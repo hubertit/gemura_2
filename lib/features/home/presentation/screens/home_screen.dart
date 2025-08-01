@@ -206,7 +206,7 @@ class _DashboardTabState extends State<_DashboardTab> {
           child: Text(
             'Gemura',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 31,
               fontWeight: FontWeight.w800,
               color: AppTheme.primaryColor,
               letterSpacing: -0.5,
