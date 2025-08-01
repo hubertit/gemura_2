@@ -700,95 +700,182 @@ class ProfileTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Profile Section
+                // Enhanced Profile Header Section
                 Container(
-                  color: AppTheme.surfaceColor,
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppTheme.primaryColor.withOpacity(0.1),
+                        AppTheme.surfaceColor,
+                      ],
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      CircleAvatar(
-                        radius: 44,
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                        backgroundImage: (user?.profileImg != null && user?.profileImg != ''
-                          ? NetworkImage(user!.profileImg)
-                          : (user?.profilePicture != null && user?.profilePicture != ''
-                            ? NetworkImage(user!.profilePicture)
-                            : null)) as ImageProvider<Object>?,
-                        child: ((user?.profileImg == null || user?.profileImg == '') && (user?.profilePicture == null || user?.profilePicture == ''))
-                            ? Text(
-                                (user?.name != null && user?.name != '' ? user!.name[0].toUpperCase() : ''),
-                                style: AppTheme.headlineLarge.copyWith(
-                                      color: AppTheme.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              )
-                            : null,
+                      // Profile Avatar with Status
+                      Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                            backgroundImage: (user?.profileImg != null && user?.profileImg != ''
+                              ? NetworkImage(user!.profileImg)
+                              : (user?.profilePicture != null && user?.profilePicture != ''
+                                ? NetworkImage(user!.profilePicture)
+                                : null)) as ImageProvider<Object>?,
+                            child: ((user?.profileImg == null || user?.profileImg == '') && (user?.profilePicture == null || user?.profilePicture == ''))
+                                ? Text(
+                                    (user?.name != null && user?.name != '' ? user!.name[0].toUpperCase() : ''),
+                                    style: AppTheme.headlineLarge.copyWith(
+                                          color: AppTheme.primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  )
+                                : null,
+                          ),
+                          // Status indicator
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: (user?.isActive ?? false) ? Colors.green : Colors.grey,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppTheme.surfaceColor, width: 2),
+                              ),
+                              child: Icon(
+                                (user?.isActive ?? false) ? Icons.check : Icons.close,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(user?.name ?? '', style: AppTheme.titleMedium, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      // User Name
+                      Text(
+                        user?.name ?? 'User Name',
+                        style: AppTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimaryColor,
+                          fontSize: 20,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      // User Role
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          user?.role ?? 'User',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                       if (user?.about != null && user?.about != '')
                         Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(user!.about, style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor), textAlign: TextAlign.center),
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            user!.about,
+                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                // Info Group
+                const SizedBox(height: 20),
+                // Quick Stats Section
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem(Icons.account_balance_wallet, 'Ikofi', '3'),
+                      _buildStatItem(Icons.people, 'Suppliers', '12'),
+                      _buildStatItem(Icons.shopping_cart, 'Customers', '8'),
+                      _buildStatItem(Icons.analytics, 'Transactions', '45'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Contact Information Section
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ListTile(
-                        leading: const Icon(Icons.email_outlined),
-                        title: const Text('Email'),
-                        subtitle: Text(user?.email ?? ''),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Contact Information',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimaryColor,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
+                      _buildInfoTile(Icons.email_outlined, 'Email', user?.email ?? 'Not provided'),
                       if (user?.phoneNumber != null && user?.phoneNumber != '')
-                        ListTile(
-                          leading: const Icon(Icons.phone),
-                          title: const Text('Phone'),
-                          subtitle: Text(user!.phoneNumber),
-                        ),
+                        _buildInfoTile(Icons.phone, 'Phone', user!.phoneNumber),
                       if (user?.address != null && user?.address != '')
-                        ListTile(
-                          leading: const Icon(Icons.location_on_outlined),
-                          title: const Text('Address'),
-                          subtitle: Text(user!.address),
-                        ),
-                      ListTile(
-                        leading: const Icon(Icons.verified_user_outlined),
-                        title: const Text('Status'),
-                        subtitle: Text((user?.isActive ?? false) ? 'Active' : 'Inactive'),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.badge_outlined),
-                        title: const Text('Role'),
-                        subtitle: Text(user?.role ?? ''),
-                      ),
+                        _buildInfoTile(Icons.location_on_outlined, 'Address', user!.address),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Actions Group
+                // Account Actions Section
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ListTile(
-                        leading: const Icon(Icons.edit_outlined),
-                        title: const Text('Edit Profile'),
-                        onTap: () {
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Account',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimaryColor,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      _buildActionTile(
+                        Icons.edit_outlined,
+                        'Edit Profile',
+                        'Update your personal information',
+                        () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const EditProfileScreen(),
@@ -796,17 +883,119 @@ class ProfileTab extends ConsumerWidget {
                           );
                         },
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.lock_outline),
-                        title: const Text('Change Password'),
-                        onTap: () {
+                      _buildActionTile(
+                        Icons.lock_outline,
+                        'Change Password',
+                        'Update your account password',
+                        () {
                           // TODO: Implement change password
                         },
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.logout),
-                        title: const Text('Logout'),
-                        onTap: () async {
+                      _buildActionTile(
+                        Icons.notifications,
+                        'Notifications',
+                        'Manage your notification preferences',
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Support & Settings Section
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Support & Settings',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimaryColor,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      _buildActionTile(
+                        Icons.settings,
+                        'Settings',
+                        'App preferences and configurations',
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildActionTile(
+                        Icons.help_outline,
+                        'Help & Support',
+                        'Get help and contact support',
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const HelpSupportScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildActionTile(
+                        Icons.info_outline,
+                        'About',
+                        'App information and version',
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const AboutScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Security Section
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Security',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimaryColor,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      _buildActionTile(
+                        Icons.logout,
+                        'Logout',
+                        'Sign out of your account',
+                        () async {
                           await ref.read(authProvider.notifier).signOut();
                           if (context.mounted) {
                             Navigator.of(context).pushAndRemoveUntil(
@@ -818,10 +1007,11 @@ class ProfileTab extends ConsumerWidget {
                           }
                         },
                       ),
-                      ListTile(
-                        leading: Icon(Icons.delete_forever, color: AppTheme.errorColor),
-                        title: Text('Delete Account', style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
-                        onTap: () async {
+                      _buildActionTile(
+                        Icons.delete_forever,
+                        'Delete Account',
+                        'Permanently delete your account',
+                        () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
@@ -853,70 +1043,14 @@ class ProfileTab extends ConsumerWidget {
                               }
                             } catch (e) {
                               if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-          AppTheme.errorSnackBar(message: 'Error: $e'),
-        );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  AppTheme.errorSnackBar(message: 'Error: $e'),
+                                );
                               }
                             }
                           }
                         },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Support/Settings Group
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.info_outline),
-                        title: const Text('About'),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const AboutScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.help_outline),
-                        title: const Text('Help & Support'),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const HelpSupportScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.notifications),
-                        title: const Text('Notifications'),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationsScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.settings),
-                        title: const Text('Settings'),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsScreen(),
-                            ),
-                          );
-                        },
+                        isDestructive: true,
                       ),
                     ],
                   ),
@@ -931,6 +1065,106 @@ class ProfileTab extends ConsumerWidget {
       error: (error, stack) => Center(
         child: Text('Error: $error'),
       ),
+    );
+  }
+
+  Widget _buildStatItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: AppTheme.primaryColor,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: AppTheme.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
+        Text(
+          label,
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textSecondaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String title, String subtitle) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: AppTheme.primaryColor,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        title,
+        style: AppTheme.bodyMedium.copyWith(
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textPrimaryColor,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTheme.bodySmall.copyWith(
+          color: AppTheme.textSecondaryColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionTile(IconData icon, String title, String subtitle, VoidCallback onTap, {bool isDestructive = false}) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isDestructive 
+            ? AppTheme.errorColor.withOpacity(0.1)
+            : AppTheme.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: isDestructive ? AppTheme.errorColor : AppTheme.primaryColor,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        title,
+        style: AppTheme.bodyMedium.copyWith(
+          fontWeight: FontWeight.w600,
+          color: isDestructive ? AppTheme.errorColor : AppTheme.textPrimaryColor,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTheme.bodySmall.copyWith(
+          color: AppTheme.textSecondaryColor,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppTheme.textSecondaryColor,
+      ),
+      onTap: onTap,
     );
   }
 }
