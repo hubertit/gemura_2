@@ -15,6 +15,7 @@ import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/models/transaction.dart';
 import 'package:d_chart/d_chart.dart';
 import '../../../../shared/models/wallet.dart';
+import 'package:intl/intl.dart';
 
 import 'search_screen.dart';
 import '../../../../shared/widgets/primary_button.dart';
@@ -137,53 +138,57 @@ class _DashboardTabState extends State<_DashboardTab> {
     ),
   ];
 
-  // Mock metrics
-  Map<String, dynamic> get metrics => {
-    'Today\'s Revenue': 150000,
-    'Total Transactions': 42,
-    'Pending Settlements': 3,
+  // Mock milk business metrics
+  Map<String, dynamic> get milkMetrics => {
+    'Today\'s Collection': 450, // liters
+    'Today\'s Sales': 380, // liters
+    'Active Suppliers': 12,
+    'Active Customers': 8,
+    'Collection Value': 157500, // Frw (450 * 350)
+    'Sales Value': 133000, // Frw (380 * 350)
+    'Pending Payments': 5,
   };
 
-  // Mock recent transactions
+  // Mock recent milk transactions
   List<Transaction> get mockTransactions => [
     Transaction(
-      id: 'TXN-1001',
-      amount: 25000,
+      id: 'MLK-1001',
+      amount: 157500,
       currency: 'RWF',
-      type: 'payment',
+      type: 'collection',
       status: 'success',
       date: DateTime.now().subtract(const Duration(hours: 2)),
-      description: 'TXN #1234',
+      description: 'Milk Collection - Jean Pierre',
       paymentMethod: 'Mobile Money',
-      customerName: 'Alice Umutoni',
+      customerName: 'Jean Pierre Ndayisaba',
       customerPhone: '0788123456',
-      reference: 'PMT-20240601-001',
+      reference: 'COL-20240601-001',
     ),
     Transaction(
-      id: 'TXN-1002',
-      amount: 120000,
+      id: 'MLK-1002',
+      amount: 133000,
       currency: 'RWF',
-      type: 'payment',
-      status: 'pending',
-      date: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-      description: 'TXN #1235',
-      paymentMethod: 'Card',
-      customerName: 'Eric Niyonsaba',
-      customerPhone: '0722123456',
-      reference: 'PMT-20240601-002',
-    ),
-    Transaction(
-      id: 'TXN-1003',
-      amount: 50000,
-      currency: 'RWF',
-      type: 'refund',
+      type: 'sale',
       status: 'success',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      description: 'Refund for TXN #1232',
+      date: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
+      description: 'Milk Sale - Hotel Rwanda',
       paymentMethod: 'Bank',
-      customerName: 'Claudine Mukamana',
+      customerName: 'Hotel Rwanda Restaurant',
+      customerPhone: '0722123456',
+      reference: 'SALE-20240601-002',
+    ),
+    Transaction(
+      id: 'MLK-1003',
+      amount: 84000,
+      currency: 'RWF',
+      type: 'collection',
+      status: 'pending',
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      description: 'Milk Collection - Marie Claire',
+      paymentMethod: 'Mobile Money',
+      customerName: 'Marie Claire Uwimana',
       customerPhone: '0733123456',
-      reference: 'REF-20240530-001',
+      reference: 'COL-20240530-001',
     ),
   ];
 
@@ -359,6 +364,86 @@ class _DashboardTabState extends State<_DashboardTab> {
               ),
             ),
             const SizedBox(height: AppTheme.spacing8),
+            // Milk Business Metrics
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+              child: Container(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.analytics, color: AppTheme.primaryColor, size: 20),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          'Today\'s Overview',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textPrimaryColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacing12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Collection',
+                            '${milkMetrics['Today\'s Collection']} L',
+                            '${NumberFormat('#,###').format(milkMetrics['Collection Value'])} Frw',
+                            Icons.local_shipping,
+                            AppTheme.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Sales',
+                            '${milkMetrics['Today\'s Sales']} L',
+                            '${NumberFormat('#,###').format(milkMetrics['Sales Value'])} Frw',
+                            Icons.shopping_cart,
+                            Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spacing12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Suppliers',
+                            '${milkMetrics['Active Suppliers']}',
+                            'Active',
+                            Icons.person_add,
+                            Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Expanded(
+                          child: _buildMetricCard(
+                            'Customers',
+                            '${milkMetrics['Active Customers']}',
+                            'Active',
+                            Icons.business,
+                            Colors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
             // Chart title
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
@@ -388,31 +473,31 @@ class _DashboardTabState extends State<_DashboardTab> {
                   child: DChartComboO(
                     groupList: [
                       OrdinalGroup(
-                        id: 'Cash In',
+                        id: 'Collection',
                         data: [
-                          OrdinalData(domain: 'Mon', measure: 120),
-                          OrdinalData(domain: 'Tue', measure: 150),
-                          OrdinalData(domain: 'Wed', measure: 100),
-                          OrdinalData(domain: 'Thu', measure: 180),
-                          OrdinalData(domain: 'Fri', measure: 90),
-                          OrdinalData(domain: 'Sat', measure: 200),
-                          OrdinalData(domain: 'Sun', measure: 170),
+                          OrdinalData(domain: 'Mon', measure: 420),
+                          OrdinalData(domain: 'Tue', measure: 450),
+                          OrdinalData(domain: 'Wed', measure: 380),
+                          OrdinalData(domain: 'Thu', measure: 520),
+                          OrdinalData(domain: 'Fri', measure: 390),
+                          OrdinalData(domain: 'Sat', measure: 480),
+                          OrdinalData(domain: 'Sun', measure: 450),
                         ],
                         color: AppTheme.primaryColor.withOpacity(0.85),
                         chartType: ChartType.bar,
                       ),
                       OrdinalGroup(
-                        id: 'Cash Out',
+                        id: 'Sales',
                         data: [
-                          OrdinalData(domain: 'Mon', measure: 80),
-                          OrdinalData(domain: 'Tue', measure: 60),
-                          OrdinalData(domain: 'Wed', measure: 120),
-                          OrdinalData(domain: 'Thu', measure: 90),
-                          OrdinalData(domain: 'Fri', measure: 110),
-                          OrdinalData(domain: 'Sat', measure: 70),
-                          OrdinalData(domain: 'Sun', measure: 130),
+                          OrdinalData(domain: 'Mon', measure: 380),
+                          OrdinalData(domain: 'Tue', measure: 420),
+                          OrdinalData(domain: 'Wed', measure: 350),
+                          OrdinalData(domain: 'Thu', measure: 480),
+                          OrdinalData(domain: 'Fri', measure: 360),
+                          OrdinalData(domain: 'Sat', measure: 440),
+                          OrdinalData(domain: 'Sun', measure: 380),
                         ],
-                        color: Color(0xFFBDBDBD), // Gray
+                        color: Colors.green.withOpacity(0.85),
                         chartType: ChartType.bar,
                       ),
                     ],
@@ -442,7 +527,7 @@ class _DashboardTabState extends State<_DashboardTab> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Text(
-                'Recent Transactions',
+                'Recent Milk Transactions',
                 style: AppTheme.bodySmall.copyWith(
                   color: AppTheme.textPrimaryColor,
                   fontWeight: FontWeight.w700,
@@ -473,6 +558,52 @@ class _DashboardTabState extends State<_DashboardTab> {
       default:
         return AppTheme.primaryColor;
     }
+  }
+
+  Widget _buildMetricCard(String title, String value, String subtitle, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: AppTheme.spacing4),
+              Text(
+                title,
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            value,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textPrimaryColor,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            subtitle,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textSecondaryColor,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
