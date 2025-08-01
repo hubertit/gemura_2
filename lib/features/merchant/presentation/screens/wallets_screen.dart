@@ -183,30 +183,30 @@ class _WalletsScreenState extends State<WalletsScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView(
                     padding: const EdgeInsets.all(AppTheme.spacing16),
-                    itemCount: wallets.length,
-                    itemBuilder: (context, index) {
-                      return WalletCard(
-                        wallet: wallets[index],
-                        showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
-                        onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
-                      );
-                    },
-                  ),
-                ),
-                // Add Wallet Card
-                AddItemCard(
-                  title: 'Add New Ikofi',
-                  subtitle: 'Create individual or joint ikofi',
-                  icon: Icons.add_circle_outline,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const CreateWalletScreen(),
+                    children: [
+                      ...wallets.map((wallet) => WalletCard(
+                        wallet: wallet,
+                        showBalance: _walletBalanceVisibility[wallet.id] ?? true,
+                        onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
+                      )),
+                      const SizedBox(height: AppTheme.spacing16),
+                      // Add Wallet Card
+                      AddItemCard(
+                        title: 'Add New Ikofi',
+                        subtitle: 'Create individual or joint ikofi',
+                        icon: Icons.add_circle_outline,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CreateWalletScreen(),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
               ],
             ),
