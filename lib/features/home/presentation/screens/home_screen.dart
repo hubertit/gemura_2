@@ -30,9 +30,9 @@ class HomeScreen extends ConsumerWidget {
     final currentIndex = ref.watch(tabIndexProvider);
     final tabs = [
       const _DashboardTab(),
-      const TransactionsScreen(),
-      const WalletsScreen(), // Restore the merchant WalletsScreen as the tab
       const ChatListScreen(),
+      const WalletsScreen(), // Restore the merchant WalletsScreen as the tab
+      const TransactionsScreen(),
       const ProfileTab(),
     ];
     return Scaffold(
@@ -49,9 +49,9 @@ class HomeScreen extends ConsumerWidget {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.swap_horiz_outlined),
-            selectedIcon: Icon(Icons.swap_horiz),
-            label: 'Transactions',
+            icon: Icon(Icons.chat_bubble_outline),
+            selectedIcon: Icon(Icons.chat_bubble),
+            label: 'Chats',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
@@ -59,9 +59,9 @@ class HomeScreen extends ConsumerWidget {
             label: 'Wallets',
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'Chat',
+            icon: Icon(Icons.swap_horiz_outlined),
+            selectedIcon: Icon(Icons.swap_horiz),
+            label: 'Transactions',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
