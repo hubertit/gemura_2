@@ -15,12 +15,11 @@ import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/models/transaction.dart';
 import 'package:d_chart/d_chart.dart';
 import '../../../../shared/models/wallet.dart';
-import 'request_payment_screen.dart';
-import 'pay_screen.dart';
-import 'payouts_screen.dart';
+
 import 'search_screen.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../chat/presentation/screens/chat_list_screen.dart';
+import '../../../suppliers/presentation/screens/suppliers_list_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -302,54 +301,58 @@ class _DashboardTabState extends State<_DashboardTab> {
                   children: [
                     Expanded(
                       child: _QuickActionButton(
-                        icon: Icons.qr_code,
-                        label: 'Request',
+                        icon: Icons.local_shipping,
+                        label: 'Collect',
                         onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: _QuickActionButton(
-                        icon: Icons.send,
-                        label: 'Pay',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const PayScreen()),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: _QuickActionButton(
-                        icon: Icons.account_balance_wallet,
-                        label: 'Top Up',
-                        onTap: () async {
-                          final result = await showModalBottomSheet<bool>(
-                            context: context,
-                            isScrollControlled: true,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          // TODO: Navigate to Record Collection screen
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Record Collection screen coming soon!'),
+                              backgroundColor: AppTheme.snackbarInfoColor,
                             ),
-                            builder: (context) => const _TopUpSheet(),
                           );
-                          if (result == true && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-          AppTheme.successSnackBar(message: 'Top up successful!'),
-        );
-                          }
                         },
                       ),
                     ),
                     Expanded(
                       child: _QuickActionButton(
-                        icon: Icons.history,
-                        label: 'Payouts',
+                        icon: Icons.shopping_cart,
+                        label: 'Sell',
+                        onTap: () {
+                          // TODO: Navigate to Record Sale screen
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Record Sale screen coming soon!'),
+                              backgroundColor: AppTheme.snackbarInfoColor,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: _QuickActionButton(
+                        icon: Icons.person_add,
+                        label: 'Supplier',
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const PayoutsScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const SuppliersListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: _QuickActionButton(
+                        icon: Icons.business,
+                        label: 'Customer',
+                        onTap: () {
+                          // TODO: Navigate to Add Customer screen
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Add Customer screen coming soon!'),
+                              backgroundColor: AppTheme.snackbarInfoColor,
+                            ),
                           );
                         },
                       ),
@@ -363,7 +366,7 @@ class _DashboardTabState extends State<_DashboardTab> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Text(
-                'Cash In & Out (This Week)',
+                'Milk Collection & Sales (This Week)',
                 style: AppTheme.bodySmall.copyWith(
                   color: AppTheme.textPrimaryColor,
                   fontWeight: FontWeight.w700,
