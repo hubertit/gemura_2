@@ -272,7 +272,9 @@ class _DashboardTabState extends State<_DashboardTab> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Default Ikofi Card
-            PageView.builder(
+            SizedBox(
+              height: 200,
+              child: PageView.builder(
                 itemCount: homeWallets.length,
                 controller: PageController(viewportFraction: 0.92),
                 itemBuilder: (context, index) {
@@ -291,6 +293,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                   );
                 },
               ),
+            ),
             const SizedBox(height: AppTheme.spacing4), // further reduced space between wallet card and quick actions
             // Quick actions
             Padding(
