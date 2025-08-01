@@ -56,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Wallets',
+            label: 'Ikofi',
           ),
           NavigationDestination(
             icon: Icon(Icons.swap_horiz_outlined),

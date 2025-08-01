@@ -84,7 +84,7 @@ class _WalletsScreenState extends State<WalletsScreen> {
             : 0);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wallets'),
+        title: const Text('Ikofi'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),

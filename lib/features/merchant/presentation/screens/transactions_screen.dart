@@ -640,14 +640,14 @@ class _FilterSheetState extends State<_FilterSheet> {
               child: DropdownButton<String>(
                 value: _selectedWalletId,
                 hint: Text(
-                  'All Wallets',
+                  'All Ikofi',
                   style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                 ),
                 isExpanded: true,
                 items: [
                   const DropdownMenuItem<String>(
                     value: null,
-                    child: Text('All Wallets'),
+                    child: Text('All Ikofi'),
                   ),
                   ...widget.wallets.map((wallet) {
                     return DropdownMenuItem<String>(
