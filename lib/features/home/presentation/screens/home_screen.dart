@@ -203,10 +203,14 @@ class _DashboardTabState extends State<_DashboardTab> {
         automaticallyImplyLeading: false,
         title: Align(
           alignment: Alignment.centerLeft,
-          child: Image.asset(
-            'assets/images/logo-name.png',
-            height: 32, // reduced by 20%
-            fit: BoxFit.contain,
+          child: Text(
+            'Gemura',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.primaryColor,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         actions: [
