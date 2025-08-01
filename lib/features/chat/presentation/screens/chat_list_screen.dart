@@ -41,9 +41,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Implement menu options
-            },
+            onPressed: _showNewChatOptions,
           ),
         ],
       ),
@@ -56,15 +54,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildCategoryChip('All', _selectedCategory == 'All'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('MCC', _selectedCategory == 'MCC'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('RAB', _selectedCategory == 'RAB'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('Friends', _selectedCategory == 'Friends'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('Groups', _selectedCategory == 'Groups'),
+                                  _buildCategoryChip('All', _selectedCategory == 'All'),
+                const SizedBox(width: AppTheme.spacing8),
+                _buildCategoryChip('Dairy', _selectedCategory == 'Dairy'),
+                const SizedBox(width: AppTheme.spacing8),
+                _buildCategoryChip('Milk', _selectedCategory == 'Milk'),
+                const SizedBox(width: AppTheme.spacing8),
+                _buildCategoryChip('Cattle', _selectedCategory == 'Cattle'),
+                const SizedBox(width: AppTheme.spacing8),
+                _buildCategoryChip('Training', _selectedCategory == 'Training'),
                   const SizedBox(width: AppTheme.spacing8),
                   // Plus Button (now scrolls with others)
                   IconButton(
@@ -364,16 +362,16 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       final walletName = chat.wallet.name.toLowerCase();
       
       switch (category) {
-        case 'MCC':
-          return chatName.contains('mcc') || walletName.contains('mcc');
-        case 'RAB':
-          return chatName.contains('rab') || walletName.contains('rab');
-        case 'Friends':
-          return chatName.contains('friend') || chatName.contains('weekend') || 
-                 walletName.contains('friend') || walletName.contains('weekend');
-        case 'Groups':
-          return chatName.contains('group') || chatName.contains('study') || 
-                 walletName.contains('group') || walletName.contains('study');
+        case 'Dairy':
+          return chatName.contains('dairy') || walletName.contains('dairy');
+        case 'Milk':
+          return chatName.contains('milk') || walletName.contains('milk');
+        case 'Cattle':
+          return chatName.contains('cattle') || walletName.contains('cattle') ||
+                 chatName.contains('feed') || walletName.contains('feed') ||
+                 chatName.contains('health') || walletName.contains('health');
+        case 'Training':
+          return chatName.contains('training') || walletName.contains('training');
         default:
           return false;
       }
@@ -384,7 +382,172 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     return chats.fold(0, (sum, chat) => sum + chat.unreadCount);
   }
 
+  void _showNewChatOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppTheme.spacing20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing20),
 
+            // Title
+            Text(
+              'New Chat',
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing24),
 
+            // Options
+            _buildNewChatOption(
+              icon: Icons.group,
+              title: 'New Group',
+              subtitle: 'Create a group chat',
+              onTap: _createNewGroup,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            _buildNewChatOption(
+              icon: Icons.person_add,
+              title: 'New Contact',
+              subtitle: 'Add a new contact',
+              onTap: _addNewContact,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            _buildNewChatOption(
+              icon: Icons.qr_code_scanner,
+              title: 'Scan QR Code',
+              subtitle: 'Scan to join a chat',
+              onTap: _scanQRCode,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            _buildNewChatOption(
+              icon: Icons.share,
+              title: 'Invite Friends',
+              subtitle: 'Share app with friends',
+              onTap: _inviteFriends,
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildNewChatOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppTheme.primaryColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTheme.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      subtitle,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: AppTheme.textSecondaryColor,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _createNewGroup() {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('New group functionality coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
+
+  void _addNewContact() {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Add new contact functionality coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
+
+  void _scanQRCode() {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('QR code scanning functionality coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
+
+  void _inviteFriends() {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Invite friends functionality coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
 } 

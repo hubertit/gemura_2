@@ -16,7 +16,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
     final jointWallets = [
       Wallet(
         id: 'WALLET-JOINT-1',
-        name: 'Family Savings',
+        name: 'Dairy Farm Fund',
         balance: 750000,
         currency: 'RWF',
         type: 'joint',
@@ -24,11 +24,11 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 90)),
         owners: ['John Doe', 'Jane Doe', 'Junior Doe'],
         isDefault: false,
-        description: 'Family emergency fund and savings',
+        description: 'Dairy farm operations and equipment fund',
       ),
       Wallet(
         id: 'WALLET-JOINT-2',
-        name: 'Business Partners',
+        name: 'Milk Collection Center',
         balance: 2500000,
         currency: 'RWF',
         type: 'joint',
@@ -36,11 +36,11 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 120)),
         owners: ['John Doe', 'Alice Smith', 'Bob Johnson'],
         isDefault: false,
-        description: 'Business operations and investments',
+        description: 'Milk collection and processing operations',
       ),
       Wallet(
         id: 'WALLET-JOINT-3',
-        name: 'Trip Fund',
+        name: 'Cattle Feed Fund',
         balance: 450000,
         currency: 'RWF',
         type: 'joint',
@@ -48,11 +48,11 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         owners: ['John Doe', 'Sarah Wilson', 'Mike Brown'],
         isDefault: false,
-        description: 'Vacation and travel expenses',
+        description: 'Cattle feed and nutrition expenses',
       ),
       Wallet(
         id: 'WALLET-JOINT-4',
-        name: 'MCC Project Fund',
+        name: 'MCC Dairy Project',
         balance: 1800000,
         currency: 'RWF',
         type: 'joint',
@@ -60,11 +60,11 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 45)),
         owners: ['John Doe', 'Emma Davis', 'Tom Wilson', 'Lisa Chen'],
         isDefault: false,
-        description: 'MCC development project funds',
+        description: 'MCC dairy farming development project',
       ),
       Wallet(
         id: 'WALLET-JOINT-5',
-        name: 'RAB Investment',
+        name: 'RAB Milk Processing',
         balance: 3200000,
         currency: 'RWF',
         type: 'joint',
@@ -72,11 +72,11 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 60)),
         owners: ['John Doe', 'David Kim', 'Maria Garcia', 'Alex Thompson'],
         isDefault: false,
-        description: 'RAB investment portfolio',
+        description: 'RAB milk processing and distribution',
       ),
       Wallet(
         id: 'WALLET-JOINT-6',
-        name: 'Friends Weekend',
+        name: 'Cattle Health Fund',
         balance: 280000,
         currency: 'RWF',
         type: 'joint',
@@ -84,11 +84,11 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 15)),
         owners: ['John Doe', 'Chris Lee', 'Anna Park', 'Sam Johnson'],
         isDefault: false,
-        description: 'Weekend getaway fund',
+        description: 'Cattle health and veterinary care fund',
       ),
       Wallet(
         id: 'WALLET-JOINT-7',
-        name: 'Study Group',
+        name: 'Dairy Training Group',
         balance: 150000,
         currency: 'RWF',
         type: 'joint',
@@ -96,15 +96,15 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         createdAt: DateTime.now().subtract(const Duration(days: 20)),
         owners: ['John Doe', 'Sarah Miller', 'James Wilson', 'Emma Brown'],
         isDefault: false,
-        description: 'Study materials and resources',
+        description: 'Dairy farming training and education',
       ),
     ];
 
     state = [
       ChatRoom(
         id: 'CHAT-1',
-        name: 'Family Savings Group',
-        description: 'Group chat for Family Savings wallet',
+        name: 'Dairy Farm Group',
+        description: 'Group chat for Dairy Farm Fund wallet',
         walletId: 'WALLET-JOINT-1',
         wallet: jointWallets[0],
         members: [
@@ -138,14 +138,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 90)),
         lastMessageAt: DateTime.now().subtract(const Duration(minutes: 15)),
-        lastMessageContent: 'I just transferred 50,000 Frw to the savings',
+        lastMessageContent: 'I just transferred 50,000 Frw for new milking equipment',
         lastMessageSender: 'Jane Doe',
         unreadCount: 2,
       ),
       ChatRoom(
         id: 'CHAT-2',
-        name: 'Business Partners Group',
-        description: 'Group chat for Business Partners wallet',
+        name: 'Milk Collection Group',
+        description: 'Group chat for Milk Collection Center wallet',
         walletId: 'WALLET-JOINT-2',
         wallet: jointWallets[1],
         members: [
@@ -179,14 +179,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 120)),
         lastMessageAt: DateTime.now().subtract(const Duration(hours: 2)),
-        lastMessageContent: 'Meeting scheduled for tomorrow at 10 AM',
+        lastMessageContent: 'Milk collection scheduled for tomorrow at 6 AM',
         lastMessageSender: 'Alice Smith',
         unreadCount: 0,
       ),
       ChatRoom(
         id: 'CHAT-3',
-        name: 'Trip Fund Group',
-        description: 'Group chat for Trip Fund wallet',
+        name: 'Cattle Feed Group',
+        description: 'Group chat for Cattle Feed Fund wallet',
         walletId: 'WALLET-JOINT-3',
         wallet: jointWallets[2],
         members: [
@@ -220,14 +220,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         lastMessageAt: DateTime.now().subtract(const Duration(days: 1)),
-        lastMessageContent: 'Flight tickets booked for next month',
+        lastMessageContent: 'New cattle feed order placed for next month',
         lastMessageSender: 'Sarah Wilson',
         unreadCount: 5,
       ),
       ChatRoom(
         id: 'CHAT-4',
-        name: 'MCC Development Team',
-        description: 'Group chat for MCC Project Fund wallet',
+        name: 'MCC Dairy Team',
+        description: 'Group chat for MCC Dairy Project wallet',
         walletId: 'WALLET-JOINT-4',
         wallet: jointWallets[3],
         members: [
@@ -270,14 +270,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 45)),
         lastMessageAt: DateTime.now().subtract(const Duration(minutes: 30)),
-        lastMessageContent: 'New feature deployment completed successfully',
+        lastMessageContent: 'New dairy equipment installation completed successfully',
         lastMessageSender: 'Emma Davis',
         unreadCount: 1,
       ),
       ChatRoom(
         id: 'CHAT-5',
-        name: 'RAB Investment Group',
-        description: 'Group chat for RAB Investment wallet',
+        name: 'RAB Milk Processing Group',
+        description: 'Group chat for RAB Milk Processing wallet',
         walletId: 'WALLET-JOINT-5',
         wallet: jointWallets[4],
         members: [
@@ -320,14 +320,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 60)),
         lastMessageAt: DateTime.now().subtract(const Duration(hours: 4)),
-        lastMessageContent: 'Portfolio performance report is ready',
+        lastMessageContent: 'Milk processing report is ready',
         lastMessageSender: 'David Kim',
         unreadCount: 3,
       ),
       ChatRoom(
         id: 'CHAT-6',
-        name: 'Friends Weekend Crew',
-        description: 'Group chat for Friends Weekend wallet',
+        name: 'Cattle Health Crew',
+        description: 'Group chat for Cattle Health Fund wallet',
         walletId: 'WALLET-JOINT-6',
         wallet: jointWallets[5],
         members: [
@@ -370,14 +370,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 15)),
         lastMessageAt: DateTime.now().subtract(const Duration(minutes: 5)),
-        lastMessageContent: 'Who\'s bringing snacks for the trip?',
+        lastMessageContent: 'Who\'s bringing the veterinary supplies?',
         lastMessageSender: 'Anna Park',
         unreadCount: 0,
       ),
       ChatRoom(
         id: 'CHAT-7',
-        name: 'Study Group Team',
-        description: 'Group chat for Study Group wallet',
+        name: 'Dairy Training Team',
+        description: 'Group chat for Dairy Training Group wallet',
         walletId: 'WALLET-JOINT-7',
         wallet: jointWallets[6],
         members: [
@@ -420,7 +420,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         ],
         createdAt: DateTime.now().subtract(const Duration(days: 20)),
         lastMessageAt: DateTime.now().subtract(const Duration(hours: 1)),
-        lastMessageContent: 'Study session tomorrow at 2 PM',
+        lastMessageContent: 'Dairy training session tomorrow at 2 PM',
         lastMessageSender: 'Sarah Miller',
         unreadCount: 2,
       ),
@@ -430,7 +430,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
   }
 
   void _initializeMessages() {
-    // Family Savings Group Messages
+    // Dairy Farm Group Messages
     _messages['CHAT-1'] = [
       ChatMessage(
         id: 'MSG-1-1',
@@ -438,7 +438,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-2',
         senderName: 'Jane Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'I just transferred 50,000 Frw to the savings',
+        content: 'I just transferred 50,000 Frw for new milking equipment',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
         status: MessageStatus.read,
@@ -449,7 +449,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-1',
         senderName: 'John Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Great! We\'re making good progress on our savings goal',
+        content: 'Great! The new milking machine will increase our production',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 12)),
         status: MessageStatus.read,
@@ -460,14 +460,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-3',
         senderName: 'Junior Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Can we use some of the savings for my school trip?',
+        content: 'Can we also buy some new cattle feed with the remaining funds?',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
         status: MessageStatus.delivered,
       ),
     ];
 
-    // Business Partners Group Messages
+    // Milk Collection Group Messages
     _messages['CHAT-2'] = [
       ChatMessage(
         id: 'MSG-2-1',
@@ -475,7 +475,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-4',
         senderName: 'Alice Smith',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Meeting scheduled for tomorrow at 10 AM',
+        content: 'Milk collection scheduled for tomorrow at 6 AM',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         status: MessageStatus.read,
@@ -486,7 +486,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-1',
         senderName: 'John Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Perfect, I\'ll prepare the quarterly report',
+        content: 'Perfect, I\'ll prepare the milk quality report',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 1)),
         status: MessageStatus.read,
@@ -497,14 +497,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-5',
         senderName: 'Bob Johnson',
         senderAvatar: 'assets/images/logo.png',
-        content: 'I\'ll bring the financial projections',
+        content: 'I\'ll bring the milk processing equipment',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
         status: MessageStatus.delivered,
       ),
     ];
 
-    // Trip Fund Group Messages
+    // Cattle Feed Group Messages
     _messages['CHAT-3'] = [
       ChatMessage(
         id: 'MSG-3-1',
@@ -512,7 +512,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-6',
         senderName: 'Sarah Wilson',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Flight tickets booked for next month',
+        content: 'New cattle feed order placed for next month',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(days: 1)),
         status: MessageStatus.read,
@@ -523,7 +523,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-7',
         senderName: 'Mike Brown',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Awesome! Which hotel did you book?',
+        content: 'Great! Which feed supplier did you choose?',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 12)),
         status: MessageStatus.read,
@@ -534,14 +534,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-1',
         senderName: 'John Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'I\'ll transfer my share for the hotel booking',
+        content: 'I\'ll transfer my share for the feed payment',
         type: MessageType.payment,
         timestamp: DateTime.now().subtract(const Duration(hours: 6)),
         status: MessageStatus.read,
       ),
     ];
 
-    // MCC Development Team Messages
+    // MCC Dairy Team Messages
     _messages['CHAT-4'] = [
       ChatMessage(
         id: 'MSG-4-1',
@@ -549,7 +549,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-8',
         senderName: 'Emma Davis',
         senderAvatar: 'assets/images/logo.png',
-        content: 'New feature deployment completed successfully',
+        content: 'New dairy equipment installation completed successfully',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
         status: MessageStatus.read,
@@ -560,7 +560,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-1',
         senderName: 'John Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Great work team! The new UI looks amazing',
+        content: 'Great work team! The new milking system looks amazing',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 25)),
         status: MessageStatus.read,
@@ -571,14 +571,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-10',
         senderName: 'Lisa Chen',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Should we schedule a code review for tomorrow?',
+        content: 'Should we schedule a dairy inspection for tomorrow?',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 20)),
         status: MessageStatus.delivered,
       ),
     ];
 
-    // RAB Investment Group Messages
+    // RAB Milk Processing Group Messages
     _messages['CHAT-5'] = [
       ChatMessage(
         id: 'MSG-5-1',
@@ -586,7 +586,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-11',
         senderName: 'David Kim',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Portfolio performance report is ready',
+        content: 'Milk processing report is ready',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 4)),
         status: MessageStatus.read,
@@ -597,7 +597,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-12',
         senderName: 'Maria Garcia',
         senderAvatar: 'assets/images/logo.png',
-        content: 'The returns look promising this quarter',
+        content: 'The milk quality looks promising this quarter',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 3)),
         status: MessageStatus.read,
@@ -608,14 +608,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-1',
         senderName: 'John Doe',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Should we consider expanding to new markets?',
+        content: 'Should we consider expanding to new dairy markets?',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         status: MessageStatus.delivered,
       ),
     ];
 
-    // Friends Weekend Crew Messages
+    // Cattle Health Crew Messages
     _messages['CHAT-6'] = [
       ChatMessage(
         id: 'MSG-6-1',
@@ -623,7 +623,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-15',
         senderName: 'Anna Park',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Who\'s bringing snacks for the trip?',
+        content: 'Who\'s bringing the veterinary supplies?',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
         status: MessageStatus.read,
@@ -634,7 +634,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-14',
         senderName: 'Chris Lee',
         senderAvatar: 'assets/images/logo.png',
-        content: 'I\'ll bring chips and drinks',
+        content: 'I\'ll bring the vaccines and medicines',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
         status: MessageStatus.read,
@@ -645,14 +645,14 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-16',
         senderName: 'Sam Johnson',
         senderAvatar: 'assets/images/logo.png',
-        content: 'I\'ll handle the sandwiches',
+        content: 'I\'ll handle the cattle feed supplements',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
         status: MessageStatus.delivered,
       ),
     ];
 
-    // Study Group Team Messages
+    // Dairy Training Team Messages
     _messages['CHAT-7'] = [
       ChatMessage(
         id: 'MSG-7-1',
@@ -660,7 +660,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-17',
         senderName: 'Sarah Miller',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Study session tomorrow at 2 PM',
+        content: 'Dairy training session tomorrow at 2 PM',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(hours: 1)),
         status: MessageStatus.read,
@@ -671,7 +671,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-18',
         senderName: 'James Wilson',
         senderAvatar: 'assets/images/logo.png',
-        content: 'I\'ll bring the study materials',
+        content: 'I\'ll bring the dairy farming materials',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
         status: MessageStatus.read,
@@ -682,7 +682,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
         senderId: 'USER-19',
         senderName: 'Emma Brown',
         senderAvatar: 'assets/images/logo.png',
-        content: 'Can we focus on the math section?',
+        content: 'Can we focus on the milking techniques?',
         type: MessageType.text,
         timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
         status: MessageStatus.delivered,

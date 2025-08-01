@@ -46,7 +46,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           // Loader in the center
           const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
           // Remove the logo image from the splash screen
