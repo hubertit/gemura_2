@@ -20,6 +20,9 @@ import 'search_screen.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../chat/presentation/screens/chat_list_screen.dart';
 import '../../../suppliers/presentation/screens/suppliers_list_screen.dart';
+import '../../../customers/presentation/screens/customers_list_screen.dart';
+import '../../../collection/presentation/screens/record_collection_screen.dart';
+import '../../../sales/presentation/screens/record_sale_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -304,11 +307,9 @@ class _DashboardTabState extends State<_DashboardTab> {
                         icon: Icons.local_shipping,
                         label: 'Collect',
                         onTap: () {
-                          // TODO: Navigate to Record Collection screen
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Record Collection screen coming soon!'),
-                              backgroundColor: AppTheme.snackbarInfoColor,
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const RecordCollectionScreen(),
                             ),
                           );
                         },
@@ -319,11 +320,9 @@ class _DashboardTabState extends State<_DashboardTab> {
                         icon: Icons.shopping_cart,
                         label: 'Sell',
                         onTap: () {
-                          // TODO: Navigate to Record Sale screen
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Record Sale screen coming soon!'),
-                              backgroundColor: AppTheme.snackbarInfoColor,
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const RecordSaleScreen(),
                             ),
                           );
                         },
@@ -347,11 +346,9 @@ class _DashboardTabState extends State<_DashboardTab> {
                         icon: Icons.business,
                         label: 'Customer',
                         onTap: () {
-                          // TODO: Navigate to Add Customer screen
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Add Customer screen coming soon!'),
-                              backgroundColor: AppTheme.snackbarInfoColor,
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomersListScreen(),
                             ),
                           );
                         },

@@ -1,50 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
-import 'package:gemura/features/suppliers/presentation/providers/supplier_provider.dart';
-import 'package:gemura/features/suppliers/domain/models/supplier.dart';
-import 'package:gemura/features/suppliers/presentation/screens/add_supplier_screen.dart';
-import 'package:gemura/features/suppliers/presentation/screens/supplier_details_screen.dart';
+import 'package:gemura/features/customers/domain/models/customer.dart';
+import 'package:gemura/features/customers/presentation/providers/customer_provider.dart';
+import 'package:gemura/features/customers/presentation/screens/add_customer_screen.dart';
+import 'package:gemura/features/customers/presentation/screens/customer_details_screen.dart';
 
-class SuppliersListScreen extends ConsumerStatefulWidget {
-  const SuppliersListScreen({super.key});
+class CustomersListScreen extends ConsumerStatefulWidget {
+  const CustomersListScreen({super.key});
 
   @override
-  ConsumerState<SuppliersListScreen> createState() => _SuppliersListScreenState();
+  ConsumerState<CustomersListScreen> createState() => _CustomersListScreenState();
 }
 
-class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
+class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<Supplier> _getFilteredSuppliers() {
-    final suppliers = ref.watch(supplierProvider);
+  List<Customer> _getFilteredCustomers() {
+    final customers = ref.watch(customerProvider);
     String searchQuery = _searchController.text.toLowerCase();
     
     if (searchQuery.isEmpty) {
-      return suppliers;
+      return customers;
     }
     
-    return suppliers.where((supplier) {
-      return supplier.name.toLowerCase().contains(searchQuery) ||
-          supplier.phone.toLowerCase().contains(searchQuery) ||
-          supplier.location.toLowerCase().contains(searchQuery) ||
-          supplier.businessType.toLowerCase().contains(searchQuery) ||
-          supplier.farmType.toLowerCase().contains(searchQuery) ||
-          supplier.collectionSchedule.toLowerCase().contains(searchQuery) ||
-          (supplier.email != null && supplier.email!.toLowerCase().contains(searchQuery)) ||
-          (supplier.idNumber != null && supplier.idNumber!.toLowerCase().contains(searchQuery));
+    return customers.where((customer) {
+      return customer.name.toLowerCase().contains(searchQuery) ||
+          customer.phone.toLowerCase().contains(searchQuery) ||
+          customer.location.toLowerCase().contains(searchQuery) ||
+          customer.businessType.toLowerCase().contains(searchQuery) ||
+          customer.customerType.toLowerCase().contains(searchQuery) ||
+          (customer.email != null && customer.email!.toLowerCase().contains(searchQuery)) ||
+          (customer.idNumber != null && customer.idNumber!.toLowerCase().contains(searchQuery));
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredSuppliers = _getFilteredSuppliers();
+    final filteredCustomers = _getFilteredCustomers();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -52,10 +45,10 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Suppliers'),
+            const Text('Customers'),
             if (_searchController.text.isNotEmpty)
               Text(
-                '${filteredSuppliers.length} result${filteredSuppliers.length == 1 ? '' : 's'}',
+                '${filteredCustomers.length} result${filteredCustomers.length == 1 ? '' : 's'}',
                 style: AppTheme.bodySmall.copyWith(
                   color: AppTheme.textSecondaryColor,
                   fontSize: 12,
@@ -82,22 +75,22 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             onPressed: () {
               _showSearchDialog();
             },
-            tooltip: 'Search suppliers',
+            tooltip: 'Search customers',
           ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const AddSupplierScreen(),
+                  builder: (context) => const AddCustomerScreen(),
                 ),
               );
             },
-            tooltip: 'Add supplier',
+            tooltip: 'Add customer',
           ),
         ],
       ),
-      body: filteredSuppliers.isEmpty
+      body: filteredCustomers.isEmpty
           ? _buildEmptyState(_searchController.text.isNotEmpty)
           : ListView.builder(
               padding: const EdgeInsets.only(
@@ -105,17 +98,17 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                 left: AppTheme.spacing16,
                 right: AppTheme.spacing16,
               ),
-              itemCount: filteredSuppliers.length,
+              itemCount: filteredCustomers.length,
               itemBuilder: (context, index) {
-                final supplier = filteredSuppliers[index];
-                return _buildSupplierCard(supplier);
+                final customer = filteredCustomers[index];
+                return _buildCustomerCard(customer);
               },
             ),
     );
   }
 
-  Widget _buildSupplierCard(Supplier supplier) {
-        return Container(
+  Widget _buildCustomerCard(Customer customer) {
+    return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
@@ -133,7 +126,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => SupplierDetailsScreen(supplier: supplier),
+              builder: (context) => CustomerDetailsScreen(customer: customer),
             ),
           );
         },
@@ -141,7 +134,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           radius: 24,
           backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
           child: Text(
-            supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : 'S',
+            customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
             style: TextStyle(
               color: AppTheme.primaryColor,
               fontWeight: FontWeight.bold,
@@ -150,7 +143,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           ),
         ),
         title: Text(
-          supplier.name,
+          customer.name,
           style: AppTheme.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
@@ -165,7 +158,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             ),
             const SizedBox(width: 6),
             Text(
-              supplier.phone,
+              customer.phone,
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.textSecondaryColor,
               ),
@@ -177,7 +170,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${supplier.sellingPricePerLiter.toStringAsFixed(0)} Frw/L',
+              '${customer.buyingPricePerLiter.toStringAsFixed(0)} Frw/L',
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.w600,
@@ -185,7 +178,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              '${supplier.dailyProduction}L/day',
+              customer.customerType,
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.textSecondaryColor,
                 fontSize: 11,
@@ -197,8 +190,6 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     );
   }
 
-
-
   void _showSearchDialog() {
     showDialog(
       context: context,
@@ -207,7 +198,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           children: [
             Icon(Icons.search, color: AppTheme.primaryColor),
             const SizedBox(width: AppTheme.spacing8),
-            const Text('Search Suppliers'),
+            const Text('Search Customers'),
           ],
         ),
         content: Column(
@@ -247,7 +238,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                 const SizedBox(width: AppTheme.spacing4),
                 Expanded(
                   child: Text(
-                    'Search is case-insensitive and works across all supplier fields',
+                    'Search is case-insensitive and works across all customer fields',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                       fontSize: 12,
@@ -276,8 +267,6 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     );
   }
 
-
-
   Widget _buildEmptyState([bool isSearch = false]) {
     return Center(
       child: Column(
@@ -298,7 +287,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            isSearch ? 'No search results' : 'No suppliers found',
+            isSearch ? 'No search results' : 'No customers found',
             style: AppTheme.titleMedium.copyWith(
               color: AppTheme.textPrimaryColor,
               fontWeight: FontWeight.w600,
@@ -307,8 +296,8 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           const SizedBox(height: AppTheme.spacing8),
           Text(
             isSearch 
-                ? 'Try adjusting your search terms or browse all suppliers'
-                : 'Add your first supplier to get started',
+                ? 'Try adjusting your search terms or browse all customers'
+                : 'Add your first customer to get started',
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
             ),
@@ -322,12 +311,12 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => const AddSupplierScreen(),
+                    builder: (context) => const AddCustomerScreen(),
                   ),
                 );
               },
               icon: const Icon(Icons.add, size: 20),
-              label: const Text('Add Supplier'),
+              label: const Text('Add Customer'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
@@ -336,7 +325,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                   vertical: AppTheme.spacing16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                 ),
               ),
             ),
@@ -345,6 +334,4 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
       ),
     );
   }
-
-
 } 
