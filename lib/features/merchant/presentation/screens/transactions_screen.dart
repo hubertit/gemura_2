@@ -622,7 +622,7 @@ class _FilterSheetState extends State<_FilterSheet> {
 
           // Wallet Filter
           Text(
-            'Wallet',
+            'Ikofi',
             style: AppTheme.bodySmall.copyWith(
               fontWeight: FontWeight.w700,
               fontSize: 13,

@@ -12,7 +12,7 @@ class ChatNotifier extends StateNotifier<List<ChatRoom>> {
   final Map<String, List<ChatMessage>> _messages = {};
 
   void _loadMockData() {
-    // Mock joint wallets for chat rooms
+    // Mock joint ikofi for chat rooms
     final jointWallets = [
       Wallet(
         id: 'WALLET-JOINT-1',

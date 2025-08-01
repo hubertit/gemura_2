@@ -6,7 +6,7 @@ A comprehensive Flutter-based financial services application that provides users
 
 ### 🏠 **Home Dashboard**
 - Multi-tab navigation (Home, Transactions, Ikofi, Chat, Profile)
-- Wallet balance display with visibility toggle
+- Ikofi balance display with visibility toggle
 - Transaction history with interactive charts
 - Quick action buttons for payments and transfers
 - Real-time balance updates
@@ -17,12 +17,19 @@ A comprehensive Flutter-based financial services application that provides users
 - **Payouts**: Withdraw funds to bank accounts with transaction tracking
 - **Payment Methods**: Mobile Money, Cards, Bank transfers, QR/USSD
 
-### 💰 **Wallet Management**
-- Multiple wallet support (individual and joint wallets)
-- Balance tracking with visibility controls
-- Transaction history per wallet
-- Target savings with progress tracking
-- Wallet sharing and collaboration features
+### 💰 **Ikofi Management**
+- Multiple ikofi support (individual and joint ikofi)
+- Balance tracking and visibility controls
+- Transaction history per ikofi
+- Target savings and goal tracking
+- Ikofi sharing and collaboration features
+
+### 💳 **Payments & Transfers**
+- Send money to contacts and bank accounts
+- Request payments from others
+- QR code payments
+- Scheduled and recurring payments
+- Payment history and receipts
 
 ### 💬 **Chat System**
 - Real-time messaging between users
@@ -53,12 +60,11 @@ A comprehensive Flutter-based financial services application that provides users
 - Renewal tracking and notifications
 - Insurance claims processing
 
-### 🏪 **Merchant Features**
-- Dashboard with transaction analytics
-- Wallet management for businesses
-- Transaction history and reporting
-- Profile management for merchants
-- Business insights and performance metrics
+### 🏦 **Merchant Services**
+- Business account management
+- Payment processing
+- Transaction analytics
+- Ikofi management for businesses
 
 ### 🔐 **Authentication & Security**
 - Secure login/register with email/password

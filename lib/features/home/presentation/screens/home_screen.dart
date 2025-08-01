@@ -264,9 +264,9 @@ class _DashboardTabState extends State<_DashboardTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Default Wallet Card
+            // Default Ikofi Card
             SizedBox(
-              height: 180, // increased to fix overflow issue
+              height: 200,
               child: PageView.builder(
                 itemCount: homeWallets.length,
                 controller: PageController(viewportFraction: 0.92),
@@ -814,11 +814,11 @@ class _TopUpSheetState extends State<_TopUpSheet> {
   String? _selectedMethod = 'Mobile Money';
   final List<String> _methods = ['Mobile Money', 'Card', 'Bank'];
 
-  // Mock wallets (same as homeWallets)
+  // Mock ikofi (same as homeWallets)
   final List<Wallet> _wallets = [
     Wallet(
       id: 'WALLET-1',
-      name: 'Main Wallet',
+      name: 'Main Ikofi',
       balance: 250000,
       currency: 'RWF',
       type: 'individual',
@@ -829,7 +829,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
     ),
     Wallet(
       id: 'WALLET-2',
-      name: 'Joint Wallet',
+      name: 'Joint Ikofi',
       balance: 1200000,
       currency: 'RWF',
       type: 'joint',

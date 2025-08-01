@@ -315,7 +315,7 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                       wallet = wallet.copyWith(isDefault: true);
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      AppTheme.successSnackBar(message: 'Wallet set as default!'),
+                      AppTheme.successSnackBar(message: 'Ikofi set as default!'),
                     );
                   }
                 },
@@ -1332,8 +1332,8 @@ class _WalletCardState extends State<WalletCard> {
           children: [
             Text(
                 widget.wallet.type == 'joint'
-                    ? 'Joint Wallet'
-                    : 'Individual Wallet',
+                    ? 'Joint Ikofi'
+                    : 'Individual Ikofi',
                 style: AppTheme.bodySmall
                     .copyWith(color: getTextColor().withOpacity(0.85))),
             if (widget.wallet.type == 'joint')
@@ -2296,7 +2296,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                           ),
                           const SizedBox(width: AppTheme.spacing8),
                           Text(
-                            'Joint Wallet Rules',
+                            'Joint Ikofi Rules',
                             style: AppTheme.bodySmall.copyWith(
                               fontWeight: FontWeight.w700,
                               fontSize: 13,
