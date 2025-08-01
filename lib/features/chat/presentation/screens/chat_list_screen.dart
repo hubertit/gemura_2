@@ -62,22 +62,14 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   _buildCategoryChip('Groups', false),
                   const SizedBox(width: AppTheme.spacing8),
                   // Plus Button (now scrolls with others)
-                  Container(
-                    height: 32,
-                    width: 32,
-                    decoration: BoxDecoration(
+                  IconButton(
+                    icon: Icon(
+                      Icons.add,
                       color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                      size: 24,
                     ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.add,
-                        color: AppTheme.surfaceColor,
-                        size: 18,
-                      ),
-                      onPressed: _showNewChatOptions,
-                      padding: EdgeInsets.zero,
-                    ),
+                    onPressed: _showNewChatOptions,
+                    padding: EdgeInsets.zero,
                   ),
                 ],
               ),
