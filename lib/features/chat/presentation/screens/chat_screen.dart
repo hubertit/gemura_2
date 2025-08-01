@@ -265,6 +265,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               child: Row(
                 children: [
+                  // Attachment Button
+                  Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.attach_file,
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                      onPressed: _showAttachmentOptions,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -543,5 +562,150 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       case MessageStatus.failed:
         return Icons.error;
     }
+  }
+
+  void _showAttachmentOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppTheme.spacing20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+            
+            // Title
+            Text(
+              'Attach File',
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing24),
+            
+            // Attachment options
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildAttachmentOption(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onTap: _openCamera,
+                ),
+                _buildAttachmentOption(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  onTap: _openGallery,
+                ),
+                _buildAttachmentOption(
+                  icon: Icons.description,
+                  label: 'Document',
+                  onTap: _openDocument,
+                ),
+                _buildAttachmentOption(
+                  icon: Icons.location_on,
+                  label: 'Location',
+                  onTap: _shareLocation,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.primaryColor,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            label,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openCamera() {
+    Navigator.pop(context);
+    // TODO: Implement camera functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Camera functionality coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
+
+  void _openGallery() {
+    Navigator.pop(context);
+    // TODO: Implement gallery picker
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Gallery picker coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
+
+  void _openDocument() {
+    Navigator.pop(context);
+    // TODO: Implement document picker
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Document picker coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
+  }
+
+  void _shareLocation() {
+    Navigator.pop(context);
+    // TODO: Implement location sharing
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Location sharing coming soon!'),
+        backgroundColor: AppTheme.snackbarInfoColor,
+      ),
+    );
   }
 } 
