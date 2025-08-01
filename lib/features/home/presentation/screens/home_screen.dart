@@ -470,23 +470,25 @@ class _DashboardTabState extends State<_DashboardTab> {
                 child: Container(
                   height: 162,
                   width: double.infinity,
-                  child: DChartComboO(
-                    groupList: [
-                      OrdinalGroup(
-                        id: 'Collection',
-                        data: [
-                          OrdinalData(domain: 'Mon', measure: 420),
-                          OrdinalData(domain: 'Tue', measure: 450),
-                          OrdinalData(domain: 'Wed', measure: 380),
-                          OrdinalData(domain: 'Thu', measure: 520),
-                          OrdinalData(domain: 'Fri', measure: 390),
-                          OrdinalData(domain: 'Sat', measure: 480),
-                          OrdinalData(domain: 'Sun', measure: 450),
-                        ],
-                        color: AppTheme.primaryColor.withOpacity(0.85),
-                        chartType: ChartType.bar,
-                      ),
-                                             OrdinalGroup(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: DChartComboO(
+                     groupList: [
+                       OrdinalGroup(
+                         id: 'Collection',
+                         data: [
+                           OrdinalData(domain: 'Mon', measure: 420),
+                           OrdinalData(domain: 'Tue', measure: 450),
+                           OrdinalData(domain: 'Wed', measure: 380),
+                           OrdinalData(domain: 'Thu', measure: 520),
+                           OrdinalData(domain: 'Fri', measure: 390),
+                           OrdinalData(domain: 'Sat', measure: 480),
+                           OrdinalData(domain: 'Sun', measure: 450),
+                         ],
+                         color: AppTheme.primaryColor.withOpacity(0.85),
+                         chartType: ChartType.bar,
+                       ),
+                       OrdinalGroup(
                          id: 'Sales',
                          data: [
                            OrdinalData(domain: 'Mon', measure: 380),
@@ -500,24 +502,25 @@ class _DashboardTabState extends State<_DashboardTab> {
                          color: Colors.grey.withOpacity(0.85),
                          chartType: ChartType.bar,
                        ),
-                    ],
-                    animate: true,
-                    domainAxis: DomainAxis(
-                      showLine: true,
-                      labelStyle: const LabelStyle(
-                        color: AppTheme.textSecondaryColor, // Slightly lighter for reduced visibility
-                        fontSize: 12, // Larger font size
-                        fontWeight: FontWeight.w600, // Bold weight
-                      ),
-                    ),
-                    measureAxis: MeasureAxis(
-                      showLine: true,
-                      labelStyle: const LabelStyle(
-                        color: AppTheme.textSecondaryColor, // Slightly lighter for reduced visibility
-                        fontSize: 12, // Larger font size
-                        fontWeight: FontWeight.w600, // Bold weight
-                      ),
-                    ),
+                     ],
+                     animate: true,
+                     domainAxis: DomainAxis(
+                       showLine: true,
+                       labelStyle: const LabelStyle(
+                         color: AppTheme.textSecondaryColor,
+                         fontSize: 12,
+                         fontWeight: FontWeight.w600,
+                       ),
+                     ),
+                     measureAxis: MeasureAxis(
+                       showLine: true,
+                       labelStyle: const LabelStyle(
+                         color: AppTheme.textSecondaryColor,
+                         fontSize: 12,
+                         fontWeight: FontWeight.w600,
+                       ),
+                     ),
+                   ),
                   ),
                 ),
               ),
