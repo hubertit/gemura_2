@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/chat_provider.dart';
 import '../../domain/models/chat_room.dart';
 import 'chat_screen.dart';
+import 'create_list_screen.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -72,7 +73,13 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       color: AppTheme.primaryColor,
                       size: 24,
                     ),
-                    onPressed: _showNewChatOptions,
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const CreateListScreen(),
+                        ),
+                      );
+                    },
                     padding: EdgeInsets.zero,
                   ),
                 ],
@@ -377,148 +384,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     return chats.fold(0, (sum, chat) => sum + chat.unreadCount);
   }
 
-  void _showNewChatOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surfaceColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(AppTheme.spacing20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondaryColor.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing20),
-            
-            // Title
-            Text(
-              'New Chat',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            
-            // New chat options
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildNewChatOption(
-                  icon: Icons.group_add,
-                  label: 'New Group',
-                  onTap: _createNewGroup,
-                ),
-                _buildNewChatOption(
-                  icon: Icons.person_add,
-                  label: 'New Contact',
-                  onTap: _addNewContact,
-                ),
-                _buildNewChatOption(
-                  icon: Icons.qr_code,
-                  label: 'Scan QR',
-                  onTap: _scanQRCode,
-                ),
-                _buildNewChatOption(
-                  icon: Icons.share,
-                  label: 'Invite',
-                  onTap: _inviteFriends,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing20),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildNewChatOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-            ),
-            child: Icon(
-              icon,
-              color: AppTheme.primaryColor,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            label,
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondaryColor,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _createNewGroup() {
-    Navigator.pop(context);
-    // TODO: Implement new group creation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('New group creation coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
-  }
 
-  void _addNewContact() {
-    Navigator.pop(context);
-    // TODO: Implement new contact addition
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add new contact coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
-  }
-
-  void _scanQRCode() {
-    Navigator.pop(context);
-    // TODO: Implement QR code scanning
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('QR code scanning coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
-  }
-
-  void _inviteFriends() {
-    Navigator.pop(context);
-    // TODO: Implement friend invitation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invite friends coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
-  }
 } 
