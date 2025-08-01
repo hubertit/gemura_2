@@ -7,12 +7,16 @@ import '../../../../shared/models/transaction.dart';
 import '../../../../shared/models/wallet.dart';
 import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/widgets/layout_widgets.dart' show AddItemCard, CustomRulesActionSheet, DetailsActionSheet, DetailRow;
+import '../../../../shared/widgets/primary_button.dart';
 import '../../../savings/presentation/screens/savings_screen.dart';
 import '../../../savings/presentation/providers/savings_provider.dart';
 import '../../../savings/domain/models/savings_goal.dart';
 import '../../../loans/presentation/screens/loans_screen.dart';
 import '../../../insurance/presentation/screens/insurance_screen.dart';
 import 'transactions_screen.dart';
+import '../../../home/presentation/screens/request_payment_screen.dart';
+import '../../../home/presentation/screens/pay_screen.dart';
+import '../../../home/presentation/screens/payouts_screen.dart';
 
 class WalletsScreen extends StatefulWidget {
   const WalletsScreen({super.key});
@@ -121,6 +125,78 @@ class _WalletsScreenState extends State<WalletsScreen> {
                     },
                   ),
                 ),
+                const SizedBox(height: AppTheme.spacing8),
+                // Quick actions
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.qr_code,
+                            label: 'Request',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.send,
+                            label: 'Pay',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const PayScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.account_balance_wallet,
+                            label: 'Top Up',
+                            onTap: () async {
+                              final result = await showModalBottomSheet<bool>(
+                                context: context,
+                                isScrollControlled: true,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                ),
+                                builder: (context) => const _TopUpSheet(),
+                              );
+                              if (result == true && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  AppTheme.successSnackBar(message: 'Top up successful!'),
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.history,
+                            label: 'Payouts',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const PayoutsScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
                 // Add Wallet Card
                 AddItemCard(
                   title: 'Add New Ikofi',
@@ -1472,38 +1548,25 @@ class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-
-  const _QuickActionButton(
-      {required this.icon, required this.label, required this.onTap});
+  const _QuickActionButton({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-          border: Border.all(
-              color: AppTheme.thinBorderColor,
-              width: AppTheme.thinBorderWidth),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.surfaceColor.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: AppTheme.primaryColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: AppTheme.textPrimaryColor, size: 24),
-            const SizedBox(height: 4),
-            Text(label,
-                style: AppTheme.bodySmall
-                    .copyWith(color: AppTheme.textPrimaryColor)),
+            Icon(icon, color: AppTheme.primaryColor, size: 28),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(label, style: AppTheme.bodySmall.copyWith(color: AppTheme.primaryColor, fontWeight: FontWeight.w600, fontSize: 12)),
           ],
         ),
       ),
@@ -2917,6 +2980,94 @@ class _WalletDetailsSheet extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _TopUpSheet extends StatefulWidget {
+  const _TopUpSheet();
+
+  @override
+  State<_TopUpSheet> createState() => _TopUpSheetState();
+}
+
+class _TopUpSheetState extends State<_TopUpSheet> {
+  final TextEditingController _amountController = TextEditingController();
+  String _selectedWallet = 'Main Ikofi';
+  final List<String> _wallets = ['Main Ikofi', 'Joint Ikofi'];
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: AppTheme.spacing16,
+        right: AppTheme.spacing16,
+        top: AppTheme.spacing16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Top Up Ikofi',
+                style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          DropdownButtonFormField<String>(
+            value: _selectedWallet,
+            decoration: const InputDecoration(
+              labelText: 'Select Ikofi',
+              border: OutlineInputBorder(),
+            ),
+            items: _wallets.map((wallet) {
+              return DropdownMenuItem(
+                value: wallet,
+                child: Text(wallet),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedWallet = value!;
+              });
+            },
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          TextFormField(
+            controller: _amountController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Amount (RWF)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing24),
+          PrimaryButton(
+            label: 'Top Up',
+            onPressed: () {
+              if (_amountController.text.isNotEmpty) {
+                Navigator.of(context).pop(true);
+              }
+            },
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+        ],
+      ),
     );
   }
 }
