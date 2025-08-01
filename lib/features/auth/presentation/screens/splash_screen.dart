@@ -62,6 +62,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: AppTheme.surfaceColor,
                         fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            offset: const Offset(1, 1),
+                            blurRadius: 3,
+                            color: Colors.black.withOpacity(0.5),
+                          ),
+                        ],
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -80,6 +87,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.surfaceColor,
                     fontWeight: FontWeight.w700,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 2,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -89,6 +103,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.surfaceColor,
                     fontWeight: FontWeight.w600,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 2,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -98,6 +119,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   style: AppTheme.bodySmall.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.surfaceColor,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 2,
+                        color: Colors.black.withOpacity(0.6),
+                      ),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
