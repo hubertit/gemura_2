@@ -460,21 +460,7 @@ class _DashboardTabState extends State<_DashboardTab> {
             // Area chart section with legends
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-                    child: Text(
-                      'Weekly Milk Collection & Sales',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textPrimaryColor,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  Container(
+              child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceColor,
@@ -497,8 +483,8 @@ class _DashboardTabState extends State<_DashboardTab> {
                           OrdinalData(domain: 'Sat', measure: 480),
                           OrdinalData(domain: 'Sun', measure: 450),
                         ],
-                        color: AppTheme.primaryColor.withOpacity(0.6),
-                        chartType: ChartType.line,
+                        color: AppTheme.primaryColor.withOpacity(0.85),
+                        chartType: ChartType.bar,
                       ),
                       OrdinalGroup(
                         id: 'Sales',
@@ -511,8 +497,8 @@ class _DashboardTabState extends State<_DashboardTab> {
                           OrdinalData(domain: 'Sat', measure: 440),
                           OrdinalData(domain: 'Sun', measure: 380),
                         ],
-                        color: Colors.green.withOpacity(0.6),
-                        chartType: ChartType.line,
+                        color: Colors.green.withOpacity(0.85),
+                        chartType: ChartType.bar,
                       ),
                     ],
                     animate: true,
@@ -534,8 +520,6 @@ class _DashboardTabState extends State<_DashboardTab> {
                     ),
                   ),
                 ),
-              ),
-                ],
               ),
             ),
             const SizedBox(height: AppTheme.spacing8),
