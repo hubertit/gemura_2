@@ -112,23 +112,9 @@ class _WalletsScreenState extends State<WalletsScreen> {
           ? _buildEmptyState(context)
           : Column(
               children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(AppTheme.spacing16),
-                    itemCount: wallets.length,
-                    itemBuilder: (context, index) {
-                      return WalletCard(
-                        wallet: wallets[index],
-                        showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
-                        onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spacing8),
                 // Quick actions
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
                     decoration: BoxDecoration(
@@ -196,7 +182,19 @@ class _WalletsScreenState extends State<WalletsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing8),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
+                    itemCount: wallets.length,
+                    itemBuilder: (context, index) {
+                      return WalletCard(
+                        wallet: wallets[index],
+                        showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
+                        onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
+                      );
+                    },
+                  ),
+                ),
                 // Add Wallet Card
                 AddItemCard(
                   title: 'Add New Ikofi',
