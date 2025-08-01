@@ -47,46 +47,40 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           // Chat Categories
           Container(
             margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildCategoryChip('All', true),
-                        const SizedBox(width: AppTheme.spacing8),
-                        _buildCategoryChip('Friends', false),
-                        const SizedBox(width: AppTheme.spacing8),
-                        _buildCategoryChip('Family', false),
-                        const SizedBox(width: AppTheme.spacing8),
-                        _buildCategoryChip('Work', false),
-                        const SizedBox(width: AppTheme.spacing8),
-                        _buildCategoryChip('Groups', false),
-                      ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildCategoryChip('All', true),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('MCC', false),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('RAB', false),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('Friends', false),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('Groups', false),
+                  const SizedBox(width: AppTheme.spacing8),
+                  // Plus Button (now scrolls with others)
+                  Container(
+                    height: 32,
+                    width: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.add,
+                        color: AppTheme.surfaceColor,
+                        size: 18,
+                      ),
+                      onPressed: _showNewChatOptions,
+                      padding: EdgeInsets.zero,
                     ),
                   ),
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                // Plus Button
-                Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.add,
-                      color: AppTheme.surfaceColor,
-                      size: 18,
-                    ),
-                    onPressed: _showNewChatOptions,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           
