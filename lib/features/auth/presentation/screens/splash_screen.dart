@@ -40,7 +40,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         children: [
           // Background cover image
           Image.asset(
-            'assets/images/splash_cover.jpg',
+            'assets/images/splash.jpg',
             fit: BoxFit.cover,
           ),
           // Loader in the center
