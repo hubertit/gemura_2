@@ -35,7 +35,7 @@ class _WalletsScreenState extends State<WalletsScreen> {
   List<Wallet> get mockWallets => [
         Wallet(
           id: 'WALLET-1',
-          name: 'Main Wallet',
+          name: 'Main Ikofi',
           balance: 250000,
           currency: 'RWF',
           type: 'individual',
@@ -46,7 +46,7 @@ class _WalletsScreenState extends State<WalletsScreen> {
         ),
         Wallet(
           id: 'WALLET-2',
-          name: 'Joint Wallet',
+          name: 'Joint Ikofi',
           balance: 1200000,
           currency: 'RWF',
           type: 'joint',
@@ -92,7 +92,7 @@ class _WalletsScreenState extends State<WalletsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add Wallet',
+            tooltip: 'Add Ikofi',
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -123,8 +123,8 @@ class _WalletsScreenState extends State<WalletsScreen> {
                 ),
                 // Add Wallet Card
                 AddItemCard(
-                  title: 'Add New Wallet',
-                  subtitle: 'Create individual or joint wallet',
+                  title: 'Add New Ikofi',
+                  subtitle: 'Create individual or joint ikofi',
                   icon: Icons.add_circle_outline,
                   onTap: () {
                     Navigator.of(context).push(
@@ -136,6 +136,17 @@ class _WalletsScreenState extends State<WalletsScreen> {
                 ),
               ],
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CreateWalletScreen(),
+            ),
+          );
+        },
+        tooltip: 'Add Ikofi',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -148,13 +159,13 @@ class _WalletsScreenState extends State<WalletsScreen> {
               size: 64, color: AppTheme.textHintColor),
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            'No wallets yet',
+            'No ikofi yet',
             style: AppTheme.titleMedium
                 .copyWith(color: AppTheme.textSecondaryColor),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Your wallets will appear here.',
+            'Your ikofi will appear here.',
             style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
           ),
         ],
@@ -257,7 +268,7 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                   _isEditing = false;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
-                  AppTheme.successSnackBar(message: 'Wallet updated successfully!'),
+                  AppTheme.successSnackBar(message: 'Ikofi updated successfully!'),
                 );
               } else {
                 setState(() {
@@ -2178,7 +2189,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          AppTheme.successSnackBar(message: 'Wallet created successfully!'),
+          AppTheme.successSnackBar(message: 'Ikofi created successfully!'),
         );
       }
     } catch (e) {
@@ -2198,7 +2209,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Wallet'),
+        title: const Text('Create Ikofi'),
         backgroundColor: AppTheme.surfaceColor,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
         titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
@@ -2213,7 +2224,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
             children: [
               // Wallet Type Selection
               Text(
-                'Wallet Type',
+                'Ikofi Type',
                 style: AppTheme.bodySmall.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
@@ -2233,7 +2244,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                         children: [
                           Icon(Icons.person, color: AppTheme.primaryColor, size: 20),
                           const SizedBox(width: AppTheme.spacing8),
-                          Text('Individual Wallet', style: AppTheme.bodySmall),
+                          Text('Individual Ikofi', style: AppTheme.bodySmall),
                         ],
                       ),
                       value: 'individual',
@@ -2247,7 +2258,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                         children: [
                           Icon(Icons.group, color: AppTheme.primaryColor, size: 20),
                           const SizedBox(width: AppTheme.spacing8),
-                          Text('Joint Wallet', style: AppTheme.bodySmall),
+                          Text('Joint Ikofi', style: AppTheme.bodySmall),
                         ],
                       ),
                       value: 'joint',
@@ -2359,10 +2370,10 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                 controller: _nameController,
                 style: AppTheme.bodySmall,
                 decoration: const InputDecoration(
-                  hintText: 'Wallet name',
+                  hintText: 'Ikofi name',
                   prefixIcon: Icon(Icons.account_balance_wallet_rounded),
                 ),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Wallet name required' : null,
+                validator: (v) => v == null || v.trim().isEmpty ? 'Ikofi name required' : null,
               ),
               
               const SizedBox(height: AppTheme.spacing12),
@@ -2395,7 +2406,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Saving Wallet', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+                          Text('Saving Ikofi', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
                           Text('Set a target amount to save', style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor, fontSize: 12)),
                         ],
                       ),
@@ -2797,14 +2808,14 @@ class _WalletDetailsSheet extends StatelessWidget {
         // Group 1: Type & Owners
         DetailRow(
           label: 'Type',
-          value: wallet.type == 'joint' ? 'Joint Wallet' : 'Individual Wallet',
+          value: wallet.type == 'joint' ? 'Joint Ikofi' : 'Individual Ikofi',
           customValue: Row(
             children: [
               Icon(wallet.type == 'joint' ? Icons.groups : Icons.person, size: 16, color: AppTheme.primaryColor),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  wallet.type == 'joint' ? 'Joint Wallet' : 'Individual Wallet',
+                  wallet.type == 'joint' ? 'Joint Ikofi' : 'Individual Ikofi',
                   style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2868,7 +2879,7 @@ class _WalletDetailsSheet extends StatelessWidget {
           ),
         ),
         DetailRow(
-          label: 'Wallet ID',
+          label: 'Ikofi ID',
           value: wallet.id,
           customValue: Row(
             children: [

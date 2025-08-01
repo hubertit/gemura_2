@@ -96,7 +96,7 @@ class _DashboardTabState extends State<_DashboardTab> {
   List<Wallet> get homeWallets => [
     Wallet(
       id: 'WALLET-1',
-      name: 'Main Wallet',
+      name: 'Main Ikofi',
       balance: 250000,
       currency: 'RWF',
       type: 'individual',
@@ -107,7 +107,7 @@ class _DashboardTabState extends State<_DashboardTab> {
     ),
     Wallet(
       id: 'WALLET-2',
-      name: 'Joint Wallet',
+      name: 'Joint Ikofi',
       balance: 1200000,
       currency: 'RWF',
       type: 'joint',
@@ -887,9 +887,9 @@ class _TopUpSheetState extends State<_TopUpSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Top Up Wallet', style: AppTheme.titleMedium, textAlign: TextAlign.center),
+            Text('Top Up Ikofi', style: AppTheme.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: AppTheme.spacing16),
-            Text('To Wallet', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+            Text('To Ikofi', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: AppTheme.spacing8),
             DropdownButtonFormField<Wallet>(
               value: _selectedWallet,
@@ -902,7 +902,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                 child: Text('${w.name} (${w.balance.toStringAsFixed(0)} ${w.currency})'),
               )).toList(),
               onChanged: (w) => setState(() => _selectedWallet = w),
-              validator: (w) => w == null ? 'Select a wallet' : null,
+              validator: (w) => w == null ? 'Select an ikofi' : null,
             ),
             const SizedBox(height: AppTheme.spacing16),
             Text('Amount', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),

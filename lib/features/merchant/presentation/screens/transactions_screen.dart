@@ -154,7 +154,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   List<Wallet> get mockWallets => [
     Wallet(
       id: 'WALLET-1',
-      name: 'Main Wallet',
+      name: 'Main Ikofi',
       balance: 250000,
       currency: 'RWF',
       type: 'individual',
@@ -165,7 +165,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     ),
     Wallet(
       id: 'WALLET-2',
-      name: 'Joint Wallet',
+      name: 'Joint Ikofi',
       balance: 1200000,
       currency: 'RWF',
       type: 'joint',

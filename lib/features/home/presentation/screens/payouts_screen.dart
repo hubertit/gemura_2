@@ -193,7 +193,7 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
   final List<Wallet> _wallets = [
     Wallet(
       id: 'WALLET-1',
-      name: 'Main Wallet',
+      name: 'Main Ikofi',
       balance: 250000,
       currency: 'RWF',
       type: 'individual',
@@ -204,7 +204,7 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
     ),
     Wallet(
       id: 'WALLET-2',
-      name: 'Joint Wallet',
+      name: 'Joint Ikofi',
       balance: 1200000,
       currency: 'RWF',
       type: 'joint',
@@ -271,7 +271,7 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
           children: [
             Text('Initiate Payout', style: AppTheme.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: AppTheme.spacing16),
-            Text('From Wallet', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+            Text('From Ikofi', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: AppTheme.spacing8),
             DropdownButtonFormField<Wallet>(
               value: _selectedWallet,
@@ -284,7 +284,7 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
                 child: Text('${w.name} (${w.balance.toStringAsFixed(0)} ${w.currency})'),
               )).toList(),
               onChanged: (w) => setState(() => _selectedWallet = w),
-              validator: (w) => w == null ? 'Select a wallet' : null,
+              validator: (w) => w == null ? 'Select an ikofi' : null,
             ),
             const SizedBox(height: AppTheme.spacing16),
             Text('Amount', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600)),
