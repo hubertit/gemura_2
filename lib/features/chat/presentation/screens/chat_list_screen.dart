@@ -15,10 +15,14 @@ class ChatListScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatListScreenState extends ConsumerState<ChatListScreen> {
+  String _selectedCategory = 'All';
+
   @override
   Widget build(BuildContext context) {
-    final chats = ref.watch(activeChatsProvider);
-    final chatStats = ref.watch(chatStatsProvider);
+    final allChats = ref.watch(activeChatsProvider);
+    
+    // Filter chats based on selected category
+    final chats = _getFilteredChats(allChats, _selectedCategory);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -51,15 +55,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildCategoryChip('All', true),
+                  _buildCategoryChip('All', _selectedCategory == 'All'),
                   const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('MCC', false),
+                  _buildCategoryChip('MCC', _selectedCategory == 'MCC'),
                   const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('RAB', false),
+                  _buildCategoryChip('RAB', _selectedCategory == 'RAB'),
                   const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('Friends', false),
+                  _buildCategoryChip('Friends', _selectedCategory == 'Friends'),
                   const SizedBox(width: AppTheme.spacing8),
-                  _buildCategoryChip('Groups', false),
+                  _buildCategoryChip('Groups', _selectedCategory == 'Groups'),
                   const SizedBox(width: AppTheme.spacing8),
                   // Plus Button (now scrolls with others)
                   IconButton(
@@ -106,7 +110,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Text(
-                    '${chatStats['totalChats']} groups • ${chatStats['totalUnreadMessages']} unread',
+                    '${chats.length} groups • ${_getUnreadCount(chats)} unread',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                       fontSize: 13,
@@ -314,7 +318,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   Widget _buildCategoryChip(String label, bool isSelected) {
     return GestureDetector(
       onTap: () {
-        // TODO: Implement category filtering
+        setState(() {
+          _selectedCategory = label;
+        });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -339,6 +345,36 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         ),
       ),
     );
+  }
+
+  List<ChatRoom> _getFilteredChats(List<ChatRoom> allChats, String category) {
+    if (category == 'All') {
+      return allChats;
+    }
+    
+    return allChats.where((chat) {
+      final chatName = chat.name.toLowerCase();
+      final walletName = chat.wallet.name.toLowerCase();
+      
+      switch (category) {
+        case 'MCC':
+          return chatName.contains('mcc') || walletName.contains('mcc');
+        case 'RAB':
+          return chatName.contains('rab') || walletName.contains('rab');
+        case 'Friends':
+          return chatName.contains('friend') || chatName.contains('weekend') || 
+                 walletName.contains('friend') || walletName.contains('weekend');
+        case 'Groups':
+          return chatName.contains('group') || chatName.contains('study') || 
+                 walletName.contains('group') || walletName.contains('study');
+        default:
+          return false;
+      }
+    }).toList();
+  }
+
+  int _getUnreadCount(List<ChatRoom> chats) {
+    return chats.fold(0, (sum, chat) => sum + chat.unreadCount);
   }
 
   void _showNewChatOptions() {
