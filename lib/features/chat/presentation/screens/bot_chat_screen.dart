@@ -453,17 +453,12 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
               ),
             ),
           
-          // Input area
+          // Message Input
           Container(
-            padding: const EdgeInsets.all(AppTheme.spacing16),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              border: Border(
-                top: BorderSide(
-                  color: AppTheme.thinBorderColor,
-                  width: 1,
-                ),
-              ),
+            margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spacing12,
+              vertical: AppTheme.spacing8,
             ),
             child: Row(
               children: [
@@ -495,7 +490,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                     child: TextField(
                       controller: _messageController,
                       decoration: const InputDecoration(
-                        hintText: 'Type your message...',
+                        hintText: 'Type a message',
                         hintStyle: TextStyle(fontSize: 14),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
