@@ -318,114 +318,97 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     final isUser = message.isUser;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
       child: Row(
         mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.primaryColor,
-                    AppTheme.primaryColor.withOpacity(0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-              ),
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
               child: const Icon(
                 Icons.smart_toy,
-                color: Colors.white,
+                color: AppTheme.primaryColor,
                 size: 18,
               ),
             ),
             const SizedBox(width: AppTheme.spacing8),
           ],
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              child: Column(
-                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  // Message bubble with tail
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-                    decoration: BoxDecoration(
-                      color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(AppTheme.borderRadius12),
-                        topRight: const Radius.circular(AppTheme.borderRadius12),
-                        bottomLeft: Radius.circular(isUser ? AppTheme.borderRadius12 : 4),
-                        bottomRight: Radius.circular(isUser ? 4 : AppTheme.borderRadius12),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                if (!isUser)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
+                    child: Text(
+                      'Gemura Assistant',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
                       ),
-                      border: isUser ? null : Border.all(
-                        color: AppTheme.thinBorderColor,
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
+                    ),
+                  ),
+                CustomPaint(
+                  painter: ChatBubblePainter(
+                    isFromCurrentUser: isUser,
+                    color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                      vertical: AppTheme.spacing12,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           message.text,
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: isUser ? Colors.white : AppTheme.textPrimaryColor,
-                            height: 1.4,
+                          style: AppTheme.bodySmall.copyWith(
+                            color: isUser ? AppTheme.surfaceColor : AppTheme.textPrimaryColor,
+                            fontSize: 14,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('HH:mm').format(message.timestamp),
-                          style: AppTheme.bodySmall.copyWith(
-                            color: isUser ? Colors.white70 : AppTheme.textSecondaryColor,
-                            fontSize: 11,
-                          ),
+                        const SizedBox(height: AppTheme.spacing2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              DateFormat('HH:mm').format(message.timestamp),
+                              style: AppTheme.bodySmall.copyWith(
+                                color: isUser 
+                                    ? AppTheme.surfaceColor.withOpacity(0.7)
+                                    : AppTheme.textSecondaryColor,
+                                fontSize: 10,
+                              ),
+                            ),
+                            if (isUser) ...[
+                              const SizedBox(width: AppTheme.spacing2),
+                              const Icon(
+                                Icons.done_all,
+                                size: 12,
+                                color: Colors.white70,
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  // Tail
-                  Container(
-                    margin: EdgeInsets.only(
-                      left: isUser ? 0 : 12,
-                      right: isUser ? 12 : 0,
-                    ),
-                    child: CustomPaint(
-                      size: const Size(8, 8),
-                      painter: MessageTailPainter(
-                        isUser: isUser,
-                        color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
-                        borderColor: isUser ? null : AppTheme.thinBorderColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           if (isUser) ...[
             const SizedBox(width: AppTheme.spacing8),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-              ),
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
               child: const Icon(
                 Icons.person,
                 color: AppTheme.primaryColor,
@@ -440,60 +423,46 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
 
   Widget _buildTypingIndicator() {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryColor,
-                  AppTheme.primaryColor.withOpacity(0.8),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-            ),
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
             child: const Icon(
               Icons.smart_toy,
-              color: Colors.white,
+              color: AppTheme.primaryColor,
               size: 18,
             ),
           ),
           const SizedBox(width: AppTheme.spacing8),
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Typing bubble with tail
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppTheme.borderRadius12),
-                        topRight: Radius.circular(AppTheme.borderRadius12),
-                        bottomLeft: Radius.circular(4),
-                        bottomRight: Radius.circular(AppTheme.borderRadius12),
-                      ),
-                      border: Border.all(
-                        color: AppTheme.thinBorderColor,
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
+                  child: Text(
+                    'Gemura Assistant',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                CustomPaint(
+                  painter: ChatBubblePainter(
+                    isFromCurrentUser: false,
+                    color: AppTheme.surfaceColor,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                      vertical: AppTheme.spacing12,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -506,20 +475,8 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                       ],
                     ),
                   ),
-                  // Tail
-                  Container(
-                    margin: const EdgeInsets.only(left: 12),
-                    child: CustomPaint(
-                      size: const Size(8, 8),
-                      painter: MessageTailPainter(
-                        isUser: false,
-                        color: AppTheme.surfaceColor,
-                        borderColor: AppTheme.thinBorderColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -562,16 +519,11 @@ enum BotMessageType {
   data,
 }
 
-class MessageTailPainter extends CustomPainter {
-  final bool isUser;
+class ChatBubblePainter extends CustomPainter {
+  final bool isFromCurrentUser;
   final Color color;
-  final Color? borderColor;
 
-  MessageTailPainter({
-    required this.isUser,
-    required this.color,
-    this.borderColor,
-  });
+  ChatBubblePainter({required this.isFromCurrentUser, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -579,35 +531,40 @@ class MessageTailPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    Paint? borderPaint;
-    if (borderColor != null) {
-      borderPaint = Paint()
-        ..color = borderColor!
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1;
-    }
-
     final path = Path();
     
-    if (isUser) {
-      // User message tail (right side)
-      path.moveTo(0, 0);
-      path.lineTo(size.width, 4);
-      path.lineTo(0, size.height);
+    if (isFromCurrentUser) {
+      // Sent message bubble (right side) with tail
+      path.moveTo(12, 0);
+      path.lineTo(size.width - 12, 0);
+      path.quadraticBezierTo(size.width, 0, size.width, 12);
+      path.lineTo(size.width, size.height - 12);
+      path.quadraticBezierTo(size.width, size.height, size.width - 12, size.height);
+      path.lineTo(size.width - 20, size.height);
+      path.lineTo(size.width - 8, size.height + 8);
+      path.lineTo(size.width - 12, size.height);
+      path.lineTo(12, size.height);
+      path.quadraticBezierTo(0, size.height, 0, size.height - 12);
+      path.lineTo(0, 12);
+      path.quadraticBezierTo(0, 0, 12, 0);
       path.close();
     } else {
-      // Bot message tail (left side)
-      path.moveTo(size.width, 0);
-      path.lineTo(0, 4);
-      path.lineTo(size.width, size.height);
+      // Received message bubble (left side) with tail pointing left
+      path.moveTo(12, 0);
+      path.lineTo(size.width - 12, 0);
+      path.quadraticBezierTo(size.width, 0, size.width, 12);
+      path.lineTo(size.width, size.height - 12);
+      path.quadraticBezierTo(size.width, size.height, size.width - 12, size.height);
+      path.lineTo(20, size.height);
+      path.lineTo(8, size.height + 8);
+      path.lineTo(12, size.height);
+      path.quadraticBezierTo(0, size.height, 0, size.height - 12);
+      path.lineTo(0, 12);
+      path.quadraticBezierTo(0, 0, 12, 0);
       path.close();
     }
 
     canvas.drawPath(path, paint);
-    
-    if (borderPaint != null) {
-      canvas.drawPath(path, borderPaint);
-    }
   }
 
   @override
