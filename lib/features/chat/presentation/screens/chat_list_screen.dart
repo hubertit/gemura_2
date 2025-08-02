@@ -132,9 +132,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 ? _buildEmptyState()
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
-                    itemCount: chats.length,
+                    itemCount: chats.length + 1, // +1 for bot chat
                     itemBuilder: (context, index) {
-                      final chat = chats[index];
+                      if (index == 0) {
+                        return _buildBotChatTile(context);
+                      }
+                      final chat = chats[index - 1];
                       return _buildChatTile(context, ref, chat);
                     },
                   ),
@@ -313,6 +316,138 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => ChatScreen(chatRoom: chat),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBotChatTile(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.primaryColor.withOpacity(0.1),
+            AppTheme.primaryColor.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        border: Border.all(
+          color: AppTheme.primaryColor.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing8,
+        ),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.primaryColor,
+                AppTheme.primaryColor.withOpacity(0.8),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.smart_toy,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        title: Row(
+          children: [
+            Text(
+              'Gemura Assistant',
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimaryColor,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'AI',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Text(
+              'Your AI assistant for milk collection',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 12,
+                  color: AppTheme.primaryColor,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Powered by AI • Always online',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+          ),
+          child: Icon(
+            Icons.chat_bubble_outline,
+            color: AppTheme.primaryColor,
+            size: 20,
+          ),
+        ),
+        onTap: () {
+          // TODO: Navigate to bot chat screen
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Bot chat coming soon!'),
+              backgroundColor: AppTheme.snackbarInfoColor,
             ),
           );
         },
