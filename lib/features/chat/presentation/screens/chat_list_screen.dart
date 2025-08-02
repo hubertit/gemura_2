@@ -7,6 +7,7 @@ import '../providers/chat_provider.dart';
 import '../../domain/models/chat_room.dart';
 import 'chat_screen.dart';
 import 'create_list_screen.dart';
+import 'bot_chat_screen.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -443,11 +444,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           ),
         ),
         onTap: () {
-          // TODO: Navigate to bot chat screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Bot chat coming soon!'),
-              backgroundColor: AppTheme.snackbarInfoColor,
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const BotChatScreen(),
             ),
           );
         },
