@@ -296,28 +296,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     );
   }
 
-  void _showClearConversationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Conversation'),
-        content: const Text('Are you sure you want to clear all conversation history? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _clearConversation();
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Future<void> _clearConversation() async {
     await ConversationStorageService.clearConversation();
@@ -392,28 +371,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'clear') {
-                _showClearConversationDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline, color: AppTheme.textSecondaryColor),
-                    SizedBox(width: AppTheme.spacing8),
-                    Text('Clear Conversation'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        actions: const [],
       ),
       body: Column(
         children: [
