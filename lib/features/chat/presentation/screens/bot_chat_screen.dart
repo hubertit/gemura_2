@@ -65,10 +65,11 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
       _isTyping = true;
     });
 
-    // Simulate typing delay
-    Future.delayed(const Duration(seconds: 1), () {
-      String response = _generateBotResponse(userMessage);
-      
+    // Simulate realistic typing delay based on message length
+    final response = _generateBotResponse(userMessage);
+    final typingDelay = Duration(milliseconds: 500 + (response.length * 20).clamp(500, 2000));
+
+    Future.delayed(typingDelay, () {
       _messages.add(
         BotMessage(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -83,7 +84,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
         _isTyping = false;
       });
 
-      // Scroll to bottom
+      // Scroll to bottom with smooth animation
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
@@ -347,30 +348,69 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-              decoration: BoxDecoration(
-                color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                border: isUser ? null : Border.all(
-                  color: AppTheme.thinBorderColor,
-                  width: 1,
-                ),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.text,
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: isUser ? Colors.white : AppTheme.textPrimaryColor,
+                  // Message bubble with tail
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
+                    decoration: BoxDecoration(
+                      color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(AppTheme.borderRadius12),
+                        topRight: const Radius.circular(AppTheme.borderRadius12),
+                        bottomLeft: Radius.circular(isUser ? AppTheme.borderRadius12 : 4),
+                        bottomRight: Radius.circular(isUser ? 4 : AppTheme.borderRadius12),
+                      ),
+                      border: isUser ? null : Border.all(
+                        color: AppTheme.thinBorderColor,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message.text,
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: isUser ? Colors.white : AppTheme.textPrimaryColor,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat('HH:mm').format(message.timestamp),
+                          style: AppTheme.bodySmall.copyWith(
+                            color: isUser ? Colors.white70 : AppTheme.textSecondaryColor,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('HH:mm').format(message.timestamp),
-                    style: AppTheme.bodySmall.copyWith(
-                      color: isUser ? Colors.white70 : AppTheme.textSecondaryColor,
-                      fontSize: 11,
+                  // Tail
+                  Container(
+                    margin: EdgeInsets.only(
+                      left: isUser ? 0 : 12,
+                      right: isUser ? 12 : 0,
+                    ),
+                    child: CustomPaint(
+                      size: const Size(8, 8),
+                      painter: MessageTailPainter(
+                        isUser: isUser,
+                        color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
+                        borderColor: isUser ? null : AppTheme.thinBorderColor,
+                      ),
                     ),
                   ),
                 ],
@@ -424,25 +464,62 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
             ),
           ),
           const SizedBox(width: AppTheme.spacing8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-              border: Border.all(
-                color: AppTheme.thinBorderColor,
-                width: 1,
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTypingDot(0),
-                const SizedBox(width: 4),
-                _buildTypingDot(1),
-                const SizedBox(width: 4),
-                _buildTypingDot(2),
-              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Typing bubble with tail
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppTheme.borderRadius12),
+                        topRight: Radius.circular(AppTheme.borderRadius12),
+                        bottomLeft: Radius.circular(4),
+                        bottomRight: Radius.circular(AppTheme.borderRadius12),
+                      ),
+                      border: Border.all(
+                        color: AppTheme.thinBorderColor,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTypingDot(0),
+                        const SizedBox(width: 4),
+                        _buildTypingDot(1),
+                        const SizedBox(width: 4),
+                        _buildTypingDot(2),
+                      ],
+                    ),
+                  ),
+                  // Tail
+                  Container(
+                    margin: const EdgeInsets.only(left: 12),
+                    child: CustomPaint(
+                      size: const Size(8, 8),
+                      painter: MessageTailPainter(
+                        isUser: false,
+                        color: AppTheme.surfaceColor,
+                        borderColor: AppTheme.thinBorderColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -483,4 +560,56 @@ enum BotMessageType {
   text,
   action,
   data,
+}
+
+class MessageTailPainter extends CustomPainter {
+  final bool isUser;
+  final Color color;
+  final Color? borderColor;
+
+  MessageTailPainter({
+    required this.isUser,
+    required this.color,
+    this.borderColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    Paint? borderPaint;
+    if (borderColor != null) {
+      borderPaint = Paint()
+        ..color = borderColor!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+    }
+
+    final path = Path();
+    
+    if (isUser) {
+      // User message tail (right side)
+      path.moveTo(0, 0);
+      path.lineTo(size.width, 4);
+      path.lineTo(0, size.height);
+      path.close();
+    } else {
+      // Bot message tail (left side)
+      path.moveTo(size.width, 0);
+      path.lineTo(0, 4);
+      path.lineTo(size.width, size.height);
+      path.close();
+    }
+
+    canvas.drawPath(path, paint);
+    
+    if (borderPaint != null) {
+      canvas.drawPath(path, borderPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 } 
