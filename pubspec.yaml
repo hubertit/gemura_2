@@ -63,6 +63,7 @@ dependencies:
   d_chart: ^2.8.0
   share_plus: ^11.0.0
   contacts_service: ^0.6.3
+  flutter_markdown: ^0.6.18
 
 dev_dependencies:
   flutter_test:
