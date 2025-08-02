@@ -62,7 +62,7 @@ class ChatGptService {
   String _generateMockResponse(String userMessage) {
     final message = userMessage.toLowerCase();
     
-    // Short, human-like responses
+    // More varied, natural responses
     if (message.contains('supplier') || message.contains('register')) {
       return 'Sure! I can help with that. What info do you have about the supplier? 👋';
     } else if (message.contains('customer')) {
@@ -74,10 +74,20 @@ class ChatGptService {
     } else if (message.contains('price') || message.contains('cost')) {
       return 'Prices are 300-400 Frw/L depending on quality and location. What area are you in? 💰';
     } else if (message.contains('help') || message.contains('what can you do')) {
-      return 'Hey! 😊 I help with suppliers, customers, collections, sales, pricing - anything milk business related. What do you need?';
+      return 'I help with suppliers, customers, collections, sales, pricing - anything milk business related. What do you need? 😊';
+    } else if (message.contains('who are you') || message.contains('what\'s your name')) {
+      return 'I\'m Karake, your milk collection specialist! I help farmers with suppliers, customers, collections, sales, and pricing. How can I assist you today?';
+    } else if (message.contains('hello') || message.contains('hi')) {
+      return 'Hello! How can I help you with your milk business today?';
     } else {
-      // Short, friendly response
-      return 'Hey! 👋 What can I help you with today?';
+      // More varied responses
+      final responses = [
+        'How can I help you with your milk business today?',
+        'What would you like to know about milk collection?',
+        'I\'m here to help with your dairy business. What do you need?',
+        'Ready to assist with suppliers, customers, or collections. What\'s on your mind?',
+      ];
+      return responses[DateTime.now().millisecond % responses.length];
     }
   }
 } 
