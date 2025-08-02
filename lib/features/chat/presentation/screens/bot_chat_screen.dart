@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../../core/services/chat_gpt_service.dart';
 
 class BotChatScreen extends ConsumerStatefulWidget {
   const BotChatScreen({super.key});
@@ -60,16 +62,30 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     _simulateBotResponse(text);
   }
 
-  void _simulateBotResponse(String userMessage) {
+  void _simulateBotResponse(String userMessage) async {
     setState(() {
       _isTyping = true;
     });
 
-    // Simulate realistic typing delay based on message length
-    final response = _generateBotResponse(userMessage);
-    final typingDelay = Duration(milliseconds: 500 + (response.length * 20).clamp(500, 2000));
+    try {
+      // Convert messages to format expected by ChatGPT service
+      final conversationHistory = _messages.map((msg) => {
+        'text': msg.text,
+        'isUser': msg.isUser,
+      }).toList();
 
-    Future.delayed(typingDelay, () {
+      // Get response from ChatGPT
+      final response = await ChatGptService().generateResponse(userMessage, conversationHistory);
+      
+      // Calculate typing delay based on response length
+      final typingDelay = Duration(
+        milliseconds: AppConfig.typingDelayMinMs + 
+        (response.length * 20).clamp(0, AppConfig.typingDelayMaxMs - AppConfig.typingDelayMinMs)
+      );
+
+      // Simulate typing delay
+      await Future.delayed(typingDelay);
+
       _messages.add(
         BotMessage(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -94,28 +110,25 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
           );
         }
       });
-    });
-  }
-
-  String _generateBotResponse(String userMessage) {
-    final message = userMessage.toLowerCase();
-    
-    if (message.contains('supplier') || message.contains('register')) {
-      return 'I can help you register a new supplier! Would you like me to open the supplier registration form?';
-    } else if (message.contains('customer')) {
-      return 'I can help you register a new customer! Would you like me to open the customer registration form?';
-    } else if (message.contains('collection') || message.contains('collect')) {
-      return 'I can help you record a milk collection! Which supplier are you collecting from?';
-    } else if (message.contains('sale') || message.contains('sell')) {
-      return 'I can help you record a milk sale! Which customer are you selling to?';
-    } else if (message.contains('price') || message.contains('cost')) {
-      return 'Current milk prices in Rwanda typically range from 300-400 Frw/L for suppliers. The exact price depends on quality, location, and season.';
-    } else if (message.contains('help') || message.contains('what can you do')) {
-      return 'I can help you with:\n\n• Registering suppliers and customers\n• Recording collections and sales\n• Searching for information\n• Getting reports and analytics\n• Answering questions about milk collection\n\nJust ask me what you need!';
-    } else {
-      return 'I understand you said: "$userMessage". I\'m still learning, but I can help you with milk collection tasks. Try asking me about registering suppliers, recording collections, or getting pricing information!';
+    } catch (e) {
+      // Handle error gracefully
+      setState(() {
+        _isTyping = false;
+      });
+      
+      _messages.add(
+        BotMessage(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          text: 'Sorry, I\'m having trouble connecting right now. Please try again in a moment.',
+          isUser: false,
+          timestamp: DateTime.now(),
+          messageType: BotMessageType.text,
+        ),
+      );
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

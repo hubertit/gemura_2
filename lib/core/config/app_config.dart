@@ -2,9 +2,26 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 class AppConfig {
+  // ChatGPT API Configuration
+  static const String chatGptApiKey = 'YOUR_CHATGPT_API_KEY_HERE'; // Replace with your actual API key
+  static const String chatGptApiUrl = 'https://api.openai.com/v1/chat/completions';
+  
+  // App Configuration
   static const String appName = 'Gemura';
   static const String appVersion = '1.0.0';
-  static const String apiBaseUrl = '';
+  
+  // Assistant Configuration
+  static const String assistantName = 'Karake';
+  static const String assistantRole = 'You are Karake, an AI assistant for the Gemura milk collection app. You help users with registering suppliers and customers, recording milk collections and sales, searching for information, getting reports and analytics, and answering questions about milk collection in Rwanda. Be helpful, friendly, and concise in your responses.';
+  
+  // API Configuration
+  static const int apiTimeoutSeconds = 30;
+  static const int maxRetries = 3;
+  
+  // Chat Configuration
+  static const int maxMessageLength = 1000;
+  static const int typingDelayMinMs = 500;
+  static const int typingDelayMaxMs = 2000;
 
   // API Endpoints
   static const String authEndpoint = '/auth';
@@ -88,7 +105,7 @@ class AppConfig {
   static Dio dioInstance() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: apiBaseUrl,
+        baseUrl: '', // apiBaseUrl is removed, so we'll use an empty string or a default
         connectTimeout: const Duration(milliseconds: connectionTimeout),
         receiveTimeout: const Duration(milliseconds: receiveTimeout),
         headers: {
