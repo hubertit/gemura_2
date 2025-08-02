@@ -196,9 +196,15 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.search, color: AppTheme.primaryColor),
+            Icon(Icons.search, color: AppTheme.primaryColor, size: 20),
             const SizedBox(width: AppTheme.spacing8),
-            const Text('Search Customers'),
+            Text(
+              'Search Customers',
+              style: AppTheme.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -219,13 +225,6 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                  borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
-                ),
               ),
               onChanged: (value) {
                 setState(() {});

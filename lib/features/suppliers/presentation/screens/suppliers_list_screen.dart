@@ -205,9 +205,15 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.search, color: AppTheme.primaryColor),
+            Icon(Icons.search, color: AppTheme.primaryColor, size: 20),
             const SizedBox(width: AppTheme.spacing8),
-            const Text('Search Suppliers'),
+            Text(
+              'Search Suppliers',
+              style: AppTheme.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -228,13 +234,6 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                  borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
-                ),
               ),
               onChanged: (value) {
                 setState(() {});
