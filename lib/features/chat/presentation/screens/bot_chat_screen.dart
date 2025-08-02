@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/services/chat_gpt_service.dart';
+import '../../../../core/services/conversation_storage_service.dart';
 
 class BotChatScreen extends ConsumerStatefulWidget {
   const BotChatScreen({super.key});
@@ -21,16 +22,40 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Add welcome message
-    _messages.add(
-      BotMessage(
-        id: '1',
-        text: 'Hey! 👋 I\'m Karake, your milk collection specialist. I help farmers with suppliers, customers, collections, sales, and pricing. What can I help you with today?',
-        isUser: false,
-        timestamp: DateTime.now(),
+    _loadConversation();
+  }
+
+  Future<void> _loadConversation() async {
+    // Load previous conversation from storage
+    final savedMessages = await ConversationStorageService.loadConversation();
+    
+    if (savedMessages.isNotEmpty) {
+      // Convert saved messages to BotMessage objects
+      final loadedMessages = savedMessages.map((msg) => BotMessage(
+        id: msg['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        text: msg['text'] ?? '',
+        isUser: msg['isUser'] ?? false,
+        timestamp: msg['timestamp'] != null 
+            ? DateTime.parse(msg['timestamp']) 
+            : DateTime.now(),
         messageType: BotMessageType.text,
-      ),
-    );
+      )).toList();
+      
+      setState(() {
+        _messages.addAll(loadedMessages);
+      });
+    } else {
+      // Add welcome message if no previous conversation
+      _messages.add(
+        BotMessage(
+          id: '1',
+          text: 'Hey! 👋 I\'m Karake, your milk collection specialist. I help farmers with suppliers, customers, collections, sales, and pricing. What can I help you with today?',
+          isUser: false,
+          timestamp: DateTime.now(),
+          messageType: BotMessageType.text,
+        ),
+      );
+    }
   }
 
   @override
@@ -58,8 +83,67 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     _messageController.clear();
     setState(() {});
 
+    // Save conversation after user message
+    _saveConversation();
+
     // Simulate bot response
     _simulateBotResponse(text);
+  }
+
+  Future<void> _saveConversation() async {
+    // Convert messages to format for storage
+    final messagesForStorage = _messages.map((msg) => {
+      'id': msg.id,
+      'text': msg.text,
+      'isUser': msg.isUser,
+      'timestamp': msg.timestamp.toIso8601String(),
+    }).toList();
+    
+    await ConversationStorageService.saveConversation(messagesForStorage);
+  }
+
+  void _showClearConversationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Conversation'),
+        content: const Text('Are you sure you want to clear all conversation history? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _clearConversation();
+            },
+            child: const Text('Clear', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _clearConversation() async {
+    // Clear from storage
+    await ConversationStorageService.clearConversation();
+    
+    // Clear from UI
+    setState(() {
+      _messages.clear();
+    });
+    
+    // Add welcome message
+    _messages.add(
+      BotMessage(
+        id: '1',
+        text: 'Hey! 👋 I\'m Karake, your milk collection specialist. I help farmers with suppliers, customers, collections, sales, and pricing. What can I help you with today?',
+        isUser: false,
+        timestamp: DateTime.now(),
+        messageType: BotMessageType.text,
+      ),
+    );
   }
 
   void _simulateBotResponse(String userMessage) async {
@@ -99,6 +183,9 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
       setState(() {
         _isTyping = false;
       });
+
+      // Save conversation after bot response
+      _saveConversation();
 
       // Scroll to bottom with smooth animation
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -183,11 +270,25 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Add bot chat options
+            onSelected: (value) {
+              if (value == 'clear') {
+                _showClearConversationDialog();
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, color: AppTheme.textSecondaryColor),
+                    SizedBox(width: AppTheme.spacing8),
+                    Text('Clear Conversation'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

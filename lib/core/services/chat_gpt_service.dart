@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import 'conversation_storage_service.dart';
 
 class ChatGptService {
   static final ChatGptService _instance = ChatGptService._internal();
@@ -9,6 +10,16 @@ class ChatGptService {
 
   Future<String> generateResponse(String userMessage, List<Map<String, dynamic>> conversationHistory) async {
     try {
+      // Get conversation context from storage
+      final conversationSummary = await ConversationStorageService.getConversationSummary();
+      final isRecent = await ConversationStorageService.isRecentConversation();
+      
+      // Create context-aware system message
+      String systemMessage = AppConfig.assistantRole;
+      if (isRecent && conversationSummary.isNotEmpty) {
+        systemMessage += '\n\nPrevious conversation context:\n$conversationSummary';
+      }
+      
       final response = await http.post(
         Uri.parse(AppConfig.chatGptApiUrl),
         headers: {
@@ -20,7 +31,7 @@ class ChatGptService {
           'messages': [
             {
               'role': 'system',
-              'content': AppConfig.assistantRole,
+              'content': systemMessage,
             },
             ...conversationHistory.map((msg) => {
               'role': msg['isUser'] ? 'user' : 'assistant',
