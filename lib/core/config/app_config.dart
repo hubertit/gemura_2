@@ -8,7 +8,7 @@ class AppConfig {
   
   // App Configuration
   static const String appName = 'Gemura';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '2.0.0';
   
   // Assistant Configuration
   static const String assistantName = 'Karake';
