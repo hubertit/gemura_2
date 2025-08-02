@@ -369,7 +369,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             ],
           ),
           child: const Icon(
-            Icons.smart_toy,
+            Icons.person,
             color: Colors.white,
             size: 24,
           ),
@@ -391,7 +391,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
-                          'AI',
+                          'EXPERT',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -414,7 +414,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Powered by AI • Always online',
+                            'Milk Collection Expert • Online',
                             style: AppTheme.bodySmall.copyWith(
                               color: AppTheme.primaryColor,
                               fontSize: 11,

@@ -25,7 +25,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     _messages.add(
       BotMessage(
         id: '1',
-        text: 'Hello! I\'m Karake, your AI assistant. I can help you with:\n\n• Registering suppliers and customers\n• Recording milk collections and sales\n• Searching for information\n• Getting reports and analytics\n• Answering questions about milk collection\n\nHow can I help you today?',
+        text: 'Hey there! 👋 I\'m Karake, your milk collection specialist here at Gemura. I\'ve been working in the dairy industry for over 5 years, helping farmers and businesses like yours grow their milk collection and sales.\n\nI can help you with everything from registering new suppliers and customers, to tracking your collections and sales, pricing strategies, and even business growth tips! 🐄💪\n\nWhat can I help you with today?',
         isUser: false,
         timestamp: DateTime.now(),
         messageType: BotMessageType.text,
@@ -151,11 +151,11 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                 ),
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
               ),
-              child: const Icon(
-                Icons.smart_toy,
-                color: Colors.white,
-                size: 18,
-              ),
+                                  child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 18,
+                    ),
             ),
             const SizedBox(width: AppTheme.spacing8),
             Column(
@@ -169,7 +169,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                   ),
                 ),
                 Text(
-                  'AI Assistant',
+                  'Milk Collection Specialist',
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.textSecondaryColor,
                     fontSize: 11,
@@ -229,7 +229,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                       borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                     ),
                     child: const Icon(
-                      Icons.smart_toy,
+                      Icons.person,
                       color: Colors.white,
                       size: 18,
                     ),
@@ -360,7 +360,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
               radius: 14,
               backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
               child: const Icon(
-                Icons.smart_toy,
+                Icons.person,
                 color: AppTheme.primaryColor,
                 size: 18,
               ),
@@ -462,7 +462,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
             radius: 14,
             backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
             child: const Icon(
-              Icons.smart_toy,
+              Icons.person,
               color: AppTheme.primaryColor,
               size: 18,
             ),
@@ -478,7 +478,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
                   child: Text(
-                    'Karake',
+                    AppConfig.assistantName,
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                       fontWeight: FontWeight.w500,
