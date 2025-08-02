@@ -139,3 +139,21 @@ lib/
 
 1. **Clone the repository**
    ```
+
+### **ChatGPT API Setup**
+
+To enable the AI assistant (Karake), you need to set up your ChatGPT API key:
+
+1. Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Open `lib/core/config/app_config.dart`
+3. Replace `YOUR_CHATGPT_API_KEY_HERE` with your actual API key:
+   ```dart
+   static const String chatGptApiKey = 'your-actual-api-key-here';
+   ```
+
+**Note**: The API key is stored in the config file for development purposes. For production, consider using environment variables or secure storage.
+
+### **Installation**
+
+1. **Clone the repository**
+   ```
