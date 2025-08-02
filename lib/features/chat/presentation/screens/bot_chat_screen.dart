@@ -378,7 +378,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
                     child: Text(
-                      'Gemura Assistant',
+                      'Karake',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondaryColor,
                         fontWeight: FontWeight.w500,

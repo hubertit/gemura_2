@@ -51,20 +51,22 @@ class ChatGptService {
   String _generateMockResponse(String userMessage) {
     final message = userMessage.toLowerCase();
     
+    // More natural, conversational responses that don't limit the conversation
     if (message.contains('supplier') || message.contains('register')) {
-      return 'I can help you register a new supplier! Would you like me to open the supplier registration form?';
+      return 'Hey there! 👋 I\'d be happy to help you register a new supplier! This is one of my favorite parts of the job - helping farmers build their networks. What information do you have about the supplier? I can walk you through the whole process step by step!';
     } else if (message.contains('customer')) {
-      return 'I can help you register a new customer! Would you like me to open the customer registration form?';
+      return 'Great! Adding new customers is always exciting - it means your business is growing! 🎉 I can help you register them in our system. Do you have their contact details ready? I\'ll make sure we capture everything we need to set up a smooth working relationship.';
     } else if (message.contains('collection') || message.contains('collect')) {
-      return 'I can help you record a milk collection! Which supplier are you collecting from?';
+      return 'Perfect! Recording collections is super important for tracking your business growth. 📊 I can help you log this collection properly. Which supplier are you collecting from today? And how much milk are we talking about?';
     } else if (message.contains('sale') || message.contains('sell')) {
-      return 'I can help you record a milk sale! Which customer are you selling to?';
+      return 'Awesome! Sales are the lifeblood of any business! 💪 I\'m here to help you record this sale properly. Which customer are you selling to? This will help me guide you through the right process.';
     } else if (message.contains('price') || message.contains('cost')) {
-      return 'Current milk prices in Rwanda typically range from 300-400 Frw/L for suppliers. The exact price depends on quality, location, and season.';
+      return 'Great question about pricing! 💰 From my experience working with farmers across Rwanda, current milk prices typically range from 300-400 Frw/L, but it really depends on quality, location, and season. What area are you working in? I can give you more specific advice!';
     } else if (message.contains('help') || message.contains('what can you do')) {
-      return 'I can help you with:\n\n• Registering suppliers and customers\n• Recording collections and sales\n• Searching for information\n• Getting reports and analytics\n• Answering questions about milk collection\n\nJust ask me what you need!';
+      return 'Hey! 😊 I\'m your milk collection specialist, and I\'m here to help you grow your business! I can assist with everything from registering suppliers and customers, to tracking your collections and sales, pricing strategies, quality control, and even business growth tips. What\'s on your mind today?';
     } else {
-      return 'I understand you said: "$userMessage". I\'m here to help you with milk collection tasks. Try asking me about registering suppliers, recording collections, or getting pricing information!';
+      // More natural, open-ended response that encourages conversation
+      return 'Hey there! 👋 Thanks for reaching out! I\'m here to help you with anything related to your milk collection business. Whether you want to chat about suppliers, customers, pricing, collections, sales, or just general business advice - I\'m your person! What\'s on your mind today?';
     }
   }
 } 
