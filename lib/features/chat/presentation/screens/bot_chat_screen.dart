@@ -25,7 +25,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     _messages.add(
       BotMessage(
         id: '1',
-        text: 'Hey there! 👋 I\'m Karake, your milk collection specialist here at Gemura. I\'ve been working in the dairy industry for over 5 years, helping farmers and businesses like yours grow their milk collection and sales.\n\nI can help you with everything from registering new suppliers and customers, to tracking your collections and sales, pricing strategies, and even business growth tips! 🐄💪\n\nWhat can I help you with today?',
+        text: 'Hey! 👋 I\'m Karake, your milk collection specialist. I help farmers with suppliers, customers, collections, sales, and pricing. What can I help you with today?',
         isUser: false,
         timestamp: DateTime.now(),
         messageType: BotMessageType.text,
