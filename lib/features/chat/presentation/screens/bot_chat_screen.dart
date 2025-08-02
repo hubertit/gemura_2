@@ -23,7 +23,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     _messages.add(
       BotMessage(
         id: '1',
-        text: 'Hello! I\'m your Gemura Assistant. I can help you with:\n\n• Registering suppliers and customers\n• Recording milk collections and sales\n• Searching for information\n• Getting reports and analytics\n• Answering questions about milk collection\n\nHow can I help you today?',
+        text: 'Hello! I\'m Karake, your AI assistant. I can help you with:\n\n• Registering suppliers and customers\n• Recording milk collections and sales\n• Searching for information\n• Getting reports and analytics\n• Answering questions about milk collection\n\nHow can I help you today?',
         isUser: false,
         timestamp: DateTime.now(),
         messageType: BotMessageType.text,
@@ -149,7 +149,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Gemura Assistant',
+                  'Karake',
                   style: AppTheme.titleMedium.copyWith(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimaryColor,
@@ -465,7 +465,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spacing2),
                   child: Text(
-                    'Gemura Assistant',
+                    'Karake',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                       fontWeight: FontWeight.w500,

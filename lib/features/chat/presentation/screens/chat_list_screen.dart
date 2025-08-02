@@ -374,63 +374,56 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             size: 24,
           ),
         ),
-        title: Row(
-          children: [
-            Text(
-              'Gemura Assistant',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacing4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'AI',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              'Your AI assistant for milk collection',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome,
-                  size: 12,
-                  color: AppTheme.primaryColor,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Powered by AI • Always online',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.primaryColor,
-                    fontSize: 11,
+                          title: Row(
+                    children: [
+                      Text(
+                        'Karake',
+                        style: AppTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spacing4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'AI',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            size: 12,
+                            color: AppTheme.primaryColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Powered by AI • Always online',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
         trailing: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
