@@ -68,22 +68,42 @@ class ChatBubblePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _BotChatScreenState extends ConsumerState<BotChatScreen> {
+class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTickerProviderStateMixin {
   final List<BotMessage> _messages = [];
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isTyping = false;
+  late AnimationController _typingController;
+  late Animation<double> _dot1, _dot2, _dot3;
 
   @override
   void initState() {
     super.initState();
+    _initializeTypingAnimation();
     _loadConversation();
+  }
+
+  void _initializeTypingAnimation() {
+    _typingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _dot1 = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _typingController, curve: const Interval(0.0, 0.6, curve: Curves.easeInOut)),
+    );
+    _dot2 = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _typingController, curve: const Interval(0.2, 0.8, curve: Curves.easeInOut)),
+    );
+    _dot3 = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _typingController, curve: const Interval(0.4, 1.0, curve: Curves.easeInOut)),
+    );
   }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _typingController.dispose();
     super.dispose();
   }
 
@@ -154,6 +174,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     setState(() {
       _isTyping = true;
     });
+    _typingController.repeat();
 
     _simulateBotResponse(capitalizedText);
   }
@@ -185,6 +206,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
           );
           _isTyping = false;
         });
+        _typingController.stop();
         _saveConversation();
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
@@ -202,6 +224,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
           );
           _isTyping = false;
         });
+        _typingController.stop();
         _saveConversation();
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
@@ -412,46 +435,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                   ),
           ),
           
-          // Typing indicator
-          if (_isTyping)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
-                    child: const Icon(
-                      Icons.person,
-                      color: AppTheme.primaryColor,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                      border: Border.all(
-                        color: AppTheme.thinBorderColor,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTypingDot(0),
-                        const SizedBox(width: 4),
-                        _buildTypingDot(1),
-                        const SizedBox(width: 4),
-                        _buildTypingDot(2),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+
           
           // Message Input
           Container(
@@ -732,15 +716,37 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
                       horizontal: AppTheme.spacing16,
                       vertical: AppTheme.spacing12,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTypingDot(0),
-                        const SizedBox(width: 4),
-                        _buildTypingDot(1),
-                        const SizedBox(width: 4),
-                        _buildTypingDot(2),
-                      ],
+                    child: SizedBox(
+                      width: 36,
+                      height: 16,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedBuilder(
+                            animation: _typingController,
+                            builder: (context, child) => Padding(
+                              padding: EdgeInsets.only(bottom: _dot1.value),
+                              child: _buildAnimatedDot(),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          AnimatedBuilder(
+                            animation: _typingController,
+                            builder: (context, child) => Padding(
+                              padding: EdgeInsets.only(bottom: _dot2.value),
+                              child: _buildAnimatedDot(),
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          AnimatedBuilder(
+                            animation: _typingController,
+                            builder: (context, child) => Padding(
+                              padding: EdgeInsets.only(bottom: _dot3.value),
+                              child: _buildAnimatedDot(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -752,14 +758,13 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> {
     );
   }
 
-  Widget _buildTypingDot(int index) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 600 + (index * 200)),
-      width: 8,
-      height: 8,
+  Widget _buildAnimatedDot() {
+    return Container(
+      width: 6,
+      height: 6,
       decoration: BoxDecoration(
         color: AppTheme.primaryColor,
-        borderRadius: BorderRadius.circular(4),
+        shape: BoxShape.circle,
       ),
     );
   }
