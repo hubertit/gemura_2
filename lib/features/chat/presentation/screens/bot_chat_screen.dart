@@ -10,6 +10,7 @@ import '../../../../core/services/chat_gpt_service.dart';
 import '../../../../core/services/conversation_storage_service.dart';
 import '../../../../core/services/attachment_service.dart';
 import '../../../../core/services/attachment_processor_service.dart';
+import '../../../../core/services/attachment_handler_service.dart';
 import '../../../../shared/widgets/markdown_text.dart';
 import '../../domain/models/attachment_message.dart';
 import 'contact_selection_screen.dart';
@@ -135,7 +136,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
       _messages.add(
         BotMessage(
           id: '1',
-          text: 'Hello! 👋 I\'m Karake, your milk collection specialist. I help farmers with suppliers, customers, collections, sales, and pricing. How can I assist you today?',
+          text: 'Hey there! 👋 I\'m Karake, your dairy farming buddy! 🐄 I help farmers with milk collection, suppliers, customers, supplements, veterinary care, and getting the best prices. What\'s on your mind today? 🌾',
           isUser: false,
           timestamp: DateTime.now(),
           messageType: BotMessageType.text,
@@ -223,7 +224,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
           _messages.add(
             BotMessage(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
-              text: "Sorry, there was an error connecting to the service. Please check your internet connection and try again.",
+              text: "Oops! Looks like there's a connection issue. Please check your internet and try again. I'm here to help with your dairy business! 🌾",
               isUser: false,
               timestamp: DateTime.now(),
               messageType: BotMessageType.text,
@@ -315,7 +316,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     _messages.add(
       BotMessage(
         id: '1',
-        text: 'Hello! 👋 I\'m Karake, your milk collection specialist. I help farmers with suppliers, customers, collections, sales, and pricing. How can I assist you today?',
+        text: 'Hey there! 👋 I\'m Karake, your dairy farming buddy! 🐄 I help farmers like you with milk collection, finding suppliers, managing customers, and getting the best prices. What\'s on your mind today? 🌾',
         isUser: false,
         timestamp: DateTime.now(),
         messageType: BotMessageType.text,
@@ -521,7 +522,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
           ),
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            'Start a Conversation',
+            'Let\'s Chat! 🐄',
             style: AppTheme.bodyMedium.copyWith(
               color: AppTheme.textPrimaryColor,
               fontWeight: FontWeight.w600,
@@ -530,7 +531,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
           ),
           const SizedBox(height: AppTheme.spacing4),
           Text(
-            'Ask Karake about milk collection,\nsuppliers, customers, and more.',
+            'Ask me about milk collection, suppliers,\ncustomers, pricing, supplements, veterinary care, and dairy farming tips! 🌾',
             textAlign: TextAlign.center,
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
@@ -869,23 +870,10 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     setState(() => _isAttaching = true);
     
     try {
-      print('Opening camera...');
-      final File? photo = await AttachmentService.takePhoto();
-      print('Camera result: ${photo?.path ?? 'null'}');
-      if (photo != null) {
-        _addAttachmentMessage(AttachmentType.image, [photo]);
-      } else {
-        // User cancelled camera
-        print('Camera was cancelled by user');
+      final files = await AttachmentHandlerService.handleCamera(context);
+      if (files != null) {
+        _addAttachmentMessage(AttachmentType.image, files);
       }
-    } catch (e) {
-      print('Camera error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Camera error: ${e.toString()}'),
-          backgroundColor: AppTheme.snackbarErrorColor,
-        ),
-      );
     } finally {
       setState(() => _isAttaching = false);
     }
@@ -896,23 +884,10 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     setState(() => _isAttaching = true);
     
     try {
-      print('Opening gallery...');
-      final List<File> images = await AttachmentService.pickImages();
-      print('Gallery result: ${images.length} images');
-      if (images.isNotEmpty) {
-        _addAttachmentMessage(AttachmentType.image, images);
-      } else {
-        // User cancelled gallery picker
-        print('Gallery picker was cancelled by user');
+      final files = await AttachmentHandlerService.handleGallery(context);
+      if (files != null) {
+        _addAttachmentMessage(AttachmentType.image, files);
       }
-    } catch (e) {
-      print('Gallery error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gallery error: ${e.toString()}'),
-          backgroundColor: AppTheme.snackbarErrorColor,
-        ),
-      );
     } finally {
       setState(() => _isAttaching = false);
     }
@@ -923,12 +898,10 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     setState(() => _isAttaching = true);
     
     try {
-      final List<File> documents = await AttachmentService.pickDocuments();
-      if (documents.isNotEmpty) {
-        _addAttachmentMessage(AttachmentType.document, documents);
+      final files = await AttachmentHandlerService.handleDocument(context);
+      if (files != null) {
+        _addAttachmentMessage(AttachmentType.document, files);
       }
-    } catch (e) {
-      _showPermissionError('Document Picker', e.toString());
     } finally {
       setState(() => _isAttaching = false);
     }
@@ -938,30 +911,12 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     Navigator.pop(context);
     
     try {
-      print('Opening contact selection...');
-      
-      final selectedContacts = await Navigator.push<List<Contact>>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ContactSelectionScreen(),
-        ),
-      );
-      
-      if (selectedContacts != null && selectedContacts.isNotEmpty) {
-        print('Selected contacts: ${selectedContacts.length}');
-        _addContactAttachments(selectedContacts);
-      } else {
-        // User cancelled contact selection
-        print('Contact selection was cancelled by user');
+      final contacts = await AttachmentHandlerService.handleContacts(context);
+      if (contacts != null) {
+        _addContactAttachments(contacts);
       }
     } catch (e) {
       print('Contacts error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Contacts error: ${e.toString()}'),
-          backgroundColor: AppTheme.snackbarErrorColor,
-        ),
-      );
     }
   }
 
@@ -1097,16 +1052,16 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         switch (type) {
           case AttachmentType.image:
             fallbackResponse = files.length == 1 
-                ? "Great! I can see the photo you shared. This looks like it could be related to your dairy operations. How can I help you with this?"
-                : "I can see you've shared ${files.length} photos. These appear to be related to your dairy business. What would you like me to help you with regarding these images?";
+                ? "Great! I can see the photo you shared. This looks like it could be related to your dairy operations. How can I help you with this? 📸"
+                : "I can see you've shared ${files.length} photos. These appear to be related to your dairy business. What would you like me to help you with regarding these images? 📸";
             break;
           case AttachmentType.document:
             fallbackResponse = files.length == 1
-                ? "I can see you've shared a document. This looks like it might be related to your dairy business records. How can I assist you with this document?"
-                : "I can see you've shared ${files.length} documents. These appear to be dairy business related. What would you like me to help you with regarding these documents?";
+                ? "I can see you've shared a document. This looks like it might be related to your dairy business records. How can I assist you with this document? 📄"
+                : "I can see you've shared ${files.length} documents. These appear to be dairy business related. What would you like me to help you with regarding these documents? 📄";
             break;
           case AttachmentType.contact:
-            fallbackResponse = "I can see you've shared contact information. This could be useful for your dairy business network. How can I help you with these contacts?";
+            fallbackResponse = "I can see you've shared contact information. This could be useful for your dairy business network. How can I help you with these contacts? 👥";
             break;
         }
 

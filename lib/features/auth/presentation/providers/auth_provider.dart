@@ -60,25 +60,40 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   }
 
   Future<void> signInWithEmailAndPassword(String emailOrPhone, String password) async {
-    // Accept any credentials and return a dummy user
-    await Future.delayed(const Duration(milliseconds: 500));
-    state = AsyncValue.data(User(
-      id: '1',
-      name: 'Demo User',
-      email: emailOrPhone.contains('@') ? emailOrPhone : 'demo@example.com',
-      password: '',
-      role: 'user',
-      createdAt: DateTime.now(),
-      lastLoginAt: DateTime.now(),
-      isActive: true,
-      about: '',
-      address: '',
-      profilePicture: '',
-      profileImg: '',
-      profileCover: '',
-      coverImg: '',
-      phoneNumber: emailOrPhone.contains('@') ? '' : emailOrPhone,
-    ));
+    try {
+      state = const AsyncValue.loading();
+      
+      // Accept any credentials and return a dummy user
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      final user = User(
+        id: '1',
+        name: 'Demo User',
+        email: emailOrPhone.contains('@') ? emailOrPhone : 'demo@example.com',
+        password: '',
+        role: 'user',
+        createdAt: DateTime.now(),
+        lastLoginAt: DateTime.now(),
+        isActive: true,
+        about: '',
+        address: '',
+        profilePicture: '',
+        profileImg: '',
+        profileCover: '',
+        coverImg: '',
+        phoneNumber: emailOrPhone.contains('@') ? '' : emailOrPhone,
+      );
+      
+      // Save user data and login state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConfig.userFullDataKey, json.encode(user.toJson()));
+      await prefs.setBool(AppConfig.isLoggedInKey, true);
+      
+      state = AsyncValue.data(user);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+      rethrow;
+    }
   }
 
   Future<void> signUpWithEmailAndPassword(
@@ -122,7 +137,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(AppConfig.isLoggedInKey, false);
-      // Don't remove user data, just mark as logged out
+      await prefs.remove(AppConfig.userFullDataKey);
+      await prefs.remove(AppConfig.authTokenKey);
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

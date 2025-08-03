@@ -126,15 +126,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Email Field
                   TextFormField(
                     controller: _emailController,
-                    keyboardType: TextInputType.phone,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Phone Number or Email',
-                      hintText: '',
-                      prefixIcon: Icon(Icons.phone),
+                      prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return '';
+                        return 'Please enter your email or phone number';
                       }
                       return null;
                     },
@@ -144,6 +144,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
+                    textInputAction: TextInputAction.done,
+                    keyboardType: TextInputType.visiblePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),

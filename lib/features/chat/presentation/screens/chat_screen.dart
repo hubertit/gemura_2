@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:contacts_service/contacts_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/attachment_handler_service.dart';
 
 import '../providers/chat_provider.dart';
 import '../../domain/models/chat_message.dart';
@@ -452,7 +455,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 CustomPaint(
                   painter: ChatBubblePainter(
                     isFromCurrentUser: isCurrentUser,
-                    color: isCurrentUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
+                    color: isCurrentUser ? AppTheme.sentMessageColor : AppTheme.surfaceColor,
                   ),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -468,7 +471,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           Text(
                             message.content,
                             style: AppTheme.bodySmall.copyWith(
-                              color: isCurrentUser ? AppTheme.surfaceColor : AppTheme.textPrimaryColor,
+                              color: isCurrentUser ? AppTheme.textPrimaryColor : AppTheme.textPrimaryColor,
                               fontSize: 14,
                             ),
                           ),
@@ -480,7 +483,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               messageTime,
                               style: AppTheme.bodySmall.copyWith(
                                 color: isCurrentUser 
-                                    ? AppTheme.surfaceColor.withOpacity(0.7)
+                                    ? AppTheme.textSecondaryColor
                                     : AppTheme.textSecondaryColor,
                                 fontSize: 10,
                               ),
@@ -490,7 +493,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               Icon(
                                 _getStatusIcon(message.status),
                                 size: 12,
-                                color: AppTheme.surfaceColor.withOpacity(0.7),
+                                color: AppTheme.textSecondaryColor,
                               ),
                             ],
                           ],
@@ -616,9 +619,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   onTap: _openDocument,
                 ),
                 _buildAttachmentOption(
-                  icon: Icons.location_on,
-                  label: 'Location',
-                  onTap: _shareLocation,
+                  icon: Icons.contacts,
+                  label: 'Contacts',
+                  onTap: _shareContacts,
                 ),
               ],
             ),
@@ -665,47 +668,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _openCamera() {
+  Future<void> _openCamera() async {
     Navigator.pop(context);
-    // TODO: Implement camera functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Camera functionality coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
+    final files = await AttachmentHandlerService.handleCamera(context);
+    if (files != null) {
+      _handleAttachments('image', files);
+    }
   }
 
-  void _openGallery() {
+  Future<void> _openGallery() async {
     Navigator.pop(context);
-    // TODO: Implement gallery picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Gallery picker coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
+    final files = await AttachmentHandlerService.handleGallery(context);
+    if (files != null) {
+      _handleAttachments('image', files);
+    }
   }
 
-  void _openDocument() {
+  Future<void> _openDocument() async {
     Navigator.pop(context);
-    // TODO: Implement document picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Document picker coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
+    final files = await AttachmentHandlerService.handleDocument(context);
+    if (files != null) {
+      _handleAttachments('document', files);
+    }
   }
 
-  void _shareLocation() {
+  Future<void> _shareContacts() async {
     Navigator.pop(context);
-    // TODO: Implement location sharing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Location sharing coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
+    final contacts = await AttachmentHandlerService.handleContacts(context);
+    if (contacts != null) {
+      _handleContactAttachments(contacts);
+    }
+  }
+
+  void _handleAttachments(String type, List<File> files) {
+    // TODO: Implement attachment handling for group chat
+    // This would add the attachments to the group chat
+    print('Handling $type attachments: ${files.length} files');
+  }
+
+  void _handleContactAttachments(List<Contact> contacts) {
+    // TODO: Implement contact handling for group chat
+    // This would add the contacts to the group chat
+    print('Handling contacts: ${contacts.length} contacts');
   }
 } 

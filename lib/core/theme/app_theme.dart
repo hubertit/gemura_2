@@ -245,9 +245,7 @@ class AppTheme {
       secondary: primaryColor,
       error: errorColor,
       surface: Colors.white,
-      background: backgroundColor,
       onSurface: textPrimaryColor,
-      onBackground: textPrimaryColor,
       // No blue/pink
     ),
     inputDecorationTheme: InputDecorationTheme(

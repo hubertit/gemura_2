@@ -32,11 +32,11 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(tabIndexProvider);
     final tabs = [
-      const _DashboardTab(),
-      const ChatListScreen(),
-      const WalletsScreen(), // Restore the merchant WalletsScreen as the tab
-      const TransactionsScreen(),
-      const ProfileTab(),
+      const _DashboardTab(), // Index 0: Home
+      const WalletsScreen(), // Index 1: Ikofi
+      const ChatListScreen(), // Index 2: Chat (Default)
+      const TransactionsScreen(), // Index 3: Transactions
+      const ProfileTab(), // Index 4: Profile
     ];
     return Scaffold(
       body: tabs[currentIndex],
@@ -52,14 +52,14 @@ class HomeScreen extends ConsumerWidget {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
-            label: 'Chats',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
             label: 'Ikofi',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.chat_bubble_outline),
+            selectedIcon: Icon(Icons.chat_bubble),
+            label: 'Chats',
           ),
           NavigationDestination(
             icon: Icon(Icons.swap_horiz_outlined),
@@ -691,6 +691,41 @@ class ProfileTab extends ConsumerWidget {
                       builder: (context) => const EditProfileScreen(),
                     ),
                   );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                tooltip: 'Sign Out',
+                onPressed: () async {
+                  // Show confirmation dialog
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Sign Out'),
+                      content: const Text('Are you sure you want to sign out?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Sign Out'),
+                        ),
+                      ],
+                    ),
+                  );
+                  
+                  if (shouldLogout == true) {
+                    // Sign out and navigate to login screen
+                    await ref.read(authProvider.notifier).signOut();
+                    if (context.mounted) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  }
                 },
               ),
             ],

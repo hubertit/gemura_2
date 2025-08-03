@@ -300,7 +300,7 @@ class _ResultBox extends StatelessWidget {
                 icon: const Icon(Icons.share, size: 20),
                 tooltip: 'Share',
                 onPressed: () async {
-                  await Share.share(value);
+                  await SharePlus.instance.share(ShareParams(text: value));
                 },
               ),
             ],
