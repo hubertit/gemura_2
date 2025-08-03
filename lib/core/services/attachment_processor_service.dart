@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../../features/chat/domain/models/attachment_message.dart';
 import 'hybrid_ai_service.dart';
+import '../../core/config/app_config.dart';
 
 class AttachmentProcessorService {
   /// Process attachments and extract meaningful information for bot responses
@@ -34,6 +35,33 @@ class AttachmentProcessorService {
         return 'Image: Unable to access image file';
       }
       
+      // Check if AI services are configured
+      final isConfigured = AppConfig.chatGptApiKey.isNotEmpty && 
+                          AppConfig.chatGptApiKey != 'YOUR_OPENAI_API_KEY_HERE' &&
+                          AppConfig.claudeApiKey.isNotEmpty && 
+                          AppConfig.claudeApiKey != 'YOUR_CLAUDE_API_KEY_HERE';
+      
+      if (!isConfigured) {
+        // Fallback response when AI services are not configured
+        return '''📸 **Image Analysis**
+I can see you've shared an image! This looks like it could be related to your dairy operations.
+
+**💡 What I can help with:**
+• If it's a supplement or medication, I can help you understand its benefits for your cattle
+• If it's a receipt or invoice, I can help with record keeping
+• If it's a contact or business card, I can help you manage your network
+
+**🔧 To enable AI image analysis:**
+Please configure your OpenAI and Claude AI API keys in the app settings.
+
+**📋 For now, you can:**
+• Tell me what the image shows
+• Ask me about dairy business topics
+• Share contact information instead
+
+What would you like to know about this image? 🐄''';
+      }
+      
       // Use hybrid AI service (Claude Vision + GPT)
       final response = await HybridAIService.processImageWithConversationalResponse(attachment.path);
       
@@ -41,7 +69,21 @@ class AttachmentProcessorService {
       
     } catch (e) {
       print('Error processing image: $e');
-      return 'I had trouble analyzing that image. Could you try sending it again?';
+      return '''📸 **Image Analysis**
+I had trouble analyzing that image, but I can still help you with your dairy business!
+
+**💡 What you can do:**
+• Tell me what the image shows
+• Ask me about supplements, suppliers, or dairy operations
+• Share contact information instead
+
+**🔧 Common dairy topics I can help with:**
+• Finding supplement suppliers in your area
+• Understanding cattle nutrition
+• Managing milk collection and sales
+• Connecting with veterinary services
+
+What would you like to know? 🐄''';
     }
   }
   

@@ -874,6 +874,14 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
       if (files != null) {
         _addAttachmentMessage(AttachmentType.image, files);
       }
+    } catch (e) {
+      print('Camera error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Camera error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
     } finally {
       setState(() => _isAttaching = false);
     }
@@ -888,6 +896,14 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
       if (files != null) {
         _addAttachmentMessage(AttachmentType.image, files);
       }
+    } catch (e) {
+      print('Gallery error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gallery error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
     } finally {
       setState(() => _isAttaching = false);
     }
@@ -902,6 +918,8 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
       if (files != null) {
         _addAttachmentMessage(AttachmentType.document, files);
       }
+    } catch (e) {
+      _showPermissionError('Document Picker', e.toString());
     } finally {
       setState(() => _isAttaching = false);
     }
