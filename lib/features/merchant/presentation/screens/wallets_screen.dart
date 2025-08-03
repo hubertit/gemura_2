@@ -2518,24 +2518,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                     prefixIcon: Icon(Icons.calendar_today),
                     suffixIcon: Icon(Icons.keyboard_arrow_down),
                   ),
-                  onTap: () async {
-                    final today = DateTime.now();
-                    final tomorrow = DateTime(today.year, today.month, today.day + 1);
-                    print('Today: $today, Tomorrow: $tomorrow'); // Debug
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _selectedTargetDate ?? tomorrow.add(const Duration(days: 29)),
-                      firstDate: tomorrow,
-                      lastDate: DateTime(today.year + 5, today.month, today.day),
-                    );
-                    if (date != null) {
-                      print('Selected date: $date'); // Debug
-                      setState(() {
-                        _selectedTargetDate = date;
-                        _targetDateController.text = '${date.day}/${date.month}/${date.year}';
-                      });
-                    }
-                  },
+                  onTap: _showDatePicker,
                   validator: (v) {
                     if (_isSavingWallet && (v == null || v.trim().isEmpty)) {
                       return 'Target date required for saving wallet';
@@ -2715,6 +2698,24 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
         ),
       ),
     );
+  }
+
+  void _showDatePicker() {
+    final today = DateTime.now();
+    final tomorrow = today.add(const Duration(days: 1));
+    
+    showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: DateTime(2020),
+      lastDate: tomorrow,
+    ).then((date) {
+      if (date != null) {
+        setState(() {
+          _selectedTargetDate = date;
+        });
+      }
+    });
   }
 }
 

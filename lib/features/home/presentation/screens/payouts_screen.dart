@@ -255,7 +255,9 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
     setState(() => _isLoading = false);
-    Navigator.of(context).pop(true);
+    if (mounted) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   @override

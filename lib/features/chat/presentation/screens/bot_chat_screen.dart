@@ -13,7 +13,6 @@ import '../../../../core/services/attachment_processor_service.dart';
 import '../../../../core/services/attachment_handler_service.dart';
 import '../../../../shared/widgets/markdown_text.dart';
 import '../../domain/models/attachment_message.dart';
-import 'contact_selection_screen.dart';
 import 'package:contacts_service/contacts_service.dart';
 
 class BotChatScreen extends ConsumerStatefulWidget {
@@ -302,29 +301,6 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         ),
       ),
     );
-  }
-
-
-
-  Future<void> _clearConversation() async {
-    await ConversationStorageService.clearConversation();
-    
-    setState(() {
-      _messages.clear();
-    });
-    
-    _messages.add(
-      BotMessage(
-        id: '1',
-        text: 'Hey there! 👋 I\'m Karake, your dairy farming buddy! 🐄 I help farmers like you with milk collection, finding suppliers, managing customers, and getting the best prices. What\'s on your mind today? 🌾',
-        isUser: false,
-        timestamp: DateTime.now(),
-        messageType: BotMessageType.text,
-      ),
-    );
-    
-    _saveConversation();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   @override
@@ -881,19 +857,22 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final files = await AttachmentHandlerService.handleCamera(context);
-      if (files != null) {
+      if (files != null && mounted) {
         _addAttachmentMessage(AttachmentType.image, files);
       }
     } catch (e) {
-      print('Camera error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Camera error: ${e.toString()}'),
-          backgroundColor: AppTheme.snackbarErrorColor,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Camera error: ${e.toString()}'),
+            backgroundColor: AppTheme.snackbarErrorColor,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isAttaching = false);
+      if (mounted) {
+        setState(() => _isAttaching = false);
+      }
     }
   }
 
@@ -903,19 +882,22 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final files = await AttachmentHandlerService.handleGallery(context);
-      if (files != null) {
+      if (files != null && mounted) {
         _addAttachmentMessage(AttachmentType.image, files);
       }
     } catch (e) {
-      print('Gallery error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gallery error: ${e.toString()}'),
-          backgroundColor: AppTheme.snackbarErrorColor,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gallery error: ${e.toString()}'),
+            backgroundColor: AppTheme.snackbarErrorColor,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isAttaching = false);
+      if (mounted) {
+        setState(() => _isAttaching = false);
+      }
     }
   }
 
@@ -925,13 +907,17 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final files = await AttachmentHandlerService.handleDocument(context);
-      if (files != null) {
+      if (files != null && mounted) {
         _addAttachmentMessage(AttachmentType.document, files);
       }
     } catch (e) {
-      _showPermissionError('Document Picker', e.toString());
+      if (mounted) {
+        _showPermissionError('Document Picker', e.toString());
+      }
     } finally {
-      setState(() => _isAttaching = false);
+      if (mounted) {
+        setState(() => _isAttaching = false);
+      }
     }
   }
 
@@ -940,11 +926,11 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final contacts = await AttachmentHandlerService.handleContacts(context);
-      if (contacts != null) {
+      if (contacts != null && mounted) {
         _addContactAttachments(contacts);
       }
     } catch (e) {
-      print('Contacts error: $e');
+      // Handle contact error silently
     }
   }
 
@@ -1294,9 +1280,6 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
   }
 
   void _showPermissionError(String feature, String error) {
-    // Check if permission is permanently denied (used for UI logic)
-    final isPermanentlyDenied = error.contains('permanently denied');
-    
     // Show dialog for permanently denied permissions
     showDialog(
       context: context,

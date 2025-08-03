@@ -291,9 +291,9 @@ class _ResultBox extends StatelessWidget {
                 tooltip: 'Copy',
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: value));
-                          ScaffoldMessenger.of(context).showSnackBar(
-          AppTheme.infoSnackBar(message: 'Copied to clipboard'),
-        );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    AppTheme.infoSnackBar(message: 'Copied to clipboard'),
+                  );
                 },
               ),
               IconButton(

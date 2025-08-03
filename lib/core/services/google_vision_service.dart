@@ -1,123 +1,80 @@
 import 'dart:io';
 import 'dart:convert';
 import '../config/api_config.dart';
+import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 
 class GoogleVisionService {
   static bool get _isConfigured => APIConfig.isGoogleVisionConfigured;
   
   /// Analyze image using Google Cloud Vision API
-  static Future<Map<String, dynamic>> analyzeImage(String imagePath) async {
-    if (!_isConfigured) {
-      return {
-        'extractedText': 'Google Vision API not configured',
-        'analysis': 'Please configure your Google Vision API key',
-        'hasText': false,
-      };
-    }
-    
+  static Future<Map<String, dynamic>> analyzeImage(File imageFile) async {
     try {
-      final file = File(imagePath);
-      if (!await file.exists()) {
-        return {
-          'extractedText': 'Image file not found',
-          'analysis': 'Unable to access image file',
-          'hasText': false,
-        };
-      }
-      
-      // Read image as base64
-      final bytes = await file.readAsBytes();
+      final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-      
-      // Prepare the API request
-      final url = Uri.parse('https://vision.googleapis.com/v1/images:annotate?key=${APIConfig.googleVisionKey}');
-      
-      final body = {
-        'requests': [
-          {
-            'image': {
-              'content': base64Image
-            },
-            'features': [
-              {
-                'type': 'TEXT_DETECTION',
-                'maxResults': 1
+
+      final response = await http.post(
+        Uri.parse('https://vision.googleapis.com/v1/images:annotate?key=${AppConfig.googleVisionApiKey}'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'requests': [
+            {
+              'image': {
+                'content': base64Image,
               },
-              {
-                'type': 'DOCUMENT_TEXT_DETECTION',
-                'maxResults': 1
-              }
-            ]
-          }
-        ]
-      };
-      
-      final request = await HttpClient().openUrl('POST', url);
-      request.headers.set('Content-Type', 'application/json');
-      request.write(jsonEncode(body));
-      
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
-      
-      print('Google Vision API Response Status: ${response.statusCode}');
-      print('Google Vision API Response Body: $responseBody');
-      
+              'features': [
+                {
+                  'type': 'TEXT_DETECTION',
+                  'maxResults': 1,
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
       if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseBody);
-        final responses = jsonResponse['responses'] as List;
+        final data = jsonDecode(response.body);
+        final responses = data['responses'] as List;
         
-        if (responses.isNotEmpty) {
-          final response = responses.first;
-          final textAnnotations = response['textAnnotations'] as List?;
-          final fullTextAnnotation = response['fullTextAnnotation'];
-          
-          String extractedText = '';
-          String documentType = 'Unknown';
-          Map<String, dynamic> keyInfo = {};
-          
-          // Extract text from full text annotation (better for documents)
-          if (fullTextAnnotation != null && fullTextAnnotation['text'] != null) {
-            extractedText = fullTextAnnotation['text'];
-          } else if (textAnnotations != null && textAnnotations.isNotEmpty) {
-            // Fallback to individual text annotations
-            extractedText = textAnnotations.first['description'] ?? '';
-          }
-          
-          // Analyze the extracted text for document type and key information
-          final analysis = _analyzeExtractedText(extractedText);
-          documentType = analysis['documentType'];
-          keyInfo = analysis['keyInfo'];
+        if (responses.isNotEmpty && responses.first['textAnnotations'] != null) {
+          final textAnnotations = responses.first['textAnnotations'] as List;
+          final extractedText = textAnnotations.isNotEmpty ? textAnnotations.first['description'] ?? '' : '';
           
           return {
             'extractedText': extractedText,
-            'documentType': documentType,
-            'keyInfo': keyInfo,
-            'businessRelevance': analysis['businessRelevance'],
-            'analysis': analysis['analysis'],
-            'hasText': extractedText.isNotEmpty,
+            'documentType': 'Unknown',
+            'keyInfo': {},
+            'businessRelevance': 'Text extraction completed',
+            'analysis': 'Successfully extracted text from image',
           };
         } else {
           return {
             'extractedText': 'No text found in image',
             'documentType': 'Unknown',
             'keyInfo': {},
-            'businessRelevance': '',
-            'analysis': 'No readable text detected in this image',
-            'hasText': false,
+            'businessRelevance': 'No text detected',
+            'analysis': 'No readable text found in image',
           };
         }
       } else {
         return {
-          'extractedText': 'Error: ${response.statusCode}',
-          'analysis': 'Failed to analyze image',
-          'hasText': false,
+          'extractedText': 'Unable to process image',
+          'documentType': 'Unknown',
+          'keyInfo': {},
+          'businessRelevance': 'Service error',
+          'analysis': 'HTTP error: ${response.statusCode}',
         };
       }
     } catch (e) {
       return {
-        'extractedText': 'Error analyzing image: $e',
-        'analysis': 'Failed to process image',
-        'hasText': false,
+        'extractedText': 'Error processing image',
+        'documentType': 'Unknown',
+        'keyInfo': {},
+        'businessRelevance': 'Processing error',
+        'analysis': 'Exception: $e',
       };
     }
   }

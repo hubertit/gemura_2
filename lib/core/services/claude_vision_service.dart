@@ -1,143 +1,83 @@
 import 'dart:io';
 import 'dart:convert';
 import '../config/app_config.dart';
+import 'package:http/http.dart' as http;
 
 class ClaudeVisionService {
   static bool get _isConfigured => AppConfig.claudeApiKey.isNotEmpty && 
                                   AppConfig.claudeApiKey != 'YOUR_CLAUDE_API_KEY_HERE';
 
   /// Analyze image using Claude AI Vision API
-  static Future<Map<String, dynamic>> analyzeImage(String imagePath) async {
-    if (!_isConfigured) {
-      return {
-        'extractedText': 'Claude AI API not configured',
-        'analysis': 'Please configure your Claude AI API key',
-        'hasText': false,
-      };
-    }
-
+  static Future<Map<String, dynamic>> analyzeImage(File imageFile) async {
     try {
-      final file = File(imagePath);
-      if (!await file.exists()) {
-        return {
-          'extractedText': 'Image file not found',
-          'analysis': 'Unable to access image file',
-          'hasText': false,
-        };
-      }
-
-      // Read image as base64
-      final bytes = await file.readAsBytes();
+      final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      // Prepare the API request
-      final url = Uri.parse(AppConfig.claudeApiUrl);
-      // Headers are set directly on the request
-
-      final body = {
-        'model': 'claude-3-5-sonnet-20241022',
-        'max_tokens': 1000,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-                                        {
-                            'type': 'text',
-                            'text': '''Look at this image and tell me what you see in a friendly, conversational way. If this is a veterinary product, supplement, or medication, explain it like you're talking to a dairy farmer who wants to understand:
-
-1. What the product is and who makes it
-2. What it's used for in dairy operations
-3. How it helps with animal health
-4. Any important safety or usage notes
-
-For supplements and medications, focus on:
-- Product name and manufacturer
-- What it does for livestock (muscle function, immune support, etc.)
-- Why it's important for dairy operations
-- Safety considerations
-
-Format your response as JSON with these fields:
-{
-  "extractedText": "text found in image",
-  "documentType": "supplement/medication/receipt/etc",
-  "keyInfo": {
-    "vendor": "manufacturer name",
-    "product": "product name if found",
-    "purpose": "what it's used for"
-  },
-  "businessRelevance": "why this matters for dairy farming",
-  "analysis": "friendly explanation of the product and its benefits"
-}'''
-                          },
-              {
-                'type': 'image',
-                'source': {
-                  'type': 'base64',
-                  'media_type': 'image/jpeg',
-                  'data': base64Image
-                }
-              }
-            ]
-          }
-        ]
-      };
-
-      print('🚀 Sending request to Claude Vision API...');
-
-      final request = await HttpClient().openUrl('POST', url);
-      request.headers.set('Content-Type', 'application/json');
-      request.headers.set('x-api-key', AppConfig.claudeApiKey);
-      request.headers.set('anthropic-version', '2023-06-01');
-      request.write(jsonEncode(body));
-
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
-
-      print('📊 Claude Vision Response Status: ${response.statusCode}');
+      final response = await http.post(
+        Uri.parse('https://api.anthropic.com/v1/messages'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': AppConfig.claudeApiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': 'claude-3-sonnet-20240229',
+          'max_tokens': 1000,
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'text',
+                  'text': 'Analyze this image for a dairy farmer. Extract any text, identify document types, and provide business-relevant insights. Focus on: 1) Any text content 2) Document type (receipt, invoice, medical record, etc.) 3) Key business information 4) How this relates to dairy farming operations. Return as JSON with keys: extractedText, documentType, keyInfo, businessRelevance, analysis',
+                },
+                {
+                  'type': 'image',
+                  'source': {
+                    'type': 'base64',
+                    'media_type': 'image/jpeg',
+                    'data': base64Image,
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      );
 
       if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseBody);
-        final content = jsonResponse['content'][0]['text'];
-
-        print('📝 Claude Vision Response: $content');
-
+        final data = jsonDecode(response.body);
+        final content = data['content'][0]['text'];
+        
+        // Try to parse as JSON, fallback to text if it's not JSON
         try {
-          // Try to parse as JSON
-          final analysis = jsonDecode(content);
-          return {
-            'extractedText': analysis['extractedText'] ?? 'No text found',
-            'documentType': analysis['documentType'] ?? 'Unknown',
-            'keyInfo': analysis['keyInfo'] ?? {},
-            'businessRelevance': analysis['businessRelevance'] ?? '',
-            'analysis': analysis['analysis'] ?? '',
-            'hasText': (analysis['extractedText'] ?? '').isNotEmpty,
-          };
+          return jsonDecode(content);
         } catch (e) {
-          // If not JSON, return as plain text
           return {
             'extractedText': content,
             'documentType': 'Unknown',
             'keyInfo': {},
-            'businessRelevance': '',
+            'businessRelevance': 'Document analysis completed',
             'analysis': content,
-            'hasText': content.isNotEmpty,
           };
         }
       } else {
-        print('❌ Claude Vision API Error: ${response.statusCode}');
-        print('Response: $responseBody');
+        final responseBody = response.body;
         return {
-          'extractedText': 'Error: ${response.statusCode}',
-          'analysis': 'Failed to analyze image with Claude Vision',
-          'hasText': false,
+          'extractedText': 'Unable to analyze image',
+          'documentType': 'Unknown',
+          'keyInfo': {},
+          'businessRelevance': 'Analysis failed',
+          'analysis': 'Error: ${response.statusCode}',
         };
       }
     } catch (e) {
-      print('❌ Claude Vision Error: $e');
       return {
-        'extractedText': 'Error analyzing image: $e',
-        'analysis': 'Failed to process image with Claude Vision',
-        'hasText': false,
+        'extractedText': 'Error processing image',
+        'documentType': 'Unknown',
+        'keyInfo': {},
+        'businessRelevance': 'Processing error',
+        'analysis': 'Exception: $e',
       };
     }
   }

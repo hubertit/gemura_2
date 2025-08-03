@@ -22,7 +22,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
   RangeValues _priceRange = const RangeValues(0, 1000);
   
   // Filter options
-  List<String> get suppliers => ['All', ...suppliedMilkData.map((milk) => milk['supplierName']).toSet().toList()];
+  List<String> get suppliers => ['All', ...suppliedMilkData.map((milk) => milk['supplierName']).toSet()];
   List<String> get statuses => ['All', 'pending', 'recorded', 'cancelled'];
 
   // Mock supplied milk data
@@ -209,7 +209,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
           ),
         ),
         subtitle: Text(
-          '${DateFormat('MMM dd, yyyy').format(milk['date'])}',
+          DateFormat('MMM dd, yyyy').format(milk['date']),
           style: AppTheme.bodySmall.copyWith(
             color: AppTheme.textHintColor,
             fontSize: 11,

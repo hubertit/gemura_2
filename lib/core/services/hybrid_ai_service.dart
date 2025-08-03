@@ -1,72 +1,31 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import 'claude_vision_service.dart';
 
 class HybridAIService {
-  static final HybridAIService _instance = HybridAIService._internal();
-  factory HybridAIService() => _instance;
   HybridAIService._internal();
 
-  /// Process image with Claude Vision and generate conversational response with GPT
-  static Future<String> processImageWithConversationalResponse(String imagePath) async {
+  static Future<String> processImageWithHybridAI(File imageFile) async {
     try {
-      // Step 1: Use Claude Vision to analyze the image
-      print('🔍 Analyzing image with Claude Vision...');
-      final claudeResult = await ClaudeVisionService.analyzeImage(imagePath);
+      // First, try Claude Vision for image analysis
+      final claudeResponse = await ClaudeVisionService.analyzeImage(imageFile);
       
-      // Step 2: Extract key information from Claude's analysis
-      final extractedText = claudeResult['extractedText'] ?? '';
-      final documentType = claudeResult['documentType'] ?? 'Unknown';
-      final keyInfo = claudeResult['keyInfo'] ?? {};
-      final businessRelevance = claudeResult['businessRelevance'] ?? '';
-      final aiAnalysis = claudeResult['analysis'] ?? '';
-      
-      // Step 3: Create a conversational prompt for GPT
-      final gptPrompt = _createConversationalPrompt(
-        documentType, 
-        keyInfo, 
-        businessRelevance, 
-        aiAnalysis, 
-        extractedText
-      );
-      
-      // Step 4: Use GPT to generate a friendly, conversational response
-      print('💬 Generating conversational response with GPT...');
-      final gptResponse = await _generateGPTResponse(gptPrompt);
+      // Then, use GPT for conversational response
+      final gptResponse = await _generateConversationalResponse(claudeResponse['analysis'] ?? '');
       
       return gptResponse;
-      
     } catch (e) {
-      print('❌ Error in hybrid AI processing: $e');
-      return 'I had trouble analyzing that image. Could you try sending it again?';
+      // Fallback to basic response
+      return "I can see the image you've shared. How can I help you with this?";
     }
   }
 
-  /// Create a conversational prompt for GPT based on Claude's analysis
-  static String _createConversationalPrompt(
-    String documentType, 
-    Map<String, dynamic> keyInfo, 
-    String businessRelevance, 
-    String aiAnalysis, 
-    String extractedText
-  ) {
-    String prompt = '''You are Karake, a friendly dairy business assistant. A user shared an image with you. Here's what was found:
-
-Document Type: $documentType
-Key Info: ${keyInfo.toString()}
-Analysis: $aiAnalysis
-
-Start by describing what you see in the image, then explain how it helps their dairy business. Keep it friendly and practical. Use 2-3 emojis and write 3-4 sentences.''';
-
-    return prompt;
-  }
-
-  /// Generate conversational response using GPT
-  static Future<String> _generateGPTResponse(String prompt) async {
+  static Future<String> _generateConversationalResponse(String imageAnalysis) async {
     try {
       final response = await http.post(
-        Uri.parse(AppConfig.chatGptApiUrl),
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${AppConfig.chatGptApiKey}',
@@ -76,38 +35,26 @@ Start by describing what you see in the image, then explain how it helps their d
           'messages': [
             {
               'role': 'system',
-              'content': 'You are Karake, a friendly and knowledgeable dairy business assistant. You help farmers with their milk business, suppliers, customers, and operations. Always be encouraging, practical, and conversational. Use emojis to make responses friendly.',
+              'content': 'You are a helpful assistant for dairy farmers. Provide friendly, practical advice based on the image analysis.',
             },
             {
               'role': 'user',
-              'content': prompt,
+              'content': 'Based on this image analysis: $imageAnalysis\n\nPlease provide helpful advice for a dairy farmer.',
             },
           ],
           'max_tokens': 300,
-          'temperature': 0.8,
+          'temperature': 0.7,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'];
+        return data['choices'][0]['message']['content'] ?? 'I can help you with that!';
       } else {
-        print('❌ GPT API Error: ${response.statusCode}');
-        print('Response: ${response.body}');
-        return _generateFallbackResponse(prompt);
+        return 'I can see the image you\'ve shared. How can I help you with this?';
       }
     } catch (e) {
-      print('❌ GPT API Exception: $e');
-      return _generateFallbackResponse(prompt);
-    }
-  }
-
-  /// Fallback response if GPT fails
-  static String _generateFallbackResponse(String prompt) {
-    if (prompt.toLowerCase().contains('supplement') || prompt.toLowerCase().contains('medication')) {
-      return 'I can see this is a veterinary supplement from Interchemie! It contains Vitamin E and Selenium which are essential nutrients for dairy cattle. This type of supplement helps keep your animals healthy, supports their immune system, and improves reproductive health. Always consult with your veterinarian before using any supplements! 🐄💊';
-    } else {
-      return 'I can see this document in the image! It appears to be related to your dairy business operations. This could be useful for record keeping, supplier management, or financial tracking. What specific information would you like to know about it? 📄😊';
+      return 'I can see the image you\'ve shared. How can I help you with this?';
     }
   }
 } 

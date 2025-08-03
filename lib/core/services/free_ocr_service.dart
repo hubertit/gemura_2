@@ -4,103 +4,63 @@ import 'package:http/http.dart' as http;
 
 class FreeOCRService {
   /// Analyze image using a free OCR service
-  static Future<Map<String, dynamic>> analyzeImage(String imagePath) async {
+  static Future<Map<String, dynamic>> extractText(File imageFile) async {
     try {
-      final file = File(imagePath);
-      if (!await file.exists()) {
-        return {
-          'extractedText': 'Image file not found',
-          'analysis': 'Unable to access image file',
-          'hasText': false,
-        };
-      }
-      
-      // Read image as bytes for multipart request
-      final bytes = await file.readAsBytes();
-      
-      // Use a free OCR service (OCR.space API - 500 requests/month free)
-      final url = Uri.parse('https://api.ocr.space/parse/image');
-      
-      final request = http.MultipartRequest('POST', url)
-        ..fields['apikey'] = 'K894634387496' // Free API key
-        ..fields['language'] = 'eng'
-        ..fields['isOverlayRequired'] = 'false'
-        ..fields['filetype'] = 'jpeg'
-        ..files.add(http.MultipartFile.fromBytes(
-          'image',
-          bytes,
-          filename: 'image.jpg',
-        ));
-      
-      print('🚀 Sending request to free OCR service...');
-      
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-      
-      print('📊 Response Status: ${response.statusCode}');
-      
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      final response = await http.post(
+        Uri.parse('https://api.ocr.space/parse/image'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'apikey': 'K894634387496', // Free API key
+          'base64Image': 'data:image/jpeg;base64,$base64Image',
+          'language': 'eng',
+          'isOverlayRequired': 'false',
+          'filetype': 'jpg',
+          'detectOrientation': 'true',
+        },
+      );
+
       if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseBody);
+        final data = jsonDecode(response.body);
         
-        if (jsonResponse['IsErroredOnProcessing'] == false) {
-          final parsedResults = jsonResponse['ParsedResults'] as List;
-          
-          if (parsedResults.isNotEmpty) {
-            final parsedText = parsedResults.first['ParsedText'] ?? '';
-            
-            print('📝 Extracted Text: "$parsedText"');
-            
-            if (parsedText.isNotEmpty) {
-              // Analyze the extracted text
-              final analysis = _analyzeExtractedText(parsedText);
-              
-              return {
-                'extractedText': parsedText,
-                'documentType': analysis['documentType'],
-                'keyInfo': analysis['keyInfo'],
-                'businessRelevance': analysis['businessRelevance'],
-                'analysis': analysis['analysis'],
-                'hasText': true,
-              };
-            } else {
-              return {
-                'extractedText': 'No text found in image',
-                'documentType': 'Unknown',
-                'keyInfo': {},
-                'businessRelevance': '',
-                'analysis': 'No readable text detected in this image',
-                'hasText': false,
-              };
-            }
-          } else {
-            return {
-              'extractedText': 'No text found in image',
-              'documentType': 'Unknown',
-              'keyInfo': {},
-              'businessRelevance': '',
-              'analysis': 'No readable text detected in this image',
-              'hasText': false,
-            };
-          }
+        if (data['IsErroredOnProcessing'] == false) {
+          final parsedText = data['ParsedResults'][0]['ParsedText'] ?? '';
+          return {
+            'extractedText': parsedText,
+            'documentType': 'Unknown',
+            'keyInfo': {},
+            'businessRelevance': 'Text extraction completed',
+            'analysis': 'Successfully extracted text from image',
+          };
         } else {
           return {
-            'extractedText': 'Error processing image',
-            'analysis': 'Failed to process image with OCR service',
-            'hasText': false,
+            'extractedText': 'OCR processing failed',
+            'documentType': 'Unknown',
+            'keyInfo': {},
+            'businessRelevance': 'Processing error',
+            'analysis': 'OCR service error',
           };
         }
       } else {
         return {
-          'extractedText': 'Error: ${response.statusCode}',
-          'analysis': 'Failed to analyze image',
-          'hasText': false,
+          'extractedText': 'Unable to process image',
+          'documentType': 'Unknown',
+          'keyInfo': {},
+          'businessRelevance': 'Service error',
+          'analysis': 'HTTP error: ${response.statusCode}',
         };
       }
     } catch (e) {
       return {
-        'extractedText': 'Error analyzing image: $e',
-        'analysis': 'Failed to process image',
-        'hasText': false,
+        'extractedText': 'Error processing image',
+        'documentType': 'Unknown',
+        'keyInfo': {},
+        'businessRelevance': 'Processing error',
+        'analysis': 'Exception: $e',
       };
     }
   }

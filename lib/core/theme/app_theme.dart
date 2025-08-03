@@ -44,31 +44,68 @@ class AppTheme {
   static const double borderRadius8 = 8.0;
   static const double borderRadius12 = 12.0;
   static const double borderRadius16 = 16.0;
+  static const double borderRadius20 = 20.0;
   static const double borderRadius24 = 24.0;
+  static const double borderRadius32 = 32.0;
 
   // Text Styles (using Inter font)
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: textPrimaryColor,
+  );
+
+  static const TextStyle displayMedium = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: textPrimaryColor,
+  );
+
+  static const TextStyle displaySmall = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: textPrimaryColor,
+  );
+
   static const TextStyle headlineLarge = TextStyle(
-    fontFamily: 'Inter',
     fontSize: 32,
     fontWeight: FontWeight.w700,
     color: textPrimaryColor,
   );
-  static const TextStyle bodyMedium = TextStyle(
-    fontFamily: 'Inter',
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
+
+  static const TextStyle titleLarge = TextStyle(
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
     color: textPrimaryColor,
   );
+
   static const TextStyle titleMedium = TextStyle(
-    fontFamily: 'Inter',
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: textPrimaryColor,
   );
-  static const TextStyle bodySmall = TextStyle(
-    fontFamily: 'Inter',
+
+  static const TextStyle titleSmall = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: textPrimaryColor,
+  );
+
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: textPrimaryColor,
+  );
+
+  static const TextStyle bodyMedium = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.normal,
+    color: textPrimaryColor,
+  );
+
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
     color: textPrimaryColor,
   );
   static const TextStyle badge = TextStyle(
@@ -271,9 +308,9 @@ class AppTheme {
         borderRadius: BorderRadius.circular(borderRadius8),
         borderSide: BorderSide(color: errorColor, width: 2),
       ),
-      labelStyle: TextStyle(color: textSecondaryColor, fontFamily: 'Inter'),
-      hintStyle: TextStyle(color: textHintColor, fontFamily: 'Inter'),
-      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      labelStyle: const TextStyle(color: textSecondaryColor, fontFamily: 'Inter'),
+      hintStyle: const TextStyle(color: textHintColor, fontFamily: 'Inter'),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
     ),
     canvasColor: surfaceColor.withOpacity(0.98),
     navigationBarTheme: NavigationBarThemeData(

@@ -710,19 +710,71 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final contacts = await AttachmentHandlerService.handleContacts(context);
     if (contacts != null) {
-      _handleContactAttachments(contacts);
+      _handleContacts(contacts);
     }
   }
 
-  void _handleAttachments(String type, List<File> files) {
-    // TODO: Implement attachment handling for group chat
-    // This would add the attachments to the group chat
-    print('Handling $type attachments: ${files.length} files');
+  void _handleAttachments(AttachmentType type, List<File> files) {
+    // Handle attachment processing
+    _simulateBotResponseToAttachments(type, files);
   }
 
-  void _handleContactAttachments(List<Contact> contacts) {
-    // TODO: Implement contact handling for group chat
-    // This would add the contacts to the group chat
-    print('Handling contacts: ${contacts.length} contacts');
+  void _handleContacts(List<Contact> contacts) {
+    // Handle contact processing
+    _simulateBotResponseToContacts(contacts);
+  }
+
+  void _simulateBotResponseToAttachments(AttachmentType type, List<File> files) {
+    // Simulate bot response for attachments
+    final message = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: 'BOT',
+      senderName: 'Karake',
+      senderAvatar: null,
+      content: 'I can see you\'ve shared some ${type.toString().toLowerCase()} files. How can I help you with these?',
+      type: MessageType.text,
+      timestamp: DateTime.now(),
+      attachments: files.map((file) => Attachment(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: file.path.split('/').last,
+        path: file.path,
+        size: file.lengthSync(),
+        type: type.toString().toLowerCase(),
+        fileExtension: file.path.split('.').last,
+        readableSize: '${(file.lengthSync() / 1024).toStringAsFixed(1)} KB',
+        metadata: {},
+      )).toList(),
+    );
+    
+    ref.read(chatMessagesProvider(widget.chatRoom.id).notifier).addMessage(message);
+  }
+
+  void _simulateBotResponseToContacts(List<Contact> contacts) {
+    // Simulate bot response for contacts
+    final message = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: 'BOT',
+      senderName: 'Karake',
+      senderAvatar: null,
+      content: 'I can see you\'ve shared ${contacts.length} contact(s). How can I help you with these?',
+      type: MessageType.text,
+      timestamp: DateTime.now(),
+      attachments: contacts.map((contact) => Attachment(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: contact.displayName ?? 'Unknown Contact',
+        path: '',
+        size: 0,
+        type: 'contact',
+        fileExtension: 'contact',
+        readableSize: '0 KB',
+        metadata: {
+          'displayName': contact.displayName,
+          'phones': contact.phones,
+          'emails': contact.emails,
+        },
+      )).toList(),
+    );
+    
+    ref.read(chatMessagesProvider(widget.chatRoom.id).notifier).addMessage(message);
   }
 } 
