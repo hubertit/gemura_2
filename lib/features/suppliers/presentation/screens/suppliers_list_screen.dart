@@ -142,10 +142,9 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
           child: Text(
             supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : 'S',
-            style: TextStyle(
+            style: AppTheme.bodySmall.copyWith(
               color: AppTheme.primaryColor,
               fontWeight: FontWeight.bold,
-              fontSize: 16,
             ),
           ),
         ),
@@ -168,6 +167,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               supplier.phone,
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.textSecondaryColor,
+                fontSize: 12,
               ),
             ),
           ],
@@ -202,99 +202,136 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   void _showSearchDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.search, color: AppTheme.primaryColor, size: 20),
-            const SizedBox(width: AppTheme.spacing8),
-            Text(
-              'Search Suppliers',
-              style: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
-          ],
+      builder: (context) => Dialog(
+        backgroundColor: AppTheme.surfaceColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Search by name, phone, or location...',
-                hintStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textHintColor),
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {});
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide.none,
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide.none,
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: AppTheme.textHintColor.withOpacity(0.1),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-              onChanged: (value) {
-                setState(() {});
-              },
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Row(
-              children: [
-                Icon(Icons.info_outline, size: 16, color: AppTheme.textSecondaryColor),
-                const SizedBox(width: AppTheme.spacing4),
-                Expanded(
-                  child: Text(
-                    'Search is case-insensitive and works across all supplier fields',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                      fontSize: 12,
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spacing20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Row(
+                children: [
+                  Icon(Icons.search, color: AppTheme.primaryColor, size: 18),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    'Search Suppliers',
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              // Search Field
+              TextFormField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search by name, phone, or location...',
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  prefixIcon: Icon(Icons.search, color: AppTheme.textSecondaryColor, size: 20),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: AppTheme.textSecondaryColor, size: 20),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.errorColor, width: 1),
+                  ),
+                  disabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.backgroundColor,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
                 ),
-              ],
-            ),
-          ],
+                style: AppTheme.bodySmall.copyWith(color: AppTheme.textPrimaryColor),
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              // Info Text
+              Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: AppTheme.textSecondaryColor),
+                  const SizedBox(width: AppTheme.spacing4),
+                  Expanded(
+                    child: Text(
+                      'Search is case-insensitive and works across all supplier fields',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              // Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'Cancel',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: AppTheme.surfaceColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                      ),
+                    ),
+                    child: Text(
+                      'Search',
+                      style: AppTheme.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _searchController.clear();
-              setState(() {});
-              Navigator.of(context).pop();
-            },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

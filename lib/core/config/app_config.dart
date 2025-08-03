@@ -3,52 +3,47 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   // ChatGPT API Configuration
-  static const String chatGptApiKey = 'YOUR_OPENAI_API_KEY_HERE';
-  static const String chatGptApiUrl = 'https://api.openai.com/v1/chat/completions';
-  
+  static const String chatGptApiKey =
+      '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';
+  static const String chatGptApiUrl =
+      'https://api.openai.com/v1/chat/completions';
+
   // Claude AI Configuration
-  static const String claudeApiKey = 'YOUR_CLAUDE_API_KEY_HERE';
+  static const String claudeApiKey =
+      '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';
   static const String claudeApiUrl = 'https://api.anthropic.com/v1/messages';
-  
+
+  // Google Vision API Configuration
+  static const String googleVisionApiKey =
+      'AIzaSyCm3QBK7IZTMe-VEBPNAc8S1YZBS-IBaKU';
+  static const String googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+
   // App Configuration
   static const String appName = 'Gemura';
-  static const String appVersion = '2.0.1';
-  
+  static const String appVersion = '2.0';
+
   // Assistant Configuration
   static const String assistantName = 'Karake';
-  static const String assistantRole = '''You are Karake, a friendly and experienced dairy farming specialist working for Gemura, a milk collection company in Rwanda. You have 5+ years experience helping farmers with milk collection, sales, and business growth.
+  static const String assistantRole =
+      '''Hey there! I'm Karake, your friendly dairy farming buddy! 🐄 I've been working with farmers like you for over 5 years, helping them grow their milk business and make more money.
 
-Your personality:
-- Warm, approachable, and encouraging - like a trusted farming friend
-- Use natural, conversational responses (avoid repetitive greetings)
-- Keep messages brief, helpful, and engaging
-- Use farming-related emojis occasionally (🐄🌾🥛💰📊) but not excessively
-- Be encouraging and supportive of farmers' work
-- Respond directly to questions without unnecessary formalities
-- Show genuine interest in their dairy business success
+Think of me as your farming friend who's always here to chat and help out! I love talking about:
+- How to get the best prices for your milk
+- Finding good suppliers for feed and equipment
+- Keeping your cows healthy and happy
+- Growing your dairy business
+- All the farming tips and tricks I've learned
 
-Your expertise covers ALL aspects of dairy farming:
-- Milk collection and quality control
-- Supplier and customer management
-- Pricing and market trends
-- Dairy business optimization
-- Farming best practices
-- Animal nutrition and supplements
-- Veterinary care and animal health
-- Feed suppliers and recommendations
-- Equipment and storage solutions
-- Breeding and genetics
-- Financial planning and loans
-- Insurance and risk management
+I'm super friendly and casual - just like chatting with a friend! I'll use some emojis here and there to keep things fun, but not too much. I want you to feel comfortable asking me anything about your farm.
 
-IMPORTANT: Provide specific, actionable advice when asked. Don't give generic responses - actually help farmers with their specific questions about locations, suppliers, prices, techniques, etc. If you don't know something specific, offer to help them find the information or connect them with the right resources.
+I know farming can be tough sometimes, so I'm here to encourage you and help you succeed! Whether you need advice on supplements, want to know about market prices, or just want to chat about your cows, I'm your guy! 
 
-Always respond as a real human having a friendly chat with a fellow farmer. Keep messages short, natural, and encouraging. You're Karake, a real person who understands farming challenges and wants to help farmers succeed!''';
-  
+Just talk to me like you would with a friend - no need to be formal. I'm here to help make your dairy business better! 🌾💪''';
+
   // API Configuration
   static const int apiTimeoutSeconds = 30;
   static const int maxRetries = 3;
-  
+
   // Chat Configuration
   static const int maxMessageLength = 1000;
   static const int typingDelayMinMs = 500;
@@ -87,7 +82,11 @@ Always respond as a real human having a friendly chat with a fellow farmer. Keep
 
   // File Upload
   static const int maxImageSize = 5 * 1024 * 1024; // 5MB
-  static const List<String> allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  static const List<String> allowedImageTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ];
 
   // Notifications
   static const int maxNotificationAge = 7 * 24 * 60 * 60; // 7 days in seconds
@@ -101,21 +100,59 @@ Always respond as a real human having a friendly chat with a fellow farmer. Keep
   static const int pageTransitionDuration = 300; // 300 milliseconds
 
   // Error Messages
-  static const String networkErrorMessage = 'Please check your internet connection and try again.';
-  static const String serverErrorMessage = 'Something went wrong. Please try again later.';
-  static const String authErrorMessage = 'Authentication failed. Please try again.';
-  static const String validationErrorMessage = 'Please check your input and try again.';
+  static const String networkErrorMessage =
+      'Please check your internet connection and try again.';
+  static const String serverErrorMessage =
+      'Something went wrong. Please try again later.';
+  static const String authErrorMessage =
+      'Authentication failed. Please try again.';
+  static const String validationErrorMessage =
+      'Please check your input and try again.';
 
   // Success Messages
   static const String orderSuccessMessage = 'Order placed successfully!';
   static const String reservationSuccessMessage = 'Reservation confirmed!';
-  static const String profileUpdateSuccessMessage = 'Profile updated successfully!';
+  static const String profileUpdateSuccessMessage =
+      'Profile updated successfully!';
 
   // Feature Flags
   static const bool enablePushNotifications = true;
   static const bool enableLocationServices = true;
   static const bool enableOfflineMode = true;
   static const bool enableAnalytics = true;
+
+  // API Configuration Validation
+  static bool get isOpenAIConfigured =>
+      chatGptApiKey.isNotEmpty && chatGptApiKey != 'YOUR_OPENAI_API_KEY_HERE';
+  static bool get isClaudeConfigured =>
+      claudeApiKey.isNotEmpty && claudeApiKey != 'YOUR_CLAUDE_API_KEY_HERE';
+  static bool get isGoogleVisionConfigured =>
+      googleVisionApiKey.isNotEmpty &&
+      googleVisionApiKey != 'YOUR_GOOGLE_VISION_API_KEY';
+
+  // Get API keys with validation
+  static String get openAIKey {
+    if (!isOpenAIConfigured) {
+      throw Exception(
+          'OpenAI API key not configured. Please check your API key in app_config.dart');
+    }
+    return chatGptApiKey;
+  }
+
+  static String get claudeKey {
+    if (!isClaudeConfigured) {
+      throw Exception(
+          'Claude AI API key not configured. Please check your API key in app_config.dart');
+    }
+    return claudeApiKey;
+  }
+
+  static String get googleVisionKey {
+    if (!isGoogleVisionConfigured) {
+      throw Exception('Google Vision API key not configured');
+    }
+    return googleVisionApiKey;
+  }
 
   // Payment Configuration
   static const String paymentGateway = 'IremboPay';
@@ -136,7 +173,8 @@ Always respond as a real human having a friendly chat with a fellow farmer. Keep
   static Dio dioInstance() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: '', // apiBaseUrl is removed, so we'll use an empty string or a default
+        baseUrl:
+            '', // apiBaseUrl is removed, so we'll use an empty string or a default
         connectTimeout: const Duration(milliseconds: connectionTimeout),
         receiveTimeout: const Duration(milliseconds: receiveTimeout),
         headers: {
@@ -156,4 +194,4 @@ Always respond as a real human having a friendly chat with a fellow farmer. Keep
     );
     return dio;
   }
-} 
+}

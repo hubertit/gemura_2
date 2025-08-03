@@ -123,10 +123,9 @@ class CustomerDetailsScreen extends ConsumerWidget {
             backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
             child: Text(
               customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
-              style: TextStyle(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
               ),
             ),
           ),

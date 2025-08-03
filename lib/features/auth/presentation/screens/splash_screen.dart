@@ -65,32 +65,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ),
-          // Remove the logo image from the splash screen
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 120,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Gemura',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppTheme.surfaceColor,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            offset: const Offset(1, 1),
-                            blurRadius: 3,
-                            color: Colors.black.withOpacity(0.5),
-                          ),
-                        ],
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
           // Footer with more visible version and copyright
           Positioned(
             left: 0,
@@ -98,22 +72,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             bottom: 32,
             child: Column(
               children: [
-                Text(
-                  'Version ${AppConfig.appVersion}',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.surfaceColor,
-                    fontWeight: FontWeight.w700,
-                    shadows: [
-                      Shadow(
-                        offset: const Offset(1, 1),
-                        blurRadius: 2,
-                        color: Colors.black.withOpacity(0.6),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
                 Text(
                   '© ${DateTime.now().year} Gemura',
                   style: AppTheme.bodySmall.copyWith(

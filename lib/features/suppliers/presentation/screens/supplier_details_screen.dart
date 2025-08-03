@@ -143,10 +143,9 @@ class SupplierDetailsScreen extends ConsumerWidget {
             backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
             child: Text(
               supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : 'S',
-              style: TextStyle(
+              style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
               ),
             ),
           ),

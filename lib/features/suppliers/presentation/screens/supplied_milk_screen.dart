@@ -211,7 +211,8 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
         subtitle: Text(
           '${DateFormat('MMM dd, yyyy').format(milk['date'])}',
           style: AppTheme.bodySmall.copyWith(
-            color: AppTheme.textSecondaryColor,
+            color: AppTheme.textHintColor,
+            fontSize: 11,
           ),
         ),
         trailing: Column(
@@ -302,9 +303,8 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
                     const SizedBox(width: AppTheme.spacing8),
                     Text(
                       'Filter Supplied Milk',
-                      style: AppTheme.bodyMedium.copyWith(
+                      style: AppTheme.bodySmall.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
                       ),
                     ),
                     const Spacer(),

@@ -329,176 +329,186 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.primaryColor,
-                    AppTheme.primaryColor.withOpacity(0.8),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside the text field
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.primaryColor,
+                      AppTheme.primaryColor.withOpacity(0.8),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
                 ),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                child: const Icon(
+                  Icons.smart_toy,
+                  color: Colors.white,
+                  size: 18,
+                ),
               ),
-              child: const Icon(
-                Icons.smart_toy,
-                color: Colors.white,
-                size: 18,
+              const SizedBox(width: AppTheme.spacing8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppConfig.assistantName,
+                    style: AppTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                  ),
+                  Text(
+                    'Milk Collection Specialist',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          backgroundColor: AppTheme.surfaceColor,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+          actions: const [],
+        ),
+        body: Column(
+          children: [
+            // Messages
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  // Dismiss keyboard when tapping on the message list
+                  FocusScope.of(context).unfocus();
+                },
+                child: _messages.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
+                        itemCount: _messages.length + (_isTyping ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (_isTyping && index == _messages.length) {
+                            return _buildTypingIndicator();
+                          }
+                          final message = _messages[index];
+                          return _buildMessageBubble(message);
+                        },
+                      ),
               ),
             ),
-            const SizedBox(width: AppTheme.spacing8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppConfig.assistantName,
-                  style: AppTheme.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimaryColor,
+            
+            // Message Input
+            Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing12,
+                vertical: AppTheme.spacing8,
+              ),
+              child: Row(
+                children: [
+                  // Attachment Button
+                  Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: _isAttaching 
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.attach_file,
+                              color: AppTheme.primaryColor,
+                              size: 20,
+                            ),
+                      onPressed: _isAttaching ? null : _showAttachmentOptions,
+                      padding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-                Text(
-                  'Milk Collection Specialist',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                    fontSize: 11,
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.backgroundColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: const InputDecoration(
+                          hintText: 'Type a message',
+                          hintStyle: TextStyle(fontSize: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing12,
+                            vertical: AppTheme.spacing8,
+                          ),
+                        ),
+                        maxLines: null,
+                        textCapitalization: TextCapitalization.sentences,
+                        onChanged: (value) {
+                          setState(() => _isTyping = value.isNotEmpty);
+                        },
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppTheme.spacing8),
+                  Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: _isTyping ? AppTheme.primaryColor : AppTheme.primaryColor.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.send,
+                        color: AppTheme.surfaceColor,
+                        size: 18,
+                      ),
+                      onPressed: _isTyping ? _sendMessage : null,
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-        backgroundColor: AppTheme.surfaceColor,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        actions: const [],
-      ),
-      body: Column(
-        children: [
-          // Messages
-          Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
-                    itemCount: _messages.length + (_isTyping ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (_isTyping && index == _messages.length) {
-                        return _buildTypingIndicator();
-                      }
-                      final message = _messages[index];
-                      return _buildMessageBubble(message);
-                    },
-                  ),
-          ),
-          
-
-          
-          // Message Input
-          Container(
-            margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spacing12,
-              vertical: AppTheme.spacing8,
-            ),
-            child: Row(
-              children: [
-                // Attachment Button
-                Container(
-                  height: 40,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: _isAttaching 
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                            ),
-                          )
-                        : const Icon(
-                            Icons.attach_file,
-                            color: AppTheme.primaryColor,
-                            size: 20,
-                          ),
-                    onPressed: _isAttaching ? null : _showAttachmentOptions,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.backgroundColor,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Type a message',
-                        hintStyle: TextStyle(fontSize: 14),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(AppTheme.borderRadius16)),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                          vertical: AppTheme.spacing8,
-                        ),
-                      ),
-                      maxLines: null,
-                      textCapitalization: TextCapitalization.sentences,
-                      onChanged: (value) {
-                        setState(() => _isTyping = value.isNotEmpty);
-                      },
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing8),
-                Container(
-                  height: 40,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: _isTyping ? AppTheme.primaryColor : AppTheme.primaryColor.withOpacity(0.3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.send,
-                      color: AppTheme.surfaceColor,
-                      size: 18,
-                    ),
-                    onPressed: _isTyping ? _sendMessage : null,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

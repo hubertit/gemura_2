@@ -442,19 +442,31 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.business, color: AppTheme.primaryColor),
-                const SizedBox(width: AppTheme.spacing8),
-                const Text('Select Customer'),
-              ],
+          return Dialog(
+            backgroundColor: AppTheme.surfaceColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
             ),
-            content: SizedBox(
-              width: double.maxFinite,
+            child: Container(
+              padding: const EdgeInsets.all(AppTheme.spacing20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Title
+                  Row(
+                    children: [
+                      Icon(Icons.business, color: AppTheme.primaryColor, size: 18),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        'Select Customer',
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
                   // Search field
                   TextField(
                     controller: searchController,
@@ -557,15 +569,25 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
                             },
                           ),
                   ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Cancel',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-            ],
           );
         },
       ),

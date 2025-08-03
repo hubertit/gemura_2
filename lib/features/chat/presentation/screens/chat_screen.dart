@@ -122,66 +122,74 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final messages = ref.watch(chatMessagesProvider(widget.chatRoom.id));
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
-              child: widget.chatRoom.groupAvatar != null
-                  ? ClipOval(
-                      child: Image.asset(
-                        widget.chatRoom.groupAvatar!,
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside the text field
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        appBar: AppBar(
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
+                child: widget.chatRoom.groupAvatar != null
+                    ? ClipOval(
+                        child: Image.asset(
+                          widget.chatRoom.groupAvatar!,
+                          width: 36,
+                          height: 36,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Text(
+                        widget.chatRoom.name.substring(0, 1).toUpperCase(),
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
                       ),
-                    )
-                  : Text(
-                      widget.chatRoom.name.substring(0, 1).toUpperCase(),
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-            ),
-            const SizedBox(width: AppTheme.spacing8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.chatRoom.name,
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textPrimaryColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '${widget.chatRoom.members.length} members',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
               ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.chatRoom.name,
+                      style: AppTheme.titleMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimaryColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${widget.chatRoom.members.length} members',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppTheme.surfaceColor,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: _navigateToWalletDetails,
             ),
           ],
         ),
-        backgroundColor: AppTheme.surfaceColor,
-        elevation: 0,
-        actions: const [],
-      ),
-      body: Container(
-        color: Colors.black.withOpacity(0.02),
-        child: Column(
+        body: Column(
           children: [
             // Wallet Info Card
             Container(
@@ -245,18 +253,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
             // Messages
             Expanded(
-              child: messages.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final isCurrentUser = message.senderId == 'USER-1';
-                        return _buildMessageBubble(message, isCurrentUser);
-                      },
-                    ),
+              child: GestureDetector(
+                onTap: () {
+                  // Dismiss keyboard when tapping on the message list
+                  FocusScope.of(context).unfocus();
+                },
+                child: messages.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isCurrentUser = message.senderId == 'USER-1'; // Assuming current user is USER-1
+                          return _buildMessageBubble(message, isCurrentUser);
+                        },
+                      ),
+              ),
             ),
 
             // Message Input
