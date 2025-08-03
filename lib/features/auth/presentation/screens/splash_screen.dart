@@ -24,7 +24,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _checkAuthState() async {
     await Future.delayed(
-      Duration(milliseconds: AppConfig.splashDuration),
+      const Duration(milliseconds: AppConfig.splashDuration),
     );
     if (!mounted) return;
     
@@ -61,8 +61,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           ),
           // Loader in the center
           const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo
+                Image(
+                  image: AssetImage('assets/images/logo.png'),
+                  width: 120,
+                  height: 120,
+                ),
+                SizedBox(height: 32),
+              ],
             ),
           ),
           // Footer with more visible version and copyright

@@ -302,15 +302,13 @@ class AppTheme {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadius8),
-        borderSide: BorderSide(color: errorColor, width: 1.5),
+        borderSide: BorderSide(color: errorColor, width: 1),
       ),
-      focusedErrorBorder: OutlineInputBorder(
+      disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(borderRadius8),
-        borderSide: BorderSide(color: errorColor, width: 2),
+        borderSide: BorderSide(color: thinBorderColor, width: thinBorderWidth),
       ),
-      labelStyle: const TextStyle(color: textSecondaryColor, fontFamily: 'Inter'),
-      hintStyle: const TextStyle(color: textHintColor, fontFamily: 'Inter'),
-      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: spacing12, vertical: spacing8),
     ),
     canvasColor: surfaceColor.withOpacity(0.98),
     navigationBarTheme: NavigationBarThemeData(

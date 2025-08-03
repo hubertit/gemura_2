@@ -17,7 +17,7 @@ class OpenAIVisionService {
         Uri.parse('https://api.openai.com/v1/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${AppConfig.openaiApiKey}',
+          'Authorization': 'Bearer ${AppConfig.chatGptApiKey}',
         },
         body: jsonEncode({
           'model': 'gpt-4-vision-preview',

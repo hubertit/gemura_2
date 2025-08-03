@@ -240,7 +240,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
 
   int _calculateTypingDelay(int responseLength) {
     // Base delay + additional time based on response length
-    final baseDelay = AppConfig.typingDelayMinMs;
+    const baseDelay = AppConfig.typingDelayMinMs;
     final additionalDelay = (responseLength / 10).clamp(0, AppConfig.typingDelayMaxMs - baseDelay);
     return (baseDelay + additionalDelay).round();
   }
@@ -633,7 +633,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                               ),
                               if (isCurrentUser) ...[
                                 const SizedBox(width: AppTheme.spacing2),
-                                Icon(
+                                const Icon(
                                   Icons.done_all,
                                   size: 12,
                                   color: AppTheme.textSecondaryColor,

@@ -23,9 +23,15 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<string>10</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take photos for sharing in chats.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>This app needs contacts access to share contact information in chats.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to select images for sharing in chats.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -45,12 +51,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<!-- Permissions for attachments -->
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access to take photos for sharing in chats.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs photo library access to select images for sharing in chats.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>This app needs contacts access to share contact information in chats.</string>
 </dict>
 </plist>

@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:contacts_service/contacts_service.dart';
+
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/attachment_handler_service.dart';
-
-import '../providers/chat_provider.dart';
+import '../../domain/models/attachment_message.dart';
 import '../../domain/models/chat_message.dart';
 import '../../domain/models/chat_room.dart';
+import '../providers/chat_provider.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -686,7 +687,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final files = await AttachmentHandlerService.handleCamera(context);
     if (files != null) {
-      _handleAttachments('image', files);
+      _handleAttachments(AttachmentType.image, files);
     }
   }
 
@@ -694,7 +695,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final files = await AttachmentHandlerService.handleGallery(context);
     if (files != null) {
-      _handleAttachments('image', files);
+      _handleAttachments(AttachmentType.image, files);
     }
   }
 
@@ -702,7 +703,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final files = await AttachmentHandlerService.handleDocument(context);
     if (files != null) {
-      _handleAttachments('document', files);
+      _handleAttachments(AttachmentType.document, files);
     }
   }
 
@@ -728,53 +729,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Simulate bot response for attachments
     final message = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      chatId: widget.chatRoom.id,
       senderId: 'BOT',
       senderName: 'Karake',
       senderAvatar: null,
-      content: 'I can see you\'ve shared some ${type.toString().toLowerCase()} files. How can I help you with these?',
+      content: 'I can see you\'ve shared some ${type.toString().split('.').last} files. How can I help you with these?',
       type: MessageType.text,
       timestamp: DateTime.now(),
-      attachments: files.map((file) => Attachment(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: file.path.split('/').last,
-        path: file.path,
-        size: file.lengthSync(),
-        type: type.toString().toLowerCase(),
-        fileExtension: file.path.split('.').last,
-        readableSize: '${(file.lengthSync() / 1024).toStringAsFixed(1)} KB',
-        metadata: {},
-      )).toList(),
+      status: MessageStatus.sent,
+      attachments: files.map((file) => file.path ?? '').toList(),
     );
     
-    ref.read(chatMessagesProvider(widget.chatRoom.id).notifier).addMessage(message);
+    // Add message using the chat notifier
+    ref.read(chatProvider.notifier).addMessage(message);
   }
 
   void _simulateBotResponseToContacts(List<Contact> contacts) {
     // Simulate bot response for contacts
     final message = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      chatId: widget.chatRoom.id,
       senderId: 'BOT',
       senderName: 'Karake',
       senderAvatar: null,
       content: 'I can see you\'ve shared ${contacts.length} contact(s). How can I help you with these?',
       type: MessageType.text,
       timestamp: DateTime.now(),
-      attachments: contacts.map((contact) => Attachment(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: contact.displayName ?? 'Unknown Contact',
-        path: '',
-        size: 0,
-        type: 'contact',
-        fileExtension: 'contact',
-        readableSize: '0 KB',
-        metadata: {
-          'displayName': contact.displayName,
-          'phones': contact.phones,
-          'emails': contact.emails,
-        },
-      )).toList(),
+      status: MessageStatus.sent,
+      attachments: contacts.map((contact) => contact.displayName ?? 'Unknown Contact').toList(),
     );
     
-    ref.read(chatMessagesProvider(widget.chatRoom.id).notifier).addMessage(message);
+    // Add message using the chat notifier
+    ref.read(chatProvider.notifier).addMessage(message);
   }
 } 
