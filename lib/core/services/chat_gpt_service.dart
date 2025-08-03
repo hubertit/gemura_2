@@ -62,8 +62,33 @@ class ChatGptService {
   String _generateMockResponse(String userMessage) {
     final message = userMessage.toLowerCase();
     
-    // More specific and helpful responses
-    if (message.contains('supplement') || message.contains('feed') || message.contains('nutrition')) {
+    // Handle general greetings and conversational questions
+    if (message.contains('hello') || message.contains('hi') || message.contains('hey')) {
+      return 'Hey there! 👋 How are you doing today? I hope your farming is going well! What can I help you with?';
+    } else if (message.contains('how are you') || message.contains('how\'s it going')) {
+      return 'I\'m doing great, thanks for asking! 😊 I\'ve been helping other farmers today and learning lots. How about you? How\'s your day going? Any exciting news from the farm?';
+    } else if (message.contains('good morning') || message.contains('good afternoon') || message.contains('good evening')) {
+      return 'Good morning to you too! 🌅 I hope you\'re having a wonderful day on the farm. What\'s on your mind today?';
+    } else if (message.contains('thank you') || message.contains('thanks')) {
+      return 'You\'re very welcome! 😊 I\'m always happy to help. Is there anything else you\'d like to know or chat about?';
+    } else if (message.contains('bye') || message.contains('goodbye') || message.contains('see you')) {
+      return 'Take care! 👋 Have a great day on the farm, and don\'t hesitate to reach out if you need anything. I\'ll be here when you need me!';
+    } else if (message.contains('weather') || message.contains('rain') || message.contains('sunny')) {
+      return 'Weather is so important for farming! 🌤️ How\'s the weather treating your crops and animals today? I hope it\'s good for your dairy operations!';
+    } else if (message.contains('family') || message.contains('children') || message.contains('kids')) {
+      return 'Family is everything! 👨‍👩‍👧‍👦 How\'s your family doing? I bet they\'re proud of all the hard work you\'re doing on the farm. Family support makes farming so much better!';
+    } else if (message.contains('tired') || message.contains('exhausted') || message.contains('hard work')) {
+      return 'Farming is definitely hard work! 💪 I can only imagine how tired you must be. Remember to take care of yourself too - you\'re doing amazing work! What\'s been the most challenging part of your day?';
+    } else if (message.contains('happy') || message.contains('excited') || message.contains('great news')) {
+      return 'That\'s wonderful! 🎉 I love hearing good news! What\'s got you so happy? I\'m excited to hear about your success!';
+    } else if (message.contains('who are you') || message.contains('what\'s your name') || message.contains('tell me about yourself')) {
+      return 'I\'m Karake! 🐄 Your friendly dairy farming buddy who\'s been helping farmers like you for over 5 years. I love chatting about farming, helping with business advice, and just being a good friend! What would you like to know about me?';
+    } else if (message.contains('what can you do') || message.contains('help me') || message.contains('capabilities')) {
+      return 'I can help with so much! 🚀 Dairy business advice, finding suppliers and customers, record keeping, supplements, veterinary care, and just being a good friend to chat with! What do you need help with today?';
+    }
+    
+    // Dairy-specific responses
+    else if (message.contains('supplement') || message.contains('feed') || message.contains('nutrition')) {
       if (message.contains('nyagatare')) {
         return 'For supplements in Nyagatare, I recommend checking with local agricultural stores like Nyagatare Farmers Cooperative or contacting the district agricultural office. You can also try suppliers like Inyange Industries or Uzima Feeds who have branches in the Eastern Province. Would you like me to help you find specific contact details? 📞';
       }
@@ -78,12 +103,6 @@ class ChatGptService {
       return 'Nice! Time to make some sales! 💰 Which customer are you selling to? How much milk? 📈';
     } else if (message.contains('price') || message.contains('cost')) {
       return 'Current prices are 300-400 Frw/L depending on quality and your location. What area are you in? 💰';
-    } else if (message.contains('help') || message.contains('what can you do')) {
-      return 'I help with everything dairy! Suppliers, customers, collections, sales, pricing, supplements, veterinary services, and farming advice. What do you need help with? 😊';
-    } else if (message.contains('who are you') || message.contains('what\'s your name')) {
-      return 'I\'m Karake! Your dairy farming buddy who helps with milk collection, suppliers, customers, supplements, veterinary care, and getting the best deals! 🐄 How can I help you today?';
-    } else if (message.contains('hello') || message.contains('hi') || message.contains('nice to meet')) {
-      return 'Hey! Great to meet you too! How\'s the farming going? What can I help you with today? 🌾';
     } else if (message.contains('milk') || message.contains('dairy')) {
       return 'Milk business is the best business! 🥛 What do you need help with? Collections, sales, supplements, or finding new customers?';
     } else if (message.contains('farm') || message.contains('farmer')) {
@@ -98,19 +117,11 @@ class ChatGptService {
       return 'Proper feeding is key to good milk production! I can help with feed recommendations, suppliers, and feeding schedules. What do you need? 🌱';
     } else if (message.contains('breed') || message.contains('cow type')) {
       return 'Different breeds have different strengths! I can help you understand Holstein, Jersey, and local breeds for your farming goals. What breed are you working with? 🐄';
-    } else if (message.contains('storage') || message.contains('preserve')) {
-      return 'Milk storage is critical for quality! I can help with cooling systems, storage containers, and preservation techniques. What storage challenges are you facing? ❄️';
-    } else {
-      // More varied and helpful responses
-      final responses = [
-        'How can I help with your dairy business today? 🐄',
-        'What\'s new on the farm? Need help with collections, sales, or animal care? 🌾',
-        'Ready to help with suppliers, customers, collections, supplements, or veterinary care. What\'s on your mind? 📊',
-        'Another great day for dairy farming! What do you need help with? 🥛',
-        'Farmers like you make our country strong! How can I assist today? 💪',
-        'I\'m here to help with all aspects of dairy farming - from feed to finance! What\'s your question? 🌱',
-      ];
-      return responses[DateTime.now().millisecond % responses.length];
+    }
+    
+    // Default friendly response
+    else {
+      return 'That\'s interesting! 🤔 I\'d love to help you with that. Could you tell me a bit more about what you\'re looking for? I\'m here to help with dairy farming, business advice, or just to chat! 😊';
     }
   }
 } 
