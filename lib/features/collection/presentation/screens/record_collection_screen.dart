@@ -5,7 +5,9 @@ import 'package:gemura/features/suppliers/presentation/providers/supplier_provid
 import 'package:gemura/features/suppliers/domain/models/supplier.dart';
 
 class RecordCollectionScreen extends ConsumerStatefulWidget {
-  const RecordCollectionScreen({super.key});
+  final Map<String, dynamic>? preFilledData;
+  
+  const RecordCollectionScreen({super.key, this.preFilledData});
 
   @override
   ConsumerState<RecordCollectionScreen> createState() => _RecordCollectionScreenState();
@@ -35,6 +37,17 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
     'Temperature Issues',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.preFilledData != null) {
+      final data = widget.preFilledData!;
+      _quantityController.text = data['quantity']?.toString() ?? '';
+      _notesController.text = data['notes'] ?? '';
+      // TODO: Set selected supplier based on pre-filled data
+    }
+  }
 
   @override
   void dispose() {

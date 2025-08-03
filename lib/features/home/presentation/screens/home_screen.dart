@@ -22,8 +22,8 @@ import '../../../../shared/widgets/primary_button.dart';
 import '../../../chat/presentation/screens/chat_list_screen.dart';
 import '../../../suppliers/presentation/screens/suppliers_list_screen.dart';
 import '../../../customers/presentation/screens/customers_list_screen.dart';
-import '../../../collection/presentation/screens/record_collection_screen.dart';
-import '../../../sales/presentation/screens/record_sale_screen.dart';
+import '../../../suppliers/presentation/screens/supplied_milk_screen.dart';
+import '../../../customers/presentation/screens/collected_milk_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -314,7 +314,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const RecordCollectionScreen(),
+                              builder: (context) => const SuppliedMilkScreen(),
                             ),
                           );
                         },
@@ -327,7 +327,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const RecordSaleScreen(),
+                              builder: (context) => const CollectedMilkScreen(),
                             ),
                           );
                         },

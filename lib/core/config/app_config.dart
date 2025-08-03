@@ -3,8 +3,12 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   // ChatGPT API Configuration
-  static const String chatGptApiKey = 'YOUR_CHATGPT_API_KEY_HERE'; // Replace with your actual API key
+  static const String chatGptApiKey = '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';
   static const String chatGptApiUrl = 'https://api.openai.com/v1/chat/completions';
+  
+  // Claude AI Configuration
+  static const String claudeApiKey = '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';
+  static const String claudeApiUrl = 'https://api.anthropic.com/v1/messages';
   
   // App Configuration
   static const String appName = 'Gemura';

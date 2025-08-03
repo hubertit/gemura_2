@@ -5,7 +5,9 @@ import 'package:gemura/features/customers/presentation/providers/customer_provid
 import 'package:gemura/features/customers/domain/models/customer.dart';
 
 class RecordSaleScreen extends ConsumerStatefulWidget {
-  const RecordSaleScreen({super.key});
+  final Map<String, dynamic>? preFilledData;
+  
+  const RecordSaleScreen({super.key, this.preFilledData});
 
   @override
   ConsumerState<RecordSaleScreen> createState() => _RecordSaleScreenState();
@@ -35,6 +37,17 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
     'Temperature Issues',
     'Other',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.preFilledData != null) {
+      final data = widget.preFilledData!;
+      _quantityController.text = data['quantity']?.toString() ?? '';
+      _notesController.text = data['notes'] ?? '';
+      // TODO: Set selected customer based on pre-filled data
+    }
+  }
 
   @override
   void dispose() {

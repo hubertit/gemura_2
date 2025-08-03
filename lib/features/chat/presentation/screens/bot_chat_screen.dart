@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/chat_gpt_service.dart';
 import '../../../../core/services/conversation_storage_service.dart';
+import '../../../../core/services/attachment_service.dart';
+import '../../../../core/services/attachment_processor_service.dart';
 import '../../../../shared/widgets/markdown_text.dart';
+import '../../domain/models/attachment_message.dart';
+import 'contact_selection_screen.dart';
+import 'package:contacts_service/contacts_service.dart';
 
 class BotChatScreen extends ConsumerStatefulWidget {
   const BotChatScreen({super.key});
@@ -73,6 +79,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isTyping = false;
+  bool _isAttaching = false;
   late AnimationController _typingController;
   late Animation<double> _dot1, _dot2, _dot3;
 
@@ -413,12 +420,21 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.attach_file,
-                      color: AppTheme.primaryColor,
-                      size: 20,
-                    ),
-                    onPressed: _showAttachmentOptions,
+                    icon: _isAttaching 
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.attach_file,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
+                    onPressed: _isAttaching ? null : _showAttachmentOptions,
                     padding: EdgeInsets.zero,
                   ),
                 ),
@@ -572,7 +588,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                   child: CustomPaint(
                     painter: ChatBubblePainter(
                       isFromCurrentUser: isCurrentUser,
-                      color: isCurrentUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
+                      color: isCurrentUser ? AppTheme.sentMessageColor : AppTheme.surfaceColor,
                     ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -583,17 +599,37 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           isCurrentUser 
-                            ? Text(
-                                message.text,
-                                style: AppTheme.bodySmall.copyWith(
-                                  color: AppTheme.surfaceColor,
-                                  fontSize: 14,
-                                ),
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    message.text,
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textPrimaryColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (message.attachments != null && message.attachments!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                                      child: _buildMessageAttachments(message.attachments!),
+                                    ),
+                                ],
                               )
-                            : MarkdownText(
-                                text: message.text,
-                                style: const TextStyle(fontSize: 14),
-                                textColor: AppTheme.textPrimaryColor,
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MarkdownText(
+                                    text: message.text,
+                                    style: const TextStyle(fontSize: 14),
+                                    textColor: AppTheme.textPrimaryColor,
+                                  ),
+                                  if (message.attachments != null && message.attachments!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                                      child: _buildMessageAttachments(message.attachments!),
+                                    ),
+                                ],
                               ),
                           const SizedBox(height: AppTheme.spacing2),
                           Row(
@@ -603,17 +639,17 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                                 messageTime,
                                 style: AppTheme.bodySmall.copyWith(
                                   color: isCurrentUser 
-                                      ? AppTheme.surfaceColor.withOpacity(0.7)
+                                      ? AppTheme.textSecondaryColor
                                       : AppTheme.textSecondaryColor,
                                   fontSize: 10,
                                 ),
                               ),
                               if (isCurrentUser) ...[
                                 const SizedBox(width: AppTheme.spacing2),
-                                const Icon(
+                                Icon(
                                   Icons.done_all,
                                   size: 12,
-                                  color: Colors.white70,
+                                  color: AppTheme.textSecondaryColor,
                                 ),
                               ],
                             ],
@@ -779,9 +815,9 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                   onTap: _openDocument,
                 ),
                 _buildAttachmentOption(
-                  icon: Icons.location_on,
-                  label: 'Location',
-                  onTap: _shareLocation,
+                  icon: Icons.contacts,
+                  label: 'Contacts',
+                  onTap: _shareContacts,
                 ),
               ],
             ),
@@ -828,46 +864,548 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     );
   }
 
-  void _openCamera() {
+  Future<void> _openCamera() async {
     Navigator.pop(context);
-    // TODO: Implement camera functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Camera functionality coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
+    setState(() => _isAttaching = true);
+    
+    try {
+      print('Opening camera...');
+      final File? photo = await AttachmentService.takePhoto();
+      print('Camera result: ${photo?.path ?? 'null'}');
+      if (photo != null) {
+        _addAttachmentMessage(AttachmentType.image, [photo]);
+      } else {
+        // User cancelled camera
+        print('Camera was cancelled by user');
+      }
+    } catch (e) {
+      print('Camera error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Camera error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
+    } finally {
+      setState(() => _isAttaching = false);
+    }
+  }
+
+  Future<void> _openGallery() async {
+    Navigator.pop(context);
+    setState(() => _isAttaching = true);
+    
+    try {
+      print('Opening gallery...');
+      final List<File> images = await AttachmentService.pickImages();
+      print('Gallery result: ${images.length} images');
+      if (images.isNotEmpty) {
+        _addAttachmentMessage(AttachmentType.image, images);
+      } else {
+        // User cancelled gallery picker
+        print('Gallery picker was cancelled by user');
+      }
+    } catch (e) {
+      print('Gallery error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gallery error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
+    } finally {
+      setState(() => _isAttaching = false);
+    }
+  }
+
+  Future<void> _openDocument() async {
+    Navigator.pop(context);
+    setState(() => _isAttaching = true);
+    
+    try {
+      final List<File> documents = await AttachmentService.pickDocuments();
+      if (documents.isNotEmpty) {
+        _addAttachmentMessage(AttachmentType.document, documents);
+      }
+    } catch (e) {
+      _showPermissionError('Document Picker', e.toString());
+    } finally {
+      setState(() => _isAttaching = false);
+    }
+  }
+
+  Future<void> _shareContacts() async {
+    Navigator.pop(context);
+    
+    try {
+      print('Opening contact selection...');
+      
+      final selectedContacts = await Navigator.push<List<Contact>>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ContactSelectionScreen(),
+        ),
+      );
+      
+      if (selectedContacts != null && selectedContacts.isNotEmpty) {
+        print('Selected contacts: ${selectedContacts.length}');
+        _addContactAttachments(selectedContacts);
+      } else {
+        // User cancelled contact selection
+        print('Contact selection was cancelled by user');
+      }
+    } catch (e) {
+      print('Contacts error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Contacts error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
+    }
+  }
+
+  void _addAttachmentMessage(AttachmentType type, List<File> files) {
+    final attachments = files.map((file) => Attachment(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: file.path.split('/').last,
+      path: file.path,
+      type: type,
+      size: file.lengthSync(),
+    )).toList();
+
+    // Create bot message with attachments
+    final botMessage = BotMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      text: _getAttachmentText(type, files.length),
+      isUser: true,
+      timestamp: DateTime.now(),
+      messageType: BotMessageType.text,
+      attachments: attachments,
+    );
+
+    setState(() {
+      _messages.add(botMessage);
+    });
+    
+    _saveConversation();
+    _scrollToBottom();
+    
+    // Simulate bot response to attachments
+    _simulateBotResponseToAttachments(type, files);
+  }
+
+  void _addContactAttachments(List<Contact> contacts) {
+    final attachments = contacts.map((contact) => Attachment(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: contact.displayName ?? 'Unknown Contact',
+      path: contact.phones?.isNotEmpty == true ? contact.phones!.first.value ?? '' : '',
+      type: AttachmentType.contact,
+      size: 0,
+      metadata: {
+        'displayName': contact.displayName ?? '',
+        'phones': contact.phones?.map((p) => p.value).toList() ?? [],
+        'emails': contact.emails?.map((e) => e.value).toList() ?? [],
+      },
+    )).toList();
+
+    // Create bot message with contact attachments
+    final botMessage = BotMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      text: _getContactAttachmentText(contacts.length),
+      isUser: true,
+      timestamp: DateTime.now(),
+      messageType: BotMessageType.text,
+      attachments: attachments,
+    );
+
+    setState(() {
+      _messages.add(botMessage);
+    });
+    
+    _saveConversation();
+    _scrollToBottom();
+    
+    // Simulate bot response to contacts
+    _simulateBotResponseToContacts(contacts);
+  }
+
+
+
+
+
+  String _getAttachmentText(AttachmentType type, int count) {
+    switch (type) {
+      case AttachmentType.image:
+        return count == 1 ? '📷 Photo' : '📷 $count Photos';
+      case AttachmentType.document:
+        return count == 1 ? '📄 Document' : '📄 $count Documents';
+      case AttachmentType.contact:
+        return count == 1 ? '👥 Contact' : '👥 $count Contacts';
+    }
+  }
+
+  String _getContactAttachmentText(int count) {
+    return count == 1 ? '👥 Contact' : '👥 $count Contacts';
+  }
+
+  Future<void> _simulateBotResponseToAttachments(AttachmentType type, List<File> files) async {
+    setState(() {
+      _isTyping = true;
+    });
+    _typingController.repeat();
+
+    // Calculate typing delay
+    final typingDelay = _calculateTypingDelay(100);
+    await Future.delayed(Duration(milliseconds: typingDelay));
+
+    if (mounted) {
+      try {
+        // Convert files to attachments for processing
+        final attachments = files.map((file) => Attachment(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: file.path.split('/').last,
+          path: file.path,
+          type: type,
+          size: file.lengthSync(),
+        )).toList();
+        
+        // Process attachments to extract information
+        final processedInfo = await AttachmentProcessorService.processAttachments(attachments);
+        
+        // Generate contextual bot response
+        final response = AttachmentProcessorService.generateBotResponse(processedInfo, attachments);
+
+        setState(() {
+          _messages.add(
+            BotMessage(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: response,
+              isUser: false,
+              timestamp: DateTime.now(),
+              messageType: BotMessageType.text,
+            ),
+          );
+          _isTyping = false;
+        });
+        _typingController.stop();
+        _saveConversation();
+        _scrollToBottom();
+      } catch (e) {
+        // Fallback response if processing fails
+        String fallbackResponse = '';
+        switch (type) {
+          case AttachmentType.image:
+            fallbackResponse = files.length == 1 
+                ? "Great! I can see the photo you shared. This looks like it could be related to your dairy operations. How can I help you with this?"
+                : "I can see you've shared ${files.length} photos. These appear to be related to your dairy business. What would you like me to help you with regarding these images?";
+            break;
+          case AttachmentType.document:
+            fallbackResponse = files.length == 1
+                ? "I can see you've shared a document. This looks like it might be related to your dairy business records. How can I assist you with this document?"
+                : "I can see you've shared ${files.length} documents. These appear to be dairy business related. What would you like me to help you with regarding these documents?";
+            break;
+          case AttachmentType.contact:
+            fallbackResponse = "I can see you've shared contact information. This could be useful for your dairy business network. How can I help you with these contacts?";
+            break;
+        }
+
+        setState(() {
+          _messages.add(
+            BotMessage(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: fallbackResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+              messageType: BotMessageType.text,
+            ),
+          );
+          _isTyping = false;
+        });
+        _typingController.stop();
+        _saveConversation();
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Future<void> _simulateBotResponseToContacts(List<Contact> contacts) async {
+    setState(() {
+      _isTyping = true;
+    });
+    _typingController.repeat();
+
+    // Calculate typing delay
+    final typingDelay = _calculateTypingDelay(100);
+    await Future.delayed(Duration(milliseconds: typingDelay));
+
+    if (mounted) {
+      try {
+        // Convert contacts to attachments for processing
+        final attachments = contacts.map((contact) => Attachment(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: contact.displayName ?? 'Unknown Contact',
+          path: contact.phones?.isNotEmpty == true ? contact.phones!.first.value ?? '' : '',
+          type: AttachmentType.contact,
+          size: 0,
+          metadata: {
+            'displayName': contact.displayName ?? '',
+            'phones': contact.phones?.map((p) => p.value).toList() ?? [],
+            'emails': contact.emails?.map((e) => e.value).toList() ?? [],
+          },
+        )).toList();
+        
+        // Process attachments to extract information
+        final processedInfo = await AttachmentProcessorService.processAttachments(attachments);
+        
+        // Generate contextual bot response
+        final response = AttachmentProcessorService.generateBotResponse(processedInfo, attachments);
+
+        setState(() {
+          _messages.add(
+            BotMessage(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: response,
+              isUser: false,
+              timestamp: DateTime.now(),
+              messageType: BotMessageType.text,
+            ),
+          );
+          _isTyping = false;
+        });
+        _typingController.stop();
+        _saveConversation();
+        _scrollToBottom();
+      } catch (e) {
+        // Fallback response if processing fails
+        final contactNames = contacts.take(3).map((c) => c.displayName ?? 'Unknown').join(', ');
+        final fallbackResponse = contacts.length == 1
+            ? "I can see you've shared contact information for $contactNames. This could be useful for your dairy business network. How can I help you with this contact?"
+            : "I can see you've shared ${contacts.length} contacts including $contactNames. This looks like your dairy business network. How can I help you with these contacts?";
+
+        setState(() {
+          _messages.add(
+            BotMessage(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              text: fallbackResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+              messageType: BotMessageType.text,
+            ),
+          );
+          _isTyping = false;
+        });
+        _typingController.stop();
+        _saveConversation();
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Widget _buildMessageAttachments(List<Attachment> attachments) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: attachments.map((attachment) {
+        switch (attachment.type) {
+          case AttachmentType.image:
+            return Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                child: Image.file(
+                  File(attachment.path),
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            );
+          case AttachmentType.document:
+            return Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    AttachmentService.getFileIcon(attachment.fileExtension),
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          attachment.name,
+                          style: AppTheme.bodySmall.copyWith(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${attachment.fileExtension.toUpperCase()} • ${attachment.readableSize}',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          case AttachmentType.contact:
+            return Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
+              padding: const EdgeInsets.all(AppTheme.spacing8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.person,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          attachment.name,
+                          style: AppTheme.bodySmall.copyWith(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (attachment.metadata?['phones'] != null && attachment.metadata!['phones'].isNotEmpty)
+                          Text(
+                            attachment.metadata!['phones'].first.toString(),
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                              fontSize: 10,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+        }
+      }).toList(),
     );
   }
 
-  void _openGallery() {
-    Navigator.pop(context);
-    // TODO: Implement gallery picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Gallery picker coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
-  }
-
-  void _openDocument() {
-    Navigator.pop(context);
-    // TODO: Implement document picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Document picker coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
-      ),
-    );
-  }
-
-  void _shareLocation() {
-    Navigator.pop(context);
-    // TODO: Implement location sharing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Location sharing coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
+  void _showPermissionError(String feature, String error) {
+    // Check if permission is permanently denied (used for UI logic)
+    final isPermanentlyDenied = error.contains('permanently denied');
+    
+    // Show dialog for permanently denied permissions
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceColor,
+        title: Row(
+          children: [
+            Icon(
+              Icons.settings,
+              color: AppTheme.primaryColor,
+              size: 24,
+            ),
+            const SizedBox(width: AppTheme.spacing8),
+            Text(
+              'Enable $feature Access',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textPrimaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$feature permission is required to use this feature.',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'How to enable:',
+                    style: AppTheme.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  Text(
+                    '1. Tap "Open Settings"\n2. Find "Privacy & Security"\n3. Tap "$feature"\n4. Enable for Gemura',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              AttachmentService.openAppSettings();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: AppTheme.surfaceColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              ),
+            ),
+            child: Text(
+              'Open Settings',
+              style: AppTheme.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -879,6 +1417,7 @@ class BotMessage {
   final bool isUser;
   final DateTime timestamp;
   final BotMessageType messageType;
+  final List<Attachment>? attachments;
 
   BotMessage({
     required this.id,
@@ -886,6 +1425,7 @@ class BotMessage {
     required this.isUser,
     required this.timestamp,
     required this.messageType,
+    this.attachments,
   });
 }
 

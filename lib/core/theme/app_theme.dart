@@ -5,6 +5,7 @@ class AppTheme {
   static const Color primaryColor = Color(0xFF004AAD);
   static const Color backgroundColor = Color(0xFFF5F5F5);
   static const Color surfaceColor = Colors.white;
+  static const Color sentMessageColor = Color(0xFFBBDEFB); // Medium light blue for sent messages
   static const Color errorColor = Color(0xFFE53935);
   static const Color successColor = Color(0xFF4CAF50); // Brighter green for success
   static const Color warningColor = Color(0xFFFFA000);

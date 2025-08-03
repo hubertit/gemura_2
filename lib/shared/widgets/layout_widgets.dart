@@ -5,14 +5,12 @@ class DetailsActionSheet extends StatelessWidget {
   final String? title;
   final Widget? headerWidget;
   final List<DetailRow> details;
-  final VoidCallback? onClose;
 
   const DetailsActionSheet({
     super.key,
     this.title,
     this.headerWidget,
     required this.details,
-    this.onClose,
   });
 
   @override
@@ -22,65 +20,47 @@ class DetailsActionSheet extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header with drag handle
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.textHintColor.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header with drag handle
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textHintColor.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
             ),
-          ),
-          // Close button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                InkWell(
-                  onTap: onClose ?? () => Navigator.of(context).pop(),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppTheme.textHintColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close,
-                      color: AppTheme.textSecondaryColor,
-                      size: 20,
-                    ),
-                  ),
+
+            // Optional header widget (for transaction amount, wallet balance, etc.)
+            if (headerWidget != null) ...[
+              const SizedBox(height: 12),
+              headerWidget!,
+              const SizedBox(height: 16),
+            ],
+            // Details with dotted separators - make scrollable
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: details.map((detail) => _DetailRowWidget(detail: detail)).toList(),
                 ),
-              ],
+              ),
             ),
-          ),
-          // Optional header widget (for transaction amount, wallet balance, etc.)
-          if (headerWidget != null) ...[
-            const SizedBox(height: 12),
-            headerWidget!,
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
           ],
-          // Details with dotted separators
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: details.map((detail) => _DetailRowWidget(detail: detail)).toList(),
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }

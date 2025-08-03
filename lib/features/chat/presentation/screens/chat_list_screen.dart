@@ -86,47 +86,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             ),
           ),
           
-          // Stats Card
-          Container(
-                  margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing4),
-      padding: const EdgeInsets.all(AppTheme.spacing8),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
-              border: Border(
-                bottom: BorderSide(
-                  color: AppTheme.thinBorderColor.withOpacity(0.3),
-                  width: 0.5,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                  ),
-                  child: const Icon(
-                    Icons.chat_bubble_outline,
-                    color: AppTheme.primaryColor,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: Text(
-                    '${chats.length} groups • ${_getUnreadCount(chats)} unread',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
           // Chat List
           Expanded(
             child: chats.isEmpty
@@ -207,14 +166,14 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         leading: Stack(
           children: [
                         CircleAvatar(
-              radius: 20,
+              radius: 30,
               backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
               child: chat.groupAvatar != null
                   ? ClipOval(
                       child: Image.asset(
                         chat.groupAvatar!,
-                        width: 40,
-                        height: 40,
+                        width: 60,
+                        height: 60,
                         fit: BoxFit.cover,
                       ),
                     )
@@ -223,7 +182,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.primaryColor,
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: 18,
                       ),
                     ),
             ),
@@ -347,31 +306,13 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           horizontal: AppTheme.spacing16,
           vertical: AppTheme.spacing8,
         ),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.primaryColor,
-                AppTheme.primaryColor.withOpacity(0.8),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+        leading: CircleAvatar(
+          radius: 30,
+          backgroundColor: AppTheme.primaryColor,
           child: const Icon(
-            Icons.person,
+            Icons.smart_toy,
             color: Colors.white,
-            size: 24,
+            size: 30,
           ),
         ),
                           title: Row(
@@ -505,9 +446,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     }).toList();
   }
 
-  int _getUnreadCount(List<ChatRoom> chats) {
-    return chats.fold(0, (sum, chat) => sum + chat.unreadCount);
-  }
+
 
   void _showNewChatOptions() {
     showModalBottomSheet(
