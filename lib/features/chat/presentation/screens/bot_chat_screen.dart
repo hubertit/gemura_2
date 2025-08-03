@@ -349,7 +349,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
               ),
               child: const Icon(
-                Icons.person,
+                Icons.smart_toy,
                 color: Colors.white,
                 size: 18,
               ),

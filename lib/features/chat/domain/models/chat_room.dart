@@ -112,7 +112,7 @@ class ChatMember {
   final String id;
   final String name;
   final String email;
-  final String avatar;
+  final String? avatar;
   final String role; // 'owner', 'admin', 'member'
   final DateTime joinedAt;
   final bool isOnline;
@@ -122,7 +122,7 @@ class ChatMember {
     required this.id,
     required this.name,
     required this.email,
-    required this.avatar,
+    this.avatar,
     required this.role,
     required this.joinedAt,
     this.isOnline = false,
@@ -169,7 +169,7 @@ class ChatMember {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
-      avatar: json['avatar']?.toString() ?? '',
+      avatar: json['avatar']?.toString(),
       role: json['role']?.toString() ?? 'member',
       joinedAt: json['joinedAt'] != null 
           ? DateTime.parse(json['joinedAt'].toString())

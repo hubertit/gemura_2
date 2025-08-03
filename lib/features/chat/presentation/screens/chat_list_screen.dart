@@ -191,20 +191,20 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 right: 0,
                 top: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing2,
-                    vertical: AppTheme.spacing2,
-                  ),
+                  width: 20,
+                  height: 20,
                   decoration: const BoxDecoration(
                     color: AppTheme.primaryColor,
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    chat.unreadCount.toString(),
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.surfaceColor,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+                  child: Center(
+                    child: Text(
+                      chat.unreadCount.toString(),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.surfaceColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),

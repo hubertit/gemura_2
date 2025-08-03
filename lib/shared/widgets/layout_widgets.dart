@@ -178,12 +178,12 @@ class AddItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(AppTheme.spacing12),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
         child: Container(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: AppTheme.spacing16),
           decoration: BoxDecoration(
             color: AppTheme.surfaceColor,
             borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
