@@ -66,6 +66,7 @@ dependencies:
   file_picker: ^8.0.0+1
   flutter_markdown: ^0.6.18
   openai_dart: ^0.4.5 # Added for OpenAI API
+  flutter_dotenv: ^5.1.0 # Added for environment variables
 
 
 dev_dependencies:
@@ -98,6 +99,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - .env
     - assets/animations/
     - assets/pdfs/
   #   - images/a_dot_burr.jpeg

@@ -63,11 +63,12 @@ What would you like to know about this image? 🐄''';
       }
       
       // Use hybrid AI service (Claude Vision + GPT)
-      final response = await HybridAIService.processImageWithHybridAI(File(attachment.path));
+      final response = await HybridAIService.processImageWithConversationalResponse(attachment.path);
       
       return response;
       
     } catch (e) {
+      print('Error processing image: $e');
       return '''📸 **Image Analysis**
 I had trouble analyzing that image, but I can still help you with your dairy business!
 

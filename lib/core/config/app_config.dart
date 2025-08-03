@@ -4,23 +4,23 @@ import 'package:flutter/foundation.dart';
 class AppConfig {
   // ChatGPT API Configuration
   static const String chatGptApiKey =
-      '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';
+      'YOUR_OPENAI_API_KEY_HERE';
   static const String chatGptApiUrl =
       'https://api.openai.com/v1/chat/completions';
 
   // Claude AI Configuration
   static const String claudeApiKey =
-      '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';
+      'YOUR_CLAUDE_API_KEY_HERE';
   static const String claudeApiUrl = 'https://api.anthropic.com/v1/messages';
 
   // Google Vision API Configuration
   static const String googleVisionApiKey =
-      'AIzaSyCm3QBK7IZTMe-VEBPNAc8S1YZBS-IBaKU';
+      'YOUR_GOOGLE_VISION_API_KEY';
   static const String googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
 
   // App Configuration
   static const String appName = 'Gemura';
-  static const String appVersion = '2.0';
+  static const String appVersion = '2.0.1';
 
   // Assistant Configuration
   static const String assistantName = 'Karake';

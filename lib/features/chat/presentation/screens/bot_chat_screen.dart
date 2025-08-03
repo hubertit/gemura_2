@@ -13,6 +13,7 @@ import '../../../../core/services/attachment_processor_service.dart';
 import '../../../../core/services/attachment_handler_service.dart';
 import '../../../../shared/widgets/markdown_text.dart';
 import '../../domain/models/attachment_message.dart';
+import 'contact_selection_screen.dart';
 import 'package:contacts_service/contacts_service.dart';
 
 class BotChatScreen extends ConsumerStatefulWidget {
@@ -240,7 +241,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
 
   int _calculateTypingDelay(int responseLength) {
     // Base delay + additional time based on response length
-    const baseDelay = AppConfig.typingDelayMinMs;
+    final baseDelay = AppConfig.typingDelayMinMs;
     final additionalDelay = (responseLength / 10).clamp(0, AppConfig.typingDelayMaxMs - baseDelay);
     return (baseDelay + additionalDelay).round();
   }
@@ -301,6 +302,29 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         ),
       ),
     );
+  }
+
+
+
+  Future<void> _clearConversation() async {
+    await ConversationStorageService.clearConversation();
+    
+    setState(() {
+      _messages.clear();
+    });
+    
+    _messages.add(
+      BotMessage(
+        id: '1',
+        text: 'Hey there! 👋 I\'m Karake, your dairy farming buddy! 🐄 I help farmers like you with milk collection, finding suppliers, managing customers, and getting the best prices. What\'s on your mind today? 🌾',
+        isUser: false,
+        timestamp: DateTime.now(),
+        messageType: BotMessageType.text,
+      ),
+    );
+    
+    _saveConversation();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   @override
@@ -633,7 +657,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
                               ),
                               if (isCurrentUser) ...[
                                 const SizedBox(width: AppTheme.spacing2),
-                                const Icon(
+                                Icon(
                                   Icons.done_all,
                                   size: 12,
                                   color: AppTheme.textSecondaryColor,
@@ -857,22 +881,19 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final files = await AttachmentHandlerService.handleCamera(context);
-      if (files != null && mounted) {
+      if (files != null) {
         _addAttachmentMessage(AttachmentType.image, files);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Camera error: ${e.toString()}'),
-            backgroundColor: AppTheme.snackbarErrorColor,
-          ),
-        );
-      }
+      print('Camera error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Camera error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isAttaching = false);
-      }
+      setState(() => _isAttaching = false);
     }
   }
 
@@ -882,22 +903,19 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final files = await AttachmentHandlerService.handleGallery(context);
-      if (files != null && mounted) {
+      if (files != null) {
         _addAttachmentMessage(AttachmentType.image, files);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gallery error: ${e.toString()}'),
-            backgroundColor: AppTheme.snackbarErrorColor,
-          ),
-        );
-      }
+      print('Gallery error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gallery error: ${e.toString()}'),
+          backgroundColor: AppTheme.snackbarErrorColor,
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isAttaching = false);
-      }
+      setState(() => _isAttaching = false);
     }
   }
 
@@ -907,17 +925,13 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final files = await AttachmentHandlerService.handleDocument(context);
-      if (files != null && mounted) {
+      if (files != null) {
         _addAttachmentMessage(AttachmentType.document, files);
       }
     } catch (e) {
-      if (mounted) {
-        _showPermissionError('Document Picker', e.toString());
-      }
+      _showPermissionError('Document Picker', e.toString());
     } finally {
-      if (mounted) {
-        setState(() => _isAttaching = false);
-      }
+      setState(() => _isAttaching = false);
     }
   }
 
@@ -926,11 +940,11 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
     
     try {
       final contacts = await AttachmentHandlerService.handleContacts(context);
-      if (contacts != null && mounted) {
+      if (contacts != null) {
         _addContactAttachments(contacts);
       }
     } catch (e) {
-      // Handle contact error silently
+      print('Contacts error: $e');
     }
   }
 
@@ -1280,6 +1294,9 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
   }
 
   void _showPermissionError(String feature, String error) {
+    // Check if permission is permanently denied (used for UI logic)
+    final isPermanentlyDenied = error.contains('permanently denied');
+    
     // Show dialog for permanently denied permissions
     showDialog(
       context: context,

@@ -23,7 +23,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
   RangeValues _priceRange = const RangeValues(0, 1000);
   
   // Filter options
-  List<String> get suppliers => ['All', ...collectedMilkData.map((milk) => milk['supplierName']).toSet()];
+  List<String> get suppliers => ['All', ...collectedMilkData.map((milk) => milk['supplierName']).toSet().toList()];
   List<String> get statuses => ['All', 'available', 'sold', 'reserved'];
   List<String> get qualities => ['All', 'Grade A', 'Grade B', 'Grade C'];
 
@@ -233,7 +233,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           ),
         ),
         subtitle: Text(
-          DateFormat('MMM dd, yyyy').format(milk['date']),
+          '${DateFormat('MMM dd, yyyy').format(milk['date'])}',
           style: AppTheme.bodySmall.copyWith(
             color: AppTheme.textHintColor,
             fontSize: 11,

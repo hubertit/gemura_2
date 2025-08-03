@@ -106,7 +106,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // Logo and Title
                   Image.asset(
                     'assets/images/logo.png',
-                    height: 120,
+                    height: 80,
                   ),
                   const SizedBox(height: AppTheme.spacing24),
                   Text(

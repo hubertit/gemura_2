@@ -3,13 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:contacts_service/contacts_service.dart';
-
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/attachment_handler_service.dart';
-import '../../domain/models/attachment_message.dart';
+
+import '../providers/chat_provider.dart';
 import '../../domain/models/chat_message.dart';
 import '../../domain/models/chat_room.dart';
-import '../providers/chat_provider.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -687,7 +686,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final files = await AttachmentHandlerService.handleCamera(context);
     if (files != null) {
-      _handleAttachments(AttachmentType.image, files);
+      _handleAttachments('image', files);
     }
   }
 
@@ -695,7 +694,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final files = await AttachmentHandlerService.handleGallery(context);
     if (files != null) {
-      _handleAttachments(AttachmentType.image, files);
+      _handleAttachments('image', files);
     }
   }
 
@@ -703,7 +702,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final files = await AttachmentHandlerService.handleDocument(context);
     if (files != null) {
-      _handleAttachments(AttachmentType.document, files);
+      _handleAttachments('document', files);
     }
   }
 
@@ -711,55 +710,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Navigator.pop(context);
     final contacts = await AttachmentHandlerService.handleContacts(context);
     if (contacts != null) {
-      _handleContacts(contacts);
+      _handleContactAttachments(contacts);
     }
   }
 
-  void _handleAttachments(AttachmentType type, List<File> files) {
-    // Handle attachment processing
-    _simulateBotResponseToAttachments(type, files);
+  void _handleAttachments(String type, List<File> files) {
+    // TODO: Implement attachment handling for group chat
+    // This would add the attachments to the group chat
+    print('Handling $type attachments: ${files.length} files');
   }
 
-  void _handleContacts(List<Contact> contacts) {
-    // Handle contact processing
-    _simulateBotResponseToContacts(contacts);
-  }
-
-  void _simulateBotResponseToAttachments(AttachmentType type, List<File> files) {
-    // Simulate bot response for attachments
-    final message = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      chatId: widget.chatRoom.id,
-      senderId: 'BOT',
-      senderName: 'Karake',
-      senderAvatar: null,
-      content: 'I can see you\'ve shared some ${type.toString().split('.').last} files. How can I help you with these?',
-      type: MessageType.text,
-      timestamp: DateTime.now(),
-      status: MessageStatus.sent,
-      attachments: files.map((file) => file.path ?? '').toList(),
-    );
-    
-    // Add message using the chat notifier
-    ref.read(chatProvider.notifier).addMessage(message);
-  }
-
-  void _simulateBotResponseToContacts(List<Contact> contacts) {
-    // Simulate bot response for contacts
-    final message = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      chatId: widget.chatRoom.id,
-      senderId: 'BOT',
-      senderName: 'Karake',
-      senderAvatar: null,
-      content: 'I can see you\'ve shared ${contacts.length} contact(s). How can I help you with these?',
-      type: MessageType.text,
-      timestamp: DateTime.now(),
-      status: MessageStatus.sent,
-      attachments: contacts.map((contact) => contact.displayName ?? 'Unknown Contact').toList(),
-    );
-    
-    // Add message using the chat notifier
-    ref.read(chatProvider.notifier).addMessage(message);
+  void _handleContactAttachments(List<Contact> contacts) {
+    // TODO: Implement contact handling for group chat
+    // This would add the contacts to the group chat
+    print('Handling contacts: ${contacts.length} contacts');
   }
 } 

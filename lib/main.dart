@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
 import 'core/theme/app_theme.dart';
+import 'core/config/secure_config.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize environment variables
+  await SecureConfig.initialize();
+  
   runApp(const ProviderScope(child: MyApp()));
 }
 
