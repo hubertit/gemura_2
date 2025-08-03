@@ -41,9 +41,9 @@ class ClaudeVisionService {
           {
             'role': 'user',
             'content': [
-                                        {
-                            'type': 'text',
-                            'text': '''Look at this image and tell me what you see in a friendly, conversational way. If this is a veterinary product, supplement, or medication, explain it like you're talking to a dairy farmer who wants to understand:
+              {
+                'type': 'text',
+                'text': '''Look at this image and tell me what you see in a friendly, conversational way. If this is a veterinary product, supplement, or medication, explain it like you're talking to a dairy farmer who wants to understand:
 
 1. What the product is and who makes it
 2. What it's used for in dairy operations
@@ -68,7 +68,7 @@ Format your response as JSON with these fields:
   "businessRelevance": "why this matters for dairy farming",
   "analysis": "friendly explanation of the product and its benefits"
 }'''
-                          },
+              },
               {
                 'type': 'image',
                 'source': {

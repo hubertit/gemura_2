@@ -8,7 +8,7 @@ class APIConfig {
   static String get claudeApiKey => AppConfig.claudeApiKey;
 
   // Google Vision API key
-  static const String googleVisionApiKey = 'YOUR_GOOGLE_VISION_API_KEY';
+  static const String googleVisionApiKey = 'AIzaSyCm3QBK7IZTMe-VEBPNAc8S1YZBS-IBaKU';
 
   // You can add other API keys here as needed
   static const String googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
