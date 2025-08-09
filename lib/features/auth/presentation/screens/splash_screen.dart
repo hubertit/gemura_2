@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -16,10 +17,25 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  String _appVersionText = 'Version ${AppConfig.appVersion}';
+
   @override
   void initState() {
     super.initState();
+    _loadAppVersion();
     _checkAuthState();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() {
+        _appVersionText = 'Version ${info.version}+${info.buildNumber}';
+      });
+    } catch (_) {
+      // Ignore version fetch errors; keep UI clean
+    }
   }
 
   Future<void> _checkAuthState() async {
@@ -89,9 +105,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Powered by RWANDA ICT Chamber',
+                  _appVersionText,
                   style: AppTheme.bodySmall.copyWith(
-                    fontWeight: FontWeight.bold,
                     color: AppTheme.surfaceColor,
                     shadows: [
                       Shadow(

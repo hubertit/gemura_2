@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -53,11 +54,21 @@ class AboutScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('Version 1.0.0', style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor), textAlign: TextAlign.center),
+                  FutureBuilder<PackageInfo>(
+                    future: PackageInfo.fromPlatform(),
+                    builder: (context, snapshot) {
+                      final versionText = snapshot.hasData
+                          ? 'Version ${snapshot.data!.version}+${snapshot.data!.buildNumber}'
+                          : 'Version';
+                      return Text(
+                        versionText,
+                        style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                        textAlign: TextAlign.center,
+                      );
+                    },
+                  ),
                   const SizedBox(height: 8),
                   Text('© ${DateTime.now().year} Gemura', style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor), textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text('Powered by RWANDA ICT Chamber', style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimaryColor), textAlign: TextAlign.center),
                 ],
               ),
             ),

@@ -62,6 +62,7 @@ dependencies:
   shimmer: ^3.0.0
   d_chart: ^2.8.0
   share_plus: ^11.0.0
+  package_info_plus: ^8.0.0
   contacts_service: ^0.6.3
   file_picker: ^8.0.0+1
   flutter_markdown: ^0.6.18
