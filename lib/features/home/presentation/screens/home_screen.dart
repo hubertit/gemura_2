@@ -11,6 +11,7 @@ import 'settings_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart' show WalletCard, WalletsScreen;
+import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/models/transaction.dart';
 import 'package:d_chart/d_chart.dart';
@@ -78,14 +79,14 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _DashboardTab extends StatefulWidget {
+class _DashboardTab extends ConsumerStatefulWidget {
   const _DashboardTab();
 
   @override
-  State<_DashboardTab> createState() => _DashboardTabState();
+  ConsumerState<_DashboardTab> createState() => _DashboardTabState();
 }
 
-class _DashboardTabState extends State<_DashboardTab> {
+class _DashboardTabState extends ConsumerState<_DashboardTab> {
   // State to track balance visibility for each wallet
   final Map<String, bool> _walletBalanceVisibility = {};
 
@@ -96,7 +97,7 @@ class _DashboardTabState extends State<_DashboardTab> {
     });
   }
 
-  // Mock wallets for PageView
+  // Static mock wallets as fallback for home screen
   List<Wallet> get homeWallets => [
     Wallet(
       id: 'WALLET-1',
@@ -272,28 +273,84 @@ class _DashboardTabState extends State<_DashboardTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Default Ikofi Card
-            SizedBox(
-              height: 200,
-              child: PageView.builder(
-                itemCount: homeWallets.length,
-                controller: PageController(viewportFraction: 0.92),
-                itemBuilder: (context, index) {
-                  final isFirst = index == 0;
-                  final isLast = index == homeWallets.length - 1;
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      left: isFirst ? 0 : AppTheme.spacing8,
-                      right: isLast ? 0 : AppTheme.spacing8,
+            // Dynamic Ikofi Cards
+            Consumer(
+              builder: (context, ref, child) {
+                final walletsAsync = ref.watch(walletsNotifierProvider);
+                
+                return walletsAsync.when(
+                  loading: () => SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primaryColor,
+                      ),
                     ),
-                    child: WalletCard(
-                      wallet: homeWallets[index], 
-                      showBalance: _walletBalanceVisibility[homeWallets[index].id] ?? true,
-                      onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(homeWallets[index].id, showBalance),
+                  ),
+                  error: (error, stack) => SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, color: AppTheme.textHintColor),
+                          const SizedBox(height: AppTheme.spacing8),
+                          Text(
+                            'Failed to load wallets',
+                            style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                          ),
+                        ],
+                      ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                  data: (apiWallets) {
+                    // Use API wallets, fallback to mock if empty
+                    final wallets = apiWallets.isNotEmpty ? apiWallets : homeWallets;
+                    
+                    if (wallets.isEmpty) {
+                      return SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.account_balance_wallet_outlined, color: AppTheme.textHintColor),
+                              const SizedBox(height: AppTheme.spacing8),
+                              Text(
+                                'No wallets available',
+                                style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return SizedBox(
+                      height: 200,
+                      child: PageView.builder(
+                        itemCount: wallets.length,
+                        controller: PageController(viewportFraction: 0.92),
+                        itemBuilder: (context, index) {
+                          final isFirst = index == 0;
+                          final isLast = index == wallets.length - 1;
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              left: isFirst ? 0 : AppTheme.spacing8,
+                              right: isLast ? 0 : AppTheme.spacing8,
+                            ),
+                            child: WalletCard(
+                              wallet: wallets[index], 
+                              showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
+                              onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
             ),
             const SizedBox(height: AppTheme.spacing4), // further reduced space between wallet card and quick actions
             // Quick actions

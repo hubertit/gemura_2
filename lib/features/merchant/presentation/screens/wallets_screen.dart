@@ -88,9 +88,8 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
       loading: () => _buildLoadingState(),
       error: (error, stack) => _buildErrorState(error.toString()),
       data: (apiWallets) {
-        // Combine API wallets with mock wallets for now
-        final allWallets = [...apiWallets, ...mockWallets];
-        final wallets = List<Wallet>.from(allWallets);
+        // Use only API wallets for the main list
+        final wallets = List<Wallet>.from(apiWallets);
         wallets.sort((a, b) => a.isDefault
             ? -1
             : b.isDefault
