@@ -80,7 +80,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
