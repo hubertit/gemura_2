@@ -46,7 +46,8 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
     required double pricePerLiter,
   }) async {
     try {
-      final newSupplier = await _suppliersService.createSupplier(
+      // Create the supplier via API
+      await _suppliersService.createSupplier(
         name: name,
         phone: phone,
         email: email,
@@ -55,10 +56,8 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
         pricePerLiter: pricePerLiter,
       );
       
-      state.whenData((suppliers) {
-        final updatedSuppliers = [...suppliers, newSupplier];
-        state = AsyncValue.data(updatedSuppliers);
-      });
+      // Refresh the suppliers list to get the updated data
+      await loadSuppliers();
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }

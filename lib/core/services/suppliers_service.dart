@@ -64,7 +64,7 @@ class SuppliersService {
   }
 
   /// Create a new supplier
-  Future<Supplier> createSupplier({
+  Future<void> createSupplier({
     required String name,
     required String phone,
     String? email,
@@ -94,7 +94,8 @@ class SuppliersService {
       if (response.statusCode == 200) {
         final data = response.data;
         if (data['code'] == 200 && data['status'] == 'success') {
-          return Supplier.fromApiResponse(data['data']);
+          // API returns success, no need to return supplier data
+          return;
         } else {
           throw Exception(data['message'] ?? 'Failed to create supplier');
         }
