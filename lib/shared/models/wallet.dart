@@ -1,16 +1,28 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'wallet.g.dart';
+
+@JsonSerializable()
 class Wallet {
   final String id;
   final String name;
   final double balance;
   final String currency;
-  final String type; // 'individual' or 'joint'
-  final String status; // 'active', 'inactive'
+  final String type;
+  final String status;
   final DateTime createdAt;
   final List<String> owners;
   final bool isDefault;
   final String? description;
   final double? targetAmount;
   final DateTime? targetDate;
+
+  // API-specific fields
+  @JsonKey(name: 'wallet_code')
+  final String? walletCode;
+  @JsonKey(name: 'is_joint')
+  final bool? isJoint;
+  final Account? account;
 
   Wallet({
     required this.id,
@@ -21,12 +33,38 @@ class Wallet {
     required this.status,
     required this.createdAt,
     required this.owners,
-    this.isDefault = false,
+    required this.isDefault,
     this.description,
     this.targetAmount,
     this.targetDate,
+    this.walletCode,
+    this.isJoint,
+    this.account,
   });
 
+  factory Wallet.fromJson(Map<String, dynamic> json) => _$WalletFromJson(json);
+
+  Map<String, dynamic> toJson() => _$WalletToJson(this);
+
+  // Factory method to create from API response
+  factory Wallet.fromApiResponse(Map<String, dynamic> json) {
+    return Wallet(
+      id: json['wallet_code'] ?? '',
+      name: json['account']?['name'] ?? 'Unknown Wallet',
+      balance: (json['balance'] ?? 0).toDouble(),
+      currency: json['currency'] ?? 'RWF',
+      type: json['type'] ?? 'regular',
+      status: json['status'] ?? 'active',
+      createdAt: DateTime.now(), // API doesn't provide this, using current time
+      owners: [json['account']?['name'] ?? 'Unknown'],
+      isDefault: json['is_default'] ?? false,
+      walletCode: json['wallet_code'],
+      isJoint: json['is_joint'] ?? false,
+      account: json['account'] != null ? Account.fromJson(json['account']) : null,
+    );
+  }
+
+  // Copy with method for updating wallet data
   Wallet copyWith({
     String? id,
     String? name,
@@ -40,6 +78,9 @@ class Wallet {
     String? description,
     double? targetAmount,
     DateTime? targetDate,
+    String? walletCode,
+    bool? isJoint,
+    Account? account,
   }) {
     return Wallet(
       id: id ?? this.id,
@@ -54,46 +95,26 @@ class Wallet {
       description: description ?? this.description,
       targetAmount: targetAmount ?? this.targetAmount,
       targetDate: targetDate ?? this.targetDate,
+      walletCode: walletCode ?? this.walletCode,
+      isJoint: isJoint ?? this.isJoint,
+      account: account ?? this.account,
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'balance': balance,
-      'currency': currency,
-      'type': type,
-      'status': status,
-      'createdAt': createdAt.toIso8601String(),
-      'owners': owners,
-      'isDefault': isDefault,
-      'description': description,
-      'targetAmount': targetAmount,
-      'targetDate': targetDate?.toIso8601String(),
-    };
-  }
+@JsonSerializable()
+class Account {
+  final String code;
+  final String name;
+  final String type;
 
-  factory Wallet.fromJson(Map<String, dynamic> json) {
-    return Wallet(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
-      currency: json['currency']?.toString() ?? '',
-      type: json['type']?.toString() ?? '',
-      status: json['status']?.toString() ?? '',
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt'].toString())
-          : DateTime.now(),
-      owners: json['owners'] != null 
-          ? List<String>.from(json['owners'])
-          : [],
-      isDefault: json['isDefault'] as bool? ?? false,
-      description: json['description']?.toString(),
-      targetAmount: (json['targetAmount'] as num?)?.toDouble(),
-      targetDate: json['targetDate'] != null 
-          ? DateTime.parse(json['targetDate'].toString())
-          : null,
-    );
-  }
+  Account({
+    required this.code,
+    required this.name,
+    required this.type,
+  });
+
+  factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AccountToJson(this);
 } 

@@ -1,7 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../config/app_config.dart';
-import '../../shared/models/wallet.dart';
 
 class SecureStorageService {
   static SharedPreferences? _prefs;
@@ -202,34 +201,6 @@ class SecureStorageService {
     return null;
   }
 
-  // ===== WALLET CACHING =====
-  
-  /// Save wallets data
-  static Future<void> saveWallets(List<Wallet> wallets) async {
-    final walletsJson = wallets.map((wallet) => wallet.toJson()).toList();
-    await prefs.setString('wallets_data', json.encode(walletsJson));
-    await prefs.setString('wallets_last_sync', DateTime.now().toIso8601String());
-  }
-  
-  /// Get wallets data
-  static Future<List<Wallet>> getWallets() async {
-    final walletsJson = prefs.getString('wallets_data');
-    if (walletsJson != null) {
-      final List<dynamic> decoded = json.decode(walletsJson);
-      return decoded.map((json) => Wallet.fromJson(json)).toList();
-    }
-    return [];
-  }
-  
-  /// Get wallets last sync time
-  static DateTime? getWalletsLastSync() {
-    final lastSync = prefs.getString('wallets_last_sync');
-    if (lastSync != null) {
-      return DateTime.parse(lastSync);
-    }
-    return null;
-  }
-
   // ===== CACHE MANAGEMENT =====
   
   /// Clear all cached data
@@ -242,8 +213,6 @@ class SecureStorageService {
     await prefs.remove('milk_collections_last_sync');
     await prefs.remove('milk_sales_data');
     await prefs.remove('milk_sales_last_sync');
-    await prefs.remove('wallets_data');
-    await prefs.remove('wallets_last_sync');
     await prefs.remove('app_config');
     await prefs.remove('user_preferences');
   }

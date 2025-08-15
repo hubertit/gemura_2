@@ -17,7 +17,7 @@ import 'transactions_screen.dart';
 import '../../../home/presentation/screens/request_payment_screen.dart';
 import '../../../home/presentation/screens/pay_screen.dart';
 import '../../../home/presentation/screens/payouts_screen.dart';
-import '../providers/wallet_provider.dart';
+import '../providers/wallets_provider.dart';
 
 class WalletsScreen extends ConsumerStatefulWidget {
   const WalletsScreen({super.key});
@@ -37,24 +37,131 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
     });
   }
 
-    // Get wallets from provider
-  List<Wallet> get wallets {
-    final walletsAsync = ref.watch(walletsProvider);
-    return walletsAsync.when(
-      data: (wallets) => wallets,
-      loading: () => [],
-      error: (error, stack) => [],
-    );
-  }
+  // Static mock wallets as fallback
+  List<Wallet> get mockWallets => [
+        Wallet(
+          id: 'WALLET-1',
+          name: 'Main Ikofi',
+          balance: 250000,
+          currency: 'RWF',
+          type: 'individual',
+          status: 'active',
+          createdAt: DateTime.now().subtract(const Duration(days: 120)),
+          owners: ['You'],
+          isDefault: true,
+        ),
+        Wallet(
+          id: 'WALLET-2',
+          name: 'Joint Ikofi',
+          balance: 1200000,
+          currency: 'RWF',
+          type: 'joint',
+          status: 'active',
+          createdAt: DateTime.now().subtract(const Duration(days: 60)),
+          owners: ['You', 'Alice', 'Eric'],
+          isDefault: false,
+          description: 'Joint savings for family expenses',
+          targetAmount: 2000000,
+          targetDate: DateTime.now().add(const Duration(days: 180)),
+        ),
+        Wallet(
+          id: 'WALLET-3',
+          name: 'Vacation Fund',
+          balance: 350000,
+          currency: 'RWF',
+          type: 'individual',
+          status: 'inactive',
+          createdAt: DateTime.now().subtract(const Duration(days: 200)),
+          owners: ['You'],
+          isDefault: false,
+          description: 'Vacation savings',
+          targetAmount: 500000,
+          targetDate: DateTime.now().add(const Duration(days: 90)),
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
-    final wallets = List<Wallet>.from(mockWallets);
-    wallets.sort((a, b) => a.isDefault
-        ? -1
-        : b.isDefault
-            ? 1
-            : 0);
+    final walletsAsync = ref.watch(walletsNotifierProvider);
+    
+    return walletsAsync.when(
+      loading: () => _buildLoadingState(),
+      error: (error, stack) => _buildErrorState(error.toString()),
+      data: (apiWallets) {
+        // Combine API wallets with mock wallets for now
+        final allWallets = [...apiWallets, ...mockWallets];
+        final wallets = List<Wallet>.from(allWallets);
+        wallets.sort((a, b) => a.isDefault
+            ? -1
+            : b.isDefault
+                ? 1
+                : 0);
+        
+        return _buildWalletsContent(wallets);
+      },
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ikofi'),
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+      ),
+      backgroundColor: AppTheme.backgroundColor,
+      body: const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ikofi'),
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.read(walletsNotifierProvider.notifier).refreshWallets(),
+          ),
+        ],
+      ),
+      backgroundColor: AppTheme.backgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: AppTheme.textHintColor),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'Failed to load wallets',
+              style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondaryColor),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              error,
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            PrimaryButton(
+              label: 'Retry',
+              onPressed: () => ref.read(walletsNotifierProvider.notifier).refreshWallets(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWalletsContent(List<Wallet> wallets) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ikofi'),
@@ -77,51 +184,9 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
         ],
       ),
       backgroundColor: AppTheme.backgroundColor,
-      body: Consumer(
-        builder: (context, ref, child) {
-          final walletsAsync = ref.watch(walletsProvider);
-          
-          return walletsAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            error: (error, stack) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppTheme.textSecondaryColor,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    'Failed to load wallets',
-                    style: AppTheme.titleMedium.copyWith(
-                      color: AppTheme.textPrimaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing8),
-                  Text(
-                    error.toString(),
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  PrimaryButton(
-                    label: 'Retry',
-                    onPressed: () {
-                      ref.read(walletsProvider.notifier).loadWallets();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            data: (wallets) => wallets.isEmpty
-                ? _buildEmptyState(context)
-                : Column(
+      body: wallets.isEmpty
+          ? _buildEmptyState(context)
+          : Column(
               children: [
                 // Quick actions
                 Padding(
@@ -196,7 +261,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
-                      await ref.read(walletsProvider.notifier).refreshWallets();
+                      await ref.read(walletsNotifierProvider.notifier).refreshWallets();
                     },
                     child: ListView(
                       padding: const EdgeInsets.all(AppTheme.spacing16),
