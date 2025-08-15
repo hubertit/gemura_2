@@ -231,7 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: GestureDetector(
                             onTap: () {
                               setState(() {
-                                _isPhoneLogin = false;
+                                _isPhoneLogin = true;
                               });
                             },
                             child: Container(
@@ -240,8 +240,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 horizontal: AppTheme.spacing16,
                               ),
                               decoration: BoxDecoration(
-                                color: !_isPhoneLogin 
-                                    ? AppTheme.primaryColor 
+                                color: _isPhoneLogin 
+                                    ? Colors.grey[300] 
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                               ),
@@ -249,20 +249,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.email_outlined,
-                                    color: !_isPhoneLogin 
-                                        ? Colors.white 
+                                    Icons.phone_outlined,
+                                    color: _isPhoneLogin 
+                                        ? Colors.grey[700] 
                                         : AppTheme.textSecondaryColor,
                                     size: 20,
                                   ),
                                   const SizedBox(width: AppTheme.spacing8),
                                   Text(
-                                    'Email',
+                                    'Phone',
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: !_isPhoneLogin 
-                                          ? Colors.white 
+                                      color: _isPhoneLogin 
+                                          ? Colors.grey[700] 
                                           : AppTheme.textSecondaryColor,
-                                      fontWeight: !_isPhoneLogin 
+                                      fontWeight: _isPhoneLogin 
                                           ? FontWeight.w600 
                                           : FontWeight.normal,
                                     ),
@@ -276,7 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: GestureDetector(
                             onTap: () {
                               setState(() {
-                                _isPhoneLogin = true;
+                                _isPhoneLogin = false;
                               });
                             },
                             child: Container(
@@ -285,8 +285,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 horizontal: AppTheme.spacing16,
                               ),
                               decoration: BoxDecoration(
-                                color: _isPhoneLogin 
-                                    ? AppTheme.primaryColor 
+                                color: !_isPhoneLogin 
+                                    ? Colors.grey[300] 
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                               ),
@@ -294,20 +294,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.phone_outlined,
-                                    color: _isPhoneLogin 
-                                        ? Colors.white 
+                                    Icons.email_outlined,
+                                    color: !_isPhoneLogin 
+                                        ? Colors.grey[700] 
                                         : AppTheme.textSecondaryColor,
                                     size: 20,
                                   ),
                                   const SizedBox(width: AppTheme.spacing8),
                                   Text(
-                                    'Phone',
+                                    'Email',
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: _isPhoneLogin 
-                                          ? Colors.white 
+                                      color: !_isPhoneLogin 
+                                          ? Colors.grey[700] 
                                           : AppTheme.textSecondaryColor,
-                                      fontWeight: _isPhoneLogin 
+                                      fontWeight: !_isPhoneLogin 
                                           ? FontWeight.w600 
                                           : FontWeight.normal,
                                     ),
