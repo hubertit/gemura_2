@@ -89,4 +89,42 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
       state = AsyncValue.error(error, stackTrace);
     }
   }
+
+  Future<void> updateSupplierPrice({
+    required int relationId,
+    required double pricePerLiter,
+  }) async {
+    try {
+      // Update the supplier price via API
+      await _suppliersService.updateSupplierPrice(
+        relationId: relationId,
+        pricePerLiter: pricePerLiter,
+      );
+      
+      // Refresh the suppliers list to get the updated data
+      await loadSuppliers();
+    } catch (error, stackTrace) {
+      // Don't set the entire state to error if update fails
+      // Just rethrow the error to be handled by the UI
+      rethrow;
+    }
+  }
+
+  Future<void> deleteSupplier({
+    required int relationshipId,
+  }) async {
+    try {
+      // Delete the supplier via API
+      await _suppliersService.deleteSupplier(
+        relationshipId: relationshipId,
+      );
+      
+      // Refresh the suppliers list to get the updated data
+      await loadSuppliers();
+    } catch (error, stackTrace) {
+      // Don't set the entire state to error if deletion fails
+      // Just rethrow the error to be handled by the UI
+      rethrow;
+    }
+  }
 }

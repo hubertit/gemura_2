@@ -186,4 +186,116 @@ class SuppliersService {
       throw Exception('Unexpected error: $e');
     }
   }
+
+  /// Update supplier price per liter
+  Future<void> updateSupplierPrice({
+    required int relationId,
+    required double pricePerLiter,
+  }) async {
+    try {
+      final token = await SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      final response = await _dio.post(
+        '${AppConfig.apiBaseUrl}/suppliers/update',
+        data: {
+          'token': token,
+          'relation_id': relationId,
+          'price_per_liter': pricePerLiter,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 200 && data['status'] == 'success') {
+          return;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to update supplier');
+        }
+      } else {
+        throw Exception('Failed to update supplier: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to update supplier. ';
+      
+      if (e.response?.statusCode == 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Supplier relationship not found or not owned by this customer.';
+      } else if (e.response?.statusCode == 400) {
+        errorMessage = 'Invalid update data. Please check your input.';
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.receiveTimeout ||
+                 e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage += backendMsg ?? 'Please try again.';
+      }
+      
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  /// Delete supplier relationship
+  Future<void> deleteSupplier({
+    required int relationshipId,
+  }) async {
+    try {
+      final token = await SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      final response = await _dio.post(
+        '${AppConfig.apiBaseUrl}/suppliers/delete',
+        data: {
+          'token': token,
+          'relationship_id': relationshipId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 200 && data['status'] == 'success') {
+          return;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to delete supplier');
+        }
+      } else {
+        throw Exception('Failed to delete supplier: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to delete supplier. ';
+      
+      if (e.response?.statusCode == 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Supplier relationship not found or already inactive.';
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.receiveTimeout ||
+                 e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage += backendMsg ?? 'Please try again.';
+      }
+      
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
 }

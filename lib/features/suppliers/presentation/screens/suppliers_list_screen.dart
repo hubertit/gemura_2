@@ -180,12 +180,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           vertical: AppTheme.spacing4,
         ),
         onTap: () {
-          // TODO: Navigate to supplier details when screen is updated
-          // Navigator.of(context).push(
-          //   MaterialPageRoute(
-          //     builder: (context) => SupplierDetailsScreen(supplier: supplier),
-          //   ),
-          // );
+          _showSupplierBottomSheet(supplier);
         },
         leading: CircleAvatar(
           radius: 24,
@@ -434,5 +429,436 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     );
   }
 
+  void _showSupplierBottomSheet(Supplier supplier) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Supplier info header
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    child: Text(
+                      supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : 'S',
+                      style: AppTheme.titleMedium.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          supplier.name,
+                          style: AppTheme.titleMedium.copyWith(
+                            color: AppTheme.textPrimaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.phone,
+                              size: 16,
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              supplier.phone,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (supplier.email != null) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.email,
+                                size: 16,
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                supplier.email!,
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textSecondaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Stats section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '${supplier.pricePerLiter.toStringAsFixed(0)}',
+                            style: AppTheme.titleMedium.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Frw/L',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '${supplier.averageSupplyQuantity.toStringAsFixed(1)}',
+                            style: AppTheme.titleMedium.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'L/day',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppTheme.spacing20),
+
+            // Action buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+              child: Column(
+                children: [
+                  // Update Price Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showUpdatePriceDialog(supplier);
+                      },
+                      icon: const Icon(Icons.edit, size: 20),
+                      label: const Text('Update Price'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: AppTheme.spacing12),
+                  
+                  // Delete Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showDeleteConfirmationDialog(supplier);
+                      },
+                      icon: const Icon(Icons.delete, size: 20),
+                      label: const Text('Delete Supplier'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.errorColor,
+                        side: BorderSide(color: AppTheme.errorColor, width: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Bottom padding for safe area
+            const SizedBox(height: AppTheme.spacing20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showUpdatePriceDialog(Supplier supplier) {
+    final priceController = TextEditingController(
+      text: supplier.pricePerLiter.toStringAsFixed(0),
+    );
+    bool isUpdating = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Update Price',
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textPrimaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Update price for ${supplier.name}',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              TextFormField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Price per liter (RWF)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Price is required';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isUpdating ? null : () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isUpdating ? null : () async {
+                if (priceController.text.trim().isEmpty) {
+                  return;
+                }
+
+                final newPrice = double.tryParse(priceController.text);
+                if (newPrice == null) {
+                  return;
+                }
+
+                setDialogState(() {
+                  isUpdating = true;
+                });
+
+                try {
+                  await ref.read(suppliersNotifierProvider.notifier).updateSupplierPrice(
+                    relationId: int.parse(supplier.relationshipId),
+                    pricePerLiter: newPrice,
+                  );
+
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Price updated successfully!'),
+                        backgroundColor: AppTheme.snackbarSuccessColor,
+                      ),
+                    );
+                  }
+                } catch (error) {
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update price: ${error.toString()}'),
+                        backgroundColor: AppTheme.snackbarErrorColor,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: isUpdating
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text('Update'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmationDialog(Supplier supplier) {
+    bool isDeleting = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Delete Supplier',
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textPrimaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.warning,
+                size: 48,
+                color: AppTheme.errorColor,
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              Text(
+                'Are you sure you want to delete ${supplier.name}?',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textPrimaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                'This action cannot be undone.',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isDeleting ? null : () => Navigator.of(context).pop(),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isDeleting ? null : () async {
+                setDialogState(() {
+                  isDeleting = true;
+                });
+
+                try {
+                  await ref.read(suppliersNotifierProvider.notifier).deleteSupplier(
+                    relationshipId: int.parse(supplier.relationshipId),
+                  );
+
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Supplier deleted successfully!'),
+                        backgroundColor: AppTheme.snackbarSuccessColor,
+                      ),
+                    );
+                  }
+                } catch (error) {
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to delete supplier: ${error.toString()}'),
+                        backgroundColor: AppTheme.snackbarErrorColor,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.errorColor,
+                foregroundColor: Colors.white,
+              ),
+              child: isDeleting
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text('Delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
 } 

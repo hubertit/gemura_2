@@ -186,39 +186,6 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
               ),
               const SizedBox(height: AppTheme.spacing24),
 
-              // Note about additional fields
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spacing12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                  border: Border.all(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 20,
-                      color: AppTheme.primaryColor,
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Expanded(
-                      child: Text(
-                        'Additional fields like business type, cattle count, and payment methods will be available in future updates.',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.primaryColor,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing24),
-
               // Save Button
               PrimaryButton(
                 onPressed: _isSubmitting ? null : _saveSupplier,
