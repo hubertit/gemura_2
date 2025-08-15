@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -20,19 +21,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _nidController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _phoneInputKey = GlobalKey<PhoneInputFieldState>();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
-  final String _selectedRole = 'user'; // Changed from 'customer' or 'exhibitor' to 'user'
+  final String _selectedRole = 'owner'; // Default role for dairy business owners
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _nidController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -53,6 +56,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             fullPhoneNumber,
             _passwordController.text,
             _selectedRole,
+            _nidController.text.trim().isEmpty ? null : _nidController.text.trim(),
           );
       
       // Show success message
@@ -77,9 +81,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      String errorMessage = 'Registration failed. ';
+      
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        final backendMsg = e.response?.data?['message'] ?? e.message;
+        
+        switch (statusCode) {
+          case 400:
+            if (backendMsg?.contains('required') == true) {
+              errorMessage = 'Please fill in all required fields.';
+            } else if (backendMsg?.contains('email') == true) {
+              errorMessage = 'Please enter a valid email address.';
+            } else if (backendMsg?.contains('phone') == true) {
+              errorMessage = 'Please enter a valid phone number.';
+            } else {
+              errorMessage += backendMsg ?? 'Invalid request. Please check your input.';
+            }
+            break;
+          case 409:
+            errorMessage = 'An account with this email or phone already exists.';
+            break;
+          case 422:
+            errorMessage = 'Invalid data format. Please check your input.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            if (e.type == DioExceptionType.connectionTimeout ||
+                e.type == DioExceptionType.receiveTimeout ||
+                e.type == DioExceptionType.sendTimeout) {
+              errorMessage = 'Connection timeout. Please check your internet connection.';
+            } else if (e.type == DioExceptionType.connectionError) {
+              errorMessage = 'No internet connection. Please check your network.';
+            } else {
+              errorMessage += backendMsg ?? 'Please try again.';
+            }
+        }
+      } else {
+        errorMessage += e.toString();
+      }
+      
       showIntentionSnackBar(
         context,
-        e.toString(),
+        errorMessage,
         intent: SnackBarIntent.error,
       );
     } finally {
@@ -168,6 +214,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your phone number';
                       }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+
+                  // NID Field (Optional)
+                  TextFormField(
+                    controller: _nidController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'National ID (Optional)',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                      hintText: 'Enter your National ID number',
+                    ),
+                    validator: (value) {
+                      // NID is optional, so no validation required
                       return null;
                     },
                   ),

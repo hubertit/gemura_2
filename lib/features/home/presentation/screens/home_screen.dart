@@ -24,6 +24,7 @@ import '../../../suppliers/presentation/screens/suppliers_list_screen.dart';
 import '../../../customers/presentation/screens/customers_list_screen.dart';
 import '../../../suppliers/presentation/screens/supplied_milk_screen.dart';
 import '../../../customers/presentation/screens/collected_milk_screen.dart';
+import '../../../account_access/presentation/screens/manage_account_access_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -359,6 +360,8 @@ class _DashboardTabState extends State<_DashboardTab> {
                         },
                       ),
                     ),
+
+
                   ],
                 ),
               ),
@@ -934,6 +937,35 @@ class ProfileTab extends ConsumerWidget {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const NotificationsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildActionTile(
+                        Icons.people,
+                        'Manage Access',
+                        'Grant or revoke account access',
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const ManageAccountAccessScreen(
+                                accountId: '1',
+                                accountName: 'My Farm',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildActionTile(
+                        Icons.task_alt,
+                        'Tasks',
+                        'Manage your tasks and reminders',
+                        () {
+                          // TODO: Navigate to tasks screen when implemented
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tasks feature coming soon!'),
+                              duration: Duration(seconds: 2),
                             ),
                           );
                         },

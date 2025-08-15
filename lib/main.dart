@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/secure_config.dart';
+import 'core/services/secure_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize environment variables
   await SecureConfig.initialize();
+  
+  // Initialize secure storage
+  await SecureStorageService.initialize();
   
   runApp(const ProviderScope(child: MyApp()));
 }

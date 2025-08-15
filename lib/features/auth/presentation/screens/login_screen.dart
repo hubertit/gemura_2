@@ -57,18 +57,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       String errorMessage = 'Login failed. ';
+      
       if (e is DioException) {
-        final backendMsg = e.response?.data['message'] ?? e.message;
-        errorMessage += backendMsg ?? 'Please check your credentials and try again.';
-      } else if (e.toString().contains('Invalid email/phone or password')) {
-        errorMessage += 'Please check your email/phone number and password and try again.';
-      } else if (e.toString().contains('No registered user found')) {
-        errorMessage += 'No account found with these credentials. Please register first.';
-      } else if (e.toString().contains('network')) {
-        errorMessage += 'Network error. Please check your internet connection.';
+        final statusCode = e.response?.statusCode;
+        final backendMsg = e.response?.data?['message'] ?? e.message;
+        
+        switch (statusCode) {
+          case 400:
+            if (backendMsg?.contains('required') == true) {
+              errorMessage = 'Please enter both email/phone and password.';
+            } else {
+              errorMessage += backendMsg ?? 'Invalid request. Please check your input.';
+            }
+            break;
+          case 401:
+            errorMessage = 'Invalid email/phone or password. Please try again.';
+            break;
+          case 403:
+            errorMessage = 'Access denied. Please contact support.';
+            break;
+          case 404:
+            errorMessage = 'Service not found. Please try again later.';
+            break;
+          case 422:
+            errorMessage = 'Invalid data format. Please check your input.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            if (e.type == DioExceptionType.connectionTimeout ||
+                e.type == DioExceptionType.receiveTimeout ||
+                e.type == DioExceptionType.sendTimeout) {
+              errorMessage = 'Connection timeout. Please check your internet connection.';
+            } else if (e.type == DioExceptionType.connectionError) {
+              errorMessage = 'No internet connection. Please check your network.';
+            } else {
+              errorMessage += backendMsg ?? 'Please check your credentials and try again.';
+            }
+        }
       } else {
         errorMessage += e.toString();
       }
+      
       showIntentionSnackBar(
         context,
         errorMessage,
@@ -123,13 +154,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppTheme.spacing32),
-                  // Email Field
+                  // Email/Phone Field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      labelText: 'Phone Number or Email',
+                      labelText: 'Email or Phone Number',
+                      hintText: 'Enter your email or phone number',
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (value) {
