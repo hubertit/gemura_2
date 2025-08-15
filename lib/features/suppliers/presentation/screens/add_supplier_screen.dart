@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/phone_input_field.dart';
 import '../providers/suppliers_provider.dart';
 
 class AddSupplierScreen extends ConsumerStatefulWidget {
@@ -124,8 +123,14 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
               ),
               const SizedBox(height: AppTheme.spacing12),
               
-              PhoneInputField(
+              TextFormField(
                 controller: _phoneController,
+                style: AppTheme.bodySmall,
+                decoration: const InputDecoration(
+                  hintText: 'Phone number',
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Phone number is required';
