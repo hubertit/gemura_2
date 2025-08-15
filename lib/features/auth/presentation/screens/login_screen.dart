@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:country_picker/country_picker.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
@@ -20,13 +21,30 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _isPhoneLogin = false; // Toggle between email and phone login
+  
+  // Country picker for phone login
+  Country _selectedCountry = Country(
+    phoneCode: '250',
+    countryCode: 'RW',
+    e164Sc: 0,
+    geographic: true,
+    level: 1,
+    name: 'Rwanda',
+    example: '250123456789',
+    displayName: 'Rwanda (RW) [+250]',
+    displayNameNoCountryCode: 'Rwanda (RW)',
+    e164Key: '250-RW-0',
+  );
 
   @override
   void dispose() {
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -37,12 +55,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  void _showCountryPicker() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: true,
+      countryListTheme: CountryListThemeData(
+        flagSize: 25,
+        backgroundColor: AppTheme.backgroundColor,
+        textStyle: Theme.of(context).textTheme.bodyLarge!,
+        bottomSheetHeight: 500,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        inputDecoration: InputDecoration(
+          labelText: 'Search',
+          hintText: 'Start typing to search',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: const Color(0xFF8C98A8).withOpacity(0.2),
+            ),
+          ),
+        ),
+      ),
+      onSelect: (Country country) {
+        setState(() {
+          _selectedCountry = country;
+        });
+      },
+    );
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      String identifier;
+      if (_isPhoneLogin) {
+        // Use phone with country code
+        identifier = '+${_selectedCountry.phoneCode}${_phoneController.text.trim()}';
+      } else {
+        // Use email
+        identifier = _emailController.text.trim();
+      }
+      
       await ref.read(authProvider.notifier).signInWithEmailAndPassword(
-        _emailController.text.trim(),
+        identifier,
         _passwordController.text,
       );
       final user = ref.read(authProvider).value;
@@ -154,23 +213,208 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppTheme.spacing32),
-                  // Email/Phone Field
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email or Phone Number',
-                      hintText: 'Enter your email or phone number',
-                      prefixIcon: Icon(Icons.email_outlined),
+                  
+                  // Login Method Toggle
+                  Container(
+                    padding: const EdgeInsets.all(AppTheme.spacing4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor,
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      border: Border.all(
+                        color: AppTheme.thinBorderColor,
+                        width: AppTheme.thinBorderWidth,
+                      ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email or phone number';
-                      }
-                      return null;
-                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isPhoneLogin = false;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppTheme.spacing12,
+                                horizontal: AppTheme.spacing16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: !_isPhoneLogin 
+                                    ? AppTheme.primaryColor 
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.email_outlined,
+                                    color: !_isPhoneLogin 
+                                        ? Colors.white 
+                                        : AppTheme.textSecondaryColor,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing8),
+                                  Text(
+                                    'Email',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: !_isPhoneLogin 
+                                          ? Colors.white 
+                                          : AppTheme.textSecondaryColor,
+                                      fontWeight: !_isPhoneLogin 
+                                          ? FontWeight.w600 
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isPhoneLogin = true;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppTheme.spacing12,
+                                horizontal: AppTheme.spacing16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _isPhoneLogin 
+                                    ? AppTheme.primaryColor 
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.phone_outlined,
+                                    color: _isPhoneLogin 
+                                        ? Colors.white 
+                                        : AppTheme.textSecondaryColor,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing8),
+                                  Text(
+                                    'Phone',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: _isPhoneLogin 
+                                          ? Colors.white 
+                                          : AppTheme.textSecondaryColor,
+                                      fontWeight: _isPhoneLogin 
+                                          ? FontWeight.w600 
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  
+                  // Email or Phone Input Field
+                  if (!_isPhoneLogin) ...[
+                    // Email Field
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Email Address',
+                        hintText: 'your.email@example.com',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email address';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                  ] else ...[
+                    // Phone Field with Country Code
+                    IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          // Country Code Picker
+                          InkWell(
+                            onTap: _showCountryPicker,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing12,
+                                vertical: AppTheme.spacing12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceColor,
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                                border: Border.all(
+                                  color: AppTheme.thinBorderColor,
+                                  width: AppTheme.thinBorderWidth,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _selectedCountry.flagEmoji,
+                                    style: Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing4),
+                                  Text(
+                                    '+${_selectedCountry.phoneCode}',
+                                    style: Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing4),
+                                  Icon(
+                                    Icons.arrow_drop_down,
+                                    color: AppTheme.textSecondaryColor,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          // Phone Number Input
+                          Expanded(
+                            child: TextFormField(
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                labelText: 'Phone Number',
+                                prefixIcon: Icon(Icons.phone_outlined),
+                                hintText: '788123456',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your phone number';
+                                }
+                                if (value.length < 8) {
+                                  return 'Please enter a valid phone number';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppTheme.spacing16),
                   // Password Field
                   TextFormField(
@@ -180,6 +424,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     keyboardType: TextInputType.visiblePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      hintText: 'Enter your password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(

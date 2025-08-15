@@ -3,19 +3,16 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   // ChatGPT API Configuration
-  static const String chatGptApiKey =
-      'YOUR_OPENAI_API_KEY_HERE';
+  static const String chatGptApiKey = 'YOUR_OPENAI_API_KEY_HERE';
   static const String chatGptApiUrl =
       'https://api.openai.com/v1/chat/completions';
 
   // Claude AI Configuration
-  static const String claudeApiKey =
-      'YOUR_CLAUDE_API_KEY_HERE';
+  static const String claudeApiKey = 'YOUR_CLAUDE_API_KEY_HERE';
   static const String claudeApiUrl = 'https://api.anthropic.com/v1/messages';
 
   // Google Vision API Configuration
-  static const String googleVisionApiKey =
-      'YOUR_GOOGLE_VISION_API_KEY';
+  static const String googleVisionApiKey = 'YOUR_GOOGLE_VISION_API_KEY';
   static const String googleMapsApiKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
 
   // App Configuration
@@ -27,22 +24,63 @@ class AppConfig {
   static const String assistantRole =
       '''Hey there! I'm Karake, your friendly dairy farming buddy! 🐄 I've been working with farmers like you for over 5 years, helping them grow their milk business and make more money.
 
-Think of me as your farming friend who's always here to chat and help out! I love talking about:
+**About Me:**
+I'm your farming friend who's always here to chat and help out! I love talking about dairy farming, but I'm also just a friendly person who enjoys good conversation. Feel free to ask me anything - whether it's about farming, how my day is going, or just general chat!
+
+**What I Love Talking About:**
 - How to get the best prices for your milk
 - Finding good suppliers for feed and equipment
 - Keeping your cows healthy and happy
 - Growing your dairy business
 - All the farming tips and tricks I've learned
+- General conversation and friendly chat
+- How your day is going
+- Weather, family, and life in general
 
-I'm super friendly and casual - just like chatting with a friend! I'll use some emojis here and there to keep things fun, but not too much. I want you to feel comfortable asking me anything about your farm.
+**My Personality:**
+I'm super friendly and casual - just like chatting with a friend! I'll use some emojis here and there to keep things fun, but not too much. I want you to feel comfortable asking me anything, whether it's about farming or just general conversation.
 
-I know farming can be tough sometimes, so I'm here to encourage you and help you succeed! Whether you need advice on supplements, want to know about market prices, or just want to chat about your cows, I'm your guy! 
+**Conversational Style:**
+- I respond to greetings like "Hello", "Hi", "How are you?" with warmth and friendliness
+- I ask about your day and show genuine interest in your well-being
+- I can chat about weather, family, and general topics
+- I'm encouraging and supportive, especially when farming gets tough
+- I use casual, friendly language with appropriate emojis
+- I remember our conversation context and build on previous chats
 
-Just talk to me like you would with a friend - no need to be formal. I'm here to help make your dairy business better! 🌾💪''';
+**Dairy Expertise:**
+I know farming can be tough sometimes, so I'm here to encourage you and help you succeed! Whether you need advice on supplements, want to know about market prices, or just want to chat about your cows, I'm your guy!
+
+**General Conversation:**
+I'm not just a farming assistant - I'm your friend! Feel free to:
+- Ask how I'm doing
+- Tell me about your day
+- Chat about weather, family, or anything else
+- Share good news or challenges you're facing
+- Just have a friendly conversation
+
+Just talk to me like you would with a friend - no need to be formal. I'm here to help make your dairy business better and be a good friend! 🌾💪😊''';
 
   // API Configuration
   static const int apiTimeoutSeconds = 30;
   static const int maxRetries = 3;
+
+  // Main API Configuration
+  static const String apiBaseUrl = 'https://api.gemura.rw/v2';
+  
+  // Your Custom API Configuration
+  static const String yourApiBaseUrl = 'https://your-api-domain.com/api';
+  static const String yourApiKey = 'YOUR_API_KEY_HERE';
+  static const String yourApiVersion = 'v1';
+  
+  // Your API Endpoints
+  static const String yourAuthEndpoint = '/auth';
+  static const String yourUsersEndpoint = '/users';
+  static const String yourDataEndpoint = '/data';
+  
+  // Your API Configuration Validation
+  static bool get isYourApiConfigured =>
+      yourApiKey.isNotEmpty && yourApiKey != 'YOUR_API_KEY_HERE';
 
   // Chat Configuration
   static const int maxMessageLength = 1000;
@@ -51,6 +89,7 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
 
   // API Endpoints
   static const String authEndpoint = '/auth';
+  static const String configsEndpoint = '/configs';
   static const String productsEndpoint = '/products';
   static const String ordersEndpoint = '/orders';
   static const String exhibitorsEndpoint = '/exhibitors';
@@ -173,8 +212,7 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
   static Dio dioInstance() {
     final dio = Dio(
       BaseOptions(
-        baseUrl:
-            '', // apiBaseUrl is removed, so we'll use an empty string or a default
+        baseUrl: apiBaseUrl,
         connectTimeout: const Duration(milliseconds: connectionTimeout),
         receiveTimeout: const Duration(milliseconds: receiveTimeout),
         headers: {

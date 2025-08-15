@@ -4,6 +4,11 @@ class SecureConfig {
   static String? _openaiApiKey;
   static String? _claudeApiKey;
   static String? _googleVisionApiKey;
+<<<<<<< HEAD
+=======
+  static String? _yourApiKey;
+  static String? _apiBaseUrl;
+>>>>>>> 9e50ede (feat: Enhanced login screen with email/phone toggle and country code selection)
   static bool _initialized = false;
 
   /// Initialize environment variables
@@ -54,6 +59,33 @@ class SecureConfig {
     return _googleVisionApiKey!;
   }
 
+<<<<<<< HEAD
+=======
+  /// Get Your API key from environment or fallback
+  static String get yourApiKey {
+    if (_yourApiKey != null) return _yourApiKey!;
+    
+    if (_initialized) {
+      _yourApiKey = dotenv.env['YOUR_API_KEY'];
+    }
+    
+    _yourApiKey ??= 'YOUR_API_KEY_HERE';
+    return _yourApiKey!;
+  }
+
+  /// Get API Base URL from environment or fallback
+  static String get apiBaseUrl {
+    if (_apiBaseUrl != null) return _apiBaseUrl!;
+    
+    if (_initialized) {
+      _apiBaseUrl = dotenv.env['API_BASE_URL'];
+    }
+    
+    _apiBaseUrl ??= 'https://api.gemura.rw/v2';
+    return _apiBaseUrl!;
+  }
+
+>>>>>>> 9e50ede (feat: Enhanced login screen with email/phone toggle and country code selection)
   /// Check if API keys are configured
   static bool get isOpenAIConfigured => openaiApiKey.isNotEmpty && 
       openaiApiKey != 'YOUR_OPENAI_API_KEY_HERE';
@@ -63,4 +95,11 @@ class SecureConfig {
   
   static bool get isGoogleVisionConfigured => googleVisionApiKey.isNotEmpty && 
       googleVisionApiKey != 'YOUR_GOOGLE_VISION_API_KEY';
+<<<<<<< HEAD
 } 
+=======
+      
+  static bool get isYourApiConfigured => yourApiKey.isNotEmpty && 
+      yourApiKey != 'YOUR_API_KEY_HERE';
+}
+>>>>>>> 9e50ede (feat: Enhanced login screen with email/phone toggle and country code selection)
