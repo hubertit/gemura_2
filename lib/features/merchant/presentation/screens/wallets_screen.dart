@@ -103,17 +103,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
   }
 
   Widget _buildLoadingState() {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ikofi'),
-        backgroundColor: AppTheme.surfaceColor,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
-      ),
-      backgroundColor: AppTheme.backgroundColor,
-      body: SkeletonLoaders.walletListSkeleton(count: 3),
-    );
+    return SkeletonLoaders.fullWalletsTabSkeleton();
   }
 
   Widget _buildErrorState(String error) {

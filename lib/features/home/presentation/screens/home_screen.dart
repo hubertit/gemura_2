@@ -280,7 +280,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                 final walletsAsync = ref.watch(walletsNotifierProvider);
                 
                 return walletsAsync.when(
-                  loading: () => SkeletonLoaders.homeWalletsSkeleton(),
+                  loading: () => SkeletonLoaders.fullHomeTabSkeleton(),
                   error: (error, stack) => SizedBox(
                     height: 200,
                     child: Center(
