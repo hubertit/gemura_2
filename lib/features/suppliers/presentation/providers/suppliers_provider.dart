@@ -56,10 +56,15 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
         pricePerLiter: pricePerLiter,
       );
       
+      // Add a small delay to ensure the backend has processed the creation
+      await Future.delayed(const Duration(milliseconds: 500));
+      
       // Refresh the suppliers list to get the updated data
       await loadSuppliers();
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      // Don't set the entire state to error if supplier creation fails
+      // Just rethrow the error to be handled by the UI
+      rethrow;
     }
   }
 

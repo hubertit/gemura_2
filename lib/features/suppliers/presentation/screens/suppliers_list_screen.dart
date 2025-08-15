@@ -299,62 +299,42 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
 
 
   Widget _buildLoadingState() {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Suppliers'),
-        backgroundColor: AppTheme.surfaceColor,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
-      ),
-      backgroundColor: AppTheme.backgroundColor,
-      body: SkeletonLoaders.supplierListSkeleton(),
-    );
+    return SkeletonLoaders.supplierListSkeleton();
   }
 
   Widget _buildErrorState(String error) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Suppliers'),
-        backgroundColor: AppTheme.surfaceColor,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
-      ),
-      backgroundColor: AppTheme.backgroundColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppTheme.errorColor,
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: AppTheme.errorColor,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Text(
+            'Failed to load suppliers',
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textSecondaryColor,
             ),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              'Failed to load suppliers',
-              style: AppTheme.titleMedium.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            error,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textHintColor,
             ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              error,
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textHintColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            ElevatedButton(
-              onPressed: () {
-                ref.read(suppliersNotifierProvider.notifier).loadSuppliers();
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(suppliersNotifierProvider.notifier).loadSuppliers();
+            },
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }

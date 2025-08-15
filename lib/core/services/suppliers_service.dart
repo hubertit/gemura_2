@@ -28,11 +28,17 @@ class SuppliersService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['code'] == 200 && data['status'] == 'success') {
-          final List<dynamic> suppliersData = data['data']['suppliers'] ?? [];
+        // Check if the API response indicates success
+        if (data['code'] == 200 || data['status'] == 'success') {
+          final List<dynamic> suppliersData = data['data']?['suppliers'] ?? data['data'] ?? [];
           return suppliersData.map((json) => Supplier.fromApiResponse(json)).toList();
         } else {
-          throw Exception(data['message'] ?? 'Failed to get suppliers');
+          final errorMessage = data['message'] ?? 'Failed to get suppliers';
+          // Check if the message contains success info but is still an error
+          if (errorMessage.toString().toLowerCase().contains('successfully') && data['status'] != 'success') {
+            throw Exception('Supplier created but failed to refresh list. Please try again.');
+          }
+          throw Exception(errorMessage);
         }
       } else {
         throw Exception('Failed to get suppliers: ${response.statusCode}');
@@ -93,7 +99,8 @@ class SuppliersService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['code'] == 200 && data['status'] == 'success') {
+        // Check if the API response indicates success
+        if (data['code'] == 200 || data['code'] == 201 || data['status'] == 'success') {
           // API returns success, no need to return supplier data
           return;
         } else {
