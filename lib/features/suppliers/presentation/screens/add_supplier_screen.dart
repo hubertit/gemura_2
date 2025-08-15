@@ -20,6 +20,8 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
   final _addressController = TextEditingController();
   final _nidController = TextEditingController();
   final _pricePerLiterController = TextEditingController();
+  
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -34,6 +36,10 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
 
   void _saveSupplier() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
       try {
         await ref.read(suppliersNotifierProvider.notifier).createSupplier(
           name: _nameController.text.trim(),
@@ -52,6 +58,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             ),
           );
 
+          // Navigate back to suppliers list screen
           Navigator.of(context).pop();
         }
       } catch (error) {
@@ -62,6 +69,12 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
               backgroundColor: AppTheme.snackbarErrorColor,
             ),
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
         }
       }
     }
@@ -208,8 +221,9 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
 
               // Save Button
               PrimaryButton(
-                onPressed: _saveSupplier,
-                label: 'Add Supplier',
+                onPressed: _isSubmitting ? null : _saveSupplier,
+                label: _isSubmitting ? 'Adding Supplier...' : 'Add Supplier',
+                isLoading: _isSubmitting,
               ),
             ],
           ),
