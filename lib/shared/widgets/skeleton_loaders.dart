@@ -15,7 +15,21 @@ class SkeletonLoaders {
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryColor.withOpacity(0.85),
+              AppTheme.primaryColor.withOpacity(0.7),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryColor.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,34 +39,34 @@ class SkeletonLoaders {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: [
+                                        children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Container(
+                          width: 120,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
                     Container(
-                      width: 28,
-                      height: 28,
+                      width: 60,
+                      height: 20,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Container(
-                      width: 120,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  width: 60,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: AppTheme.spacing16),
@@ -61,7 +75,7 @@ class SkeletonLoaders {
               width: 100,
               height: 24,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -70,7 +84,7 @@ class SkeletonLoaders {
               width: 150,
               height: 16,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -83,7 +97,7 @@ class SkeletonLoaders {
                   width: 80,
                   height: 16,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -91,7 +105,7 @@ class SkeletonLoaders {
                   width: 100,
                   height: 16,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -123,7 +137,21 @@ class SkeletonLoaders {
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryColor.withOpacity(0.85),
+              AppTheme.primaryColor.withOpacity(0.7),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryColor.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,34 +161,34 @@ class SkeletonLoaders {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                                          children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Container(
+                            width: 100,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing8),
-                    Container(
-                      width: 100,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
+                      Container(
+                        width: 50,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Container(
-                  width: 50,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: AppTheme.spacing12),
@@ -169,7 +197,7 @@ class SkeletonLoaders {
               width: 80,
               height: 20,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -178,7 +206,7 @@ class SkeletonLoaders {
               width: 120,
               height: 14,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -390,16 +418,30 @@ class SkeletonLoaders {
               child: ListView.builder(
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 itemCount: 4,
-                itemBuilder: (context, index) => Container(
-                  margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: AppTheme.spacing16,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                    color: Colors.white,
-                  ),
+                                 itemBuilder: (context, index) => Container(
+                   margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+                   padding: const EdgeInsets.symmetric(
+                     vertical: 14,
+                     horizontal: AppTheme.spacing16,
+                   ),
+                   decoration: BoxDecoration(
+                     borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                     gradient: LinearGradient(
+                       colors: [
+                         AppTheme.primaryColor.withOpacity(0.85),
+                         AppTheme.primaryColor.withOpacity(0.7),
+                       ],
+                       begin: Alignment.topLeft,
+                       end: Alignment.bottomRight,
+                     ),
+                     boxShadow: [
+                       BoxShadow(
+                         color: AppTheme.primaryColor.withOpacity(0.08),
+                         blurRadius: 16,
+                         offset: const Offset(0, 4),
+                       ),
+                     ],
+                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -408,78 +450,78 @@ class SkeletonLoaders {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
-                            children: [
-                              Container(
-                                width: 28,
-                                height: 28,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[400],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              const SizedBox(width: AppTheme.spacing8),
-                              Container(
-                                width: 120,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[400],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            width: 60,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                                                   children: [
+                         Container(
+                           width: 28,
+                           height: 28,
+                           decoration: BoxDecoration(
+                             color: Colors.white.withOpacity(0.9),
+                             borderRadius: BorderRadius.circular(8),
+                           ),
+                         ),
+                         const SizedBox(width: AppTheme.spacing8),
+                         Container(
+                           width: 120,
+                           height: 20,
+                           decoration: BoxDecoration(
+                             color: Colors.white.withOpacity(0.9),
+                             borderRadius: BorderRadius.circular(4),
+                           ),
+                         ),
+                       ],
+                     ),
+                     Container(
+                       width: 60,
+                       height: 20,
+                       decoration: BoxDecoration(
+                         color: Colors.white.withOpacity(0.9),
+                         borderRadius: BorderRadius.circular(8),
+                       ),
+                     ),
                         ],
                       ),
                       const SizedBox(height: AppTheme.spacing16),
-                      // Balance section
-                      Container(
-                        width: 100,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Container(
-                        width: 150,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
+                                             // Balance section
+                       Container(
+                         width: 100,
+                         height: 24,
+                         decoration: BoxDecoration(
+                           color: Colors.white.withOpacity(0.9),
+                           borderRadius: BorderRadius.circular(4),
+                         ),
+                       ),
+                       const SizedBox(height: AppTheme.spacing8),
+                       Container(
+                         width: 150,
+                         height: 16,
+                         decoration: BoxDecoration(
+                           color: Colors.white.withOpacity(0.9),
+                           borderRadius: BorderRadius.circular(4),
+                         ),
+                       ),
                       const SizedBox(height: AppTheme.spacing16),
-                      // Bottom row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ],
-                      ),
+                                             // Bottom row
+                       Row(
+                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                         children: [
+                           Container(
+                             width: 80,
+                             height: 16,
+                             decoration: BoxDecoration(
+                               color: Colors.white.withOpacity(0.9),
+                               borderRadius: BorderRadius.circular(4),
+                             ),
+                           ),
+                           Container(
+                             width: 100,
+                             height: 16,
+                             decoration: BoxDecoration(
+                               color: Colors.white.withOpacity(0.9),
+                               borderRadius: BorderRadius.circular(4),
+                             ),
+                           ),
+                         ],
+                       ),
                     ],
                   ),
                 ),
@@ -531,71 +573,85 @@ class SkeletonLoaders {
                 child: PageView.builder(
                   itemCount: 3,
                   controller: PageController(viewportFraction: 0.92),
-                  itemBuilder: (context, index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing8),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: AppTheme.spacing16,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                      color: Colors.white,
-                    ),
+                                     itemBuilder: (context, index) => Container(
+                     margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing8),
+                     padding: const EdgeInsets.symmetric(
+                       vertical: 14,
+                       horizontal: AppTheme.spacing16,
+                     ),
+                     decoration: BoxDecoration(
+                       borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                       gradient: LinearGradient(
+                         colors: [
+                           AppTheme.primaryColor.withOpacity(0.85),
+                           AppTheme.primaryColor.withOpacity(0.7),
+                         ],
+                         begin: Alignment.topLeft,
+                         end: Alignment.bottomRight,
+                       ),
+                       boxShadow: [
+                         BoxShadow(
+                           color: AppTheme.primaryColor.withOpacity(0.08),
+                           blurRadius: 16,
+                           offset: const Offset(0, 4),
+                         ),
+                       ],
+                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[400],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                const SizedBox(width: AppTheme.spacing8),
-                                Container(
-                                  width: 100,
-                                  height: 18,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[400],
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(
-                              width: 50,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[400],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
+                                                   children: [
+                           Row(
+                             children: [
+                               Container(
+                                 width: 28,
+                                 height: 28,
+                                 decoration: BoxDecoration(
+                                   color: Colors.white.withOpacity(0.9),
+                                   borderRadius: BorderRadius.circular(8),
+                                 ),
+                               ),
+                               const SizedBox(width: AppTheme.spacing8),
+                               Container(
+                                 width: 100,
+                                 height: 18,
+                                 decoration: BoxDecoration(
+                                   color: Colors.white.withOpacity(0.9),
+                                   borderRadius: BorderRadius.circular(4),
+                                 ),
+                               ),
+                             ],
+                           ),
+                           Container(
+                             width: 50,
+                             height: 18,
+                             decoration: BoxDecoration(
+                               color: Colors.white.withOpacity(0.9),
+                               borderRadius: BorderRadius.circular(8),
+                             ),
+                           ),
                           ],
                         ),
                         const SizedBox(height: AppTheme.spacing12),
-                        Container(
-                          width: 80,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[400],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing8),
-                        Container(
-                          width: 120,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[400],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
+                                                 Container(
+                           width: 80,
+                           height: 20,
+                           decoration: BoxDecoration(
+                             color: Colors.white.withOpacity(0.9),
+                             borderRadius: BorderRadius.circular(4),
+                           ),
+                         ),
+                         const SizedBox(height: AppTheme.spacing8),
+                         Container(
+                           width: 120,
+                           height: 14,
+                           decoration: BoxDecoration(
+                             color: Colors.white.withOpacity(0.9),
+                             borderRadius: BorderRadius.circular(4),
+                           ),
+                         ),
                       ],
                     ),
                   ),
