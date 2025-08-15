@@ -17,15 +17,16 @@ import 'transactions_screen.dart';
 import '../../../home/presentation/screens/request_payment_screen.dart';
 import '../../../home/presentation/screens/pay_screen.dart';
 import '../../../home/presentation/screens/payouts_screen.dart';
+import '../providers/wallet_provider.dart';
 
-class WalletsScreen extends StatefulWidget {
+class WalletsScreen extends ConsumerStatefulWidget {
   const WalletsScreen({super.key});
 
   @override
-  State<WalletsScreen> createState() => _WalletsScreenState();
+  ConsumerState<WalletsScreen> createState() => _WalletsScreenState();
 }
 
-class _WalletsScreenState extends State<WalletsScreen> {
+class _WalletsScreenState extends ConsumerState<WalletsScreen> {
   // State to track balance visibility for each wallet
   final Map<String, bool> _walletBalanceVisibility = {};
 
@@ -36,47 +37,15 @@ class _WalletsScreenState extends State<WalletsScreen> {
     });
   }
 
-  List<Wallet> get mockWallets => [
-        Wallet(
-          id: 'WALLET-1',
-          name: 'Main Ikofi',
-          balance: 250000,
-          currency: 'RWF',
-          type: 'individual',
-          status: 'active',
-          createdAt: DateTime.now().subtract(const Duration(days: 120)),
-          owners: ['You'],
-          isDefault: true,
-        ),
-        Wallet(
-          id: 'WALLET-2',
-          name: 'Joint Ikofi',
-          balance: 1200000,
-          currency: 'RWF',
-          type: 'joint',
-          status: 'active',
-          createdAt: DateTime.now().subtract(const Duration(days: 60)),
-          owners: ['You', 'Alice', 'Eric'],
-          isDefault: false,
-          description: 'Joint savings for family expenses',
-          targetAmount: 2000000,
-          targetDate: DateTime.now().add(const Duration(days: 180)),
-        ),
-        Wallet(
-          id: 'WALLET-3',
-          name: 'Vacation Fund',
-          balance: 350000,
-          currency: 'RWF',
-          type: 'individual',
-          status: 'inactive',
-          createdAt: DateTime.now().subtract(const Duration(days: 200)),
-          owners: ['You'],
-          isDefault: false,
-          description: 'Vacation savings',
-          targetAmount: 500000,
-          targetDate: DateTime.now().add(const Duration(days: 90)),
-        ),
-      ];
+    // Get wallets from provider
+  List<Wallet> get wallets {
+    final walletsAsync = ref.watch(walletsProvider);
+    return walletsAsync.when(
+      data: (wallets) => wallets,
+      loading: () => [],
+      error: (error, stack) => [],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,9 +77,51 @@ class _WalletsScreenState extends State<WalletsScreen> {
         ],
       ),
       backgroundColor: AppTheme.backgroundColor,
-      body: wallets.isEmpty
-          ? _buildEmptyState(context)
-          : Column(
+      body: Consumer(
+        builder: (context, ref, child) {
+          final walletsAsync = ref.watch(walletsProvider);
+          
+          return walletsAsync.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            error: (error, stack) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  Text(
+                    'Failed to load wallets',
+                    style: AppTheme.titleMedium.copyWith(
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  Text(
+                    error.toString(),
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  PrimaryButton(
+                    label: 'Retry',
+                    onPressed: () {
+                      ref.read(walletsProvider.notifier).loadWallets();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            data: (wallets) => wallets.isEmpty
+                ? _buildEmptyState(context)
+                : Column(
               children: [
                 // Quick actions
                 Padding(
@@ -183,29 +194,34 @@ class _WalletsScreenState extends State<WalletsScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(AppTheme.spacing16),
-                    children: [
-                      ...wallets.map((wallet) => WalletCard(
-                        wallet: wallet,
-                        showBalance: _walletBalanceVisibility[wallet.id] ?? true,
-                        onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
-                      )),
-                      const SizedBox(height: AppTheme.spacing16),
-                      // Add Wallet Card
-                      AddItemCard(
-                        title: 'Add New Ikofi',
-                        subtitle: 'Create individual or joint ikofi',
-                        icon: Icons.add_circle_outline,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const CreateWalletScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      await ref.read(walletsProvider.notifier).refreshWallets();
+                    },
+                    child: ListView(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      children: [
+                        ...wallets.map((wallet) => WalletCard(
+                          wallet: wallet,
+                          showBalance: _walletBalanceVisibility[wallet.id] ?? true,
+                          onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
+                        )),
+                        const SizedBox(height: AppTheme.spacing16),
+                        // Add Wallet Card
+                        AddItemCard(
+                          title: 'Add New Ikofi',
+                          subtitle: 'Create individual or joint ikofi',
+                          icon: Icons.add_circle_outline,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const CreateWalletScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

@@ -3,14 +3,17 @@ import '../config/app_config.dart';
 import '../../shared/models/registration_request.dart';
 import 'secure_storage_service.dart';
 import 'authenticated_dio_service.dart';
+import 'wallet_service.dart';
 
 class AuthService {
   final Dio _dio;
   final Dio _authenticatedDio;
+  final WalletService _walletService;
 
   AuthService() 
     : _dio = AppConfig.dioInstance(),
-      _authenticatedDio = AuthenticatedDioService.instance;
+      _authenticatedDio = AuthenticatedDioService.instance,
+      _walletService = WalletService();
 
   /// Register a new user
   Future<Map<String, dynamic>> register(RegistrationRequest request) async {
@@ -83,6 +86,9 @@ class AuthService {
           
           // Refresh authenticated Dio instance with new token
           AuthenticatedDioService.refreshInstance();
+          
+          // Load user's wallets
+          await _loadUserWallets();
         }
       }
       
@@ -147,6 +153,17 @@ class AuthService {
     }
   }
   
+  /// Load user's wallets after login
+  Future<void> _loadUserWallets() async {
+    try {
+      await _walletService.getUserWallets();
+    } catch (e) {
+      // Don't throw error if wallet loading fails
+      // User can still use the app without wallets
+      print('Warning: Failed to load wallets: $e');
+    }
+  }
+
   /// Clear local data (token, user data, cache)
   Future<void> _clearLocalData() async {
     await SecureStorageService.removeAuthToken();
