@@ -30,7 +30,7 @@ class SuppliersService {
         final data = response.data;
         // Check if the API response indicates success
         if (data['code'] == 200 || data['status'] == 'success') {
-          final List<dynamic> suppliersData = data['data']?['suppliers'] ?? data['data'] ?? [];
+          final List<dynamic> suppliersData = data['data'] ?? [];
           return suppliersData.map((json) => Supplier.fromApiResponse(json)).toList();
         } else {
           final errorMessage = data['message'] ?? 'Failed to get suppliers';

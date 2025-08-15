@@ -24,7 +24,7 @@ class Supplier {
       pricePerLiter: double.tryParse(json['price_per_liter'] ?? '0') ?? 0.0,
       averageSupplyQuantity: double.tryParse(json['average_supply_quantity'] ?? '0') ?? 0.0,
       relationshipStatus: json['relationship_status'] ?? 'inactive',
-      supplier: SupplierUser.fromApiResponse(json['supplier'] ?? {}),
+      supplier: SupplierUser.fromApiResponse(json),
     );
   }
 
@@ -84,14 +84,14 @@ class SupplierUser {
 
   factory SupplierUser.fromApiResponse(Map<String, dynamic> json) {
     return SupplierUser(
-      userCode: json['user_code'] ?? '',
+      userCode: json['code'] ?? '',
       name: json['name'] ?? '',
       phone: json['phone'] ?? '',
       email: json['email'],
       nid: json['nid'],
       address: json['address'],
-      accountCode: json['account_code'] ?? '',
-      accountName: json['account_name'] ?? '',
+      accountCode: json['code'] ?? '', // Using code as account code for now
+      accountName: json['name'] ?? '', // Using name as account name for now
     );
   }
 
