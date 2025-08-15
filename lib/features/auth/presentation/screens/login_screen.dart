@@ -25,7 +25,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-  bool _isPhoneLogin = false; // Toggle between email and phone login
+  bool _isPhoneLogin = true; // Toggle between email and phone login (default to phone)
   
   // Country picker for phone login
   Country _selectedCountry = Country(
