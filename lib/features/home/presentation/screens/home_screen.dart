@@ -35,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
     final currentIndex = ref.watch(tabIndexProvider);
     final tabs = [
       const _DashboardTab(), // Index 0: Home
-      const WalletsScreen(), // Index 1: Ikofi
+      // const WalletsScreen(), // Index 1: Ikofi - Temporarily commented out
       const ChatListScreen(), // Index 2: Chat (Default)
       const TransactionsScreen(), // Index 3: Transactions
       const ProfileTab(), // Index 4: Profile
@@ -53,11 +53,11 @@ class HomeScreen extends ConsumerWidget {
             selectedIcon: Icon(Icons.dashboard),
             label: 'Home',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Ikofi',
-          ),
+          // NavigationDestination(
+          //   icon: Icon(Icons.account_balance_wallet_outlined),
+          //   selectedIcon: Icon(Icons.account_balance_wallet),
+          //   label: 'Ikofi',
+          // ),
           NavigationDestination(
             icon: Icon(Icons.chat_bubble_outline),
             selectedIcon: Icon(Icons.chat_bubble),

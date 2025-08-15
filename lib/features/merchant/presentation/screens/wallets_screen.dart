@@ -187,7 +187,8 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
           ? _buildEmptyState(context)
           : Column(
               children: [
-                // Quick actions
+                // Quick actions - Temporarily commented out
+                /*
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
                   child: Container(
@@ -216,7 +217,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                             label: 'Pay',
                             onTap: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => const PayScreen()),
+                                MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
                               );
                             },
                           ),
@@ -257,6 +258,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                     ),
                   ),
                 ),
+                */
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
@@ -271,7 +273,8 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                           onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
                         )),
                         const SizedBox(height: AppTheme.spacing16),
-                        // Add Wallet Card
+                        // Add Wallet Card - Temporarily commented out
+                        /*
                         AddItemCard(
                           title: 'Add New Ikofi',
                           subtitle: 'Create individual or joint ikofi',
@@ -284,6 +287,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                             );
                           },
                         ),
+                        */
                       ],
                     ),
                   ),
@@ -1317,12 +1321,12 @@ class _WalletCardState extends State<WalletCard> {
                 builder: (context) => _WalletDetailsSheet(wallet: widget.wallet),
               );
             } else {
-              // Navigate to details screen
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => WalletDetailsScreen(wallet: widget.wallet),
-                ),
-              );
+              // Navigate to details screen - Temporarily commented out
+              // Navigator.of(context).push(
+              //   MaterialPageRoute(
+              //     builder: (context) => WalletDetailsScreen(wallet: widget.wallet),
+              //   ),
+              // );
             }
           },
       borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
