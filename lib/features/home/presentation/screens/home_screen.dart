@@ -13,6 +13,7 @@ import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart' show WalletCard, WalletsScreen;
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/transaction_item.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../shared/models/transaction.dart';
 import 'package:d_chart/d_chart.dart';
 import '../../../../shared/models/wallet.dart';
@@ -279,14 +280,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                 final walletsAsync = ref.watch(walletsNotifierProvider);
                 
                 return walletsAsync.when(
-                  loading: () => SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                  ),
+                  loading: () => SkeletonLoaders.homeWalletsSkeleton(),
                   error: (error, stack) => SizedBox(
                     height: 200,
                     child: Center(

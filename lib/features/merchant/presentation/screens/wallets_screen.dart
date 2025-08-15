@@ -7,6 +7,7 @@ import '../../../../shared/models/transaction.dart';
 import '../../../../shared/models/wallet.dart';
 import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/widgets/layout_widgets.dart' show AddItemCard, CustomRulesActionSheet, DetailsActionSheet, DetailRow;
+import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../savings/presentation/screens/savings_screen.dart';
 import '../../../savings/presentation/providers/savings_provider.dart';
@@ -111,9 +112,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
         titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
       ),
       backgroundColor: AppTheme.backgroundColor,
-      body: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      body: SkeletonLoaders.walletListSkeleton(count: 3),
     );
   }
 
