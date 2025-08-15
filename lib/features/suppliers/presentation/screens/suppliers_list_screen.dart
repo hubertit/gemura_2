@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
-import 'package:gemura/features/suppliers/presentation/providers/supplier_provider.dart';
-import 'package:gemura/features/suppliers/domain/models/supplier.dart';
+import 'package:gemura/features/suppliers/presentation/providers/suppliers_provider.dart';
+import 'package:gemura/shared/models/supplier.dart';
 import 'package:gemura/features/suppliers/presentation/screens/add_supplier_screen.dart';
 import 'package:gemura/features/suppliers/presentation/screens/supplier_details_screen.dart';
+import 'package:gemura/shared/widgets/skeleton_loaders.dart';
 
 class SuppliersListScreen extends ConsumerStatefulWidget {
   const SuppliersListScreen({super.key});
@@ -22,8 +23,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     super.dispose();
   }
 
-  List<Supplier> _getFilteredSuppliers() {
-    final suppliers = ref.watch(supplierProvider);
+  List<Supplier> _getFilteredSuppliers(List<Supplier> suppliers) {
     String searchQuery = _searchController.text.toLowerCase();
     
     if (searchQuery.isEmpty) {
@@ -33,18 +33,15 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     return suppliers.where((supplier) {
       return supplier.name.toLowerCase().contains(searchQuery) ||
           supplier.phone.toLowerCase().contains(searchQuery) ||
-          supplier.location.toLowerCase().contains(searchQuery) ||
-          supplier.businessType.toLowerCase().contains(searchQuery) ||
-          supplier.farmType.toLowerCase().contains(searchQuery) ||
-          supplier.collectionSchedule.toLowerCase().contains(searchQuery) ||
+          (supplier.address != null && supplier.address!.toLowerCase().contains(searchQuery)) ||
           (supplier.email != null && supplier.email!.toLowerCase().contains(searchQuery)) ||
-          (supplier.idNumber != null && supplier.idNumber!.toLowerCase().contains(searchQuery));
+          (supplier.nid != null && supplier.nid!.toLowerCase().contains(searchQuery));
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredSuppliers = _getFilteredSuppliers();
+    final suppliersAsync = ref.watch(suppliersNotifierProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -55,7 +52,15 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             const Text('Suppliers'),
             if (_searchController.text.isNotEmpty)
               Text(
-                '${filteredSuppliers.length} result${filteredSuppliers.length == 1 ? '' : 's'}',
+                '${suppliersAsync.when(
+                  data: (suppliers) => _getFilteredSuppliers(suppliers).length,
+                  loading: () => 0,
+                  error: (_, __) => 0,
+                )} result${suppliersAsync.when(
+                  data: (suppliers) => _getFilteredSuppliers(suppliers).length == 1 ? '' : 's',
+                  loading: () => 's',
+                  error: (_, __) => 's',
+                )}',
                 style: AppTheme.bodySmall.copyWith(
                   color: AppTheme.textSecondaryColor,
                   fontSize: 12,
@@ -97,9 +102,21 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           ),
         ],
       ),
-      body: filteredSuppliers.isEmpty
-          ? _buildEmptyState(_searchController.text.isNotEmpty)
-          : ListView.builder(
+      body: suppliersAsync.when(
+        loading: () => _buildLoadingState(),
+        error: (error, stack) => _buildErrorState(error.toString()),
+        data: (suppliers) {
+          final filteredSuppliers = _getFilteredSuppliers(suppliers);
+          
+          if (filteredSuppliers.isEmpty) {
+            return _buildEmptyState(_searchController.text.isNotEmpty);
+          }
+          
+          return RefreshIndicator(
+            onRefresh: () async {
+              await ref.read(suppliersNotifierProvider.notifier).refreshSuppliers();
+            },
+            child: ListView.builder(
               padding: const EdgeInsets.only(
                 top: AppTheme.spacing16,
                 left: AppTheme.spacing16,
@@ -111,6 +128,9 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                 return _buildSupplierCard(supplier);
               },
             ),
+          );
+        },
+      ),
     );
   }
 
@@ -131,11 +151,12 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           vertical: AppTheme.spacing4,
         ),
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => SupplierDetailsScreen(supplier: supplier),
-            ),
-          );
+          // TODO: Navigate to supplier details when screen is updated
+          // Navigator.of(context).push(
+          //   MaterialPageRoute(
+          //     builder: (context) => SupplierDetailsScreen(supplier: supplier),
+          //   ),
+          // );
         },
         leading: CircleAvatar(
           radius: 24,
@@ -177,7 +198,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${supplier.sellingPricePerLiter.toStringAsFixed(0)} Frw/L',
+              '${supplier.pricePerLiter.toStringAsFixed(0)} Frw/L',
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.w600,
@@ -185,7 +206,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              '${supplier.dailyProduction}L/day',
+              '${supplier.averageSupplyQuantity.toStringAsFixed(1)}L/day',
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.textSecondaryColor,
                 fontSize: 11,
@@ -337,6 +358,67 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   }
 
 
+
+  Widget _buildLoadingState() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Suppliers'),
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+      ),
+      backgroundColor: AppTheme.backgroundColor,
+      body: SkeletonLoaders.supplierListSkeleton(),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Suppliers'),
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+      ),
+      backgroundColor: AppTheme.backgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppTheme.errorColor,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'Failed to load suppliers',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              error,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textHintColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(suppliersNotifierProvider.notifier).loadSuppliers();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildEmptyState([bool isSearch = false]) {
     return Center(
