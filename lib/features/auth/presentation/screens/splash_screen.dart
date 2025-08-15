@@ -75,6 +75,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             'assets/images/splash.jpg',
             fit: BoxFit.cover,
           ),
+          // Gradient overlay at bottom for text visibility
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.3),
+                    Colors.black.withOpacity(0.6),
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
           // Loader in the center
           const Center(
             child: CircularProgressIndicator(

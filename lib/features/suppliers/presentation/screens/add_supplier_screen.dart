@@ -97,15 +97,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Basic Information
-              Text(
-                'Basic Information',
-                style: AppTheme.bodySmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spacing8),
+
               
               TextFormField(
                 controller: _nameController,
