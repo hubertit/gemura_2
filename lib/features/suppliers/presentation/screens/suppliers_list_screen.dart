@@ -129,49 +129,13 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               children: [
                 // Search results indicator
                 if (_searchController.text.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing16,
-                      vertical: AppTheme.spacing8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.05),
-                      border: Border(
-                        bottom: BorderSide(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
-                          width: 1,
-                        ),
-                      ),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.search,
-                          size: 16,
-                          color: AppTheme.primaryColor,
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
                         Text(
-                          '${filteredSuppliers.length} supplier${filteredSuppliers.length == 1 ? '' : 's'} found for "${_searchController.text}"',
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
-                          child: Text(
-                            'Clear',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          '${filteredSuppliers.length} result${filteredSuppliers.length == 1 ? '' : 's'} found',
+                          style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
                         ),
                       ],
                     ),
@@ -284,58 +248,49 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   }
 
   Widget _buildSearchField() {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.primaryColor.withOpacity(0.3),
-          width: 1,
+    return TextField(
+      controller: _searchController,
+      autofocus: true,
+      style: AppTheme.bodyMedium,
+      decoration: InputDecoration(
+        hintText: 'Search suppliers...',
+        hintStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textHintColor),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          borderSide: BorderSide.none,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          borderSide: BorderSide.none,
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          borderSide: BorderSide.none,
+        ),
+        filled: true,
+        fillColor: AppTheme.textHintColor.withOpacity(0.1),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        suffixIcon: _searchController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {});
+                },
+              )
+            : null,
       ),
-      child: TextField(
-        controller: _searchController,
-        autofocus: true,
-        style: AppTheme.bodyMedium.copyWith(
-          color: AppTheme.textPrimaryColor,
-          fontSize: 16,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Search suppliers...',
-          hintStyle: AppTheme.bodyMedium.copyWith(
-            color: AppTheme.textHintColor,
-            fontSize: 16,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: AppTheme.primaryColor,
-            size: 20,
-          ),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: Icon(
-                    Icons.clear,
-                    color: AppTheme.textSecondaryColor,
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {});
-                  },
-                  tooltip: 'Clear search',
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
-        onChanged: (value) {
-          setState(() {});
-        },
-      ),
+      onChanged: (value) {
+        setState(() {});
+      },
     );
   }
 
