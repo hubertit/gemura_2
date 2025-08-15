@@ -16,11 +16,21 @@ class SuppliersListScreen extends ConsumerStatefulWidget {
 
 class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+      }
+    });
   }
 
   List<Supplier> _getFilteredSuppliers(List<Supplier> suppliers) {
@@ -46,60 +56,59 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Suppliers'),
-            if (_searchController.text.isNotEmpty)
-              Text(
-                '${suppliersAsync.when(
-                  data: (suppliers) => _getFilteredSuppliers(suppliers).length,
-                  loading: () => 0,
-                  error: (_, __) => 0,
-                )} result${suppliersAsync.when(
-                  data: (suppliers) => _getFilteredSuppliers(suppliers).length == 1 ? '' : 's',
-                  loading: () => 's',
-                  error: (_, __) => 's',
-                )}',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                  fontSize: 12,
-                ),
-              ),
-          ],
-        ),
+        title: _isSearching 
+          ? _buildSearchField()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Suppliers'),
+                if (_searchController.text.isNotEmpty)
+                  Text(
+                    '${suppliersAsync.when(
+                      data: (suppliers) => _getFilteredSuppliers(suppliers).length,
+                      loading: () => 0,
+                      error: (_, __) => 0,
+                    )} result${suppliersAsync.when(
+                      data: (suppliers) => _getFilteredSuppliers(suppliers).length == 1 ? '' : 's',
+                      loading: () => 's',
+                      error: (_, __) => 's',
+                    )}',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
         titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
         actions: [
-          if (_searchController.text.isNotEmpty)
+          if (_isSearching)
             IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                setState(() {});
-              },
-              tooltip: 'Clear search',
+              icon: const Icon(Icons.close),
+              onPressed: _toggleSearch,
+              tooltip: 'Close search',
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: _toggleSearch,
+              tooltip: 'Search suppliers',
             ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              _showSearchDialog();
-            },
-            tooltip: 'Search suppliers',
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AddSupplierScreen(),
-                ),
-              );
-            },
-            tooltip: 'Add supplier',
-          ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const AddSupplierScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Add supplier',
+            ),
+          ],
         ],
       ),
       body: suppliersAsync.when(
@@ -116,17 +125,73 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             onRefresh: () async {
               await ref.read(suppliersNotifierProvider.notifier).refreshSuppliers();
             },
-            child: ListView.builder(
-              padding: const EdgeInsets.only(
-                top: AppTheme.spacing16,
-                left: AppTheme.spacing16,
-                right: AppTheme.spacing16,
-              ),
-              itemCount: filteredSuppliers.length,
-              itemBuilder: (context, index) {
-                final supplier = filteredSuppliers[index];
-                return _buildSupplierCard(supplier);
-              },
+            child: Column(
+              children: [
+                // Search results indicator
+                if (_searchController.text.isNotEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing16,
+                      vertical: AppTheme.spacing8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.05),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.search,
+                          size: 16,
+                          color: AppTheme.primaryColor,
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        Text(
+                          '${filteredSuppliers.length} supplier${filteredSuppliers.length == 1 ? '' : 's'} found for "${_searchController.text}"',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {});
+                          },
+                          child: Text(
+                            'Clear',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // Suppliers list
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(
+                      top: AppTheme.spacing16,
+                      left: AppTheme.spacing16,
+                      right: AppTheme.spacing16,
+                    ),
+                    itemCount: filteredSuppliers.length,
+                    itemBuilder: (context, index) {
+                      final supplier = filteredSuppliers[index];
+                      return _buildSupplierCard(supplier);
+                    },
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -218,144 +283,63 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     );
   }
 
-
-
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: AppTheme.surfaceColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+  Widget _buildSearchField() {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppTheme.primaryColor.withOpacity(0.3),
+          width: 1,
         ),
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spacing20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Title
-              Row(
-                children: [
-                  Icon(Icons.search, color: AppTheme.primaryColor, size: 18),
-                  const SizedBox(width: AppTheme.spacing8),
-                  Text(
-                    'Search Suppliers',
-                    style: AppTheme.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        autofocus: true,
+        style: AppTheme.bodyMedium.copyWith(
+          color: AppTheme.textPrimaryColor,
+          fontSize: 16,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search suppliers...',
+          hintStyle: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.textHintColor,
+            fontSize: 16,
+          ),
+          prefixIcon: Icon(
+            Icons.search,
+            color: AppTheme.primaryColor,
+            size: 20,
+          ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: AppTheme.textSecondaryColor,
+                    size: 18,
                   ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              // Search Field
-              TextFormField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search by name, phone, or location...',
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-                  prefixIcon: Icon(Icons.search, color: AppTheme.textSecondaryColor, size: 20),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: AppTheme.textSecondaryColor, size: 20),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.errorColor, width: 1),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.backgroundColor,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-                ),
-                style: AppTheme.bodySmall.copyWith(color: AppTheme.textPrimaryColor),
-                onChanged: (value) {
-                  setState(() {});
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing12),
-              // Info Text
-              Row(
-                children: [
-                  Icon(Icons.info_outline, size: 16, color: AppTheme.textSecondaryColor),
-                  const SizedBox(width: AppTheme.spacing4),
-                  Expanded(
-                    child: Text(
-                      'Search is case-insensitive and works across all supplier fields',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {});
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(
-                      'Cancel',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing8),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: AppTheme.surfaceColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                      ),
-                    ),
-                    child: Text(
-                      'Search',
-                      style: AppTheme.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                  tooltip: 'Clear search',
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
           ),
         ),
+        onChanged: (value) {
+          setState(() {});
+        },
       ),
     );
   }
+
+
 
 
 
@@ -429,18 +413,20 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: isSearch 
+                ? AppTheme.primaryColor.withOpacity(0.1)
+                : AppTheme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isSearch ? Icons.search_off : Icons.people_outline,
               size: 40,
-              color: AppTheme.primaryColor,
+              color: isSearch ? AppTheme.primaryColor : AppTheme.primaryColor,
             ),
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            isSearch ? 'No search results' : 'No suppliers found',
+            isSearch ? 'No suppliers found' : 'No suppliers yet',
             style: AppTheme.titleMedium.copyWith(
               color: AppTheme.textPrimaryColor,
               fontWeight: FontWeight.w600,
@@ -449,40 +435,65 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
           const SizedBox(height: AppTheme.spacing8),
           Text(
             isSearch 
-                ? 'Try adjusting your search terms or browse all suppliers'
-                : 'Add your first supplier to get started',
+                ? 'No suppliers match "${_searchController.text}"\nTry different keywords or browse all suppliers'
+                : 'Add your first supplier to get started with milk collection',
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.spacing32),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const AddSupplierScreen(),
+          if (!isSearch)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AddSupplierScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('Add Supplier'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing24,
+                    vertical: AppTheme.spacing16,
                   ),
-                );
-              },
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('Add Supplier'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing24,
-                  vertical: AppTheme.spacing16,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+              ),
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {});
+                },
+                icon: const Icon(Icons.clear, size: 20),
+                label: const Text('Clear Search'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryColor,
+                  side: BorderSide(color: AppTheme.primaryColor, width: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing24,
+                    vertical: AppTheme.spacing16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
