@@ -7,14 +7,20 @@ class Overview {
   final OverviewSummary summary;
   @JsonKey(name: 'breakdown_type')
   final String breakdownType;
+  @JsonKey(name: 'chart_period')
+  final String? chartPeriod;
   final List<OverviewBreakdown> breakdown;
+  @JsonKey(name: 'recent_transactions')
+  final List<OverviewTransaction>? recentTransactions;
   @JsonKey(name: 'date_range')
   final OverviewDateRange dateRange;
 
   Overview({
     required this.summary,
     required this.breakdownType,
+    this.chartPeriod,
     required this.breakdown,
+    this.recentTransactions,
     required this.dateRange,
   });
 
@@ -104,12 +110,14 @@ class OverviewCustomers {
 class OverviewBreakdown {
   final String label;
   final String? month;
+  final String? date;
   final OverviewBreakdownData collection;
   final OverviewBreakdownData sales;
 
   OverviewBreakdown({
     required this.label,
     this.month,
+    this.date,
     required this.collection,
     required this.sales,
   });
@@ -130,6 +138,62 @@ class OverviewBreakdownData {
 
   factory OverviewBreakdownData.fromJson(Map<String, dynamic> json) => _$OverviewBreakdownDataFromJson(json);
   Map<String, dynamic> toJson() => _$OverviewBreakdownDataToJson(this);
+}
+
+@JsonSerializable()
+class OverviewTransaction {
+  final String id;
+  final double quantity;
+  @JsonKey(name: 'unit_price')
+  final double unitPrice;
+  @JsonKey(name: 'total_amount')
+  final double totalAmount;
+  final String status;
+  @JsonKey(name: 'transaction_at')
+  final String transactionAt;
+  final String? notes;
+  @JsonKey(name: 'created_at')
+  final String createdAt;
+  final String type;
+  @JsonKey(name: 'supplier_account')
+  final OverviewAccount? supplierAccount;
+  @JsonKey(name: 'customer_account')
+  final OverviewAccount? customerAccount;
+
+  OverviewTransaction({
+    required this.id,
+    required this.quantity,
+    required this.unitPrice,
+    required this.totalAmount,
+    required this.status,
+    required this.transactionAt,
+    this.notes,
+    required this.createdAt,
+    required this.type,
+    this.supplierAccount,
+    this.customerAccount,
+  });
+
+  factory OverviewTransaction.fromJson(Map<String, dynamic> json) => _$OverviewTransactionFromJson(json);
+  Map<String, dynamic> toJson() => _$OverviewTransactionToJson(this);
+}
+
+@JsonSerializable()
+class OverviewAccount {
+  final String code;
+  final String name;
+  final String type;
+  final String status;
+
+  OverviewAccount({
+    required this.code,
+    required this.name,
+    required this.type,
+    required this.status,
+  });
+
+  factory OverviewAccount.fromJson(Map<String, dynamic> json) => _$OverviewAccountFromJson(json);
+  Map<String, dynamic> toJson() => _$OverviewAccountToJson(this);
 }
 
 @JsonSerializable()

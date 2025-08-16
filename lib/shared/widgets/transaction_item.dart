@@ -35,17 +35,28 @@ class TransactionItem extends StatelessWidget {
   }
 
   IconData getMethodIcon() {
-    switch (transaction.paymentMethod.toLowerCase()) {
-      case 'mobile money':
-        return Icons.phone_iphone_rounded;
-      case 'card':
-        return Icons.credit_card_rounded;
-      case 'bank':
-        return Icons.account_balance_rounded;
-      case 'qr/ussd':
-        return Icons.qr_code_rounded;
+    switch (transaction.type.toLowerCase()) {
+      case 'collection':
+        return Icons.inventory_2_rounded; // Milk collection icon
+      case 'sale':
+        return Icons.local_shipping_rounded; // Supply/delivery icon
+      case 'payment':
+        return Icons.local_shipping_rounded; // Supply/delivery icon
       default:
-        return Icons.payment_rounded;
+        return Icons.swap_horiz_rounded; // Generic transaction icon
+    }
+  }
+
+  String _getTransactionTypeLabel(String type) {
+    switch (type.toLowerCase()) {
+      case 'collection':
+        return 'Collection';
+      case 'sale':
+        return 'Supply';
+      case 'payment':
+        return 'Supply';
+      default:
+        return 'Transaction';
     }
   }
 
@@ -95,12 +106,12 @@ class TransactionItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transaction.description.isNotEmpty ? transaction.description : transaction.reference,
+                    transaction.customerName,
                     style: AppTheme.bodySmall.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: AppTheme.spacing4),
                   Text(
-                    transaction.paymentMethod,
+                    _getTransactionTypeLabel(transaction.type),
                     style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor, fontSize: 12),
                   ),
                   const SizedBox(height: AppTheme.spacing4),

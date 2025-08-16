@@ -24,7 +24,7 @@ class DetailsActionSheet extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

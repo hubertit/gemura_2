@@ -8,7 +8,20 @@ final overviewServiceProvider = Provider<OverviewService>((ref) {
 
 final overviewProvider = FutureProvider<Overview>((ref) async {
   final overviewService = ref.read(overviewServiceProvider);
-  return await overviewService.getOverview();
+  
+  // Get first date and today's date of current month
+  final now = DateTime.now();
+  final firstDayOfMonth = DateTime(now.year, now.month, 1);
+  final today = DateTime(now.year, now.month, now.day);
+  
+  // Format dates for API
+  final String dateFrom = '${firstDayOfMonth.year}-${firstDayOfMonth.month.toString().padLeft(2, '0')}-${firstDayOfMonth.day.toString().padLeft(2, '0')}';
+  final String dateTo = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+  
+  return await overviewService.getOverview(
+    dateFrom: dateFrom,
+    dateTo: dateTo,
+  );
 });
 
 final filteredOverviewProvider = FutureProvider.family<Overview, Map<String, String>>((ref, dateRange) async {
@@ -34,7 +47,20 @@ class OverviewNotifier extends StateNotifier<AsyncValue<Overview>> {
   Future<void> loadOverview() async {
     try {
       state = const AsyncValue.loading();
-      final overview = await _overviewService.getOverview();
+      
+      // Get first date and today's date of current month
+      final now = DateTime.now();
+      final firstDayOfMonth = DateTime(now.year, now.month, 1);
+      final today = DateTime(now.year, now.month, now.day);
+      
+      // Format dates for API
+      final String dateFrom = '${firstDayOfMonth.year}-${firstDayOfMonth.month.toString().padLeft(2, '0')}-${firstDayOfMonth.day.toString().padLeft(2, '0')}';
+      final String dateTo = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      
+      final overview = await _overviewService.getOverview(
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+      );
       state = AsyncValue.data(overview);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);

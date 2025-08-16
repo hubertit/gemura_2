@@ -11,10 +11,10 @@ import 'settings_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart' show WalletCard;
 import '../../../merchant/presentation/providers/wallets_provider.dart';
-import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 
 import '../../../../shared/models/transaction.dart';
+import '../../../../shared/models/overview.dart';
 import 'package:d_chart/d_chart.dart';
 import '../../../../shared/models/wallet.dart';
 import 'package:intl/intl.dart';
@@ -104,6 +104,8 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
+
+
 
   // Static mock wallets as fallback for home screen
   List<Wallet> get homeWallets => [
@@ -267,9 +269,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(overviewProvider);
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Dynamic Ikofi Cards
@@ -535,7 +541,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                 child: _buildMetricCard(
                                   'Collection',
                                   '${overview.summary.collection.liters.toStringAsFixed(1)} L',
-                                  '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw',
+                                  '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw • ${overview.summary.collection.transactions} txns',
                                   Icons.local_shipping,
                                   AppTheme.primaryColor,
                                 ),
@@ -545,7 +551,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                 child: _buildMetricCard(
                                   'Sales',
                                   '${overview.summary.sales.liters.toStringAsFixed(1)} L',
-                                  '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw',
+                                  '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw • ${overview.summary.sales.transactions} txns',
                                   Icons.shopping_cart,
                                   Colors.green,
                                 ),
@@ -641,12 +647,15 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                       // Chart title
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                                                  child: Text(
-                            'Milk Collection & Sales (${_capitalize(overview.breakdownType)})',
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.textPrimaryColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Milk Collection & Sales (${_formatChartPeriod(overview.chartPeriod ?? overview.breakdownType)})',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textPrimaryColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
@@ -661,49 +670,71 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
                             border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                           ),
-                          child: Container(
-                            height: 162,
-                            width: double.infinity,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: DChartComboO(
-                               groupList: [
-                                 OrdinalGroup(
-                                   id: 'Collection',
-                                   data: overview.breakdown.map((item) => 
-                                     OrdinalData(domain: item.label, measure: item.collection.liters)
-                                   ).toList(),
-                                   color: AppTheme.primaryColor.withOpacity(0.85),
-                                   chartType: ChartType.bar,
+                          child: Column(
+                            children: [
+                              Container(
+                                height: 162,
+                                width: double.infinity,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: DChartComboO(
+                                   groupList: [
+                                     OrdinalGroup(
+                                       id: 'Collection',
+                                       data: overview.breakdown.map((item) => 
+                                         OrdinalData(domain: item.label, measure: item.collection.liters)
+                                       ).toList(),
+                                       color: AppTheme.primaryColor.withOpacity(0.85),
+                                       chartType: ChartType.bar,
+                                     ),
+                                     OrdinalGroup(
+                                       id: 'Sales',
+                                       data: overview.breakdown.map((item) => 
+                                         OrdinalData(domain: item.label, measure: item.sales.liters)
+                                       ).toList(),
+                                       color: Colors.grey.withOpacity(0.85),
+                                       chartType: ChartType.bar,
+                                     ),
+                                   ],
+                                   animate: true,
+                                   domainAxis: DomainAxis(
+                                     showLine: true,
+                                     labelStyle: const LabelStyle(
+                                       color: AppTheme.textSecondaryColor,
+                                       fontSize: 12,
+                                       fontWeight: FontWeight.w600,
+                                     ),
+                                   ),
+                                   measureAxis: MeasureAxis(
+                                     showLine: true,
+                                     labelStyle: const LabelStyle(
+                                       color: AppTheme.textSecondaryColor,
+                                       fontSize: 12,
+                                       fontWeight: FontWeight.w600,
+                                     ),
+                                   ),
                                  ),
-                                 OrdinalGroup(
-                                   id: 'Sales',
-                                   data: overview.breakdown.map((item) => 
-                                     OrdinalData(domain: item.label, measure: item.sales.liters)
-                                   ).toList(),
-                                   color: Colors.grey.withOpacity(0.85),
-                                   chartType: ChartType.bar,
-                                 ),
-                               ],
-                               animate: true,
-                               domainAxis: DomainAxis(
-                                 showLine: true,
-                                 labelStyle: const LabelStyle(
-                                   color: AppTheme.textSecondaryColor,
-                                   fontSize: 12,
-                                   fontWeight: FontWeight.w600,
-                                 ),
-                               ),
-                               measureAxis: MeasureAxis(
-                                 showLine: true,
-                                 labelStyle: const LabelStyle(
-                                   color: AppTheme.textSecondaryColor,
-                                   fontSize: 12,
-                                   fontWeight: FontWeight.w600,
-                                 ),
-                               ),
-                             ),
-                            ),
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spacing12),
+                              // Chart Legend
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildLegendItem(
+                                    'Collection',
+                                    AppTheme.primaryColor.withOpacity(0.85),
+                                    Icons.local_shipping,
+                                  ),
+                                  const SizedBox(width: AppTheme.spacing16),
+                                  _buildLegendItem(
+                                    'Sales',
+                                    Colors.grey.withOpacity(0.85),
+                                    Icons.shopping_cart,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -713,23 +744,109 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
               },
             ),
             const SizedBox(height: AppTheme.spacing8),
-            // Recent transactions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Text(
-                'Recent Milk Transactions',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textPrimaryColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
+            // Recent transactions from API
+            Consumer(
+              builder: (context, ref, child) {
+                final overviewAsync = ref.watch(overviewProvider);
+                
+                return overviewAsync.when(
+                  loading: () => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.error_outline, color: AppTheme.errorColor, size: 32),
+                            const SizedBox(height: AppTheme.spacing8),
+                            Text(
+                              'Failed to load recent transactions',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  data: (overview) {
+                    final recentTransactions = overview.recentTransactions ?? [];
+                    
+                    if (recentTransactions.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                            border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                          ),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.receipt_long_outlined, color: AppTheme.textHintColor, size: 32),
+                                const SizedBox(height: AppTheme.spacing8),
+                                Text(
+                                  'No recent transactions',
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                          child: Text(
+                            'Recent Transactions',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textPrimaryColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppTheme.spacing8),
+                        ...recentTransactions.take(5).map((tx) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                          child: _buildOverviewTransactionItem(tx),
+                        )),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
-            ...mockTransactions.map((tx) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: TransactionItem(transaction: tx),
-            )),
           ],
+        ),
         ),
       ),
     );
@@ -793,6 +910,187 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOverviewTransactionItem(OverviewTransaction transaction) {
+    final isCollection = transaction.type.toLowerCase() == 'collection';
+    final statusColor = _getStatusColor(transaction.status);
+    final statusIcon = _getStatusIcon(transaction.status);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isCollection ? AppTheme.primaryColor.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isCollection ? Icons.local_shipping : Icons.shopping_cart,
+                  color: isCollection ? AppTheme.primaryColor : Colors.green,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isCollection 
+                        ? (transaction.supplierAccount?.name ?? 'Unknown Supplier')
+                        : (transaction.customerAccount?.name ?? 'Unknown Customer'),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textPrimaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      '${transaction.quantity.toStringAsFixed(1)} L • ${NumberFormat('#,###').format(transaction.totalAmount)} Frw',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Row(
+                    children: [
+                      Icon(statusIcon, color: statusColor, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        _capitalize(transaction.status),
+                        style: AppTheme.bodySmall.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    _formatTransactionDate(transaction.transactionAt),
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textHintColor,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'accepted':
+        return AppTheme.successColor;
+      case 'pending':
+        return AppTheme.warningColor;
+      case 'cancelled':
+        return AppTheme.errorColor;
+      default:
+        return AppTheme.textSecondaryColor;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'accepted':
+        return Icons.check_circle;
+      case 'pending':
+        return Icons.schedule;
+      case 'cancelled':
+        return Icons.cancel;
+      default:
+        return Icons.help;
+    }
+  }
+
+  String _formatTransactionDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+      
+      if (difference.inDays == 0) {
+        return 'Today';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return DateFormat('MMM dd').format(date);
+      }
+    } catch (e) {
+      return 'Unknown date';
+    }
+  }
+
+  String _formatChartPeriod(String period) {
+    switch (period.toLowerCase()) {
+      case 'last_7_days':
+        return '7 Days';
+      case 'last_30_days':
+        return '30 Days';
+      case 'last_90_days':
+        return '90 Days';
+      case 'daily':
+        return 'Daily';
+      case 'weekly':
+        return 'Weekly';
+      case 'monthly':
+        return 'Monthly';
+      default:
+        return _capitalize(period);
+    }
+  }
+
+  Widget _buildLegendItem(String label, Color color, IconData icon) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Icon(icon, color: color, size: 14),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textSecondaryColor,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

@@ -37,7 +37,6 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
       return customer.name.toLowerCase().contains(searchQuery) ||
           customer.phone.toLowerCase().contains(searchQuery) ||
           (customer.address != null && customer.address!.toLowerCase().contains(searchQuery)) ||
-          (customer.email != null && customer.email!.toLowerCase().contains(searchQuery)) ||
           (customer.nid != null && customer.nid!.toLowerCase().contains(searchQuery));
     }).toList();
   }
@@ -185,15 +184,6 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
                     const SizedBox(height: 4),
                     Text(
                       customer.phone,
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                    ),
-                  ],
-                  if (customer.email != null && customer.email!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      customer.email!,
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -425,24 +415,7 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
                   ),
                 ],
               ),
-            if (customer.email != null && customer.email!.isNotEmpty)
-              Row(
-                children: [
-                  Icon(
-                    Icons.email,
-                    size: 14,
-                    color: AppTheme.textSecondaryColor,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    customer.email!,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
+
           ],
         ),
         trailing: Column(
