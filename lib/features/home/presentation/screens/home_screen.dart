@@ -27,6 +27,7 @@ import '../../../customers/presentation/screens/customers_list_screen.dart';
 import '../../../suppliers/presentation/screens/collected_milk_screen.dart';
 import '../../../customers/presentation/screens/sold_milk_screen.dart';
 import '../../../account_access/presentation/screens/manage_account_access_screen.dart';
+import '../providers/overview_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -98,6 +99,12 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     });
   }
 
+  // Helper method to capitalize first letter
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   // Static mock wallets as fallback for home screen
   List<Wallet> get homeWallets => [
     Wallet(
@@ -141,16 +148,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     ),
   ];
 
-  // Mock milk business metrics
-  Map<String, dynamic> get milkMetrics => {
-    'Today\'s Collection': 450, // liters
-    'Today\'s Sales': 380, // liters
-    'Active Suppliers': 12,
-    'Active Customers': 8,
-    'Collection Value': 157500, // Frw (450 * 350)
-    'Sales Value': 133000, // Frw (380 * 350)
-    'Pending Payments': 5,
-  };
+
 
   // Mock recent milk transactions
   List<Transaction> get mockTransactions => [
@@ -419,165 +417,300 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
             ),
             const SizedBox(height: AppTheme.spacing8),
             // Milk Business Metrics
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Container(
-                padding: const EdgeInsets.all(AppTheme.spacing16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.analytics, color: AppTheme.primaryColor, size: 20),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Text(
-                          'Today\'s Overview',
+            // Overview metrics section
+            Consumer(
+              builder: (context, ref, child) {
+                final overviewAsync = ref.watch(overviewProvider);
+                
+                return overviewAsync.when(
+                  loading: () => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.analytics, color: AppTheme.primaryColor, size: 20),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Text(
+                                'Overview',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textPrimaryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.spacing12),
+                          const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.analytics, color: AppTheme.primaryColor, size: 20),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Text(
+                                'Overview',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textPrimaryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.spacing12),
+                          Center(
+                            child: Column(
+                              children: [
+                                Icon(Icons.error_outline, color: AppTheme.errorColor, size: 32),
+                                const SizedBox(height: AppTheme.spacing8),
+                                Text(
+                                  'Failed to load overview',
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  data: (overview) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.analytics, color: AppTheme.primaryColor, size: 20),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Text(
+                                'Overview',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textPrimaryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.spacing12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildMetricCard(
+                                  'Collection',
+                                  '${overview.summary.collection.liters.toStringAsFixed(1)} L',
+                                  '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw',
+                                  Icons.local_shipping,
+                                  AppTheme.primaryColor,
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Expanded(
+                                child: _buildMetricCard(
+                                  'Sales',
+                                  '${overview.summary.sales.liters.toStringAsFixed(1)} L',
+                                  '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw',
+                                  Icons.shopping_cart,
+                                  Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.spacing12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildCombinedMetricCard(
+                                  'Suppliers',
+                                  overview.summary.suppliers.active,
+                                  overview.summary.suppliers.inactive,
+                                  Icons.person_add,
+                                  Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Expanded(
+                                child: _buildCombinedMetricCard(
+                                  'Customers',
+                                  overview.summary.customers.active,
+                                  overview.summary.customers.inactive,
+                                  Icons.business,
+                                  Colors.purple,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            // Chart section with overview data
+            Consumer(
+              builder: (context, ref, child) {
+                final overviewAsync = ref.watch(overviewProvider);
+                
+                return overviewAsync.when(
+                  loading: () => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: Container(
+                        height: 162,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                      ),
+                      child: Container(
+                        height: 162,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.error_outline, color: AppTheme.errorColor, size: 32),
+                              const SizedBox(height: AppTheme.spacing8),
+                              Text(
+                                'Failed to load chart data',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textSecondaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  data: (overview) => Column(
+                    children: [
+                      // Chart title
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                                                  child: Text(
+                            'Milk Collection & Sales (${_capitalize(overview.breakdownType)})',
                           style: AppTheme.bodySmall.copyWith(
                             color: AppTheme.textPrimaryColor,
                             fontWeight: FontWeight.w700,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Collection',
-                            '${milkMetrics['Today\'s Collection']} L',
-                            '${NumberFormat('#,###').format(milkMetrics['Collection Value'])} Frw',
-                            Icons.local_shipping,
-                            AppTheme.primaryColor,
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      // Area chart section with legends
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                            border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                          ),
+                          child: Container(
+                            height: 162,
+                            width: double.infinity,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: DChartComboO(
+                               groupList: [
+                                 OrdinalGroup(
+                                   id: 'Collection',
+                                   data: overview.breakdown.map((item) => 
+                                     OrdinalData(domain: item.label, measure: item.collection.liters)
+                                   ).toList(),
+                                   color: AppTheme.primaryColor.withOpacity(0.85),
+                                   chartType: ChartType.bar,
+                                 ),
+                                 OrdinalGroup(
+                                   id: 'Sales',
+                                   data: overview.breakdown.map((item) => 
+                                     OrdinalData(domain: item.label, measure: item.sales.liters)
+                                   ).toList(),
+                                   color: Colors.grey.withOpacity(0.85),
+                                   chartType: ChartType.bar,
+                                 ),
+                               ],
+                               animate: true,
+                               domainAxis: DomainAxis(
+                                 showLine: true,
+                                 labelStyle: const LabelStyle(
+                                   color: AppTheme.textSecondaryColor,
+                                   fontSize: 12,
+                                   fontWeight: FontWeight.w600,
+                                 ),
+                               ),
+                               measureAxis: MeasureAxis(
+                                 showLine: true,
+                                 labelStyle: const LabelStyle(
+                                   color: AppTheme.textSecondaryColor,
+                                   fontSize: 12,
+                                   fontWeight: FontWeight.w600,
+                                 ),
+                               ),
+                             ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Sales',
-                            '${milkMetrics['Today\'s Sales']} L',
-                            '${NumberFormat('#,###').format(milkMetrics['Sales Value'])} Frw',
-                            Icons.shopping_cart,
-                            Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spacing12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Suppliers',
-                            '${milkMetrics['Active Suppliers']}',
-                            'Active',
-                            Icons.person_add,
-                            Colors.orange,
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacing8),
-                        Expanded(
-                          child: _buildMetricCard(
-                            'Customers',
-                            '${milkMetrics['Active Customers']}',
-                            'Active',
-                            Icons.business,
-                            Colors.purple,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            // Chart title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Text(
-                'Milk Collection & Sales (This Week)',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textPrimaryColor,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            // Area chart section with legends
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                ),
-                child: Container(
-                  height: 162,
-                  width: double.infinity,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: DChartComboO(
-                     groupList: [
-                       OrdinalGroup(
-                         id: 'Collection',
-                         data: [
-                           OrdinalData(domain: 'Mon', measure: 420),
-                           OrdinalData(domain: 'Tue', measure: 450),
-                           OrdinalData(domain: 'Wed', measure: 380),
-                           OrdinalData(domain: 'Thu', measure: 520),
-                           OrdinalData(domain: 'Fri', measure: 390),
-                           OrdinalData(domain: 'Sat', measure: 480),
-                           OrdinalData(domain: 'Sun', measure: 450),
-                         ],
-                         color: AppTheme.primaryColor.withOpacity(0.85),
-                         chartType: ChartType.bar,
-                       ),
-                       OrdinalGroup(
-                         id: 'Sales',
-                         data: [
-                           OrdinalData(domain: 'Mon', measure: 380),
-                           OrdinalData(domain: 'Tue', measure: 420),
-                           OrdinalData(domain: 'Wed', measure: 350),
-                           OrdinalData(domain: 'Thu', measure: 480),
-                           OrdinalData(domain: 'Fri', measure: 360),
-                           OrdinalData(domain: 'Sat', measure: 440),
-                           OrdinalData(domain: 'Sun', measure: 380),
-                         ],
-                         color: Colors.grey.withOpacity(0.85),
-                         chartType: ChartType.bar,
-                       ),
-                     ],
-                     animate: true,
-                     domainAxis: DomainAxis(
-                       showLine: true,
-                       labelStyle: const LabelStyle(
-                         color: AppTheme.textSecondaryColor,
-                         fontSize: 12,
-                         fontWeight: FontWeight.w600,
-                       ),
-                     ),
-                     measureAxis: MeasureAxis(
-                       showLine: true,
-                       labelStyle: const LabelStyle(
-                         color: AppTheme.textSecondaryColor,
-                         fontSize: 12,
-                         fontWeight: FontWeight.w600,
-                       ),
-                     ),
-                   ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
+                );
+              },
             ),
             const SizedBox(height: AppTheme.spacing8),
             // Recent transactions
@@ -657,6 +790,85 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
               color: AppTheme.textSecondaryColor,
               fontSize: 10,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCombinedMetricCard(String title, int activeCount, int inactiveCount, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: AppTheme.spacing4),
+              Text(
+                title,
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$activeCount',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textPrimaryColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'Active',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$inactiveCount',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      'Inactive',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

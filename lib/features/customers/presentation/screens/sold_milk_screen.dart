@@ -24,6 +24,9 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
   RangeValues _quantityRange = const RangeValues(0, 200);
   RangeValues _priceRange = const RangeValues(0, 2000);
   
+  // Store current API filters to avoid recreation
+  Map<String, dynamic>? _currentApiFilters;
+  
   // Text controllers for input fields
   late TextEditingController _minQuantityController;
   late TextEditingController _maxQuantityController;
@@ -53,7 +56,10 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
   List<String> get statuses => ['All', 'accepted', 'pending', 'cancelled'];
 
   Map<String, dynamic>? _buildApiFilters() {
-    if (!_hasActiveFilters()) return null;
+    if (!_hasActiveFilters()) {
+      _currentApiFilters = null;
+      return null;
+    }
     
     final Map<String, dynamic> filters = {};
     
@@ -96,7 +102,9 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
       filters['price_max'] = _priceRange.end;
     }
     
-    return filters.isEmpty ? null : filters;
+    final result = filters.isEmpty ? null : filters;
+    _currentApiFilters = result;
+    return result;
   }
 
   List<Sale> _getFilteredSales() {
@@ -165,7 +173,10 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final salesAsync = ref.watch(salesProvider);
+    final apiFilters = _buildApiFilters();
+    final salesAsync = apiFilters != null 
+        ? ref.watch(filteredSalesProvider(apiFilters))
+        : ref.watch(salesProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -200,16 +211,15 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
         loading: () => _buildLoadingState(),
         error: (error, stack) => _buildErrorState(error.toString()),
         data: (sales) {
-          final filteredSales = _getFilteredSoldMilk();
+          final filteredSales = apiFilters != null ? sales : _getFilteredSoldMilk();
           return filteredSales.isEmpty
               ? _buildEmptyState(_hasActiveFilters())
               : RefreshIndicator(
                   onRefresh: () async {
                     ref.invalidate(salesProvider);
                     // Also invalidate filtered sales if filters are active
-                    final apiFilters = _buildApiFilters();
-                    if (apiFilters != null) {
-                      ref.invalidate(filteredSalesProvider(apiFilters));
+                    if (_currentApiFilters != null) {
+                      ref.invalidate(filteredSalesProvider(_currentApiFilters!));
                     }
                   },
                   child: ListView.builder(
@@ -334,6 +344,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
       _endDate = null;
       _quantityRange = const RangeValues(0, 200);
       _priceRange = const RangeValues(0, 2000);
+      _currentApiFilters = null;
       
       // Reset text controllers
       _minQuantityController.text = '0.0';
@@ -776,11 +787,10 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           // Refresh the data with new filters
-                          final apiFilters = _buildApiFilters();
-                          if (apiFilters != null) {
-                            ref.invalidate(filteredSalesProvider(apiFilters));
+                          if (_currentApiFilters != null) {
+                            ref.invalidate(filteredSalesProvider(_currentApiFilters!));
                           }
-                          setState(() {}); // Trigger rebuild
+                          // The provider watching will handle the rebuild automatically
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
@@ -1040,9 +1050,8 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
             Navigator.of(context).pop();
             // Refresh the sales list
             ref.invalidate(salesProvider);
-            final apiFilters = _buildApiFilters();
-            if (apiFilters != null) {
-              ref.invalidate(filteredSalesProvider(apiFilters));
+            if (_currentApiFilters != null) {
+              ref.invalidate(filteredSalesProvider(_currentApiFilters!));
             }
           }),
         ),
@@ -1105,9 +1114,8 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
           
           // Force refresh the sales list
           ref.invalidate(salesProvider);
-          final apiFilters = _buildApiFilters();
-          if (apiFilters != null) {
-            ref.invalidate(filteredSalesProvider(apiFilters));
+          if (_currentApiFilters != null) {
+            ref.invalidate(filteredSalesProvider(_currentApiFilters!));
           }
           
           // Additional refresh to ensure UI updates
@@ -1135,9 +1143,8 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
           
           // Force refresh the sales list
           ref.invalidate(salesProvider);
-          final apiFilters = _buildApiFilters();
-          if (apiFilters != null) {
-            ref.invalidate(filteredSalesProvider(apiFilters));
+          if (_currentApiFilters != null) {
+            ref.invalidate(filteredSalesProvider(_currentApiFilters!));
           }
           
           // Additional refresh to ensure UI updates

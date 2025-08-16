@@ -17,6 +17,16 @@ class SuppliersListScreen extends ConsumerStatefulWidget {
 class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  
+  // Filter variables
+  String _selectedStatus = 'All';
+  RangeValues _priceRange = const RangeValues(0, 2000);
+  RangeValues _supplyRange = const RangeValues(0, 500);
+  
+
+  
+  // Filter options
+  List<String> get statuses => ['All', 'active', 'inactive'];
 
   @override
   void dispose() {
@@ -33,20 +43,83 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     });
   }
 
-  List<Supplier> _getFilteredSuppliers(List<Supplier> suppliers) {
-    String searchQuery = _searchController.text.toLowerCase();
-    
-    if (searchQuery.isEmpty) {
-      return suppliers;
+  Map<String, dynamic>? _buildFilters() {
+    if (!_hasActiveFilters()) {
+      return null;
     }
     
+    final Map<String, dynamic> filters = {};
+    
+    // Status filter
+    if (_selectedStatus != 'All') {
+      filters['status'] = _selectedStatus;
+    }
+    
+    // Price range filter
+    if (_priceRange.start > 0 || _priceRange.end < 2000) {
+      filters['price_min'] = _priceRange.start;
+      filters['price_max'] = _priceRange.end;
+    }
+    
+    // Supply range filter
+    if (_supplyRange.start > 0 || _supplyRange.end < 500) {
+      filters['supply_min'] = _supplyRange.start;
+      filters['supply_max'] = _supplyRange.end;
+    }
+    
+    return filters.isEmpty ? null : filters;
+  }
+
+  List<Supplier> _getFilteredSuppliers(List<Supplier> suppliers) {
+    final filters = _buildFilters();
+    String searchQuery = _searchController.text.toLowerCase();
+    
     return suppliers.where((supplier) {
-      return supplier.name.toLowerCase().contains(searchQuery) ||
-          supplier.phone.toLowerCase().contains(searchQuery) ||
-          (supplier.address != null && supplier.address!.toLowerCase().contains(searchQuery)) ||
-          (supplier.email != null && supplier.email!.toLowerCase().contains(searchQuery)) ||
-          (supplier.nid != null && supplier.nid!.toLowerCase().contains(searchQuery));
+      // Apply search filter
+      if (searchQuery.isNotEmpty) {
+        final matchesSearch = supplier.name.toLowerCase().contains(searchQuery) ||
+            supplier.phone.toLowerCase().contains(searchQuery) ||
+            (supplier.address != null && supplier.address!.toLowerCase().contains(searchQuery)) ||
+            (supplier.email != null && supplier.email!.toLowerCase().contains(searchQuery)) ||
+            (supplier.nid != null && supplier.nid!.toLowerCase().contains(searchQuery));
+        if (!matchesSearch) return false;
+      }
+      
+      // Apply status filter
+      if (filters != null && filters['status'] != null) {
+        if (supplier.relationshipStatus != filters['status']) return false;
+      }
+      
+      // Apply price range filter
+      if (filters != null && filters['price_min'] != null) {
+        if (supplier.pricePerLiter < filters['price_min'] || supplier.pricePerLiter > filters['price_max']) {
+          return false;
+        }
+      }
+      
+      // Apply supply range filter
+      if (filters != null && filters['supply_min'] != null) {
+        if (supplier.averageSupplyQuantity < filters['supply_min'] || supplier.averageSupplyQuantity > filters['supply_max']) {
+          return false;
+        }
+      }
+      
+      return true;
     }).toList();
+  }
+
+  bool _hasActiveFilters() {
+    return _selectedStatus != 'All' ||
+        _priceRange != const RangeValues(0, 2000) ||
+        _supplyRange != const RangeValues(0, 500);
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedStatus = 'All';
+      _priceRange = const RangeValues(0, 2000);
+      _supplyRange = const RangeValues(0, 500);
+    });
   }
 
   @override
@@ -75,6 +148,13 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               icon: const Icon(Icons.search),
               onPressed: _toggleSearch,
               tooltip: 'Search suppliers',
+            ),
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: () {
+                _showFilterDialog();
+              },
+              tooltip: 'Filter suppliers',
             ),
             IconButton(
               icon: const Icon(Icons.add),
@@ -843,6 +923,250 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                   : Text('Delete'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.borderRadius16)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppTheme.textHintColor.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+                child: Row(
+                  children: [
+                    Icon(Icons.filter_list, color: AppTheme.primaryColor, size: 20),
+                    const SizedBox(width: AppTheme.spacing8),
+                    Text(
+                      'Filter Suppliers',
+                      style: AppTheme.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _clearFilters,
+                      child: const Text('Clear All'),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppTheme.spacing16),
+
+              // Filter content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Status Filter
+                      Text(
+                        'Status',
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedStatus,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        items: statuses.map((status) {
+                          return DropdownMenuItem(
+                            value: status,
+                            child: Text(status),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value!;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: AppTheme.spacing16),
+
+                      // Price Range Filter
+                      Text(
+                        'Price per Liter (Frw)',
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      RangeSlider(
+                        values: _priceRange,
+                        min: 0,
+                        max: 2000,
+                        divisions: 20,
+                        labels: RangeLabels(
+                          '${_priceRange.start.round()}',
+                          '${_priceRange.end.round()}',
+                        ),
+                        onChanged: (values) {
+                          setState(() {
+                            _priceRange = values;
+                          });
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_priceRange.start.round()} Frw',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                          Text(
+                            '${_priceRange.end.round()} Frw',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: AppTheme.spacing16),
+
+                      // Supply Range Filter
+                      Text(
+                        'Average Supply (L)',
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      RangeSlider(
+                        values: _supplyRange,
+                        min: 0,
+                        max: 500,
+                        divisions: 25,
+                        labels: RangeLabels(
+                          '${_supplyRange.start.round()}',
+                          '${_supplyRange.end.round()}',
+                        ),
+                        onChanged: (values) {
+                          setState(() {
+                            _supplyRange = values;
+                          });
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${_supplyRange.start.round()} L',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                          Text(
+                            '${_supplyRange.end.round()} L',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: AppTheme.spacing24),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Action buttons
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          // Rebuild filters and trigger UI update
+                          _buildFilters();
+                          setState(() {});
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: AppTheme.surfaceColor,
+                          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                        ),
+                        child: Text(
+                          'Apply',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.surfaceColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

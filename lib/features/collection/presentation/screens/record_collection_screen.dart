@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
-import 'package:gemura/features/suppliers/presentation/providers/supplier_provider.dart';
-import 'package:gemura/features/suppliers/domain/models/supplier.dart';
+import 'package:gemura/features/suppliers/presentation/providers/suppliers_provider.dart';
+import 'package:gemura/shared/models/supplier.dart';
+import '../providers/collections_provider.dart';
 
 class RecordCollectionScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? preFilledData;
@@ -23,6 +24,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
   String? _selectedRejectionReason;
   DateTime _collectionDate = DateTime.now();
   TimeOfDay _collectionTime = TimeOfDay.now();
+  bool _isSubmitting = false;
 
   final List<String> _statuses = [
     'Accepted',
@@ -56,16 +58,55 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate() && _selectedSupplier != null) {
-      // TODO: Save collection record to database
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Collection recorded successfully!'),
-          backgroundColor: AppTheme.snackbarSuccessColor,
-        ),
-      );
-      Navigator.of(context).pop();
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      try {
+        // Combine date and time
+        final collectionDateTime = DateTime(
+          _collectionDate.year,
+          _collectionDate.month,
+          _collectionDate.day,
+          _collectionTime.hour,
+          _collectionTime.minute,
+        );
+
+        await ref.read(collectionsNotifierProvider.notifier).createCollection(
+          supplierAccountCode: _selectedSupplier!.accountCode,
+          quantity: double.parse(_quantityController.text),
+          status: _selectedStatus.toLowerCase(),
+          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+          collectionAt: collectionDateTime,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Collection recorded successfully!'),
+              backgroundColor: AppTheme.snackbarSuccessColor,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to record collection: ${error.toString()}'),
+              backgroundColor: AppTheme.snackbarErrorColor,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
+      }
     } else if (_selectedSupplier == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -104,7 +145,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
 
   @override
   Widget build(BuildContext context) {
-    final suppliers = ref.watch(supplierProvider);
+    final suppliersAsync = ref.watch(suppliersNotifierProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -128,7 +169,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
               
               // Supplier Selection
               InkWell(
-                onTap: () => _showSupplierSelectionDialog(suppliers),
+                onTap: () => _showSupplierSelectionDialog(suppliersAsync),
                 child: Container(
                   padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
@@ -158,7 +199,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                                     ),
                                   ),
                                   Text(
-                                    '${_selectedSupplier!.sellingPricePerLiter.toStringAsFixed(0)} Frw/L',
+                                    '${_selectedSupplier!.pricePerLiter.toStringAsFixed(0)} Frw/L',
                                     style: AppTheme.bodySmall.copyWith(
                                       color: AppTheme.textSecondaryColor,
                                       fontSize: 12,
@@ -338,7 +379,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
 
               // Submit Button
               ElevatedButton(
-                onPressed: _submitForm,
+                onPressed: _isSubmitting ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
@@ -347,13 +388,35 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
                 ),
-                child: const Text(
-                  'Record Collection',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: _isSubmitting
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Text(
+                            'Recording...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        'Record Collection',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ],
           ),
@@ -368,7 +431,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
     }
 
     final quantity = double.tryParse(_quantityController.text) ?? 0;
-    final totalValue = quantity * _selectedSupplier!.sellingPricePerLiter;
+    final totalValue = quantity * _selectedSupplier!.pricePerLiter;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -390,7 +453,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
           const SizedBox(height: AppTheme.spacing12),
           _buildSummaryRow('Supplier', _selectedSupplier!.name),
           _buildSummaryRow('Quantity', '${quantity.toStringAsFixed(1)}L'),
-          _buildSummaryRow('Price per Liter', '${_selectedSupplier!.sellingPricePerLiter.toStringAsFixed(0)} Frw'),
+          _buildSummaryRow('Price per Liter', '${_selectedSupplier!.pricePerLiter.toStringAsFixed(0)} Frw'),
           _buildSummaryRow('Total Value', '${totalValue.toStringAsFixed(0)} Frw'),
           _buildSummaryRow('Status', _selectedStatus),
           if (_selectedStatus == 'Rejected' && _selectedRejectionReason != null)
@@ -434,9 +497,25 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
     );
   }
 
-  void _showSupplierSelectionDialog(List<Supplier> suppliers) {
+  void _showSupplierSelectionDialog(AsyncValue<List<Supplier>> suppliersAsync) {
     final searchController = TextEditingController();
-    List<Supplier> filteredSuppliers = suppliers;
+    List<Supplier> suppliers = [];
+    List<Supplier> filteredSuppliers = [];
+
+    suppliersAsync.when(
+      data: (suppliersList) {
+        suppliers = suppliersList;
+        filteredSuppliers = suppliersList;
+      },
+      loading: () {
+        suppliers = [];
+        filteredSuppliers = [];
+      },
+      error: (_, __) {
+        suppliers = [];
+        filteredSuppliers = [];
+      },
+    );
 
     showDialog(
       context: context,
@@ -455,14 +534,20 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                   // Title
                   Row(
                     children: [
-                      Icon(Icons.person, color: AppTheme.primaryColor, size: 18),
+                      Icon(Icons.person, color: AppTheme.primaryColor, size: 20),
                       const SizedBox(width: AppTheme.spacing8),
                       Text(
                         'Select Supplier',
-                        style: AppTheme.bodyMedium.copyWith(
+                        style: AppTheme.titleMedium.copyWith(
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: AppTheme.textSecondaryColor),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
@@ -470,15 +555,27 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                   // Search field
                   TextField(
                     controller: searchController,
+                    style: AppTheme.bodySmall,
                     decoration: InputDecoration(
-                      hintText: 'Search suppliers...',
-                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by name, phone, or address...',
+                      hintStyle: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 12,
+                      ),
+                      prefixIcon: Icon(Icons.search, size: 18, color: AppTheme.textSecondaryColor),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        borderSide: BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                        borderSide: BorderSide(color: AppTheme.primaryColor, width: 1),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing8,
                       ),
                     ),
                     onChanged: (value) {
@@ -490,7 +587,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                           filteredSuppliers = suppliers.where((supplier) {
                             return supplier.name.toLowerCase().contains(query) ||
                                 supplier.phone.toLowerCase().contains(query) ||
-                                supplier.location.toLowerCase().contains(query);
+                                (supplier.address?.toLowerCase().contains(query) ?? false);
                           }).toList();
                         }
                       });
@@ -550,7 +647,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                                       ),
                                     ),
                                     Text(
-                                      '${supplier.sellingPricePerLiter.toStringAsFixed(0)} Frw/L',
+                                      '${supplier.pricePerLiter.toStringAsFixed(0)} Frw/L',
                                       style: AppTheme.bodySmall.copyWith(
                                         color: AppTheme.primaryColor,
                                         fontWeight: FontWeight.w600,
