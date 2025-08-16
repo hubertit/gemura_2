@@ -9,11 +9,11 @@ import 'help_support_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
-import '../../../merchant/presentation/screens/wallets_screen.dart' show WalletCard;
+import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 
-import '../../../../shared/models/transaction.dart';
+
 import '../../../../shared/models/overview.dart';
 import 'package:d_chart/d_chart.dart';
 import '../../../../shared/models/wallet.dart';
@@ -37,10 +37,9 @@ class HomeScreen extends ConsumerWidget {
     final currentIndex = ref.watch(tabIndexProvider);
     final tabs = [
       const _DashboardTab(), // Index 0: Home
-      // const WalletsScreen(), // Index 1: Ikofi - Commented out for now
-      const ChatListScreen(), // Index 1: Chat (Default)
-      // const TransactionsScreen(), // Index 2: Transactions - Commented out for now
-      const ProfileTab(), // Index 2: Profile
+      const WalletsScreen(), // Index 1: Ikofi
+      const ChatListScreen(), // Index 2: Chat
+      const ProfileTab(), // Index 3: Profile
     ];
     return Scaffold(
       body: tabs[currentIndex],
@@ -55,21 +54,16 @@ class HomeScreen extends ConsumerWidget {
             selectedIcon: Icon(Icons.dashboard),
             label: 'Home',
           ),
-          // NavigationDestination(
-          //   icon: Icon(Icons.account_balance_wallet_outlined),
-          //   selectedIcon: Icon(Icons.account_balance_wallet),
-          //   label: 'Ikofi',
-          // ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Ikofi',
+          ),
           NavigationDestination(
             icon: Icon(Icons.chat_bubble_outline),
             selectedIcon: Icon(Icons.chat_bubble),
             label: 'Chats',
           ),
-          // NavigationDestination(
-          //   icon: Icon(Icons.swap_horiz_outlined),
-          //   selectedIcon: Icon(Icons.swap_horiz),
-          //   label: 'Transactions',
-          // ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
@@ -89,7 +83,7 @@ class _DashboardTab extends ConsumerStatefulWidget {
 }
 
 class _DashboardTabState extends ConsumerState<_DashboardTab> {
-  // State to track balance visibility for each wallet
+  // Wallet balance visibility state
   final Map<String, bool> _walletBalanceVisibility = {};
 
   // Method to handle balance visibility changes
@@ -104,8 +98,6 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
-
-
 
   // Static mock wallets as fallback for home screen
   List<Wallet> get homeWallets => [
@@ -152,56 +144,56 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
 
 
 
-  // Mock recent milk transactions
-  List<Transaction> get mockTransactions => [
-    Transaction(
-      id: 'MLK-1001',
-      amount: 157500,
-      currency: 'RWF',
-      type: 'collection',
-      status: 'success',
-      date: DateTime.now().subtract(const Duration(hours: 2)),
-      description: 'Milk Collection - Jean Pierre',
-      paymentMethod: 'Mobile Money',
-      customerName: 'Jean Pierre Ndayisaba',
-      customerPhone: '0788123456',
-      reference: 'COL-20240601-001',
-    ),
-    Transaction(
-      id: 'MLK-1002',
-      amount: 133000,
-      currency: 'RWF',
-      type: 'sale',
-      status: 'success',
-      date: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-      description: 'Milk Sale - Hotel Rwanda',
-      paymentMethod: 'Bank',
-      customerName: 'Hotel Rwanda Restaurant',
-      customerPhone: '0722123456',
-      reference: 'SALE-20240601-002',
-    ),
-    Transaction(
-      id: 'MLK-1003',
-      amount: 84000,
-      currency: 'RWF',
-      type: 'collection',
-      status: 'pending',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      description: 'Milk Collection - Marie Claire',
-      paymentMethod: 'Mobile Money',
-      customerName: 'Marie Claire Uwimana',
-      customerPhone: '0733123456',
-      reference: 'COL-20240530-001',
-    ),
-  ];
+  // Temporarily hidden - Mock recent milk transactions
+  // List<Transaction> get mockTransactions => [
+  //   Transaction(
+  //     id: 'MLK-1001',
+  //     amount: 157500,
+  //     currency: 'RWF',
+  //     type: 'collection',
+  //     status: 'success',
+  //     date: DateTime.now().subtract(const Duration(hours: 2)),
+  //     description: 'Milk Collection - Jean Pierre',
+  //     paymentMethod: 'Mobile Money',
+  //     customerName: 'Jean Pierre Ndayisaba',
+  //     customerPhone: '0788123456',
+  //     reference: 'COL-20240601-001',
+  //   ),
+  //   Transaction(
+  //     id: 'MLK-1002',
+  //     amount: 133000,
+  //     currency: 'RWF',
+  //     type: 'sale',
+  //     status: 'success',
+  //     date: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
+  //     description: 'Milk Sale - Hotel Rwanda',
+  //     paymentMethod: 'Bank',
+  //     customerName: 'Hotel Rwanda Restaurant',
+  //     customerPhone: '0722123456',
+  //     reference: 'SALE-20240601-002',
+  //   ),
+  //   Transaction(
+  //     id: 'MLK-1003',
+  //     amount: 84000,
+  //     currency: 'RWF',
+  //     type: 'collection',
+  //     status: 'pending',
+  //     date: DateTime.now().subtract(const Duration(days: 2)),
+  //     description: 'Milk Collection - Marie Claire',
+  //     paymentMethod: 'Mobile Money',
+  //     customerName: 'Marie Claire Uwimana',
+  //     customerPhone: '0733123456',
+  //     reference: 'COL-20240530-001',
+  //   ),
+  // ];
 
-  // Mock chart data
-  Map<String, double> get paymentMethodBreakdown => {
-    'Mobile Money': 60,
-    'Card': 25,
-    'Bank': 10,
-    'QR/USSD': 5,
-  };
+  // Temporarily hidden - Mock chart data
+  // Map<String, double> get paymentMethodBreakdown => {
+  //   'Mobile Money': 60,
+  //   'Card': 25,
+  //   'Bank': 10,
+  //   'QR/USSD': 5,
+  // };
 
   @override
   Widget build(BuildContext context) {
@@ -415,8 +407,6 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         },
                       ),
                     ),
-
-
                   ],
                 ),
               ),
@@ -1418,24 +1408,106 @@ class ProfileTab extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Quick Stats Section
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatItem(Icons.account_balance_wallet, 'Ikofi', '3'),
-                      _buildStatItem(Icons.people, 'Suppliers', '12'),
-                      _buildStatItem(Icons.shopping_cart, 'Customers', '8'),
-                      _buildStatItem(Icons.analytics, 'Transactions', '45'),
-                    ],
-                  ),
+                // Quick Stats Section - Integrated with Overview API
+                Consumer(
+                  builder: (context, ref, child) {
+                    final overviewAsync = ref.watch(overviewProvider);
+                    return overviewAsync.when(
+                      loading: () => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: List.generate(3, (index) => const CircularProgressIndicator()),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: List.generate(3, (index) => const CircularProgressIndicator()),
+                            ),
+                          ],
+                        ),
+                      ),
+                      error: (error, stack) => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Failed to load stats',
+                            style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
+                          ),
+                        ),
+                      ),
+                      data: (overview) => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: Column(
+                          children: [
+                            // First row - Key Business Metrics
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildStatItem(
+                                  Icons.local_shipping, 
+                                  'Collection', 
+                                  '${overview.summary.collection.liters.toStringAsFixed(1)}L'
+                                ),
+                                _buildStatItem(
+                                  Icons.shopping_cart, 
+                                  'Sales', 
+                                  '${overview.summary.sales.liters.toStringAsFixed(1)}L'
+                                ),
+                                _buildStatItem(
+                                  Icons.analytics, 
+                                  'Transactions', 
+                                  '${overview.summary.collection.transactions + overview.summary.sales.transactions}'
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Second row - Financial & Network Metrics
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildStatItem(
+                                  Icons.attach_money, 
+                                  'Revenue', 
+                                  '${NumberFormat('#,###').format(overview.summary.sales.value)}'
+                                ),
+                                _buildStatItem(
+                                  Icons.people, 
+                                  'Suppliers', 
+                                  '${overview.summary.suppliers?.active ?? 0}'
+                                ),
+                                _buildStatItem(
+                                  Icons.group, 
+                                  'Customers', 
+                                  '${overview.summary.customers?.active ?? 0}'
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 // Contact Information Section
@@ -1511,18 +1583,7 @@ class ProfileTab extends ConsumerWidget {
                           // TODO: Implement change password
                         },
                       ),
-                      _buildActionTile(
-                        Icons.notifications,
-                        'Notifications',
-                        'Manage your notification preferences',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const NotificationsScreen(),
-                            ),
-                          );
-                        },
-                      ),
+
                       _buildActionTile(
                         Icons.people,
                         'Manage Access',
@@ -1538,20 +1599,7 @@ class ProfileTab extends ConsumerWidget {
                           );
                         },
                       ),
-                      _buildActionTile(
-                        Icons.task_alt,
-                        'Tasks',
-                        'Manage your tasks and reminders',
-                        () {
-                          // TODO: Navigate to tasks screen when implemented
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tasks feature coming soon!'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      ),
+
                     ],
                   ),
                 ),

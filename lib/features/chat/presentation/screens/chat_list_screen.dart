@@ -29,78 +29,73 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Group Chats'),
+        title: const Text('Chats'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Implement search functionality
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: _showNewChatOptions,
-          ),
-        ],
+        // Temporarily hidden actions
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.search),
+        //     onPressed: () {
+        //       // TODO: Implement search functionality
+        //     },
+        //   ),
+        //   IconButton(
+        //     icon: const Icon(Icons.more_vert),
+        //     onPressed: _showNewChatOptions,
+        //   ),
+        // ],
       ),
       body: Column(
         children: [
-          // Chat Categories
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                                  _buildCategoryChip('All', _selectedCategory == 'All'),
-                const SizedBox(width: AppTheme.spacing8),
-                _buildCategoryChip('Dairy', _selectedCategory == 'Dairy'),
-                const SizedBox(width: AppTheme.spacing8),
-                _buildCategoryChip('Milk', _selectedCategory == 'Milk'),
-                const SizedBox(width: AppTheme.spacing8),
-                _buildCategoryChip('Cattle', _selectedCategory == 'Cattle'),
-                const SizedBox(width: AppTheme.spacing8),
-                _buildCategoryChip('Training', _selectedCategory == 'Training'),
-                  const SizedBox(width: AppTheme.spacing8),
-                  // Plus Button (now scrolls with others)
-                  IconButton(
-                    icon: Icon(
-                      Icons.add,
-                      color: AppTheme.primaryColor,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const CreateListScreen(),
-                        ),
-                      );
-                    },
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Temporarily hidden - Chat Categories
+          // Container(
+          //   margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
+          //   child: SingleChildScrollView(
+          //     scrollDirection: Axis.horizontal,
+          //     child: Row(
+          //       children: [
+          //         _buildCategoryChip('All', _selectedCategory == 'All'),
+          //         const SizedBox(width: AppTheme.spacing8),
+          //         _buildCategoryChip('Dairy', _selectedCategory == 'Dairy'),
+          //         const SizedBox(width: AppTheme.spacing8),
+          //         _buildCategoryChip('Milk', _selectedCategory == 'Milk'),
+          //         const SizedBox(width: AppTheme.spacing8),
+          //         _buildCategoryChip('Cattle', _selectedCategory == 'Cattle'),
+          //         const SizedBox(width: AppTheme.spacing8),
+          //         _buildCategoryChip('Training', _selectedCategory == 'Training'),
+          //         const SizedBox(width: AppTheme.spacing8),
+          //         // Plus Button (now scrolls with others)
+          //         IconButton(
+          //           icon: Icon(
+          //             Icons.add,
+          //             color: AppTheme.primaryColor,
+          //             size: 24,
+          //           ),
+          //           onPressed: () {
+          //             Navigator.of(context).push(
+          //               MaterialPageRoute(
+          //                 builder: (context) => const CreateListScreen(),
+          //               ),
+          //             );
+          //           },
+          //           padding: EdgeInsets.zero,
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           
-          // Chat List
+          // Chat List - Temporarily showing only Karake bot
           Expanded(
-            child: chats.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
-                    itemCount: chats.length + 1, // +1 for bot chat
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return _buildBotChatTile(context);
-                      }
-                      final chat = chats[index - 1];
-                      return _buildChatTile(context, ref, chat);
-                    },
-                  ),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
+              itemCount: 1, // Only Karake bot
+              itemBuilder: (context, index) {
+                return _buildBotChatTile(context);
+              },
+            ),
           ),
         ],
       ),
@@ -119,21 +114,21 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
             ),
             child: const Icon(
-              Icons.chat_bubble_outline,
+              Icons.smart_toy,
               size: 48,
               color: AppTheme.primaryColor,
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            'No Group Chats',
+            'Karake AI Assistant',
             style: AppTheme.titleMedium.copyWith(
               color: AppTheme.textPrimaryColor,
             ),
           ),
           const SizedBox(height: AppTheme.spacing4),
           Text(
-            'Group chats are created for joint wallets',
+            'Your dairy farming expert is here to help',
             textAlign: TextAlign.center,
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,

@@ -176,76 +176,75 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
           ? _buildEmptyState(context)
           : Column(
               children: [
-                // Quick actions
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.qr_code,
-                            label: 'Request',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
-                              );
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.send,
-                            label: 'Pay',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
-                              );
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.account_balance_wallet,
-                            label: 'Top Up',
-                            onTap: () async {
-                              final result = await showModalBottomSheet<bool>(
-                                context: context,
-                                isScrollControlled: true,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                                ),
-                                builder: (context) => const _TopUpSheet(),
-                              );
-                              if (result == true && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  AppTheme.successSnackBar(message: 'Top up successful!'),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.history,
-                            label: 'Payouts',
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => const PayoutsScreen()),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Temporarily hidden - Quick actions
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
+                //   child: Container(
+                //     padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
+                //     decoration: BoxDecoration(
+                //       color: AppTheme.primaryColor.withOpacity(0.06),
+                //       borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                //     ),
+                //     child: Row(
+                //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                //       children: [
+                //         Expanded(
+                //           child: _QuickActionButton(
+                //             icon: Icons.qr_code,
+                //             label: 'Request',
+                //             onTap: () {
+                //               Navigator.of(context).push(
+                //                 MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
+                //               );
+                //             },
+                //           ),
+                //         ),
+                //         Expanded(
+                //           child: _QuickActionButton(
+                //             icon: Icons.send,
+                //             label: 'Pay',
+                //             onTap: () {
+                //               Navigator.of(context).push(
+                //                 MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
+                //               );
+                //             },
+                //           ),
+                //         ),
+                //         Expanded(
+                //           child: _QuickActionButton(
+                //             icon: Icons.account_balance_wallet,
+                //             label: 'Top Up',
+                //             onTap: () async {
+                //               final result = await showModalBottomSheet<bool>(
+                //                 context: context,
+                //                 isScrollControlled: true,
+                //                 shape: const RoundedRectangleBorder(
+                //                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                //               ),
+                //               builder: (context) => const _TopUpSheet(),
+                //             );
+                //             if (result == true && context.mounted) {
+                //               ScaffoldMessenger.of(context).showSnackBar(
+                //                 AppTheme.successSnackBar(message: 'Top up successful!'),
+                //               );
+                //             }
+                //           ),
+                //         ),
+                //         Expanded(
+                //           child: _QuickActionButton(
+                //             icon: Icons.history,
+                //             label: 'Payouts',
+                //             onTap: () {
+                //               Navigator.of(context).push(
+                //                 MaterialPageRoute(builder: (context) => const PayoutsScreen()),
+                //               );
+                //             },
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
@@ -260,19 +259,19 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                           onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
                         )),
                         const SizedBox(height: AppTheme.spacing16),
-                        // Add Wallet Card
-                        AddItemCard(
-                          title: 'Add New Ikofi',
-                          subtitle: 'Create individual or joint ikofi',
-                          icon: Icons.add_circle_outline,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const CreateWalletScreen(),
-                              ),
-                            );
-                          },
-                        ),
+                        // Temporarily hidden - Add Wallet Card
+                        // AddItemCard(
+                        //   title: 'Add New Ikofi',
+                        //   subtitle: 'Create individual or joint ikofi',
+                        //   icon: Icons.add_circle_outline,
+                        //   onTap: () {
+                        //     Navigator.of(context).push(
+                        //       MaterialPageRoute(
+                        //         builder: (context) => const CreateWalletScreen(),
+                        //       ),
+                        //     );
+                        //   },
+                        // ),
                       ],
                     ),
                   ),
