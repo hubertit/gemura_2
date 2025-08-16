@@ -46,7 +46,19 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         
         // Only load the user if they are truly logged in (not a guest)
         if (!user.id.startsWith('guest_')) {
-          state = AsyncValue.data(user);
+          // Try to get fresh profile data from API to ensure we have the latest role and account info
+          try {
+            final profileResponse = await _authService.getProfile();
+            if (profileResponse['data'] != null) {
+              final updatedUser = User.fromJson(profileResponse['data']);
+              state = AsyncValue.data(updatedUser);
+            } else {
+              state = AsyncValue.data(user);
+            }
+          } catch (e) {
+            // If API call fails, use cached data
+            state = AsyncValue.data(user);
+          }
         } else {
           state = const AsyncValue.data(null);
         }
@@ -71,22 +83,34 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         name: userData['name'] ?? 'User',
         email: userData['email'] ?? emailOrPhone,
         password: '',
-        role: 'owner', // Default role for dairy business
+        role: userData['role']?.toString() ?? 'owner', // Use actual role from API
         createdAt: DateTime.now(), // API doesn't provide this
         lastLoginAt: DateTime.now(),
         isActive: userData['status'] == 'active',
-        about: '',
-        address: '',
-        profilePicture: '',
-        profileImg: '',
-        profileCover: '',
-        coverImg: '',
-        phoneNumber: userData['phone'] ?? '',
+        about: userData['about']?.toString() ?? '',
+        address: userData['address']?.toString() ?? '',
+        profilePicture: userData['profile_picture']?.toString() ?? '',
+        profileImg: userData['profile_img']?.toString() ?? '',
+        profileCover: userData['profile_cover']?.toString() ?? '',
+        coverImg: userData['cover_img']?.toString() ?? '',
+        phoneNumber: userData['phone']?.toString() ?? '',
       );
       
       // User data and token are already saved by AuthService
       
-      state = AsyncValue.data(user);
+      // Try to get complete profile data to ensure we have the latest role and account info
+      try {
+        final profileResponse = await _authService.getProfile();
+        if (profileResponse['data'] != null) {
+          final updatedUser = User.fromJson(profileResponse['data']);
+          state = AsyncValue.data(updatedUser);
+        } else {
+          state = AsyncValue.data(user);
+        }
+      } catch (e) {
+        // If profile fetch fails, use the user data from login
+        state = AsyncValue.data(user);
+      }
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
       rethrow;

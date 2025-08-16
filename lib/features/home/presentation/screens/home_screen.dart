@@ -875,6 +875,26 @@ class ProfileTab extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      // Account Information
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.textSecondaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Text(
+                          'Account: ${user?.id ?? 'N/A'}',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                       if (user?.about != null && user?.about != '')
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
