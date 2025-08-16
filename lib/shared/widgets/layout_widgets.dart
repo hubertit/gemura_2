@@ -5,12 +5,14 @@ class DetailsActionSheet extends StatelessWidget {
   final String? title;
   final Widget? headerWidget;
   final List<DetailRow> details;
+  final List<Widget>? actions;
 
   const DetailsActionSheet({
     super.key,
     this.title,
     this.headerWidget,
     required this.details,
+    this.actions,
   });
 
   @override
@@ -22,7 +24,7 @@ class DetailsActionSheet extends StatelessWidget {
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -58,7 +60,18 @@ class DetailsActionSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            
+            // Action buttons
+            if (actions != null && actions!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: actions!,
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
           ],
         ),
       ),

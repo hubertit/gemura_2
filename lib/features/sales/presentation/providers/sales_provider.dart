@@ -13,6 +13,11 @@ final salesProvider = FutureProvider<List<Sale>>((ref) async {
   return await salesService.getSales();
 });
 
+final filteredSalesProvider = FutureProvider.family<List<Sale>, Map<String, dynamic>>((ref, filters) async {
+  final salesService = ref.read(salesServiceProvider);
+  return await salesService.getSales(filters: filters);
+});
+
 class SalesState {
   final bool isLoading;
   final String? error;
@@ -70,6 +75,36 @@ class SalesNotifier extends StateNotifier<SalesState> {
     }
   }
 
+  Future<void> updateSale({
+    required String saleId,
+    required String customerAccountCode,
+    required double quantity,
+    required String status,
+    required DateTime saleAt,
+    String? notes,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null, isSuccess: false);
+
+    try {
+      await _salesService.updateSale(
+        saleId: saleId,
+        customerAccountCode: customerAccountCode,
+        quantity: quantity,
+        status: status,
+        saleAt: saleAt,
+        notes: notes,
+      );
+
+      state = state.copyWith(isLoading: false, isSuccess: true);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        isSuccess: false,
+      );
+    }
+  }
+
   Future<void> loadSales() async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
@@ -87,5 +122,32 @@ class SalesNotifier extends StateNotifier<SalesState> {
 
   void resetState() {
     state = SalesState();
+  }
+
+  Future<void> cancelSale({
+    required String saleId,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null, isSuccess: false);
+
+    try {
+      await _salesService.cancelSale(
+        saleId: saleId,
+      );
+
+      state = state.copyWith(isLoading: false, isSuccess: true);
+      
+      // Reset state after a short delay to allow UI to update
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (state.isSuccess) {
+          state = state.copyWith(isSuccess: false);
+        }
+      });
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        isSuccess: false,
+      );
+    }
   }
 }

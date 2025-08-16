@@ -264,52 +264,56 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
             // Action buttons
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _showUpdatePriceDialog(customer);
-                      },
-                      icon: const Icon(Icons.edit, size: 20),
-                      label: const Text('Update Price'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                              child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _showUpdatePriceDialog(customer);
+                        },
+                        icon: const Icon(Icons.edit, size: 20),
+                        label: const Text('Update'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing24,
+                            vertical: AppTheme.spacing16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _showDeleteConfirmationDialog(customer);
-                      },
-                      icon: const Icon(Icons.delete, size: 20),
-                      label: const Text('Delete Customer'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.errorColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _showDeleteConfirmationDialog(customer);
+                        },
+                        icon: const Icon(Icons.delete, size: 20),
+                        label: const Text('Delete'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.errorColor,
+                          side: BorderSide(color: AppTheme.errorColor, width: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing24,
+                            vertical: AppTheme.spacing16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ),
             
-            const SizedBox(height: 20),
+            const SizedBox(height: AppTheme.spacing20),
           ],
         ),
       ),
