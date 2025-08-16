@@ -32,17 +32,17 @@ class SalesService {
       
       if (data['code'] == 200) {
         final List<dynamic> salesData = data['data'] ?? [];
-        print('🔍 DEBUG: Found ${salesData.length} sales in API response');
+        // print('🔍 DEBUG: Found ${salesData.length} sales in API response');
         
         final List<Sale> sales = [];
         for (int i = 0; i < salesData.length; i++) {
           try {
             final sale = Sale.fromJson(salesData[i]);
             sales.add(sale);
-            print('✅ DEBUG: Successfully parsed sale ${i + 1}: ${sale.id}');
+            // print('✅ DEBUG: Successfully parsed sale ${i + 1}: ${sale.id}');
           } catch (e) {
-            print('❌ DEBUG: Failed to parse sale ${i + 1}: $e');
-            print('❌ DEBUG: Sale data: ${salesData[i]}');
+                    // print('❌ DEBUG: Failed to parse sale ${i + 1}: $e');
+        // print('❌ DEBUG: Sale data: ${salesData[i]}');
           }
         }
         
@@ -126,19 +126,19 @@ class SalesService {
       );
 
       final data = response.data;
-      print('🔍 DEBUG: Update sale response: $data');
+      // print('🔍 DEBUG: Update sale response: $data');
       
       if (data['code'] == 200 || data['code'] == 201) {
-        print('✅ DEBUG: Sale updated successfully');
+        // print('✅ DEBUG: Sale updated successfully');
         return; // Success
       } else {
-        print('❌ DEBUG: Update sale failed with code: ${data['code']}');
+        // print('❌ DEBUG: Update sale failed with code: ${data['code']}');
         throw Exception(data['message'] ?? 'Failed to update sale');
       }
     } on DioException catch (e) {
-      print('❌ DEBUG: DioException in updateSale: ${e.message}');
-      print('❌ DEBUG: Response status: ${e.response?.statusCode}');
-      print('❌ DEBUG: Response data: ${e.response?.data}');
+      // print('❌ DEBUG: DioException in updateSale: ${e.message}');
+      // print('❌ DEBUG: Response status: ${e.response?.statusCode}');
+      // print('❌ DEBUG: Response data: ${e.response?.data}');
       
       if (e.response?.data != null) {
         final errorData = e.response!.data;
@@ -146,7 +146,7 @@ class SalesService {
       }
       throw Exception('Network error: ${e.message}');
     } catch (e) {
-      print('❌ DEBUG: Unexpected error in updateSale: $e');
+      // print('❌ DEBUG: Unexpected error in updateSale: $e');
       throw Exception('Unexpected error: $e');
     }
   }
@@ -166,19 +166,19 @@ class SalesService {
       );
 
       final data = response.data;
-      print('🔍 DEBUG: Cancel sale response: $data');
+      // print('🔍 DEBUG: Cancel sale response: $data');
       
       if (data['code'] == 200 || data['code'] == 201) {
-        print('✅ DEBUG: Sale cancelled successfully');
+        // print('✅ DEBUG: Sale cancelled successfully');
         return; // Success
       } else {
-        print('❌ DEBUG: Cancel sale failed with code: ${data['code']}');
+        // print('❌ DEBUG: Cancel sale failed with code: ${data['code']}');
         throw Exception(data['message'] ?? 'Failed to cancel sale');
       }
     } on DioException catch (e) {
-      print('❌ DEBUG: DioException in cancelSale: ${e.message}');
-      print('❌ DEBUG: Response status: ${e.response?.statusCode}');
-      print('❌ DEBUG: Response data: ${e.response?.data}');
+      // print('❌ DEBUG: DioException in cancelSale: ${e.message}');
+      // print('❌ DEBUG: Response status: ${e.response?.statusCode}');
+      // print('❌ DEBUG: Response data: ${e.response?.data}');
       
       if (e.response?.data != null) {
         final errorData = e.response!.data;
@@ -186,7 +186,7 @@ class SalesService {
       }
       throw Exception('Network error: ${e.message}');
     } catch (e) {
-      print('❌ DEBUG: Unexpected error in cancelSale: $e');
+      // print('❌ DEBUG: Unexpected error in cancelSale: $e');
       throw Exception('Unexpected error: $e');
     }
   }

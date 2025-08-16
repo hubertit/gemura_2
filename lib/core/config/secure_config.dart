@@ -13,9 +13,9 @@ class SecureConfig {
     try {
       await dotenv.load(fileName: ".env");
       _initialized = true;
-      print('Environment variables loaded successfully');
+      // print('Environment variables loaded successfully');
     } catch (e) {
-      print('Warning: .env file not found, using fallback API keys');
+      // print('Warning: .env file not found, using fallback API keys');
       // Continue with fallback keys
     }
   }

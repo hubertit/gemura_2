@@ -16,7 +16,7 @@ import '../../../loans/presentation/screens/loans_screen.dart';
 import '../../../insurance/presentation/screens/insurance_screen.dart';
 import 'transactions_screen.dart';
 import '../../../home/presentation/screens/request_payment_screen.dart';
-import '../../../home/presentation/screens/pay_screen.dart';
+// Removed unused import
 import '../../../home/presentation/screens/payouts_screen.dart';
 import '../providers/wallets_provider.dart';
 
@@ -2590,7 +2590,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                   onTap: () async {
                     final today = DateTime.now();
                     final tomorrow = DateTime(today.year, today.month, today.day + 1);
-                    print('Today: $today, Tomorrow: $tomorrow'); // Debug
+                    // print('Today: $today, Tomorrow: $tomorrow'); // Debug
                     final date = await showDatePicker(
                       context: context,
                       initialDate: _selectedTargetDate ?? tomorrow.add(const Duration(days: 29)),
@@ -2598,7 +2598,7 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       lastDate: DateTime(today.year + 5, today.month, today.day),
                     );
                     if (date != null) {
-                      print('Selected date: $date'); // Debug
+                      // print('Selected date: $date'); // Debug
                       setState(() {
                         _selectedTargetDate = date;
                         _targetDateController.text = '${date.day}/${date.month}/${date.year}';

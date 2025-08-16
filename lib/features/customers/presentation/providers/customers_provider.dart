@@ -61,7 +61,7 @@ class CustomersNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
       
       // Refresh the customers list to get the updated data
       await loadCustomers();
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't set the entire state to error if customer creation fails
       // Just rethrow the error to be handled by the UI
       rethrow;
@@ -85,8 +85,8 @@ class CustomersNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
         }).toList();
         state = AsyncValue.data(updatedCustomers);
       });
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+    } catch (error) {
+      state = AsyncValue.error(error, StackTrace.current);
     }
   }
 
@@ -103,7 +103,7 @@ class CustomersNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
       
       // Refresh the customers list to get the updated data
       await loadCustomers();
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't set the entire state to error if update fails
       // Just rethrow the error to be handled by the UI
       rethrow;
@@ -121,7 +121,7 @@ class CustomersNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
       
       // Refresh the customers list to get the updated data
       await loadCustomers();
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't set the entire state to error if deletion fails
       // Just rethrow the error to be handled by the UI
       rethrow;

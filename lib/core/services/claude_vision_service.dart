@@ -82,7 +82,7 @@ Format your response as JSON with these fields:
         ]
       };
 
-      print('🚀 Sending request to Claude Vision API...');
+      // print('🚀 Sending request to Claude Vision API...');
 
       final request = await HttpClient().openUrl('POST', url);
       request.headers.set('Content-Type', 'application/json');
@@ -93,13 +93,13 @@ Format your response as JSON with these fields:
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
 
-      print('📊 Claude Vision Response Status: ${response.statusCode}');
+      // print('📊 Claude Vision Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(responseBody);
         final content = jsonResponse['content'][0]['text'];
 
-        print('📝 Claude Vision Response: $content');
+        // print('📝 Claude Vision Response: $content');
 
         try {
           // Try to parse as JSON
@@ -124,8 +124,8 @@ Format your response as JSON with these fields:
           };
         }
       } else {
-        print('❌ Claude Vision API Error: ${response.statusCode}');
-        print('Response: $responseBody');
+        // print('❌ Claude Vision API Error: ${response.statusCode}');
+        // print('Response: $responseBody');
         return {
           'extractedText': 'Error: ${response.statusCode}',
           'analysis': 'Failed to analyze image with Claude Vision',
@@ -133,7 +133,7 @@ Format your response as JSON with these fields:
         };
       }
     } catch (e) {
-      print('❌ Claude Vision Error: $e');
+      // print('❌ Claude Vision Error: $e');
       return {
         'extractedText': 'Error analyzing image: $e',
         'analysis': 'Failed to process image with Claude Vision',

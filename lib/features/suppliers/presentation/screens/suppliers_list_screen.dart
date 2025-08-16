@@ -4,7 +4,7 @@ import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/features/suppliers/presentation/providers/suppliers_provider.dart';
 import 'package:gemura/shared/models/supplier.dart';
 import 'package:gemura/features/suppliers/presentation/screens/add_supplier_screen.dart';
-import 'package:gemura/features/suppliers/presentation/screens/supplier_details_screen.dart';
+// Removed unused import
 import 'package:gemura/shared/widgets/skeleton_loaders.dart';
 
 class SuppliersListScreen extends ConsumerStatefulWidget {

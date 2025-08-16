@@ -12,7 +12,7 @@ class HybridAIService {
   static Future<String> processImageWithConversationalResponse(String imagePath) async {
     try {
       // Step 1: Use Claude Vision to analyze the image
-      print('🔍 Analyzing image with Claude Vision...');
+      // print('🔍 Analyzing image with Claude Vision...');
       final claudeResult = await ClaudeVisionService.analyzeImage(imagePath);
       
       // Step 2: Extract key information from Claude's analysis
@@ -32,13 +32,13 @@ class HybridAIService {
       );
       
       // Step 4: Use GPT to generate a friendly, conversational response
-      print('💬 Generating conversational response with GPT...');
+      // print('💬 Generating conversational response with GPT...');
       final gptResponse = await _generateGPTResponse(gptPrompt);
       
       return gptResponse;
       
     } catch (e) {
-      print('❌ Error in hybrid AI processing: $e');
+      // print('❌ Error in hybrid AI processing: $e');
       return 'I had trouble analyzing that image. Could you try sending it again?';
     }
   }
@@ -118,12 +118,12 @@ Always be encouraging, practical, and conversational. Make farmers feel like the
         final data = jsonDecode(response.body);
         return data['choices'][0]['message']['content'];
       } else {
-        print('❌ GPT API Error: ${response.statusCode}');
-        print('Response: ${response.body}');
+        // print('❌ GPT API Error: ${response.statusCode}');
+        // print('Response: ${response.body}');
         return _generateFallbackResponse(prompt);
       }
     } catch (e) {
-      print('❌ GPT API Exception: $e');
+      // print('❌ GPT API Exception: $e');
       return _generateFallbackResponse(prompt);
     }
   }

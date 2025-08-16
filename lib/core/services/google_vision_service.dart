@@ -59,8 +59,8 @@ class GoogleVisionService {
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
       
-      print('Google Vision API Response Status: ${response.statusCode}');
-      print('Google Vision API Response Body: $responseBody');
+      // print('Google Vision API Response Status: ${response.statusCode}');
+      // print('Google Vision API Response Body: $responseBody');
       
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(responseBody);

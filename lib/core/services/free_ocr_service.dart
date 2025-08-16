@@ -32,12 +32,12 @@ class FreeOCRService {
           filename: 'image.jpg',
         ));
       
-      print('🚀 Sending request to free OCR service...');
+      // print('🚀 Sending request to free OCR service...');
       
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       
-      print('📊 Response Status: ${response.statusCode}');
+      // print('📊 Response Status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(responseBody);
@@ -48,7 +48,7 @@ class FreeOCRService {
           if (parsedResults.isNotEmpty) {
             final parsedText = parsedResults.first['ParsedText'] ?? '';
             
-            print('📝 Extracted Text: "$parsedText"');
+            // print('📝 Extracted Text: "$parsedText"');
             
             if (parsedText.isNotEmpty) {
               // Analyze the extracted text

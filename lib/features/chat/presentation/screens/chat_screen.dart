@@ -717,12 +717,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _handleAttachments(String type, List<File> files) {
     // TODO: Implement attachment handling for group chat
     // This would add the attachments to the group chat
-    print('Handling $type attachments: ${files.length} files');
+    // print('Handling $type attachments: ${files.length} files');
   }
 
   void _handleContactAttachments(List<Contact> contacts) {
     // TODO: Implement contact handling for group chat
     // This would add the contacts to the group chat
-    print('Handling contacts: ${contacts.length} contacts');
+    // print('Handling contacts: ${contacts.length} contacts');
   }
 } 

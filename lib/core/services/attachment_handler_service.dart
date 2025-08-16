@@ -9,19 +9,19 @@ class AttachmentHandlerService {
   /// Handle camera attachment
   static Future<List<File>?> handleCamera(BuildContext context) async {
     try {
-      print('Opening camera...');
+      // print('Opening camera...');
       final File? photo = await AttachmentService.takePhoto();
-      print('Camera result: ${photo?.path ?? 'null'}');
+      // print('Camera result: ${photo?.path ?? 'null'}');
       
       if (photo != null) {
         return [photo];
       } else {
         // User cancelled camera
-        print('Camera was cancelled by user');
+        // print('Camera was cancelled by user');
         return null;
       }
     } catch (e) {
-      print('Camera error: $e');
+      // print('Camera error: $e');
       _showErrorSnackBar(context, 'Camera error: ${e.toString()}');
       return null;
     }
@@ -30,19 +30,19 @@ class AttachmentHandlerService {
   /// Handle gallery attachment
   static Future<List<File>?> handleGallery(BuildContext context) async {
     try {
-      print('Opening gallery...');
+      // print('Opening gallery...');
       final List<File> images = await AttachmentService.pickImages();
-      print('Gallery result: ${images.length} images');
+      // print('Gallery result: ${images.length} images');
       
       if (images.isNotEmpty) {
         return images;
       } else {
         // User cancelled gallery picker
-        print('Gallery picker was cancelled by user');
+        // print('Gallery picker was cancelled by user');
         return null;
       }
     } catch (e) {
-      print('Gallery error: $e');
+      // print('Gallery error: $e');
       _showErrorSnackBar(context, 'Gallery error: ${e.toString()}');
       return null;
     }
@@ -65,7 +65,7 @@ class AttachmentHandlerService {
   /// Handle contacts attachment
   static Future<List<Contact>?> handleContacts(BuildContext context) async {
     try {
-      print('Opening contact selection...');
+      // print('Opening contact selection...');
       
       final selectedContacts = await Navigator.push<List<Contact>>(
         context,
@@ -75,15 +75,15 @@ class AttachmentHandlerService {
       );
       
       if (selectedContacts != null && selectedContacts.isNotEmpty) {
-        print('Selected contacts: ${selectedContacts.length}');
+        // print('Selected contacts: ${selectedContacts.length}');
         return selectedContacts;
       } else {
         // User cancelled contact selection
-        print('Contact selection was cancelled by user');
+        // print('Contact selection was cancelled by user');
         return null;
       }
     } catch (e) {
-      print('Contacts error: $e');
+      // print('Contacts error: $e');
       _showErrorSnackBar(context, 'Contacts error: ${e.toString()}');
       return null;
     }

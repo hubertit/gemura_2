@@ -61,7 +61,7 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
       
       // Refresh the suppliers list to get the updated data
       await loadSuppliers();
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't set the entire state to error if supplier creation fails
       // Just rethrow the error to be handled by the UI
       rethrow;
@@ -85,8 +85,8 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
         }).toList();
         state = AsyncValue.data(updatedSuppliers);
       });
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+    } catch (error) {
+      state = AsyncValue.error(error, StackTrace.current);
     }
   }
 
@@ -103,7 +103,7 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
       
       // Refresh the suppliers list to get the updated data
       await loadSuppliers();
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't set the entire state to error if update fails
       // Just rethrow the error to be handled by the UI
       rethrow;
@@ -121,7 +121,7 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
       
       // Refresh the suppliers list to get the updated data
       await loadSuppliers();
-    } catch (error, stackTrace) {
+    } catch (error) {
       // Don't set the entire state to error if deletion fails
       // Just rethrow the error to be handled by the UI
       rethrow;

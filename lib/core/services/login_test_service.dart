@@ -6,104 +6,248 @@ import 'authenticated_dio_service.dart';
 class LoginTestService {
   final Dio _dio = AppConfig.dioInstance();
 
-  /// Test login with real credentials
-  Future<Map<String, dynamic>> testLogin() async {
+  /// Test successful login
+  Future<void> testSuccessfulLogin() async {
+    // print('🧪 Testing successful login...');
     try {
-      print('🔗 Testing login integration...');
-      
-      final loginData = {
-        'identifier': 'hubert@devslab.io',
-        'password': 'password',
-      };
-
-      print('📤 Sending login request:');
-      print('   Identifier: ${loginData['identifier']}');
-      print('   Password: ${loginData['password']}');
-
       final response = await _dio.post(
         '${AppConfig.authEndpoint}/login',
-        data: loginData,
+        data: {
+          'identifier': 'hubert@devslab.io',
+          'password': 'password123',
+        },
       );
-
-      print('✅ Login Response Status: ${response.statusCode}');
-      print('📥 Login Response Data: ${response.data}');
-
-      // Test caching functionality
+      
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        if (data != null) {
-          print('💾 Testing caching...');
-          
-          // Save auth token
-          if (data['user']?['token'] != null) {
-            await SecureStorageService.saveAuthToken(data['user']['token']);
-            print('✅ Auth token cached');
-          }
-          
-          // Save user data
-          if (data['user'] != null) {
-            await SecureStorageService.saveUserData(data['user']);
-            print('✅ User data cached');
-          }
-          
-          // Save login state
-          await SecureStorageService.saveLoginState(true);
-          print('✅ Login state cached');
-          
-          // Test authenticated Dio
-          print('🔐 Testing authenticated requests...');
-          final authDio = AuthenticatedDioService.instance;
-          print('✅ Authenticated Dio instance created');
-          
-          // Test profile endpoint with token
-          try {
-            final profileResponse = await authDio.get('${AppConfig.authEndpoint}/profile');
-            print('✅ Profile request successful: ${profileResponse.statusCode}');
-          } catch (e) {
-            print('⚠️ Profile request failed (expected if endpoint doesn\'t exist): $e');
-          }
+        // print('✅ Login successful!');
+        // print('   User: ${data['user']['name']}');
+        // print('   Email: ${data['user']['email']}');
+        // print('   Token: ${data['user']['token']?.substring(0, 20)}...');
+        // print('   Account: ${data['account']['code']}');
+        // print('   Role: ${data['account']['type']}');
+      } else {
+        // print('❌ Login failed with status: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      // print('❌ Login error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
+    }
+  }
+
+  /// Test login with wrong password
+  Future<void> testWrongPassword() async {
+    // print('🧪 Testing wrong password...');
+    try {
+      final response = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: {
+          'identifier': 'hubert@devslab.io',
+          'password': 'wrongpassword',
+        },
+      );
+      // print('❌ Expected error but got success: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('✅ Wrong password error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
+    }
+  }
+
+  /// Test login with non-existent email
+  Future<void> testNonExistentEmail() async {
+    // print('🧪 Testing non-existent email...');
+    try {
+      final response = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: {
+          'identifier': 'nonexistent@example.com',
+          'password': 'password123',
+        },
+      );
+      // print('❌ Expected error but got success: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('✅ Non-existent email error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
+    }
+  }
+
+  /// Test login with phone number
+  Future<void> testLoginWithPhone() async {
+    // print('🧪 Testing login with phone number...');
+    try {
+      final response = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: {
+          'identifier': '250788606765',
+          'password': 'password123',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        // print('✅ Phone login successful!');
+        final data = response.data['data'];
+        // print('   User: ${data['user']['name']}');
+        // print('   Phone: ${data['user']['phone']}');
+      } else {
+        // print('❌ Phone login failed: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      // print('❌ Phone login error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
+    }
+  }
+
+  /// Test token storage and retrieval
+  Future<void> testTokenStorage() async {
+    // print('🧪 Testing token storage...');
+    try {
+      // Login to get a token
+      final response = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: {
+          'identifier': 'hubert@devslab.io',
+          'password': 'password123',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final token = response.data['data']['user']['token'];
+        
+        // Save token
+        await SecureStorageService.saveAuthToken(token);
+        // print('✅ Token saved successfully');
+        
+        // Retrieve token
+        final retrievedToken = await SecureStorageService.getAuthToken();
+        if (retrievedToken == token) {
+          // print('✅ Token retrieved successfully');
+        } else {
+          // print('❌ Token mismatch');
+        }
+        
+        // Clean up
+        await SecureStorageService.removeAuthToken();
+        // print('✅ Token cleaned up');
+      }
+    } on DioException catch (e) {
+      // print('❌ Token storage error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
+    }
+  }
+
+  /// Test profile retrieval with token
+  Future<void> testProfileRetrieval() async {
+    // print('🧪 Testing profile retrieval...');
+    try {
+      // First login to get token
+      final loginResponse = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: {
+          'identifier': 'hubert@devslab.io',
+          'password': 'password123',
+        },
+      );
+      
+      if (loginResponse.statusCode == 200) {
+        final token = loginResponse.data['data']['user']['token'];
+        
+        // Use token to get profile
+        final profileResponse = await _dio.get(
+          '${AppConfig.authEndpoint}/profile',
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $token',
+            },
+          ),
+        );
+        
+        if (profileResponse.statusCode == 200) {
+          // print('✅ Profile retrieved successfully!');
+          final profile = profileResponse.data['data'];
+          // print('   Name: ${profile['name']}');
+          // print('   Email: ${profile['email']}');
+          // print('   Phone: ${profile['phone']}');
+        } else {
+          // print('❌ Profile retrieval failed: ${profileResponse.statusCode}');
         }
       }
-
-      return response.data;
     } on DioException catch (e) {
-      print('❌ Login DioException: ${e.type}');
-      print('❌ Error Message: ${e.message}');
-      print('❌ Response Status: ${e.response?.statusCode}');
-      print('❌ Response Data: ${e.response?.data}');
-      
-      rethrow;
+      // print('❌ Profile retrieval error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
     } catch (e) {
-      print('❌ Login General Error: $e');
-      rethrow;
+      // print('❌ Unexpected error: $e');
     }
   }
 
-  /// Test cached data retrieval
-  Future<void> testCachedData() async {
-    print('📋 Testing cached data retrieval...');
-    
-    final token = SecureStorageService.getAuthToken();
-    final userData = SecureStorageService.getUserData();
-    final isLoggedIn = SecureStorageService.getLoginState();
-    
-    print('🔑 Cached Token: ${token != null ? 'Present' : 'Not found'}');
-    print('👤 Cached User Data: ${userData != null ? 'Present' : 'Not found'}');
-    print('🔐 Login State: $isLoggedIn');
-    
-    if (userData != null) {
-      print('📊 User Details:');
-      print('   Name: ${userData['name']}');
-      print('   Email: ${userData['email']}');
-      print('   Phone: ${userData['phone']}');
-      print('   Status: ${userData['status']}');
+  /// Test logout
+  Future<void> testLogout() async {
+    // print('🧪 Testing logout...');
+    try {
+      // First login to get token
+      final loginResponse = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: {
+          'identifier': 'hubert@devslab.io',
+          'password': 'password123',
+        },
+      );
+      
+      if (loginResponse.statusCode == 200) {
+        final token = loginResponse.data['data']['user']['token'];
+        
+        // Test logout
+        final logoutResponse = await _dio.post(
+          '${AppConfig.authEndpoint}/logout',
+          options: Options(
+            headers: {
+              'Authorization': 'Bearer $token',
+            },
+          ),
+        );
+        
+        if (logoutResponse.statusCode == 200) {
+          // print('✅ Logout successful!');
+        } else {
+          // print('❌ Logout failed: ${logoutResponse.statusCode}');
+        }
+      }
+    } on DioException catch (e) {
+      // print('❌ Logout error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
     }
   }
 
-  /// Clear all test data
-  Future<void> clearTestData() async {
-    print('🧹 Clearing test data...');
-    await SecureStorageService.clearAllCachedData();
-    print('✅ Test data cleared');
+  /// Run all login tests
+  Future<void> runAllTests() async {
+    // print('🚀 Starting login test suite...');
+    
+    await testSuccessfulLogin();
+    await testWrongPassword();
+    await testNonExistentEmail();
+    await testLoginWithPhone();
+    await testTokenStorage();
+    await testProfileRetrieval();
+    await testLogout();
+    
+    // print('✅ Login test suite completed!');
   }
 }

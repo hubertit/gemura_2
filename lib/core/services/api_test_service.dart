@@ -3,113 +3,153 @@ import '../config/app_config.dart';
 import '../../shared/models/registration_request.dart';
 
 class ApiTestService {
-  final Dio _dio;
+  final Dio _dio = AppConfig.dioInstance();
 
-  ApiTestService() : _dio = AppConfig.dioInstance();
-
-  /// Test registration API
-  Future<Map<String, dynamic>> testRegistration() async {
+  /// Test API connectivity
+  Future<void> testApiConnectivity() async {
+    // print('🧪 Testing API connectivity...');
     try {
-      print('🔗 Testing API connection to: ${AppConfig.apiBaseUrl}');
-      print('📡 Endpoint: ${AppConfig.authEndpoint}/register');
-      
-      // Create test registration data
-      final testRequest = RegistrationRequest(
-        name: 'Test User',
-        email: 'test@example.com',
-        phone: '+250788123456',
-        password: 'password123',
-        nid: null, // Optional
-        role: 'owner',
-        permissions: {
-          'can_collect': true,
-          'can_add_supplier': true,
-          'can_view_reports': true,
-        },
-      );
-
-      print('📤 Sending request:');
-      print('   Name: ${testRequest.name}');
-      print('   Email: ${testRequest.email}');
-      print('   Phone: ${testRequest.phone}');
-      print('   Role: ${testRequest.role}');
-      print('   NID: ${testRequest.nid ?? "null"}');
-      print('   Permissions: ${testRequest.permissions}');
-
-      final response = await _dio.post(
-        '${AppConfig.authEndpoint}/register',
-        data: testRequest.toJson(),
-      );
-
-      print('✅ Response Status: ${response.statusCode}');
-      print('📥 Response Data: ${response.data}');
-      print('📋 Response Headers: ${response.headers}');
-
-      return response.data;
+      final response = await _dio.get('${AppConfig.authEndpoint}/health');
+      // print('✅ API is reachable');
+      // print('   Status: ${response.statusCode}');
+      // print('   Response: ${response.data}');
     } on DioException catch (e) {
-      print('❌ DioException: ${e.type}');
-      print('❌ Error Message: ${e.message}');
-      print('❌ Response Status: ${e.response?.statusCode}');
-      print('❌ Response Data: ${e.response?.data}');
-      print('❌ Request Data: ${e.requestOptions.data}');
-      print('❌ Request URL: ${e.requestOptions.uri}');
-      print('❌ Request Headers: ${e.requestOptions.headers}');
-      
-      rethrow;
+      // print('❌ API connectivity failed:');
+      // print('   Error Type: ${e.type}');
+      // print('   Message: ${e.message}');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Response: ${e.response?.data}');
     } catch (e) {
-      print('❌ General Error: $e');
-      rethrow;
+      // print('❌ Unexpected error: $e');
     }
   }
 
-  /// Test login API
-  Future<Map<String, dynamic>> testLogin() async {
+  /// Test authentication endpoints
+  Future<void> testAuthEndpoints() async {
+    // print('🧪 Testing authentication endpoints...');
+    
+    // Test login endpoint
     try {
-      print('🔗 Testing login API...');
-      
       final response = await _dio.post(
         '${AppConfig.authEndpoint}/login',
         data: {
-          'email': 'test@example.com',
+          'identifier': 'test@example.com',
           'password': 'password123',
         },
       );
-
-      print('✅ Login Response Status: ${response.statusCode}');
-      print('📥 Login Response Data: ${response.data}');
-
-      return response.data;
+      // print('✅ Login endpoint is accessible');
+      // print('   Status: ${response.statusCode}');
     } on DioException catch (e) {
-      print('❌ Login DioException: ${e.type}');
-      print('❌ Login Error Message: ${e.message}');
-      print('❌ Login Response Status: ${e.response?.statusCode}');
-      print('❌ Login Response Data: ${e.response?.data}');
-      
-      rethrow;
-    } catch (e) {
-      print('❌ Login General Error: $e');
-      rethrow;
+      // print('❌ Login endpoint error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    }
+
+    // Test registration endpoint
+    try {
+      final response = await _dio.post(
+        '${AppConfig.authEndpoint}/register',
+        data: {
+          'name': 'Test User',
+          'email': 'test@example.com',
+          'phone': '+250788123456',
+          'password': 'password123',
+          'role': 'owner',
+        },
+      );
+      // print('✅ Registration endpoint is accessible');
+      // print('   Status: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('❌ Registration endpoint error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
     }
   }
 
-  /// Test API connectivity
-  Future<bool> testConnectivity() async {
+  /// Test business endpoints
+  Future<void> testBusinessEndpoints() async {
+    // print('🧪 Testing business endpoints...');
+    
+    // Test suppliers endpoint
     try {
-      print('🔗 Testing API connectivity...');
-      
-      // Try to get configs endpoint to test connectivity
-      final response = await _dio.get('${AppConfig.configsEndpoint}');
-      
-      print('✅ Connectivity test successful');
-      print('📥 Configs Response: ${response.data}');
-      
-      return true;
+      final response = await _dio.post(
+        '${AppConfig.suppliersEndpoint}/get',
+        data: {'token': 'test_token'},
+      );
+      // print('✅ Suppliers endpoint is accessible');
+      // print('   Status: ${response.statusCode}');
     } on DioException catch (e) {
-      print('❌ Connectivity test failed: ${e.message}');
-      return false;
-    } catch (e) {
-      print('❌ Connectivity test failed: $e');
-      return false;
+      // print('❌ Suppliers endpoint error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
     }
+
+    // Test customers endpoint
+    try {
+      final response = await _dio.post(
+        '${AppConfig.customersEndpoint}/get',
+        data: {'token': 'test_token'},
+      );
+      // print('✅ Customers endpoint is accessible');
+      // print('   Status: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('❌ Customers endpoint error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    }
+
+    // Test sales endpoint
+    try {
+      final response = await _dio.post(
+        '${AppConfig.salesEndpoint}/sales',
+        data: {'token': 'test_token'},
+      );
+      // print('✅ Sales endpoint is accessible');
+      // print('   Status: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('❌ Sales endpoint error:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    }
+  }
+
+  /// Test error handling
+  Future<void> testErrorHandling() async {
+    // print('🧪 Testing error handling...');
+    
+    // Test invalid endpoint
+    try {
+      final response = await _dio.get('${AppConfig.authEndpoint}/invalid');
+      // print('❌ Expected error but got success: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('✅ Error handling works correctly:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+    }
+
+    // Test malformed request
+    try {
+      final response = await _dio.post(
+        '${AppConfig.authEndpoint}/login',
+        data: 'invalid json',
+      );
+      // print('❌ Expected error but got success: ${response.statusCode}');
+    } on DioException catch (e) {
+      // print('✅ Malformed request handled correctly:');
+      // print('   Error Type: ${e.type}');
+      // print('   Message: ${e.message}');
+    }
+  }
+
+  /// Run all API tests
+  Future<void> runAllTests() async {
+    // print('🚀 Starting API test suite...');
+    
+    await testApiConnectivity();
+    await testAuthEndpoints();
+    await testBusinessEndpoints();
+    await testErrorHandling();
+    
+    // print('✅ API test suite completed!');
   }
 }

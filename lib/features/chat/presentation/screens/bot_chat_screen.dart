@@ -13,7 +13,7 @@ import '../../../../core/services/attachment_processor_service.dart';
 import '../../../../core/services/attachment_handler_service.dart';
 import '../../../../shared/widgets/markdown_text.dart';
 import '../../domain/models/attachment_message.dart';
-import 'contact_selection_screen.dart';
+// Removed unused import
 import 'package:contacts_service/contacts_service.dart';
 
 class BotChatScreen extends ConsumerStatefulWidget {
@@ -885,7 +885,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         _addAttachmentMessage(AttachmentType.image, files);
       }
     } catch (e) {
-      print('Camera error: $e');
+      // print('Camera error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Camera error: ${e.toString()}'),
@@ -907,7 +907,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         _addAttachmentMessage(AttachmentType.image, files);
       }
     } catch (e) {
-      print('Gallery error: $e');
+      // print('Gallery error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gallery error: ${e.toString()}'),
@@ -944,7 +944,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         _addContactAttachments(contacts);
       }
     } catch (e) {
-      print('Contacts error: $e');
+      // print('Contacts error: $e');
     }
   }
 
@@ -1295,7 +1295,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
 
   void _showPermissionError(String feature, String error) {
     // Check if permission is permanently denied (used for UI logic)
-    final isPermanentlyDenied = error.contains('permanently denied');
+    // final isPermanentlyDenied = error.contains('permanently denied'); // Removed unused variable
     
     // Show dialog for permanently denied permissions
     showDialog(

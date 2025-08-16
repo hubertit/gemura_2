@@ -49,19 +49,19 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
                   // Try to get fresh profile data from API to ensure we have the latest role and account info
         try {
           final profileResponse = await _authService.getProfile();
-          print('🔍 DEBUG: Profile API Response: $profileResponse');
+                                // print('🔍 DEBUG: Profile API Response: $profileResponse');
           if (profileResponse['data'] != null) {
             final updatedUser = User.fromJson(profileResponse['data']);
-            print('🔍 DEBUG: Updated User Role: ${updatedUser.role}');
-            print('🔍 DEBUG: Updated User AccountCode: ${updatedUser.accountCode}');
+                      // print('🔍 DEBUG: Updated User Role: ${updatedUser.role}');
+          // print('🔍 DEBUG: Updated User AccountCode: ${updatedUser.accountCode}');
             state = AsyncValue.data(updatedUser);
           } else {
-            print('🔍 DEBUG: No profile data, using cached user');
+            // print('🔍 DEBUG: No profile data, using cached user');
             state = AsyncValue.data(user);
           }
         } catch (e) {
           // If API call fails, use cached data
-          print('🔍 DEBUG: Profile API failed, using cached user: $e');
+          // print('🔍 DEBUG: Profile API failed, using cached user: $e');
           state = AsyncValue.data(user);
         }
         } else {
@@ -85,12 +85,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       final userData = response['data']['user'];
       final accountData = response['data']['account'];
       
-      // Debug: Print the actual API response
-      print('🔍 DEBUG: Login API Response:');
-      print('🔍 DEBUG: userData: $userData');
-      print('🔍 DEBUG: accountData: $accountData');
-      print('🔍 DEBUG: accountData[type]: ${accountData['type']}');
-      print('🔍 DEBUG: accountData[code]: ${accountData['code']}');
+                            // Debug: Print the actual API response
+                      // print('🔍 DEBUG: Login API Response:');
+                      // print('🔍 DEBUG: userData: $userData');
+                      // print('🔍 DEBUG: accountData: $accountData');
+                      // print('🔍 DEBUG: accountData[type]: ${accountData['type']}');
+                      // print('🔍 DEBUG: accountData[code]: ${accountData['code']}');
       
       final user = User(
         id: userData['code']?.toString() ?? '1',
@@ -173,7 +173,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       await _authService.logout();
       state = const AsyncValue.data(null);
-    } catch (e, stack) {
+    } catch (e) {
       // Even if logout fails, clear local state
       state = const AsyncValue.data(null);
     }
@@ -257,8 +257,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       await SecureStorageService.clearAllCachedData();
       state = const AsyncValue.data(null);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
     }
   }
 
@@ -266,8 +266,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       await SecureStorageService.clearAllCachedData();
       state = const AsyncValue.data(null);
-    } catch (e, stack) {
-      state = AsyncValue.error(e, stack);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
     }
   }
 

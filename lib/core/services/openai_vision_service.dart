@@ -75,7 +75,7 @@ Format your response as JSON with these fields:
         'temperature': 0.3,
       };
       
-      print('🚀 Sending request to OpenAI Vision API...');
+      // print('🚀 Sending request to OpenAI Vision API...');
       
       final request = await HttpClient().openUrl('POST', url);
       request.headers.set('Content-Type', 'application/json');
@@ -85,13 +85,13 @@ Format your response as JSON with these fields:
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
       
-      print('📊 OpenAI Vision Response Status: ${response.statusCode}');
+      // print('📊 OpenAI Vision Response Status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(responseBody);
         final content = jsonResponse['choices'][0]['message']['content'];
         
-        print('📝 OpenAI Vision Response: $content');
+        // print('📝 OpenAI Vision Response: $content');
         
         try {
           // Try to parse as JSON
@@ -116,8 +116,8 @@ Format your response as JSON with these fields:
           };
         }
       } else {
-        print('❌ OpenAI Vision API Error: ${response.statusCode}');
-        print('Response: $responseBody');
+        // print('❌ OpenAI Vision API Error: ${response.statusCode}');
+        // print('Response: $responseBody');
         return {
           'extractedText': 'Error: ${response.statusCode}',
           'analysis': 'Failed to analyze image with OpenAI Vision',
@@ -125,7 +125,7 @@ Format your response as JSON with these fields:
         };
       }
     } catch (e) {
-      print('❌ OpenAI Vision Error: $e');
+      // print('❌ OpenAI Vision Error: $e');
       return {
         'extractedText': 'Error analyzing image: $e',
         'analysis': 'Failed to process image with OpenAI Vision',

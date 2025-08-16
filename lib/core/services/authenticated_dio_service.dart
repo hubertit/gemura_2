@@ -62,7 +62,7 @@ class AuthenticatedDioService {
         responseBody: true,
         responseHeader: false,
         error: true,
-        logPrint: (obj) => print('🌐 API: $obj'),
+        logPrint: (obj) => null, // print('🌐 API: $obj'),
       ),
     );
     

@@ -8,7 +8,7 @@ class ErrorTestService {
 
   /// Test invalid credentials
   Future<void> testInvalidCredentials() async {
-    print('🧪 Testing invalid credentials...');
+    // print('🧪 Testing invalid credentials...');
     try {
       final response = await _dio.post(
         '${AppConfig.authEndpoint}/login',
@@ -17,20 +17,20 @@ class ErrorTestService {
           'password': 'wrongpassword',
         },
       );
-      print('❌ Expected error but got success: ${response.statusCode}');
+      // print('❌ Expected error but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Invalid credentials error caught:');
-      print('   Status: ${e.response?.statusCode}');
-      print('   Message: ${e.response?.data?['message']}');
-      print('   Error Type: ${e.type}');
+      // print('✅ Invalid credentials error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
     }
   }
 
   /// Test missing fields
   Future<void> testMissingFields() async {
-    print('🧪 Testing missing fields...');
+    // print('🧪 Testing missing fields...');
     try {
       final response = await _dio.post(
         '${AppConfig.authEndpoint}/login',
@@ -39,20 +39,20 @@ class ErrorTestService {
           // Missing password
         },
       );
-      print('❌ Expected error but got success: ${response.statusCode}');
+      // print('❌ Expected error but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Missing fields error caught:');
-      print('   Status: ${e.response?.statusCode}');
-      print('   Message: ${e.response?.data?['message']}');
-      print('   Error Type: ${e.type}');
+      // print('✅ Missing fields error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
     }
   }
 
   /// Test network timeout
   Future<void> testNetworkTimeout() async {
-    print('🧪 Testing network timeout...');
+    // print('🧪 Testing network timeout...');
     try {
       // Use a non-existent endpoint to simulate timeout
       final response = await _dio.get(
@@ -62,51 +62,51 @@ class ErrorTestService {
           receiveTimeout: const Duration(seconds: 2),
         ),
       );
-      print('❌ Expected timeout but got success: ${response.statusCode}');
+      // print('❌ Expected timeout but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Network timeout error caught:');
-      print('   Error Type: ${e.type}');
-      print('   Message: ${e.message}');
+      // print('✅ Network timeout error caught:');
+      // print('   Error Type: ${e.type}');
+      // print('   Message: ${e.message}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
     }
   }
 
   /// Test server error
   Future<void> testServerError() async {
-    print('🧪 Testing server error...');
+    // print('🧪 Testing server error...');
     try {
       final response = await _dio.get('https://httpbin.org/status/500');
-      print('❌ Expected error but got success: ${response.statusCode}');
+      // print('❌ Expected error but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Server error caught:');
-      print('   Status: ${e.response?.statusCode}');
-      print('   Error Type: ${e.type}');
+      // print('✅ Server error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
     }
   }
 
   /// Test unauthorized access
   Future<void> testUnauthorizedAccess() async {
-    print('🧪 Testing unauthorized access...');
+    // print('🧪 Testing unauthorized access...');
     try {
       // Try to access a protected endpoint without token
       final response = await _dio.get('${AppConfig.authEndpoint}/profile');
-      print('❌ Expected unauthorized but got success: ${response.statusCode}');
+      // print('❌ Expected unauthorized but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Unauthorized error caught:');
-      print('   Status: ${e.response?.statusCode}');
-      print('   Message: ${e.response?.data?['message']}');
-      print('   Error Type: ${e.type}');
+      // print('✅ Unauthorized error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
     }
   }
 
   /// Test invalid token
   Future<void> testInvalidToken() async {
-    print('🧪 Testing invalid token...');
+    // print('🧪 Testing invalid token...');
     try {
       // Save an invalid token
       await SecureStorageService.saveAuthToken('invalid_token_123');
@@ -120,116 +120,94 @@ class ErrorTestService {
           },
         ),
       );
-      print('❌ Expected invalid token error but got success: ${response.statusCode}');
+      // print('❌ Expected unauthorized but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Invalid token error caught:');
-      print('   Status: ${e.response?.statusCode}');
-      print('   Message: ${e.response?.data?['message']}');
-      print('   Error Type: ${e.type}');
+      // print('✅ Invalid token error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
-    } finally {
-      // Clean up
-      await SecureStorageService.removeAuthToken();
+      // print('❌ Unexpected error: $e');
     }
   }
 
-  /// Test registration with existing email
-  Future<void> testDuplicateRegistration() async {
-    print('🧪 Testing duplicate registration...');
+  /// Test expired token
+  Future<void> testExpiredToken() async {
+    // print('🧪 Testing expired token...');
     try {
-      final response = await _dio.post(
-        '${AppConfig.authEndpoint}/register',
-        data: {
-          'name': 'Test User',
-          'email': 'hubert@devslab.io', // Already exists
-          'phone': '+250788123456',
-          'password': 'password123',
-          'role': 'owner',
-          'permissions': {
-            'can_collect': true,
-            'can_add_supplier': true,
-            'can_view_reports': true,
-          },
-        },
-      );
-      print('❌ Expected duplicate error but got success: ${response.statusCode}');
+      // Save an expired token (you would need a real expired token for this)
+      await SecureStorageService.saveAuthToken('expired_token_123');
+      
+      // Try to access a protected endpoint with expired token
+      final response = await _dio.get('${AppConfig.authEndpoint}/profile');
+      // print('❌ Expected unauthorized but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Duplicate registration error caught:');
-      print('   Status: ${e.response?.statusCode}');
-      print('   Message: ${e.response?.data?['message']}');
-      print('   Error Type: ${e.type}');
+      // print('✅ Expired token error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
     }
   }
 
-  /// Test malformed JSON
-  Future<void> testMalformedJson() async {
-    print('🧪 Testing malformed JSON...');
+  /// Test malformed request
+  Future<void> testMalformedRequest() async {
+    // print('🧪 Testing malformed request...');
     try {
       final response = await _dio.post(
         '${AppConfig.authEndpoint}/login',
-        data: 'invalid json string',
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        ),
+        data: 'invalid json string', // Malformed data
       );
-      print('❌ Expected JSON error but got success: ${response.statusCode}');
+      // print('❌ Expected error but got success: ${response.statusCode}');
     } on DioException catch (e) {
-      print('✅ Malformed JSON error caught:');
-      print('   Error Type: ${e.type}');
-      print('   Message: ${e.message}');
+      // print('✅ Malformed request error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Error Type: ${e.type}');
     } catch (e) {
-      print('❌ Unexpected error: $e');
+      // print('❌ Unexpected error: $e');
+    }
+  }
+
+  /// Test rate limiting
+  Future<void> testRateLimiting() async {
+    // print('🧪 Testing rate limiting...');
+    try {
+      // Make multiple rapid requests to trigger rate limiting
+      for (int i = 0; i < 10; i++) {
+        await _dio.post(
+          '${AppConfig.authEndpoint}/login',
+          data: {
+            'identifier': 'test@example.com',
+            'password': 'password123',
+          },
+        );
+      }
+      // print('❌ Expected rate limit but got success');
+    } on DioException catch (e) {
+      // print('✅ Rate limiting error caught:');
+      // print('   Status: ${e.response?.statusCode}');
+      // print('   Message: ${e.response?.data?['message']}');
+      // print('   Error Type: ${e.type}');
+    } catch (e) {
+      // print('❌ Unexpected error: $e');
     }
   }
 
   /// Test all error scenarios
-  Future<void> runAllErrorTests() async {
-    print('🚀 Starting comprehensive error handling tests...\n');
+  Future<void> runAllTests() async {
+    // print('🚀 Starting error test suite...');
     
     await testInvalidCredentials();
-    print('');
-    
     await testMissingFields();
-    print('');
-    
     await testNetworkTimeout();
-    print('');
-    
     await testServerError();
-    print('');
-    
     await testUnauthorizedAccess();
-    print('');
-    
     await testInvalidToken();
-    print('');
+    await testExpiredToken();
+    await testMalformedRequest();
+    await testRateLimiting();
     
-    await testDuplicateRegistration();
-    print('');
-    
-    await testMalformedJson();
-    print('');
-    
-    print('✅ All error handling tests completed!');
-  }
-
-  /// Test error handling in AuthService
-  Future<void> testAuthServiceErrors() async {
-    print('🧪 Testing AuthService error handling...');
-    
-    // Test with invalid credentials
-    try {
-      final authService = AuthService();
-      await authService.login('invalid@email.com', 'wrongpassword');
-      print('❌ Expected error but got success');
-    } catch (e) {
-      print('✅ AuthService error handling works:');
-      print('   Error: $e');
-    }
+    // print('✅ Error test suite completed!');
   }
 }
