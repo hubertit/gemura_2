@@ -51,27 +51,7 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
       appBar: AppBar(
         title: _isSearching
             ? _buildSearchField()
-            : customersAsync.when(
-                loading: () => const Text('Customers'),
-                error: (error, stackTrace) => const Text('Customers'),
-                data: (customers) {
-                  final filteredCustomers = _getFilteredCustomers(customers);
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Customers'),
-                      if (_searchController.text.isNotEmpty)
-                        Text(
-                          '${filteredCustomers.length} result${filteredCustomers.length == 1 ? '' : 's'}',
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.textSecondaryColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
+            : const Text('Customers'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),

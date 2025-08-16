@@ -83,6 +83,7 @@ class CustomerUser {
   });
 
   factory CustomerUser.fromApiResponse(Map<String, dynamic> json) {
+    final account = json['account'] as Map<String, dynamic>?;
     return CustomerUser(
       userCode: json['code'] ?? '',
       name: json['name'] ?? '',
@@ -90,8 +91,8 @@ class CustomerUser {
       email: json['email'],
       nid: json['nid'],
       address: json['address'],
-      accountCode: json['code'] ?? '', // Using code as account code for now
-      accountName: json['name'] ?? '', // Using name as account name for now
+      accountCode: account?['code'] ?? '', // Extract from nested account object
+      accountName: account?['name'] ?? '', // Extract from nested account object
     );
   }
 

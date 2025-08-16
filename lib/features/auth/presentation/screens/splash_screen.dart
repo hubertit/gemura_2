@@ -50,8 +50,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted) return;
     
     if (isLoggedIn) {
-      // User is logged in, set default tab to chat and go to home screen
-      ref.read(tabIndexProvider.notifier).state = 2; // Chat tab
+      // User is logged in, set default tab to home and go to home screen
+      ref.read(tabIndexProvider.notifier).state = 0; // Home tab
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );

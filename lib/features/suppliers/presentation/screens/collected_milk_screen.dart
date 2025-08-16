@@ -5,30 +5,32 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/layout_widgets.dart';
 import '../../../collection/presentation/screens/record_collection_screen.dart';
 
-class SuppliedMilkScreen extends ConsumerStatefulWidget {
-  const SuppliedMilkScreen({super.key});
+class CollectedMilkScreen extends ConsumerStatefulWidget {
+  const CollectedMilkScreen({super.key});
 
   @override
-  ConsumerState<SuppliedMilkScreen> createState() => _SuppliedMilkScreenState();
+  ConsumerState<CollectedMilkScreen> createState() => _CollectedMilkScreenState();
 }
 
-class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
+class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
   // Filter variables
   String _selectedSupplier = 'All';
   String _selectedStatus = 'All';
+  String _selectedQuality = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
   RangeValues _quantityRange = const RangeValues(0, 100);
   RangeValues _priceRange = const RangeValues(0, 1000);
   
   // Filter options
-  List<String> get suppliers => ['All', ...suppliedMilkData.map((milk) => milk['supplierName']).toSet().toList()];
-  List<String> get statuses => ['All', 'pending', 'recorded', 'cancelled'];
+  List<String> get suppliers => ['All', ...collectedMilkData.map((milk) => milk['supplierName']).toSet().toList()];
+  List<String> get statuses => ['All', 'available', 'sold', 'reserved'];
+  List<String> get qualities => ['All', 'Grade A', 'Grade B', 'Grade C'];
 
-  // Mock supplied milk data
-  List<Map<String, dynamic>> get suppliedMilkData => [
+  // Mock collected milk data
+  List<Map<String, dynamic>> get collectedMilkData => [
     {
-      'id': 'SUP-001',
+      'id': 'COL-001',
       'supplierName': 'Jean Pierre Ndayisaba',
       'phone': '0788123456',
       'location': 'Kigali, Gasabo',
@@ -36,11 +38,12 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
       'pricePerLiter': 350,
       'totalValue': 15750,
       'date': DateTime.now().subtract(const Duration(hours: 2)),
-      'status': 'pending',
-      'notes': 'Fresh morning collection',
+      'status': 'available',
+      'quality': 'Grade A',
+      'notes': 'Fresh morning collection, good quality',
     },
     {
-      'id': 'SUP-002',
+      'id': 'COL-002',
       'supplierName': 'Marie Claire Uwimana',
       'phone': '0733123456',
       'location': 'Kigali, Kicukiro',
@@ -48,11 +51,12 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
       'pricePerLiter': 350,
       'totalValue': 13300,
       'date': DateTime.now().subtract(const Duration(hours: 1)),
-      'status': 'pending',
+      'status': 'available',
+      'quality': 'Grade A',
       'notes': 'Quality milk, good fat content',
     },
     {
-      'id': 'SUP-003',
+      'id': 'COL-003',
       'supplierName': 'Emmanuel Niyonsenga',
       'phone': '0725123456',
       'location': 'Kigali, Nyarugenge',
@@ -60,11 +64,12 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
       'pricePerLiter': 350,
       'totalValue': 18200,
       'date': DateTime.now().subtract(const Duration(minutes: 30)),
-      'status': 'pending',
-      'notes': 'Large quantity, needs verification',
+      'status': 'available',
+      'quality': 'Grade B',
+      'notes': 'Large quantity, verified quality',
     },
     {
-      'id': 'SUP-004',
+      'id': 'COL-004',
       'supplierName': 'Anastasie Mukamana',
       'phone': '0790123456',
       'location': 'Kigali, Gasabo',
@@ -72,13 +77,27 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
       'pricePerLiter': 350,
       'totalValue': 9800,
       'date': DateTime.now().subtract(const Duration(minutes: 15)),
-      'status': 'pending',
+      'status': 'available',
+      'quality': 'Grade A',
       'notes': 'Small quantity, regular supplier',
+    },
+    {
+      'id': 'COL-005',
+      'supplierName': 'Francois Nkurunziza',
+      'phone': '0755123456',
+      'location': 'Kigali, Gasabo',
+      'quantity': 65.0,
+      'pricePerLiter': 350,
+      'totalValue': 22750,
+      'date': DateTime.now().subtract(const Duration(hours: 3)),
+      'status': 'available',
+      'quality': 'Grade A',
+      'notes': 'Premium quality, high fat content',
     },
   ];
 
-  List<Map<String, dynamic>> _getFilteredSuppliedMilk() {
-    return suppliedMilkData.where((milk) {
+  List<Map<String, dynamic>> _getFilteredCollectedMilk() {
+    return collectedMilkData.where((milk) {
       // Filter by supplier
       if (_selectedSupplier != 'All' && milk['supplierName'] != _selectedSupplier) {
         return false;
@@ -86,6 +105,11 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
       
       // Filter by status
       if (_selectedStatus != 'All' && milk['status'] != _selectedStatus) {
+        return false;
+      }
+      
+      // Filter by quality
+      if (_selectedQuality != 'All' && milk['quality'] != _selectedQuality) {
         return false;
       }
       
@@ -113,24 +137,12 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredMilk = _getFilteredSuppliedMilk();
+    final filteredMilk = _getFilteredCollectedMilk();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Supplied Milk'),
-            Text(
-              '${filteredMilk.length} record${filteredMilk.length == 1 ? '' : 's'}',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Collected Milk'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -141,7 +153,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
             onPressed: () {
               _showFilterDialog();
             },
-            tooltip: 'Filter supplied milk',
+            tooltip: 'Filter collected milk',
           ),
           IconButton(
             icon: const Icon(Icons.add),
@@ -167,13 +179,13 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
               itemCount: filteredMilk.length,
               itemBuilder: (context, index) {
                 final milk = filteredMilk[index];
-                return _buildSuppliedMilkCard(milk);
+                return _buildCollectedMilkCard(milk);
               },
             ),
     );
   }
 
-  Widget _buildSuppliedMilkCard(Map<String, dynamic> milk) {
+  Widget _buildCollectedMilkCard(Map<String, dynamic> milk) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       decoration: BoxDecoration(
@@ -196,7 +208,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
           radius: 24,
           backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
           child: Icon(
-            Icons.local_shipping,
+            Icons.inventory,
             color: AppTheme.primaryColor,
             size: 20,
           ),
@@ -243,6 +255,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
   bool _hasActiveFilters() {
     return _selectedSupplier != 'All' ||
         _selectedStatus != 'All' ||
+        _selectedQuality != 'All' ||
         _startDate != null ||
         _endDate != null ||
         _quantityRange != const RangeValues(0, 100) ||
@@ -253,6 +266,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
     setState(() {
       _selectedSupplier = 'All';
       _selectedStatus = 'All';
+      _selectedQuality = 'All';
       _startDate = null;
       _endDate = null;
       _quantityRange = const RangeValues(0, 100);
@@ -302,7 +316,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
                     Icon(Icons.filter_list, color: AppTheme.primaryColor, size: 20),
                     const SizedBox(width: AppTheme.spacing8),
                     Text(
-                      'Filter Supplied Milk',
+                      'Filter Collected Milk',
                       style: AppTheme.bodySmall.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -382,6 +396,37 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
                         onChanged: (value) {
                           setState(() {
                             _selectedStatus = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: AppTheme.spacing16),
+
+                      // Quality Filter
+                      Text(
+                        'Quality',
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.spacing8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedQuality,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        items: qualities.map((quality) {
+                          return DropdownMenuItem(
+                            value: quality,
+                            child: Text(quality),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedQuality = value!;
                           });
                         },
                       ),
@@ -643,6 +688,7 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
             DetailRow(label: 'Quantity', value: '${milk['quantity']} L'),
             DetailRow(label: 'Price/Liter', value: '${milk['pricePerLiter']} Frw'),
             DetailRow(label: 'Total Value', value: '${NumberFormat('#,###').format(milk['totalValue'])} Frw'),
+            DetailRow(label: 'Quality', value: milk['quality']),
             DetailRow(label: 'Status', value: milk['status']),
             if (milk['notes'] != null && milk['notes'].isNotEmpty)
               DetailRow(label: 'Notes', value: milk['notes']),
@@ -666,15 +712,15 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
               color: AppTheme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              isSearch ? Icons.search_off : Icons.local_shipping_outlined,
-              size: 40,
-              color: AppTheme.primaryColor,
-            ),
+                      child: Icon(
+            isSearch ? Icons.search_off : Icons.inventory_outlined,
+            size: 40,
+            color: AppTheme.primaryColor,
+          ),
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            isSearch ? 'No search results' : 'No supplied milk found',
+            isSearch ? 'No search results' : 'No collected milk found',
             style: AppTheme.titleMedium.copyWith(
               color: AppTheme.textPrimaryColor,
               fontWeight: FontWeight.w600,
@@ -683,8 +729,8 @@ class _SuppliedMilkScreenState extends ConsumerState<SuppliedMilkScreen> {
           const SizedBox(height: AppTheme.spacing8),
           Text(
             isSearch 
-                ? 'Try adjusting your search terms or browse all supplied milk'
-                : 'Supplied milk will appear here when suppliers provide milk',
+                ? 'Try adjusting your search terms or browse all collected milk'
+                : 'Collected milk will appear here after recording collections',
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
             ),

@@ -58,28 +58,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
       appBar: AppBar(
         title: _isSearching 
           ? _buildSearchField()
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Suppliers'),
-                if (_searchController.text.isNotEmpty)
-                  Text(
-                    '${suppliersAsync.when(
-                      data: (suppliers) => _getFilteredSuppliers(suppliers).length,
-                      loading: () => 0,
-                      error: (_, __) => 0,
-                    )} result${suppliersAsync.when(
-                      data: (suppliers) => _getFilteredSuppliers(suppliers).length == 1 ? '' : 's',
-                      loading: () => 's',
-                      error: (_, __) => 's',
-                    )}',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                      fontSize: 12,
-                    ),
-                  ),
-              ],
-            ),
+          : const Text('Suppliers'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -482,6 +461,14 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                           style: AppTheme.titleMedium.copyWith(
                             color: AppTheme.textPrimaryColor,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Account: ${supplier.accountCode}',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                            fontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 4),

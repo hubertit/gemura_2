@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
-import 'package:gemura/features/customers/presentation/providers/customer_provider.dart';
-import 'package:gemura/features/customers/domain/models/customer.dart';
+import 'package:gemura/features/customers/presentation/providers/customers_provider.dart';
+import 'package:gemura/shared/models/customer.dart';
+import 'package:gemura/features/sales/presentation/providers/sales_provider.dart';
 
 class RecordSaleScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? preFilledData;
@@ -56,16 +57,23 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate() && _selectedCustomer != null) {
-      // TODO: Save sale record to database
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sale recorded successfully!'),
-          backgroundColor: AppTheme.snackbarSuccessColor,
+      final salesNotifier = ref.read(salesNotifierProvider.notifier);
+      
+      await salesNotifier.recordSale(
+        customerAccountCode: _selectedCustomer!.accountCode,
+        quantity: double.parse(_quantityController.text),
+        status: _selectedStatus,
+        saleAt: DateTime(
+          _saleDate.year,
+          _saleDate.month,
+          _saleDate.day,
+          _saleTime.hour,
+          _saleTime.minute,
         ),
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       );
-      Navigator.of(context).pop();
     } else if (_selectedCustomer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -104,7 +112,7 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = ref.watch(customerProvider);
+    final customersAsync = ref.watch(customersNotifierProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -128,7 +136,7 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
               
               // Customer Selection
               InkWell(
-                onTap: () => _showCustomerSelectionDialog(customers),
+                onTap: () => _showCustomerSelectionDialog(customersAsync),
                 child: Container(
                   padding: const EdgeInsets.all(AppTheme.spacing12),
                   decoration: BoxDecoration(
@@ -158,10 +166,17 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
                                     ),
                                   ),
                                   Text(
-                                    '${_selectedCustomer!.buyingPricePerLiter.toStringAsFixed(0)} Frw/L',
+                                    '${_selectedCustomer!.pricePerLiter.toStringAsFixed(0)} Frw/L',
                                     style: AppTheme.bodySmall.copyWith(
                                       color: AppTheme.textSecondaryColor,
                                       fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Account: ${_selectedCustomer!.accountCode}',
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textSecondaryColor,
+                                      fontSize: 10,
                                     ),
                                   ),
                                 ],
@@ -337,23 +352,65 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
               ],
 
               // Submit Button
-              ElevatedButton(
-                onPressed: _submitForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  ),
-                ),
-                child: const Text(
-                  'Record Sale',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              Consumer(
+                builder: (context, ref, child) {
+                  final salesState = ref.watch(salesNotifierProvider);
+                  
+                  // Show success message and navigate back
+                  if (salesState.isSuccess) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Sale recorded successfully!'),
+                          backgroundColor: AppTheme.snackbarSuccessColor,
+                        ),
+                      );
+                      ref.read(salesNotifierProvider.notifier).resetState();
+                      Navigator.of(context).pop();
+                    });
+                  }
+                  
+                  // Show error message
+                  if (salesState.error != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(salesState.error!),
+                          backgroundColor: AppTheme.snackbarErrorColor,
+                        ),
+                      );
+                      ref.read(salesNotifierProvider.notifier).resetState();
+                    });
+                  }
+                  
+                  return ElevatedButton(
+                    onPressed: salesState.isLoading ? null : _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      ),
+                    ),
+                    child: salesState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Record Sale',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  );
+                },
               ),
             ],
           ),
@@ -368,7 +425,7 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
     }
 
     final quantity = double.tryParse(_quantityController.text) ?? 0;
-    final totalValue = quantity * _selectedCustomer!.buyingPricePerLiter;
+    final totalValue = quantity * _selectedCustomer!.pricePerLiter;
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -389,8 +446,9 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
           ),
           const SizedBox(height: AppTheme.spacing12),
           _buildSummaryRow('Customer', _selectedCustomer!.name),
+          _buildSummaryRow('Account Code', _selectedCustomer!.accountCode),
           _buildSummaryRow('Quantity', '${quantity.toStringAsFixed(1)}L'),
-          _buildSummaryRow('Price per Liter', '${_selectedCustomer!.buyingPricePerLiter.toStringAsFixed(0)} Frw'),
+          _buildSummaryRow('Price per Liter', '${_selectedCustomer!.pricePerLiter.toStringAsFixed(0)} Frw'),
           _buildSummaryRow('Total Revenue', '${totalValue.toStringAsFixed(0)} Frw'),
           _buildSummaryRow('Status', _selectedStatus),
           if (_selectedStatus == 'Rejected' && _selectedRejectionReason != null)
@@ -434,9 +492,16 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
     );
   }
 
-  void _showCustomerSelectionDialog(List<Customer> customers) {
+  void _showCustomerSelectionDialog(AsyncValue<List<Customer>> customersAsync) {
     final searchController = TextEditingController();
-    List<Customer> filteredCustomers = customers;
+    List<Customer> filteredCustomers = [];
+    
+    // Initialize filtered customers from async value
+    customersAsync.when(
+      data: (customers) => filteredCustomers = customers,
+      loading: () => filteredCustomers = [],
+      error: (error, stack) => filteredCustomers = [],
+    );
 
     showDialog(
       context: context,
@@ -448,51 +513,75 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
               borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
             ),
             child: Container(
-              padding: const EdgeInsets.all(AppTheme.spacing20),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Title
                   Row(
                     children: [
-                      Icon(Icons.business, color: AppTheme.primaryColor, size: 18),
+                      Icon(Icons.business, color: AppTheme.primaryColor, size: 20),
                       const SizedBox(width: AppTheme.spacing8),
                       Text(
                         'Select Customer',
-                        style: AppTheme.bodyMedium.copyWith(
+                        style: AppTheme.titleMedium.copyWith(
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
                         ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: AppTheme.textSecondaryColor),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.spacing16),
+                  const SizedBox(height: AppTheme.spacing12),
                   // Search field
                   TextField(
                     controller: searchController,
+                    style: AppTheme.bodySmall,
                     decoration: InputDecoration(
-                      hintText: 'Search customers...',
-                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by name, phone, or address...',
+                      hintStyle: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 12,
+                      ),
+                      prefixIcon: Icon(Icons.search, size: 18, color: AppTheme.textSecondaryColor),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        borderSide: BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                        borderSide: BorderSide(color: AppTheme.primaryColor, width: 1),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing8,
                       ),
                     ),
                     onChanged: (value) {
                       setDialogState(() {
-                        if (value.isEmpty) {
-                          filteredCustomers = customers;
-                        } else {
-                          final query = value.toLowerCase();
-                          filteredCustomers = customers.where((customer) {
-                            return customer.name.toLowerCase().contains(query) ||
-                                customer.phone.toLowerCase().contains(query) ||
-                                customer.location.toLowerCase().contains(query);
-                          }).toList();
-                        }
+                        customersAsync.when(
+                          data: (customers) {
+                            if (value.isEmpty) {
+                              filteredCustomers = customers;
+                            } else {
+                              final query = value.toLowerCase();
+                              filteredCustomers = customers.where((customer) {
+                                return customer.name.toLowerCase().contains(query) ||
+                                    customer.phone.toLowerCase().contains(query) ||
+                                    (customer.address?.toLowerCase().contains(query) ?? false);
+                              }).toList();
+                            }
+                          },
+                          loading: () => filteredCustomers = [],
+                          error: (error, stack) => filteredCustomers = [],
+                        );
                       });
                     },
                   ),
@@ -500,74 +589,102 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
                   // Customer list
                   SizedBox(
                     height: 300,
-                    child: filteredCustomers.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
-                                const SizedBox(height: AppTheme.spacing8),
-                                Text(
-                                  'No customers found',
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
-                                ),
-                              ],
+                    child: customersAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      error: (error, stack) => Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondaryColor),
+                            const SizedBox(height: AppTheme.spacing8),
+                            Text(
+                              'Failed to load customers',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
                             ),
-                          )
-                        : ListView.builder(
-                            itemCount: filteredCustomers.length,
-                            itemBuilder: (context, index) {
-                              final customer = filteredCustomers[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                                  child: Text(
-                                    customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
-                                    style: TextStyle(
-                                      color: AppTheme.primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                title: Text(
-                                  customer.name,
-                                  style: AppTheme.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          ],
+                        ),
+                      ),
+                      data: (customers) {
+                        // Initialize filtered customers if empty
+                        if (filteredCustomers.isEmpty) {
+                          filteredCustomers = customers;
+                        }
+                        
+                        return filteredCustomers.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
+                                    Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
+                                    const SizedBox(height: AppTheme.spacing8),
                                     Text(
-                                      customer.phone,
+                                      'No customers found',
                                       style: AppTheme.bodySmall.copyWith(
                                         color: AppTheme.textSecondaryColor,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    Text(
-                                      '${customer.buyingPricePerLiter.toStringAsFixed(0)} Frw/L',
-                                      style: AppTheme.bodySmall.copyWith(
-                                        color: AppTheme.primaryColor,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 12,
                                       ),
                                     ),
                                   ],
                                 ),
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCustomer = customer;
-                                  });
-                                  Navigator.of(context).pop();
+                              )
+                            : ListView.builder(
+                                itemCount: filteredCustomers.length,
+                                itemBuilder: (context, index) {
+                                  final customer = filteredCustomers[index];
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                                      child: Text(
+                                        customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
+                                        style: TextStyle(
+                                          color: AppTheme.primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      customer.name,
+                                      style: AppTheme.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          customer.phone,
+                                          style: AppTheme.bodySmall.copyWith(
+                                            color: AppTheme.textSecondaryColor,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${customer.pricePerLiter.toStringAsFixed(0)} Frw/L',
+                                          style: AppTheme.bodySmall.copyWith(
+                                            color: AppTheme.primaryColor,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCustomer = customer;
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
                                 },
                               );
-                            },
-                          ),
+                      },
+                    ),
                   ),
                   const SizedBox(height: AppTheme.spacing16),
                   // Actions

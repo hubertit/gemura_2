@@ -3,131 +3,68 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/layout_widgets.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../sales/presentation/screens/record_sale_screen.dart';
+import '../../../sales/presentation/providers/sales_provider.dart';
+import '../../../../shared/models/sale.dart';
 
-class CollectedMilkScreen extends ConsumerStatefulWidget {
-  const CollectedMilkScreen({super.key});
+class SoldMilkScreen extends ConsumerStatefulWidget {
+  const SoldMilkScreen({super.key});
 
   @override
-  ConsumerState<CollectedMilkScreen> createState() => _CollectedMilkScreenState();
+  ConsumerState<SoldMilkScreen> createState() => _SoldMilkScreenState();
 }
 
-class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
+class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
   // Filter variables
-  String _selectedSupplier = 'All';
+  String _selectedCustomer = 'All';
   String _selectedStatus = 'All';
-  String _selectedQuality = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
   RangeValues _quantityRange = const RangeValues(0, 100);
   RangeValues _priceRange = const RangeValues(0, 1000);
   
   // Filter options
-  List<String> get suppliers => ['All', ...collectedMilkData.map((milk) => milk['supplierName']).toSet().toList()];
-  List<String> get statuses => ['All', 'available', 'sold', 'reserved'];
-  List<String> get qualities => ['All', 'Grade A', 'Grade B', 'Grade C'];
+  List<String> get customers => ['All', ..._getFilteredSales().map((sale) => sale.customerAccount?.name ?? 'Unknown').toSet().toList()];
+  List<String> get statuses => ['All', 'accepted', 'pending', 'cancelled'];
 
-  // Mock collected milk data
-  List<Map<String, dynamic>> get collectedMilkData => [
-    {
-      'id': 'COL-001',
-      'supplierName': 'Jean Pierre Ndayisaba',
-      'phone': '0788123456',
-      'location': 'Kigali, Gasabo',
-      'quantity': 45.0,
-      'pricePerLiter': 350,
-      'totalValue': 15750,
-      'date': DateTime.now().subtract(const Duration(hours: 2)),
-      'status': 'available',
-      'quality': 'Grade A',
-      'notes': 'Fresh morning collection, good quality',
-    },
-    {
-      'id': 'COL-002',
-      'supplierName': 'Marie Claire Uwimana',
-      'phone': '0733123456',
-      'location': 'Kigali, Kicukiro',
-      'quantity': 38.0,
-      'pricePerLiter': 350,
-      'totalValue': 13300,
-      'date': DateTime.now().subtract(const Duration(hours: 1)),
-      'status': 'available',
-      'quality': 'Grade A',
-      'notes': 'Quality milk, good fat content',
-    },
-    {
-      'id': 'COL-003',
-      'supplierName': 'Emmanuel Niyonsenga',
-      'phone': '0725123456',
-      'location': 'Kigali, Nyarugenge',
-      'quantity': 52.0,
-      'pricePerLiter': 350,
-      'totalValue': 18200,
-      'date': DateTime.now().subtract(const Duration(minutes: 30)),
-      'status': 'available',
-      'quality': 'Grade B',
-      'notes': 'Large quantity, verified quality',
-    },
-    {
-      'id': 'COL-004',
-      'supplierName': 'Anastasie Mukamana',
-      'phone': '0790123456',
-      'location': 'Kigali, Gasabo',
-      'quantity': 28.0,
-      'pricePerLiter': 350,
-      'totalValue': 9800,
-      'date': DateTime.now().subtract(const Duration(minutes: 15)),
-      'status': 'available',
-      'quality': 'Grade A',
-      'notes': 'Small quantity, regular supplier',
-    },
-    {
-      'id': 'COL-005',
-      'supplierName': 'Francois Nkurunziza',
-      'phone': '0755123456',
-      'location': 'Kigali, Gasabo',
-      'quantity': 65.0,
-      'pricePerLiter': 350,
-      'totalValue': 22750,
-      'date': DateTime.now().subtract(const Duration(hours: 3)),
-      'status': 'available',
-      'quality': 'Grade A',
-      'notes': 'Premium quality, high fat content',
-    },
-  ];
+  List<Sale> _getFilteredSales() {
+    final salesAsync = ref.watch(salesProvider);
+    return salesAsync.when(
+      data: (sales) => sales,
+      loading: () => [],
+      error: (error, stack) => [],
+    );
+  }
 
-  List<Map<String, dynamic>> _getFilteredCollectedMilk() {
-    return collectedMilkData.where((milk) {
-      // Filter by supplier
-      if (_selectedSupplier != 'All' && milk['supplierName'] != _selectedSupplier) {
+  List<Sale> _getFilteredSoldMilk() {
+    final sales = _getFilteredSales();
+    return sales.where((sale) {
+      // Filter by customer
+      if (_selectedCustomer != 'All' && (sale.customerAccount?.name ?? 'Unknown') != _selectedCustomer) {
         return false;
       }
       
       // Filter by status
-      if (_selectedStatus != 'All' && milk['status'] != _selectedStatus) {
-        return false;
-      }
-      
-      // Filter by quality
-      if (_selectedQuality != 'All' && milk['quality'] != _selectedQuality) {
+      if (_selectedStatus != 'All' && sale.status != _selectedStatus) {
         return false;
       }
       
       // Filter by date range
-      if (_startDate != null && milk['date'].isBefore(_startDate!)) {
+      if (_startDate != null && sale.saleAtDateTime.isBefore(_startDate!)) {
         return false;
       }
-      if (_endDate != null && milk['date'].isAfter(_endDate!)) {
+      if (_endDate != null && sale.saleAtDateTime.isAfter(_endDate!)) {
         return false;
       }
       
       // Filter by quantity range
-      if (milk['quantity'] < _quantityRange.start || milk['quantity'] > _quantityRange.end) {
+      if (sale.quantityAsDouble < _quantityRange.start || sale.quantityAsDouble > _quantityRange.end) {
         return false;
       }
       
       // Filter by price range
-      if (milk['pricePerLiter'] < _priceRange.start || milk['pricePerLiter'] > _priceRange.end) {
+      if (sale.unitPriceAsDouble < _priceRange.start || sale.unitPriceAsDouble > _priceRange.end) {
         return false;
       }
       
@@ -137,24 +74,12 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredMilk = _getFilteredCollectedMilk();
+    final salesAsync = ref.watch(salesProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Collected Milk'),
-            Text(
-              '${filteredMilk.length} record${filteredMilk.length == 1 ? '' : 's'}',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Sold Milk'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -165,7 +90,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
             onPressed: () {
               _showFilterDialog();
             },
-            tooltip: 'Filter collected milk',
+            tooltip: 'Filter sold milk',
           ),
           IconButton(
             icon: const Icon(Icons.add),
@@ -180,24 +105,36 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           ),
         ],
       ),
-      body: filteredMilk.isEmpty
-          ? _buildEmptyState(_hasActiveFilters())
-          : ListView.builder(
-              padding: const EdgeInsets.only(
-                top: AppTheme.spacing16,
-                left: AppTheme.spacing16,
-                right: AppTheme.spacing16,
-              ),
-              itemCount: filteredMilk.length,
-              itemBuilder: (context, index) {
-                final milk = filteredMilk[index];
-                return _buildCollectedMilkCard(milk);
-              },
-            ),
+      body: salesAsync.when(
+        loading: () => _buildLoadingState(),
+        error: (error, stack) => _buildErrorState(error.toString()),
+        data: (sales) {
+          final filteredSales = _getFilteredSoldMilk();
+          return filteredSales.isEmpty
+              ? _buildEmptyState(_hasActiveFilters())
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(salesProvider);
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(
+                      top: AppTheme.spacing16,
+                      left: AppTheme.spacing16,
+                      right: AppTheme.spacing16,
+                    ),
+                    itemCount: filteredSales.length,
+                    itemBuilder: (context, index) {
+                      final sale = filteredSales[index];
+                      return _buildSoldMilkCard(sale);
+                    },
+                  ),
+                );
+        },
+      ),
     );
   }
 
-  Widget _buildCollectedMilkCard(Map<String, dynamic> milk) {
+  Widget _buildSoldMilkCard(Sale sale) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       decoration: BoxDecoration(
@@ -214,26 +151,26 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           vertical: AppTheme.spacing4,
         ),
         onTap: () {
-          _showMilkDetails(milk);
+          _showMilkDetails(sale);
         },
         leading: CircleAvatar(
           radius: 24,
           backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
           child: Icon(
-            Icons.inventory,
+            Icons.shopping_cart,
             color: AppTheme.primaryColor,
             size: 20,
           ),
         ),
         title: Text(
-          milk['supplierName'],
+          sale.customerAccount?.name ?? 'Unknown Customer',
           style: AppTheme.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
           ),
         ),
         subtitle: Text(
-          '${DateFormat('MMM dd, yyyy').format(milk['date'])}',
+          '${DateFormat('MMM dd, yyyy').format(sale.saleAtDateTime)}',
           style: AppTheme.bodySmall.copyWith(
             color: AppTheme.textHintColor,
             fontSize: 11,
@@ -244,7 +181,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${milk['quantity'].toStringAsFixed(1)} L',
+              '${sale.quantityAsDouble.toStringAsFixed(1)} L',
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.w600,
@@ -252,7 +189,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              '${NumberFormat('#,###').format(milk['totalValue'])} Frw',
+              '${NumberFormat('#,###').format(sale.totalAmountAsDouble)} Frw',
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.textSecondaryColor,
                 fontSize: 11,
@@ -265,9 +202,8 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
   }
 
   bool _hasActiveFilters() {
-    return _selectedSupplier != 'All' ||
+    return _selectedCustomer != 'All' ||
         _selectedStatus != 'All' ||
-        _selectedQuality != 'All' ||
         _startDate != null ||
         _endDate != null ||
         _quantityRange != const RangeValues(0, 100) ||
@@ -276,9 +212,8 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
 
   void _clearFilters() {
     setState(() {
-      _selectedSupplier = 'All';
+      _selectedCustomer = 'All';
       _selectedStatus = 'All';
-      _selectedQuality = 'All';
       _startDate = null;
       _endDate = null;
       _quantityRange = const RangeValues(0, 100);
@@ -328,7 +263,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                     Icon(Icons.filter_list, color: AppTheme.primaryColor, size: 20),
                     const SizedBox(width: AppTheme.spacing8),
                     Text(
-                      'Filter Collected Milk',
+                      'Filter Sold Milk',
                       style: AppTheme.bodySmall.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -351,9 +286,9 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Supplier Filter
+                      // Customer Filter
                       Text(
-                        'Supplier',
+                        'Customer',
                         style: AppTheme.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimaryColor,
@@ -361,22 +296,22 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       DropdownButtonFormField<String>(
-                        value: _selectedSupplier,
+                        value: _selectedCustomer,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        items: suppliers.map((supplier) {
+                        items: customers.map((customer) {
                           return DropdownMenuItem(
-                            value: supplier,
-                            child: Text(supplier),
+                            value: customer,
+                            child: Text(customer),
                           );
                         }).toList(),
                         onChanged: (value) {
                           setState(() {
-                            _selectedSupplier = value!;
+                            _selectedCustomer = value!;
                           });
                         },
                       ),
@@ -411,38 +346,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                           });
                         },
                       ),
-                      const SizedBox(height: AppTheme.spacing16),
 
-                      // Quality Filter
-                      Text(
-                        'Quality',
-                        style: AppTheme.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      DropdownButtonFormField<String>(
-                        value: _selectedQuality,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items: qualities.map((quality) {
-                          return DropdownMenuItem(
-                            value: quality,
-                            child: Text(quality),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedQuality = value!;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: AppTheme.spacing16),
 
                       // Date Range Filter
                       Text(
@@ -644,7 +548,47 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
     );
   }
 
-  void _showMilkDetails(Map<String, dynamic> milk) {
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+          const SizedBox(height: AppTheme.spacing16),
+          Text(
+            'Failed to load sales',
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textPrimaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            error,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textSecondaryColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          ElevatedButton(
+            onPressed: () {
+              ref.invalidate(salesProvider);
+            },
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMilkDetails(Sale sale) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surfaceColor,
@@ -666,7 +610,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                '${NumberFormat('#,###').format(milk['totalValue'])} Frw',
+                '${NumberFormat('#,###').format(sale.totalAmountAsDouble)} Frw',
                 style: AppTheme.headlineLarge.copyWith(
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.bold,
@@ -684,7 +628,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                   ),
                 ),
                 child: Text(
-                  '${milk['quantity']} L',
+                  '${sale.quantityAsDouble} L',
                   style: AppTheme.badge.copyWith(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w600,
@@ -694,16 +638,17 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
             ],
           ),
           details: [
-            DetailRow(label: 'Supplier', value: milk['supplierName']),
-            DetailRow(label: 'Phone', value: milk['phone']),
-            DetailRow(label: 'Location', value: milk['location']),
-            DetailRow(label: 'Quantity', value: '${milk['quantity']} L'),
-            DetailRow(label: 'Price/Liter', value: '${milk['pricePerLiter']} Frw'),
-            DetailRow(label: 'Total Value', value: '${NumberFormat('#,###').format(milk['totalValue'])} Frw'),
-            DetailRow(label: 'Quality', value: milk['quality']),
-            DetailRow(label: 'Status', value: milk['status']),
-            if (milk['notes'] != null && milk['notes'].isNotEmpty)
-              DetailRow(label: 'Notes', value: milk['notes']),
+            DetailRow(label: 'Customer', value: sale.customerAccount?.name ?? 'Unknown'),
+            DetailRow(label: 'Customer Code', value: sale.customerAccount?.code ?? 'N/A'),
+            DetailRow(label: 'Supplier', value: sale.supplierAccount?.name ?? 'Unknown'),
+            DetailRow(label: 'Supplier Code', value: sale.supplierAccount?.code ?? 'N/A'),
+            DetailRow(label: 'Quantity', value: '${sale.quantityAsDouble} L'),
+            DetailRow(label: 'Price/Liter', value: '${sale.unitPriceAsDouble} Frw'),
+            DetailRow(label: 'Total Value', value: '${NumberFormat('#,###').format(sale.totalAmountAsDouble)} Frw'),
+            DetailRow(label: 'Status', value: sale.status),
+            DetailRow(label: 'Sale Date', value: DateFormat('MMM dd, yyyy HH:mm').format(sale.saleAtDateTime)),
+            if (sale.notes != null && sale.notes!.isNotEmpty)
+              DetailRow(label: 'Notes', value: sale.notes!),
           ],
         ),
       ),
@@ -724,15 +669,15 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
               color: AppTheme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              isSearch ? Icons.search_off : Icons.inventory_outlined,
-              size: 40,
-              color: AppTheme.primaryColor,
-            ),
+                      child: Icon(
+            isSearch ? Icons.search_off : Icons.shopping_cart_outlined,
+            size: 40,
+            color: AppTheme.primaryColor,
+          ),
           ),
           const SizedBox(height: AppTheme.spacing24),
           Text(
-            isSearch ? 'No search results' : 'No collected milk found',
+            isSearch ? 'No search results' : 'No sold milk found',
             style: AppTheme.titleMedium.copyWith(
               color: AppTheme.textPrimaryColor,
               fontWeight: FontWeight.w600,
@@ -741,8 +686,8 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           const SizedBox(height: AppTheme.spacing8),
           Text(
             isSearch 
-                ? 'Try adjusting your search terms or browse all collected milk'
-                : 'Collected milk will appear here after recording collections',
+                ? 'Try adjusting your search terms or browse all sold milk'
+                : 'Sold milk will appear here after recording sales',
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
             ),
