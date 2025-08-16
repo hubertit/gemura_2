@@ -14,7 +14,7 @@ class WalletsService {
   /// Get all wallets for the authenticated user
   Future<List<Wallet>> getWallets() async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -71,7 +71,7 @@ class WalletsService {
     List<String>? jointOwners,
   }) async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -128,7 +128,7 @@ class WalletsService {
   /// Get wallet details by wallet code
   Future<Wallet> getWalletDetails(String walletCode) async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }

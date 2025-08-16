@@ -14,7 +14,7 @@ class SuppliersService {
   /// Get all suppliers for the authenticated user
   Future<List<Supplier>> getSuppliers() async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -79,7 +79,7 @@ class SuppliersService {
     required double pricePerLiter,
   }) async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -138,7 +138,7 @@ class SuppliersService {
   /// Get supplier details
   Future<Supplier> getSupplierDetails(String supplierId) async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -193,7 +193,7 @@ class SuppliersService {
     required double pricePerLiter,
   }) async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -250,7 +250,7 @@ class SuppliersService {
     required int relationshipId,
   }) async {
     try {
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
