@@ -73,9 +73,12 @@ class AuthService {
             await SecureStorageService.saveAuthToken(data['user']['token']);
           }
           
-          // Save user data
-          if (data['user'] != null) {
-            await SecureStorageService.saveUserData(data['user']);
+          // Save user data with account information
+          if (data['user'] != null && data['account'] != null) {
+            final userData = Map<String, dynamic>.from(data['user']);
+            userData['role'] = data['account']['type'];
+            userData['accountCode'] = data['account']['code'];
+            await SecureStorageService.saveUserData(userData);
           }
           
           // Save login state

@@ -756,6 +756,7 @@ class ProfileTab extends ConsumerWidget {
                   final shouldLogout = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
+                      backgroundColor: Colors.white,
                       title: const Text('Sign Out'),
                       content: const Text('Are you sure you want to sign out?'),
                       actions: [
