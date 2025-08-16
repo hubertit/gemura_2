@@ -291,6 +291,26 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                 fontSize: 11,
               ),
             ),
+            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: _getStatusColor(sale.status).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: _getStatusColor(sale.status).withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                sale.status.toUpperCase(),
+                style: AppTheme.bodySmall.copyWith(
+                  color: _getStatusColor(sale.status),
+                  fontSize: 8,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -321,6 +341,21 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
       _minPriceController.text = '0';
       _maxPriceController.text = '2000';
     });
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'accepted':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      case 'completed':
+        return Colors.blue;
+      default:
+        return AppTheme.textSecondaryColor;
+    }
   }
 
   void _showFilterDialog() {
@@ -877,9 +912,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
           ),
           details: [
             DetailRow(label: 'Customer', value: sale.customerAccount?.name ?? 'Unknown'),
-            DetailRow(label: 'Customer Code', value: sale.customerAccount?.code ?? 'N/A'),
             DetailRow(label: 'Supplier', value: sale.supplierAccount?.name ?? 'Unknown'),
-            DetailRow(label: 'Supplier Code', value: sale.supplierAccount?.code ?? 'N/A'),
             DetailRow(label: 'Quantity', value: '${sale.quantityAsDouble} L'),
             DetailRow(label: 'Price/Liter', value: '${sale.unitPriceAsDouble} Frw'),
             DetailRow(label: 'Total Value', value: '${NumberFormat('#,###').format(sale.totalAmountAsDouble)} Frw'),
@@ -889,8 +922,8 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
               DetailRow(label: 'Notes', value: sale.notes!),
           ],
           actions: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Row(
                 children: [
                   Expanded(
@@ -905,7 +938,6 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                         backgroundColor: AppTheme.primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing24,
                           vertical: AppTheme.spacing16,
                         ),
                         shape: RoundedRectangleBorder(
@@ -926,9 +958,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                         foregroundColor: AppTheme.errorColor,
                         side: BorderSide(color: AppTheme.errorColor, width: 1),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing24,
-                          vertical: AppTheme.spacing16,
-                        ),
+                          vertical: AppTheme.spacing16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                         ),
