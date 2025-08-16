@@ -106,6 +106,29 @@ class AccountAccessNotifier extends StateNotifier<AsyncValue<List<AccountAccess>
       ),
     ];
   }
+
+  // Register a new employee
+  Future<bool> registerEmployee({
+    required Map<String, dynamic> userData,
+    required Map<String, dynamic> accountAccess,
+  }) async {
+    try {
+      // TODO: Implement API call to register employee
+      // This should call the employee registration endpoint with the payload:
+      // {
+      //   "token": "{{token}}",
+      //   "user_data": userData,
+      //   "account_access": accountAccess
+      // }
+      
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock success
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 final accountAccessProvider = StateNotifierProvider<AccountAccessNotifier, AsyncValue<List<AccountAccess>>>(

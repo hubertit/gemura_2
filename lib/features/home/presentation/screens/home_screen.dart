@@ -317,7 +317,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                     }
                     
                     return SizedBox(
-                      height: 200,
+                      height: 180, // Increased height to match wallet card natural height
                       child: PageView.builder(
                         itemCount: wallets.length,
                         controller: PageController(viewportFraction: 0.92),
@@ -333,6 +333,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               wallet: wallets[index], 
                               showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
                               onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
+                              onTap: () {}, // Disable navigation to wallet details
                             ),
                           );
                         },
@@ -1406,108 +1407,6 @@ class ProfileTab extends ConsumerWidget {
                         ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 20),
-                // Quick Stats Section - Integrated with Overview API
-                Consumer(
-                  builder: (context, ref, child) {
-                    final overviewAsync = ref.watch(overviewProvider);
-                    return overviewAsync.when(
-                      loading: () => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: List.generate(3, (index) => const CircularProgressIndicator()),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: List.generate(3, (index) => const CircularProgressIndicator()),
-                            ),
-                          ],
-                        ),
-                      ),
-                      error: (error, stack) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Failed to load stats',
-                            style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
-                          ),
-                        ),
-                      ),
-                      data: (overview) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                        ),
-                        child: Column(
-                          children: [
-                            // First row - Key Business Metrics
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildStatItem(
-                                  Icons.local_shipping, 
-                                  'Collection', 
-                                  '${overview.summary.collection.liters.toStringAsFixed(1)}L'
-                                ),
-                                _buildStatItem(
-                                  Icons.shopping_cart, 
-                                  'Sales', 
-                                  '${overview.summary.sales.liters.toStringAsFixed(1)}L'
-                                ),
-                                _buildStatItem(
-                                  Icons.analytics, 
-                                  'Transactions', 
-                                  '${overview.summary.collection.transactions + overview.summary.sales.transactions}'
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Second row - Financial & Network Metrics
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildStatItem(
-                                  Icons.attach_money, 
-                                  'Revenue', 
-                                  '${NumberFormat('#,###').format(overview.summary.sales.value)}'
-                                ),
-                                _buildStatItem(
-                                  Icons.people, 
-                                  'Suppliers', 
-                                  '${overview.summary.suppliers?.active ?? 0}'
-                                ),
-                                _buildStatItem(
-                                  Icons.group, 
-                                  'Customers', 
-                                  '${overview.summary.customers?.active ?? 0}'
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
                 ),
                 const SizedBox(height: 20),
                 // Contact Information Section

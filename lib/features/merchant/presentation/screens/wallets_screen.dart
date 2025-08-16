@@ -257,6 +257,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                           wallet: wallet,
                           showBalance: _walletBalanceVisibility[wallet.id] ?? true,
                           onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
+                          onTap: () {}, // Disable navigation to wallet details
                         )),
                         const SizedBox(height: AppTheme.spacing16),
                         // Temporarily hidden - Add Wallet Card
