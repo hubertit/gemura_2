@@ -29,7 +29,7 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Manage Access',
+        title: 'Manage Employees',
         actions: [
           IconButton(
             onPressed: () => _navigateToRegisterEmployee(),

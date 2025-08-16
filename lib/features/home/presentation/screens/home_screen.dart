@@ -1236,55 +1236,6 @@ class ProfileTab extends ConsumerWidget {
             elevation: 0,
             iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
             titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor, fontWeight: FontWeight.bold),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                tooltip: 'Edit Profile',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const EditProfileScreen(),
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                tooltip: 'Sign Out',
-                onPressed: () async {
-                  // Show confirmation dialog
-                  final shouldLogout = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.white,
-                      title: const Text('Sign Out'),
-                      content: const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Sign Out'),
-                        ),
-                      ],
-                    ),
-                  );
-                  
-                  if (shouldLogout == true) {
-                    // Sign out and navigate to login screen
-                    await ref.read(authProvider.notifier).signOut();
-                    if (context.mounted) {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    }
-                  }
-                },
-              ),
-            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(0),
@@ -1463,18 +1414,6 @@ class ProfileTab extends ConsumerWidget {
                         ),
                       ),
                       _buildActionTile(
-                        Icons.edit_outlined,
-                        'Edit Profile',
-                        'Update your personal information',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const EditProfileScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      _buildActionTile(
                         Icons.lock_outline,
                         'Change Password',
                         'Update your account password',
@@ -1485,8 +1424,8 @@ class ProfileTab extends ConsumerWidget {
 
                       _buildActionTile(
                         Icons.people,
-                        'Manage Access',
-                        'Grant or revoke account access',
+                        'Manage Employees',
+                        'Add and manage team members',
                         () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -1564,93 +1503,7 @@ class ProfileTab extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                // Security Section
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Security',
-                          style: AppTheme.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimaryColor,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      _buildActionTile(
-                        Icons.logout,
-                        'Logout',
-                        'Sign out of your account',
-                        () async {
-                          await ref.read(authProvider.notifier).signOut();
-                          if (context.mounted) {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          }
-                        },
-                      ),
-                      _buildActionTile(
-                        Icons.delete_forever,
-                        'Delete Account',
-                        'Permanently delete your account',
-                        () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              backgroundColor: AppTheme.surfaceColor,
-                              title: Text('Delete Account', style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor)),
-                              content: Text('Are you sure you want to delete your account? This action cannot be undone.', style: AppTheme.bodyMedium),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: Text('Cancel', style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryColor)),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text('Delete', style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (confirm == true) {
-                            try {
-                              await ref.read(authProvider.notifier).deleteAccount();
-                              if (context.mounted) {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginScreen(),
-                                  ),
-                                  (route) => false,
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  AppTheme.errorSnackBar(message: 'Error: $e'),
-                                );
-                              }
-                            }
-                          }
-                        },
-                        isDestructive: true,
-                      ),
-                    ],
-                  ),
-                ),
+
                 const SizedBox(height: 24),
               ],
             ),

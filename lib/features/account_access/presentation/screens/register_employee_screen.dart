@@ -58,7 +58,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Register Employee',
+        title: 'Add Employee',
       ),
       body: Form(
         key: _formKey,
@@ -231,7 +231,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
               
               // Register Button
               PrimaryButton(
-                label: 'Register Employee',
+                label: 'Add Employee',
                 onPressed: _registerEmployee,
               ),
               const SizedBox(height: AppTheme.spacing16),
