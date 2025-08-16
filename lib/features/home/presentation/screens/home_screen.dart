@@ -888,7 +888,7 @@ class ProfileTab extends ConsumerWidget {
                           ),
                         ),
                         child: Text(
-                          'Account: ${user?.id ?? 'N/A'}',
+                          'Account: ${user?.accountCode ?? 'N/A'}',
                           style: AppTheme.bodySmall.copyWith(
                             color: AppTheme.textSecondaryColor,
                             fontWeight: FontWeight.w500,

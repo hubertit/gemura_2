@@ -14,6 +14,7 @@ class User {
   final String address;
   final String profileImg;
   final String coverImg;
+  final String accountCode;
 
   User({
     required this.id,
@@ -31,6 +32,7 @@ class User {
     this.profileCover = '',
     this.coverImg = '',
     this.phoneNumber = '',
+    this.accountCode = '',
   });
 
   Map<String, dynamic> toJson() {
@@ -50,6 +52,7 @@ class User {
       'profileCover': profileCover,
       'coverImg': coverImg,
       'phoneNumber': phoneNumber,
+      'accountCode': accountCode,
     };
   }
 
@@ -74,6 +77,7 @@ class User {
       profileCover: json['profileCover']?.toString() ?? '',
       coverImg: json['cover_img']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? json['phone']?.toString() ?? '',
+      accountCode: json['accountCode']?.toString() ?? '',
     );
   }
 
@@ -93,6 +97,7 @@ class User {
     String? profileCover,
     String? coverImg,
     String? phoneNumber,
+    String? accountCode,
   }) {
     return User(
       id: id ?? this.id,
@@ -110,6 +115,7 @@ class User {
       profileCover: profileCover ?? this.profileCover,
       coverImg: coverImg ?? this.coverImg,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      accountCode: accountCode ?? this.accountCode,
     );
   }
 

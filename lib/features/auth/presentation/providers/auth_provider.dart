@@ -78,12 +78,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       
       // Create user from API response
       final userData = response['data']['user'];
+      final accountData = response['data']['account'];
+      
       final user = User(
         id: userData['code']?.toString() ?? '1',
         name: userData['name'] ?? 'User',
         email: userData['email'] ?? emailOrPhone,
         password: '',
-        role: userData['role']?.toString() ?? 'owner', // Use actual role from API
+        role: accountData['type']?.toString() ?? 'owner', // Role is in account.type
         createdAt: DateTime.now(), // API doesn't provide this
         lastLoginAt: DateTime.now(),
         isActive: userData['status'] == 'active',
@@ -94,6 +96,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         profileCover: userData['profile_cover']?.toString() ?? '',
         coverImg: userData['cover_img']?.toString() ?? '',
         phoneNumber: userData['phone']?.toString() ?? '',
+        accountCode: accountData['code']?.toString() ?? '',
       );
       
       // User data and token are already saved by AuthService
