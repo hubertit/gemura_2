@@ -923,7 +923,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
           ],
           actions: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
               child: Row(
                 children: [
                   Expanded(
@@ -938,6 +938,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                         backgroundColor: AppTheme.primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
                           vertical: AppTheme.spacing16,
                         ),
                         shape: RoundedRectangleBorder(
@@ -958,7 +959,9 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                         foregroundColor: AppTheme.errorColor,
                         side: BorderSide(color: AppTheme.errorColor, width: 1),
                         padding: const EdgeInsets.symmetric(
-                          vertical: AppTheme.spacing16),
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                         ),
