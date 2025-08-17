@@ -60,7 +60,7 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
         return GestureDetector(
           onTap: () => _showEmployeeActionsBottomSheet(employee),
           child: Container(
-            margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+          margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
             decoration: BoxDecoration(
               color: AppTheme.surfaceColor,
               borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
@@ -74,22 +74,22 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    child: Text(
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              child: Text(
                       employee.name.substring(0, 1).toUpperCase(),
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
                   const SizedBox(width: AppTheme.spacing12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: [
+                    children: [
                             Expanded(
                               child: Text(
                                 employee.name,
@@ -130,10 +130,10 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                             color: AppTheme.textSecondaryColor,
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
-                ],
+                ),
+              ],
               ),
             ),
           ),
@@ -404,10 +404,10 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
 
   void _handleUserAction(String action, Employee employee) {
     switch (action) {
-              case 'edit':
+      case 'edit':
           _showEditAccessBottomSheet(employee);
         break;
-              case 'revoke':
+      case 'revoke':
           _showRevokeAccessBottomSheet(employee);
         break;
     }
@@ -433,26 +433,26 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => Container(
-          decoration: const BoxDecoration(
+        decoration: const BoxDecoration(
             color: AppTheme.surfaceColor,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
                 margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
                   color: AppTheme.textSecondaryColor.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                borderRadius: BorderRadius.circular(2),
               ),
+            ),
               
               // Header
               Container(
@@ -465,10 +465,10 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                       color: AppTheme.primaryColor,
                     ),
                     const SizedBox(height: AppTheme.spacing12),
-                    Text(
+            Text(
                       'Edit ${employee.name}\'s Access',
-                      style: AppTheme.titleMedium.copyWith(
-                        fontWeight: FontWeight.bold,
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
                         color: AppTheme.textPrimaryColor,
                       ),
                       textAlign: TextAlign.center,
@@ -478,9 +478,9 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                       'Update role and permissions',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondaryColor,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+              ),
+              textAlign: TextAlign.center,
+            ),
                   ],
                 ),
               ),
@@ -490,35 +490,35 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
                 child: Column(
                   children: [
-                    DropdownButtonFormField<String>(
-                      value: selectedRole,
+            DropdownButtonFormField<String>(
+              value: selectedRole,
                       decoration: InputDecoration(
-                        labelText: 'Role',
+                labelText: 'Role',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                         ),
                         prefixIcon: const Icon(Icons.security),
                         filled: true,
                         fillColor: Colors.white,
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: AccountAccess.roleViewer,
-                          child: const Text('Viewer - Read only access'),
-                        ),
-                        DropdownMenuItem(
-                          value: AccountAccess.roleAgent,
-                          child: const Text('Agent - Collect & sell milk'),
-                        ),
-                        DropdownMenuItem(
-                          value: AccountAccess.roleManager,
-                          child: const Text('Manager - Can edit data'),
-                        ),
-                        DropdownMenuItem(
-                          value: AccountAccess.roleAdmin,
-                          child: const Text('Admin - Full access'),
-                        ),
-                      ],
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: AccountAccess.roleViewer,
+                  child: const Text('Viewer - Read only access'),
+                ),
+                DropdownMenuItem(
+                  value: AccountAccess.roleAgent,
+                  child: const Text('Agent - Collect & sell milk'),
+                ),
+                DropdownMenuItem(
+                  value: AccountAccess.roleManager,
+                  child: const Text('Manager - Can edit data'),
+                ),
+                DropdownMenuItem(
+                  value: AccountAccess.roleAdmin,
+                  child: const Text('Admin - Full access'),
+                ),
+              ],
                       onChanged: (value) {
                         setState(() {
                           selectedRole = value!;
@@ -529,16 +529,16 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                 ),
               ),
 
-              const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing24),
 
               // Action buttons
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
                 child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppTheme.spacing24,
@@ -548,23 +548,23 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                             borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                           ),
                         ),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing12),
-                    Expanded(
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
                       child: ElevatedButton(
-                        onPressed: () async {
-                          final success = await ref.read(accountAccessProvider.notifier).updateAccess(
+                    onPressed: () async {
+                      final success = await ref.read(accountAccessProvider.notifier).updateAccess(
                             accessId: employee.accessId,
-                            role: selectedRole,
-                            permissions: _getPermissionsForRole(selectedRole),
-                          );
-                          
-                          if (success && mounted) {
-                            Navigator.of(context).pop();
-                            ref.invalidate(accountUsersProvider(widget.accountId));
-                            ScaffoldMessenger.of(context).showSnackBar(
+                        role: selectedRole,
+                        permissions: _getPermissionsForRole(selectedRole),
+                      );
+                      
+                      if (success && mounted) {
+                        Navigator.of(context).pop();
+                        ref.invalidate(accountUsersProvider(widget.accountId));
+                        ScaffoldMessenger.of(context).showSnackBar(
                               AppTheme.successSnackBar(
                                 message: '✅ ${employee.name}\'s role has been updated to ${_getRoleDisplayName(selectedRole)}',
                               ),
@@ -574,9 +574,9 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                               AppTheme.errorSnackBar(
                                 message: '❌ Failed to update ${employee.name}\'s access. Please try again.',
                               ),
-                            );
-                          }
-                        },
+                        );
+                      }
+                    },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
                           foregroundColor: Colors.white,
@@ -589,15 +589,15 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                           ),
                         ),
                         child: const Text('Update Access'),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
               ),
 
               // Bottom padding for safe area
               const SizedBox(height: AppTheme.spacing20),
-            ],
+          ],
           ),
         ),
       ),
@@ -635,28 +635,28 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
               padding: const EdgeInsets.all(AppTheme.spacing20),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 48,
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 48,
                     color: AppTheme.errorColor,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    'Revoke Access',
-                    style: AppTheme.titleMedium.copyWith(
-                      fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'Revoke Access',
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
                       color: AppTheme.textPrimaryColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppTheme.spacing12),
-                  Text(
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
                     'Are you sure you want to revoke ${employee.name}\'s access?',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
                   const SizedBox(height: AppTheme.spacing8),
                   Text(
                     'This action cannot be undone.',
@@ -674,10 +674,10 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
               child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppTheme.spacing24,
@@ -687,19 +687,19 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                         ),
                       ),
-                      child: const Text('Cancel'),
-                    ),
+                    child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: AppTheme.spacing12),
-                  Expanded(
+                ),
+                const SizedBox(width: AppTheme.spacing12),
+                Expanded(
                     child: ElevatedButton(
-                      onPressed: () async {
+                    onPressed: () async {
                         final success = await ref.read(accountAccessProvider.notifier).revokeAccess(employee.accessId);
-                        
-                        if (success && mounted) {
-                          Navigator.of(context).pop();
-                          ref.invalidate(accountUsersProvider(widget.accountId));
-                          ScaffoldMessenger.of(context).showSnackBar(
+                      
+                      if (success && mounted) {
+                        Navigator.of(context).pop();
+                        ref.invalidate(accountUsersProvider(widget.accountId));
+                        ScaffoldMessenger.of(context).showSnackBar(
                             AppTheme.successSnackBar(
                               message: '✅ ${employee.name}\'s access has been revoked from ${widget.accountName}',
                             ),
@@ -709,9 +709,9 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                             AppTheme.errorSnackBar(
                               message: '❌ Failed to revoke ${employee.name}\'s access. Please try again.',
                             ),
-                          );
-                        }
-                      },
+                        );
+                      }
+                    },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.errorColor,
                         foregroundColor: Colors.white,

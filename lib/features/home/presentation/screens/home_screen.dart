@@ -2280,7 +2280,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     ],
                   ),
                   backgroundColor: AppTheme.primaryColor,
-                  duration: const Duration(seconds: 5), // Reduced from 10 to 5 seconds
                 ),
               );
             }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import 'conversation_storage_service.dart';
+import 'api_keys_service.dart';
 
 class ChatGptService {
   static final ChatGptService _instance = ChatGptService._internal();
@@ -10,6 +11,17 @@ class ChatGptService {
 
   Future<String> generateResponse(String userMessage, List<Map<String, dynamic>> conversationHistory) async {
     try {
+      // Get API key from the API keys service
+      final apiKeysService = ApiKeysService();
+      final apiKeysResponse = await apiKeysService.getApiKeys();
+      final openAIKey = apiKeysResponse.data.apiKeys
+          .where((key) => key.keyType == 'openai' && key.isActive)
+          .firstOrNull;
+
+      if (openAIKey == null) {
+        throw Exception('No active OpenAI API key found');
+      }
+
       // Get conversation context from storage
       final conversationSummary = await ConversationStorageService.getConversationSummary();
       final isRecent = await ConversationStorageService.isRecentConversation();
@@ -24,7 +36,7 @@ class ChatGptService {
         Uri.parse(AppConfig.chatGptApiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${AppConfig.chatGptApiKey}',
+          'Authorization': 'Bearer ${openAIKey.keyValue}',
         },
         body: jsonEncode({
           'model': 'gpt-3.5-turbo',
@@ -54,6 +66,7 @@ class ChatGptService {
         throw Exception('Failed to get response: ${response.statusCode}');
       }
     } catch (e) {
+      print('❌ ChatGPT API Error: $e');
       // Fallback to mock response if API fails
       return _generateMockResponse(userMessage);
     }
