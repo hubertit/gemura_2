@@ -19,7 +19,7 @@
   "home": "Home",
   "dashboard": "Dashboard",
   "overview": "Overview",
-  "profile": "Profile",
+  "profile": "Account",
   "settings": "Settings",
   "about": "About",
   "helpSupport": "Help & Support",
@@ -132,6 +132,6 @@
   
   "sell": "Sell",
   "collect": "Collect",
-  "supplier": "Supplier",
-  "customer": "Customer"
+  "supplier": "Suppliers",
+  "customer": "Customers"
 }

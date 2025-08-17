@@ -1,10 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 import '../../../../core/providers/localization_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class LanguageSelectionScreen extends ConsumerWidget {
   const LanguageSelectionScreen({super.key});
+
+  void _changeLanguageAndRestart(WidgetRef ref, String language) {
+    final localizationService = ref.read(localizationServiceProvider);
+    
+    if (language == 'kinyarwanda') {
+      localizationService.setKinyarwanda();
+    } else {
+      localizationService.setEnglish();
+    }
+    
+    // Show a brief snackbar to indicate the change
+    ScaffoldMessenger.of(ref.context).showSnackBar(
+      SnackBar(
+        content: Text('Language changed to $language. Restarting app...'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+    
+    // Restart the app after a short delay
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (Platform.isAndroid || Platform.isIOS) {
+        SystemNavigator.pop();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,28 +54,12 @@ class LanguageSelectionScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              localizationService.translate('language'),
-              style: AppTheme.titleLarge.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Hitamo ururimi wawe',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-            ),
-            const SizedBox(height: 24),
-            
             // Kinyarwanda Option (Default)
             _LanguageOption(
               title: 'Ikinyarwanda',
               subtitle: 'Kinyarwanda',
               isSelected: isKinyarwanda,
-              onTap: () => localizationService.setKinyarwanda(),
+              onTap: () => _changeLanguageAndRestart(ref, 'kinyarwanda'),
               flag: '🇷🇼',
             ),
             
@@ -59,40 +70,8 @@ class LanguageSelectionScreen extends ConsumerWidget {
               title: localizationService.translate('english'),
               subtitle: 'English',
               isSelected: isEnglish,
-              onTap: () => localizationService.setEnglish(),
+              onTap: () => _changeLanguageAndRestart(ref, 'english'),
               flag: '🇺🇸',
-            ),
-            
-            const Spacer(),
-            
-            // Info text
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.primaryColor.withOpacity(0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppTheme.primaryColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Urugero rw\'ururimi ruzagaragazwa mu porogaramu yawe',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
