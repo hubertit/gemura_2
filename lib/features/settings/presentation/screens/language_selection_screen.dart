@@ -20,8 +20,20 @@ class LanguageSelectionScreen extends ConsumerWidget {
     // Show a brief snackbar to indicate the change
     ScaffoldMessenger.of(ref.context).showSnackBar(
       SnackBar(
-        content: Text('Language changed to $language. Restarting app...'),
+        content: Text(
+          'Language changed to $language. Restarting app...',
+          style: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.surfaceColor,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         duration: const Duration(seconds: 1),
+        backgroundColor: AppTheme.primaryColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        ),
+        margin: const EdgeInsets.all(AppTheme.spacing16),
       ),
     );
     

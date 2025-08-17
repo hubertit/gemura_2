@@ -66,7 +66,7 @@ class HomeScreen extends ConsumerWidget {
           NavigationDestination(
             icon: const Icon(Icons.chat_bubble_outline),
             selectedIcon: const Icon(Icons.chat_bubble),
-            label: 'Chats',
+            label: localizationService.translate('chats'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
@@ -289,9 +289,14 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         children: [
                           Icon(Icons.error_outline, color: AppTheme.textHintColor),
                           const SizedBox(height: AppTheme.spacing8),
-                          Text(
-                            'Failed to load wallets',
-                            style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final localizationService = ref.watch(localizationServiceProvider);
+                              return Text(
+                                localizationService.translate('failedToLoadWallets'),
+                                style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -310,9 +315,14 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             children: [
                               Icon(Icons.account_balance_wallet_outlined, color: AppTheme.textHintColor),
                               const SizedBox(height: AppTheme.spacing8),
-                              Text(
-                                'No wallets available',
-                                style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final localizationService = ref.watch(localizationServiceProvider);
+                                  return Text(
+                                    localizationService.translate('noWalletsAvailable'),
+                                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -496,11 +506,16 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               children: [
                                 Icon(Icons.error_outline, color: AppTheme.errorColor, size: 32),
                                 const SizedBox(height: AppTheme.spacing8),
-                                Text(
-                                  'Failed to load overview',
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return Text(
+                                      localizationService.translate('failedToLoadOverview'),
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.textSecondaryColor,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -525,12 +540,65 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             children: [
                               Icon(Icons.analytics, color: AppTheme.primaryColor, size: 20),
                               const SizedBox(width: AppTheme.spacing8),
-                              Text(
-                                'Overview',
-                                style: AppTheme.bodySmall.copyWith(
-                                  color: AppTheme.textPrimaryColor,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final localizationService = ref.watch(localizationServiceProvider);
+                                  return Text(
+                                    localizationService.translate('overview'),
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textPrimaryColor,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.spacing12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return _buildMetricCard(
+                                      localizationService.translate('collections'),
+                                      '${overview.summary.collection.liters.toStringAsFixed(1)} L',
+                                      '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw • ${overview.summary.collection.transactions} txns',
+                                      Icons.local_shipping,
+                                      AppTheme.primaryColor,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => const CollectedMilkScreen(),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.spacing8),
+                              Expanded(
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return _buildMetricCard(
+                                      localizationService.translate('sales'),
+                                      '${overview.summary.sales.liters.toStringAsFixed(1)} L',
+                                      '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw • ${overview.summary.sales.transactions} txns',
+                                      Icons.shopping_cart,
+                                      Colors.green,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => const SoldMilkScreen(),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -539,72 +607,44 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                           Row(
                             children: [
                               Expanded(
-                                child: _buildMetricCard(
-                                  'Collection',
-                                  '${overview.summary.collection.liters.toStringAsFixed(1)} L',
-                                  '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw • ${overview.summary.collection.transactions} txns',
-                                  Icons.local_shipping,
-                                  AppTheme.primaryColor,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => const CollectedMilkScreen(),
-                                      ),
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return _buildCombinedMetricCard(
+                                      localizationService.translate('suppliers'),
+                                      overview.summary.suppliers.active,
+                                      overview.summary.suppliers.inactive,
+                                      Icons.person_add,
+                                      Colors.orange,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => const SuppliersListScreen(),
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
                               ),
                               const SizedBox(width: AppTheme.spacing8),
                               Expanded(
-                                child: _buildMetricCard(
-                                  'Sales',
-                                  '${overview.summary.sales.liters.toStringAsFixed(1)} L',
-                                  '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw • ${overview.summary.sales.transactions} txns',
-                                  Icons.shopping_cart,
-                                  Colors.green,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => const SoldMilkScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppTheme.spacing12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildCombinedMetricCard(
-                                  'Suppliers',
-                                  overview.summary.suppliers.active,
-                                  overview.summary.suppliers.inactive,
-                                  Icons.person_add,
-                                  Colors.orange,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => const SuppliersListScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: AppTheme.spacing8),
-                              Expanded(
-                                child: _buildCombinedMetricCard(
-                                  'Customers',
-                                  overview.summary.customers.active,
-                                  overview.summary.customers.inactive,
-                                  Icons.business,
-                                  Colors.purple,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => const CustomersListScreen(),
-                                      ),
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return _buildCombinedMetricCard(
+                                      localizationService.translate('customers'),
+                                      overview.summary.customers.active,
+                                      overview.summary.customers.inactive,
+                                      Icons.business,
+                                      Colors.purple,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => const CustomersListScreen(),
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
@@ -659,11 +699,16 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             children: [
                               Icon(Icons.error_outline, color: AppTheme.errorColor, size: 32),
                               const SizedBox(height: AppTheme.spacing8),
-                              Text(
-                                'Failed to load chart data',
-                                style: AppTheme.bodySmall.copyWith(
-                                  color: AppTheme.textSecondaryColor,
-                                ),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final localizationService = ref.watch(localizationServiceProvider);
+                                  return Text(
+                                    localizationService.translate('failedToLoadChartData'),
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -678,13 +723,18 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Milk Collection & Sales (${_formatChartPeriod(overview.chartPeriod ?? overview.breakdownType)})',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textPrimaryColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final localizationService = ref.watch(localizationServiceProvider);
+                              return Text(
+                                '${localizationService.translate('milkCollectionSales')} (${_formatChartPeriod(overview.chartPeriod ?? overview.breakdownType)})',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textPrimaryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -747,21 +797,26 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               ),
                               const SizedBox(height: AppTheme.spacing12),
                               // Chart Legend
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  _buildLegendItem(
-                                    'Collection',
-                                    AppTheme.primaryColor.withOpacity(0.85),
-                                    Icons.local_shipping,
-                                  ),
-                                  const SizedBox(width: AppTheme.spacing16),
-                                  _buildLegendItem(
-                                    'Sales',
-                                    Colors.grey.withOpacity(0.85),
-                                    Icons.shopping_cart,
-                                  ),
-                                ],
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final localizationService = ref.watch(localizationServiceProvider);
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      _buildLegendItem(
+                                        localizationService.translate('collections'),
+                                        AppTheme.primaryColor.withOpacity(0.85),
+                                        Icons.local_shipping,
+                                      ),
+                                      const SizedBox(width: AppTheme.spacing16),
+                                      _buildLegendItem(
+                                        localizationService.translate('sales'),
+                                        Colors.grey.withOpacity(0.85),
+                                        Icons.shopping_cart,
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ],
                           ),
@@ -807,11 +862,16 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                           children: [
                             Icon(Icons.error_outline, color: AppTheme.errorColor, size: 32),
                             const SizedBox(height: AppTheme.spacing8),
-                            Text(
-                              'Failed to load recent transactions',
-                              style: AppTheme.bodySmall.copyWith(
-                                color: AppTheme.textSecondaryColor,
-                              ),
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final localizationService = ref.watch(localizationServiceProvider);
+                                return Text(
+                                  localizationService.translate('failedToLoadRecentTransactions'),
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -836,11 +896,16 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               children: [
                                 Icon(Icons.receipt_long_outlined, color: AppTheme.textHintColor, size: 32),
                                 const SizedBox(height: AppTheme.spacing8),
-                                Text(
-                                  'No recent transactions',
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return Text(
+                                      localizationService.translate('noRecentTransactions'),
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.textSecondaryColor,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -854,13 +919,18 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                          child: Text(
-                            'Recent Transactions',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textPrimaryColor,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final localizationService = ref.watch(localizationServiceProvider);
+                              return Text(
+                                localizationService.translate('recentTransactions'),
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textPrimaryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(height: AppTheme.spacing8),
@@ -1084,7 +1154,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
   String _formatChartPeriod(String period) {
     switch (period.toLowerCase()) {
       case 'last_7_days':
-        return '7 Days';
+        return 'Iminsi 7';
       case 'last_30_days':
         return '30 Days';
       case 'last_90_days':
@@ -1109,12 +1179,10 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           height: 12,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(2),
+            shape: BoxShape.circle,
           ),
         ),
         const SizedBox(width: 6),
-        Icon(icon, color: color, size: 14),
-        const SizedBox(width: 4),
         Text(
           label,
           style: AppTheme.bodySmall.copyWith(
@@ -1128,84 +1196,89 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
   }
 
   Widget _buildCombinedMetricCard(String title, int activeCount, int inactiveCount, IconData icon, Color color, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Consumer(
+      builder: (context, ref, child) {
+        final localizationService = ref.watch(localizationServiceProvider);
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(AppTheme.spacing12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+              border: Border.all(color: color.withOpacity(0.3), width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: color, size: 16),
-                const SizedBox(width: AppTheme.spacing4),
-                Text(
-                  title,
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Icon(icon, color: color, size: 16),
+                    const SizedBox(width: AppTheme.spacing4),
+                    Text(
+                      title,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing4),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$activeCount',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textPrimaryColor,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            localizationService.translate('active'),
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '$inactiveCount',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            localizationService.translate('inactive'),
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.spacing4),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$activeCount',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textPrimaryColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        'Active',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textSecondaryColor,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '$inactiveCount',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textSecondaryColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        'Inactive',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textSecondaryColor,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -1266,13 +1339,18 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                 color: AppTheme.textPrimaryColor,
                               ),
                             ),
-                            Text(
-                              isCollection
-                                ? (transaction.supplierAccount?.name ?? 'Unknown Supplier')
-                                : (transaction.customerAccount?.name ?? 'Unknown Customer'),
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: AppTheme.textSecondaryColor,
-                              ),
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final localizationService = ref.watch(localizationServiceProvider);
+                                return Text(
+                                  isCollection
+                                    ? (transaction.supplierAccount?.name ?? localizationService.translate('unknownSupplier'))
+                                    : (transaction.customerAccount?.name ?? localizationService.translate('unknownCustomer')),
+                                  style: AppTheme.bodyMedium.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -1307,10 +1385,19 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                   const SizedBox(height: 24),
                   
                   // Transaction details
-                  _buildDetailRow('Quantity', '${transaction.quantity.toStringAsFixed(1)} L'),
-                  _buildDetailRow('Amount', '${NumberFormat('#,###').format(transaction.totalAmount)} Frw'),
-                  _buildDetailRow('Date', _formatTransactionDate(transaction.transactionAt)),
-                  _buildDetailRow('Time', _formatTransactionTime(DateTime.parse(transaction.transactionAt))),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final localizationService = ref.watch(localizationServiceProvider);
+                      return Column(
+                        children: [
+                          _buildDetailRow(localizationService.translate('quantity'), '${transaction.quantity.toStringAsFixed(1)} L'),
+                          _buildDetailRow(localizationService.translate('amount'), '${NumberFormat('#,###').format(transaction.totalAmount)} Frw'),
+                          _buildDetailRow(localizationService.translate('date'), _formatTransactionDate(transaction.transactionAt)),
+                          _buildDetailRow(localizationService.translate('time'), _formatTransactionTime(DateTime.parse(transaction.transactionAt))),
+                        ],
+                      );
+                    },
+                  ),
 
                 ],
               ),
@@ -1404,14 +1491,24 @@ class _TransactionsTab extends StatelessWidget {
   const _TransactionsTab();
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Transactions'));
+    return Consumer(
+      builder: (context, ref, child) {
+        final localizationService = ref.watch(localizationServiceProvider);
+        return Center(child: Text(localizationService.translate('transactions')));
+      },
+    );
   }
 }
 class _WalletsTab extends StatelessWidget {
   const _WalletsTab();
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Wallets'));
+    return Consumer(
+      builder: (context, ref, child) {
+        final localizationService = ref.watch(localizationServiceProvider);
+        return Center(child: Text(localizationService.translate('wallets')));
+      },
+    );
   }
 }
 class ProfileTab extends ConsumerStatefulWidget {
@@ -1438,7 +1535,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
       data: (user) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Profile'),
+            title: Consumer(
+              builder: (context, ref, child) {
+                final localizationService = ref.watch(localizationServiceProvider);
+                return Text(localizationService.translate('profile'));
+              },
+            ),
             backgroundColor: AppTheme.surfaceColor,
             elevation: 0,
             iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -1509,14 +1611,19 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                       ),
                       const SizedBox(height: 16),
                       // User Name
-                      Text(
-                        user?.name ?? 'User Name',
-                        style: AppTheme.headlineLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimaryColor,
-                          fontSize: 24,
-                        ),
-                        textAlign: TextAlign.center,
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return Text(
+                            user?.name ?? localizationService.translate('userName'),
+                            style: AppTheme.headlineLarge.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimaryColor,
+                              fontSize: 24,
+                            ),
+                            textAlign: TextAlign.center,
+                          );
+                        },
                       ),
                       const SizedBox(height: 12),
                       // Account Switcher
@@ -1556,12 +1663,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                           color: AppTheme.primaryColor,
                                         ),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'Current Account',
-                                          style: AppTheme.bodySmall.copyWith(
-                                            color: AppTheme.textSecondaryColor,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                        Consumer(
+                                          builder: (context, ref, child) {
+                                            final localizationService = ref.watch(localizationServiceProvider);
+                                            return Text(
+                                              localizationService.translate('currentAccount'),
+                                              style: AppTheme.bodySmall.copyWith(
+                                                color: AppTheme.textSecondaryColor,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ],
                                     ),

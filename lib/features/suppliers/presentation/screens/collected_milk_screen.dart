@@ -8,6 +8,7 @@ import '../../../collection/presentation/providers/collections_provider.dart';
 import '../../presentation/providers/suppliers_provider.dart';
 import '../../../../shared/models/collection.dart';
 import '../../../../shared/models/supplier.dart';
+import '../../../../core/providers/localization_provider.dart';
 
 class CollectedMilkScreen extends ConsumerStatefulWidget {
   const CollectedMilkScreen({super.key});
@@ -130,7 +131,12 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Collected Milk'),
+        title: Consumer(
+          builder: (context, ref, child) {
+            final localizationService = ref.watch(localizationServiceProvider);
+            return Text(localizationService.translate('collectedMilk'));
+          },
+        ),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -141,7 +147,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
             onPressed: () {
               _showFilterDialog();
             },
-            tooltip: 'Filter collected milk',
+            tooltip: ref.watch(localizationServiceProvider).translate('filterCollectedMilk'),
           ),
           IconButton(
             icon: const Icon(Icons.add),
@@ -409,11 +415,16 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                   children: [
                     Icon(Icons.filter_list, color: AppTheme.primaryColor, size: 20),
                     const SizedBox(width: AppTheme.spacing8),
-                    Text(
-                      'Filter Collected Milk',
-                      style: AppTheme.bodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final localizationService = ref.watch(localizationServiceProvider);
+                        return Text(
+                          localizationService.translate('filterCollectedMilk'),
+                          style: AppTheme.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        );
+                      },
                     ),
                     const Spacer(),
                     TextButton(
@@ -950,22 +961,31 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           ),
           ),
           const SizedBox(height: AppTheme.spacing24),
-          Text(
-            isSearch ? 'No search results' : 'No collected milk found',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textPrimaryColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Text(
-            isSearch 
-                ? 'Try adjusting your search terms or browse all collected milk'
-                : 'Collected milk will appear here after recording collections',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondaryColor,
-            ),
-            textAlign: TextAlign.center,
+          Consumer(
+            builder: (context, ref, child) {
+              final localizationService = ref.watch(localizationServiceProvider);
+              return Column(
+                children: [
+                  Text(
+                    isSearch ? 'No search results' : localizationService.translate('noCollectedMilkFound'),
+                    style: AppTheme.titleMedium.copyWith(
+                      color: AppTheme.textPrimaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  Text(
+                    isSearch 
+                        ? 'Try adjusting your search terms or browse all collected milk'
+                        : localizationService.translate('collectedMilkWillAppear'),
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

@@ -158,17 +158,17 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
         titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add Ikofi',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const CreateWalletScreen(),
-                ),
-              );
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.add),
+          //   tooltip: 'Add Ikofi',
+          //   onPressed: () {
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(
+          //         builder: (context) => const CreateWalletScreen(),
+          //       ),
+          //     );
+          //   },
+          // ),
         ],
       ),
       backgroundColor: AppTheme.backgroundColor,

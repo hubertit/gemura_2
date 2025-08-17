@@ -6,6 +6,7 @@ import 'package:gemura/shared/models/supplier.dart';
 import 'package:gemura/features/suppliers/presentation/screens/add_supplier_screen.dart';
 // Removed unused import
 import 'package:gemura/shared/widgets/skeleton_loaders.dart';
+import 'package:gemura/core/providers/localization_provider.dart';
 
 class SuppliersListScreen extends ConsumerStatefulWidget {
   const SuppliersListScreen({super.key});
@@ -131,7 +132,12 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
       appBar: AppBar(
         title: _isSearching 
           ? _buildSearchField()
-          : const Text('Suppliers'),
+          : Consumer(
+            builder: (context, ref, child) {
+              final localizationService = ref.watch(localizationServiceProvider);
+              return Text(localizationService.translate('suppliers'));
+            },
+          ),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -147,14 +153,14 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: _toggleSearch,
-              tooltip: 'Search suppliers',
+              tooltip: ref.watch(localizationServiceProvider).translate('searchSuppliers'),
             ),
             IconButton(
               icon: const Icon(Icons.filter_list),
               onPressed: () {
                 _showFilterDialog();
               },
-              tooltip: 'Filter suppliers',
+              tooltip: ref.watch(localizationServiceProvider).translate('filterSuppliers'),
             ),
             IconButton(
               icon: const Icon(Icons.add),
