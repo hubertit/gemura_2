@@ -1,238 +1,325 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/theme/app_theme.dart';
-
-class NotificationItem {
-  final String id;
-  final String title;
-  final String body;
-  final DateTime date;
-  bool read;
-
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.date,
-    this.read = false,
-  });
-}
-
-final notificationsProvider = StateNotifierProvider<_NotificationsNotifier, List<NotificationItem>>((ref) {
-  return _NotificationsNotifier();
-});
-
-class _NotificationsNotifier extends StateNotifier<List<NotificationItem>> {
-  _NotificationsNotifier() : super(_mockNotifications);
-
-  void markAsRead(String id) {
-    state = [
-      for (final n in state)
-        if (n.id == id) NotificationItem(
-          id: n.id,
-          title: n.title,
-          body: n.body,
-          date: n.date,
-          read: true,
-        ) else n
-    ];
-  }
-
-  void markAsUnread(String id) {
-    state = [
-      for (final n in state)
-        if (n.id == id) NotificationItem(
-          id: n.id,
-          title: n.title,
-          body: n.body,
-          date: n.date,
-          read: false,
-        ) else n
-    ];
-  }
-
-  void delete(String id) {
-    state = state.where((n) => n.id != id).toList();
-  }
-}
-
-final List<NotificationItem> _mockNotifications = [
-  NotificationItem(
-    id: '1',
-    title: 'Welcome to Gemura!',
-    body: 'Thank you for joining. Manage your finances with ease.',
-    date: DateTime.now().subtract(const Duration(hours: 1)),
-  ),
-  NotificationItem(
-    id: '2',
-    title: 'Transaction Complete',
-    body: 'Your recent transaction was successful.',
-    date: DateTime.now().subtract(const Duration(days: 1)),
-    read: true,
-  ),
-  NotificationItem(
-    id: '3',
-    title: 'Security Alert',
-    body: 'A new device was used to sign in to your account.',
-    date: DateTime.now().subtract(const Duration(hours: 3)),
-  ),
-];
+import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../core/providers/notification_provider.dart';
+import '../../../../shared/models/notification.dart';
+import '../../../../core/providers/localization_provider.dart';
+import '../../../../core/providers/user_accounts_provider.dart';
+import 'package:intl/intl.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifications = ref.watch(notificationsProvider);
+    final localizationService = ref.watch(localizationServiceProvider);
+    final userInfo = ref.watch(userInfoProvider);
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: AppTheme.surfaceColor,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+      appBar: CustomAppBar(
+        title: localizationService.translate('notifications'),
+        showBackButton: true,
       ),
-      body: notifications.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 64,
-                    color: AppTheme.textHintColor,
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
-                  Text(
-                    'No notifications yet',
-                    style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondaryColor),
-                  ),
-                  const SizedBox(height: AppTheme.spacing8),
-                  Text(
-                    'Your notifications will appear here.',
-                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-                  ),
-                ],
-              ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing16,
-                vertical: AppTheme.spacing8,
-              ),
-              itemCount: notifications.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spacing12),
-              itemBuilder: (context, index) {
-                final n = notifications[index];
-                return Dismissible(
-                  key: ValueKey(n.id),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
-                    decoration: BoxDecoration(
-                      color: AppTheme.errorColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    ),
-                    child: const Icon(Icons.delete, color: AppTheme.errorColor),
-                  ),
-                  onDismissed: (_) => ref.read(notificationsProvider.notifier).delete(n.id),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: n.read ? AppTheme.backgroundColor : AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                      border: Border.all(
-                        color: n.read ? AppTheme.thinBorderColor : AppTheme.primaryColor.withOpacity(0.2),
-                        width: AppTheme.thinBorderWidth,
-                      ),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(AppTheme.spacing12),
-                      leading: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: n.read 
-                              ? AppTheme.textHintColor.withOpacity(0.1)
-                              : AppTheme.primaryColor.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+      body: userInfo.when(
+        data: (user) {
+          final accountId = user.defaultAccountId;
+          final notificationsAsync = ref.watch(notificationsNotifierProvider(accountId));
+          
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(notificationsNotifierProvider(accountId));
+            },
+            child: notificationsAsync.when(
+              data: (response) {
+                final notifications = response.data.notifications;
+                
+                if (notifications.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_none,
+                          size: 64,
+                          color: AppTheme.textHintColor,
                         ),
-                        child: Icon(
-                          n.read ? Icons.notifications_none : Icons.notifications_active,
-                          color: n.read ? AppTheme.textSecondaryColor : AppTheme.primaryColor,
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        n.title,
-                        style: AppTheme.bodyMedium.copyWith(
-                          fontWeight: n.read ? FontWeight.w400 : FontWeight.w600,
-                          color: n.read ? AppTheme.textSecondaryColor : AppTheme.textPrimaryColor,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: AppTheme.spacing4),
-                          Text(
-                            n.body,
-                            style: AppTheme.bodySmall.copyWith(
-                              color: n.read ? AppTheme.textHintColor : AppTheme.textSecondaryColor,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing4),
-                          Text(
-                            _formatDate(n.date),
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textHintColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            n.read ? Icons.mark_email_unread : Icons.mark_email_read,
-                            color: AppTheme.primaryColor,
-                            size: 20,
-                          ),
-                          tooltip: n.read ? 'Mark as unread' : 'Mark as read',
-                          onPressed: () {
-                            if (n.read) {
-                              ref.read(notificationsProvider.notifier).markAsUnread(n.id);
-                            } else {
-                              ref.read(notificationsProvider.notifier).markAsRead(n.id);
-                            }
+                        const SizedBox(height: AppTheme.spacing16),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final localizationService = ref.watch(localizationServiceProvider);
+                            return Text(
+                              localizationService.translate('noNotifications'),
+                              style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondaryColor),
+                            );
                           },
                         ),
-                      ),
-                      onTap: () {
-                        if (!n.read) {
-                          ref.read(notificationsProvider.notifier).markAsRead(n.id);
-                        }
-                      },
+                        const SizedBox(height: AppTheme.spacing8),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final localizationService = ref.watch(localizationServiceProvider);
+                            return Text(
+                              localizationService.translate('notificationsWillAppearHere'),
+                              style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                            );
+                          },
+                        ),
+                      ],
                     ),
+                  );
+                }
+                
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing16,
+                    vertical: AppTheme.spacing8,
                   ),
+                  itemCount: notifications.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spacing12),
+                  itemBuilder: (context, index) {
+                    final notification = notifications[index];
+                    return _NotificationCard(
+                      notification: notification,
+                      accountId: accountId,
+                    );
+                  },
                 );
               },
+              loading: () => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              error: (error, stackTrace) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: AppTheme.errorColor,
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final localizationService = ref.watch(localizationServiceProvider);
+                        return Text(
+                          localizationService.translate('failedToLoadNotifications'),
+                          style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    Text(
+                      error.toString(),
+                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
             ),
+          );
+        },
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stackTrace) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.errorColor,
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              Text(
+                'Failed to load user info',
+                style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
 
-String _formatDate(DateTime date) {
-  final now = DateTime.now();
-  final diff = now.difference(date);
-  if (diff.inMinutes < 60) {
-    return '${diff.inMinutes} min ago';
-  } else if (diff.inHours < 24) {
-    return '${diff.inHours} hr ago';
-  } else {
-    return '${diff.inDays} day${diff.inDays > 1 ? 's' : ''} ago';
+class _NotificationCard extends ConsumerWidget {
+  final Notification notification;
+  final int? accountId;
+
+  const _NotificationCard({
+    required this.notification,
+    required this.accountId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Dismissible(
+      key: ValueKey(notification.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing24),
+        decoration: BoxDecoration(
+          color: AppTheme.errorColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        ),
+        child: const Icon(Icons.delete, color: AppTheme.errorColor),
+      ),
+      onDismissed: (_) {
+        ref.read(notificationsNotifierProvider(accountId).notifier)
+           .deleteNotification(notification.id, accountId: accountId);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: notification.isRead ? AppTheme.backgroundColor : AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          border: Border.all(
+            color: notification.isRead 
+                ? AppTheme.thinBorderColor 
+                : _getTypeColor(notification.type).withOpacity(0.2),
+            width: AppTheme.thinBorderWidth,
+          ),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(AppTheme.spacing12),
+          leading: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: notification.isRead 
+                  ? AppTheme.textHintColor.withOpacity(0.1)
+                  : _getTypeColor(notification.type).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+            ),
+            child: Icon(
+              notification.isRead ? Icons.notifications_none : Icons.notifications_active,
+              color: notification.isRead ? AppTheme.textSecondaryColor : _getTypeColor(notification.type),
+              size: 24,
+            ),
+          ),
+          title: Text(
+            notification.title,
+            style: AppTheme.bodyMedium.copyWith(
+              fontWeight: notification.isRead ? FontWeight.w400 : FontWeight.w600,
+              color: notification.isRead ? AppTheme.textSecondaryColor : AppTheme.textPrimaryColor,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppTheme.spacing4),
+              Text(
+                notification.message,
+                style: AppTheme.bodySmall.copyWith(
+                  color: notification.isRead ? AppTheme.textHintColor : AppTheme.textSecondaryColor,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing8,
+                      vertical: AppTheme.spacing2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getTypeColor(notification.type).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
+                    ),
+                    child: Text(
+                      notification.type.toUpperCase(),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: _getTypeColor(notification.type),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Text(
+                    _formatDate(notification.createdAt),
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textHintColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          trailing: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+            ),
+            child: IconButton(
+              icon: Icon(
+                notification.isRead ? Icons.mark_email_unread : Icons.mark_email_read,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
+              tooltip: notification.isRead ? 'Mark as unread' : 'Mark as read',
+              onPressed: () {
+                if (notification.isRead) {
+                  ref.read(notificationsNotifierProvider(accountId).notifier)
+                     .markAsUnread(notification.id, accountId: accountId);
+                } else {
+                  ref.read(notificationsNotifierProvider(accountId).notifier)
+                     .markAsRead(notification.id, accountId: accountId);
+                }
+              },
+            ),
+          ),
+          onTap: () {
+            if (!notification.isRead) {
+              ref.read(notificationsNotifierProvider(accountId).notifier)
+                 .markAsRead(notification.id, accountId: accountId);
+            }
+            
+            // Handle action URL if present
+            if (notification.actionUrl != null) {
+              // TODO: Navigate to the action URL
+              print('Navigate to: ${notification.actionUrl}');
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'success':
+        return Colors.green;
+      case 'warning':
+        return Colors.orange;
+      case 'error':
+        return AppTheme.errorColor;
+      case 'info':
+      default:
+        return AppTheme.primaryColor;
+    }
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+      
+      if (diff.inMinutes < 60) {
+        return '${diff.inMinutes} min ago';
+      } else if (diff.inHours < 24) {
+        return '${diff.inHours} hr ago';
+      } else if (diff.inDays < 7) {
+        return '${diff.inDays} day${diff.inDays > 1 ? 's' : ''} ago';
+      } else {
+        return DateFormat('MMM dd, yyyy').format(date);
+      }
+    } catch (e) {
+      return 'Unknown date';
+    }
   }
 } 

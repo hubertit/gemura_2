@@ -201,5 +201,9 @@
   "switchedToAccount": "Switched to {account}",
   "failedToSwitchAccount": "Failed to switch account",
   "signOutConfirm": "Are you sure you want to sign out?",
-  "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone."
+  "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
+  "notifications": "Notifications",
+  "noNotifications": "No notifications yet",
+  "notificationsWillAppearHere": "Your notifications will appear here.",
+  "failedToLoadNotifications": "Failed to load notifications"
 }

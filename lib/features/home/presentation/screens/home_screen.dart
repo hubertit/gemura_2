@@ -30,6 +30,7 @@ import '../../../account_access/presentation/screens/manage_account_access_scree
 import '../providers/overview_provider.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../providers/user_accounts_provider.dart';
+import '../../../../core/providers/notification_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -228,40 +229,90 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
               );
             },
           ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+          Consumer(
+            builder: (context, ref, child) {
+              final userInfo = ref.watch(userInfoProvider);
+              final accountId = userInfo.value?.defaultAccountId;
+              
+              return userInfo.when(
+                data: (user) {
+                  final unreadCountAsync = ref.watch(unreadCountProvider(accountId));
+                  
+                  return unreadCountAsync.when(
+                    data: (unreadCount) {
+                      return Stack(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                              );
+                            },
+                          ),
+                          if (unreadCount > 0)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                    loading: () => IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                        );
+                      },
+                    ),
+                    error: (_, __) => IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                        );
+                      },
+                    ),
                   );
                 },
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '2',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                loading: () => IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                    );
+                  },
                 ),
-              ),
-            ],
+                error: (_, __) => IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),

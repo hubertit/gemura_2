@@ -201,5 +201,9 @@
   "switchedToAccount": "Byahinduriwe kuri {account}",
   "failedToSwitchAccount": "Ntibyashoboye guhindura konti",
   "signOutConfirm": "Uzi neza ko ushaka gusohoka?",
-  "deleteAccountConfirm": "Uzi neza ko ushaka gusiba konti yawe? Iki gikorwa ntibizongera guhindurwa."
+  "deleteAccountConfirm": "Uzi neza ko ushaka gusiba konti yawe? Iki gikorwa ntibizongera guhindurwa.",
+  "notifications": "Amatangazo",
+  "noNotifications": "Nta matangazo yarangiye",
+  "notificationsWillAppearHere": "Amatangazo yawe azagaragara hano.",
+  "failedToLoadNotifications": "Kugenzura amatangazo byanze"
 }
