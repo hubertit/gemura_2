@@ -92,17 +92,16 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Email Address',
+                  labelText: 'Email Address (Optional)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter email address';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'Please enter a valid email address';
+                  if (value != null && value.trim().isNotEmpty) {
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return 'Please enter a valid email address';
+                    }
                   }
                   return null;
                 },
@@ -131,7 +130,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
               TextFormField(
                 controller: _nidController,
                 decoration: const InputDecoration(
-                  labelText: 'National ID',
+                  labelText: 'National ID (16 digits starting with 11)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.badge),
                 ),
@@ -139,6 +138,9 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter national ID';
+                  }
+                  if (!RegExp(r'^11\d{14}$').hasMatch(value.trim())) {
+                    return 'NID must be 16 digits starting with 11';
                   }
                   return null;
                 },

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/widgets/primary_button.dart';
+
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../providers/account_access_provider.dart';
 import '../../../../shared/models/account_access.dart';
-import '../../../../shared/models/user.dart';
+import '../../../../shared/models/employee.dart';
 import 'register_employee_screen.dart';
 
 class ManageAccountAccessScreen extends ConsumerStatefulWidget {
@@ -51,51 +51,90 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
     );
   }
 
-  Widget _buildUsersList(List<User> users) {
+  Widget _buildUsersList(List<Employee> employees) {
     return ListView.builder(
       padding: const EdgeInsets.all(AppTheme.spacing16),
-      itemCount: users.length,
+      itemCount: employees.length,
       itemBuilder: (context, index) {
-        final user = users[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-              child: Text(
-                user.name.substring(0, 1).toUpperCase(),
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+        final employee = employees[index];
+        return GestureDetector(
+          onTap: () => _showEmployeeActionsBottomSheet(employee),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+              border: Border.all(
+                color: AppTheme.thinBorderColor,
+                width: AppTheme.thinBorderWidth,
               ),
             ),
-            title: Text(user.name, style: AppTheme.bodyMedium),
-            subtitle: Text(user.email ?? 'No email', style: AppTheme.bodySmall),
-            trailing: PopupMenuButton<String>(
-              onSelected: (value) => _handleUserAction(value, user),
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit, size: 16),
-                      SizedBox(width: 8),
-                      Text('Edit Access'),
-                    ],
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    child: Text(
+                      employee.name.substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'revoke',
-                  child: Row(
-                    children: [
-                      Icon(Icons.remove_circle, size: 16, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Revoke Access', style: TextStyle(color: Colors.red)),
-                    ],
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                employee.name,
+                                style: AppTheme.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimaryColor,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacing8,
+                                vertical: AppTheme.spacing4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                                border: Border.all(
+                                  color: AppTheme.primaryColor.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                employee.role.isNotEmpty ? employee.role : 'No role',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spacing4),
+                        Text(
+                          employee.phone.isNotEmpty ? employee.phone : 'No phone',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -103,13 +142,273 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
     );
   }
 
-  void _handleUserAction(String action, User user) {
+  void _showEmployeeActionsBottomSheet(Employee employee) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Employee info header
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    child: Text(
+                      employee.name.isNotEmpty ? employee.name[0].toUpperCase() : 'E',
+                      style: AppTheme.titleMedium.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          employee.name,
+                          style: AppTheme.titleMedium.copyWith(
+                            color: AppTheme.textPrimaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Code: ${employee.code}',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.phone,
+                              size: 16,
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              employee.phone,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (employee.email != null && employee.email!.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.email,
+                                size: 16,
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                employee.email!,
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: AppTheme.textSecondaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      border: Border.all(
+                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      employee.role.isNotEmpty ? employee.role.toUpperCase() : 'NO ROLE',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Employee stats section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            employee.permissions.length.toString(),
+                            style: AppTheme.titleMedium.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Permissions',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            employee.status,
+                            style: AppTheme.titleMedium.copyWith(
+                              color: employee.status == 'active' 
+                                  ? Colors.green 
+                                  : AppTheme.errorColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Status',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppTheme.spacing20),
+
+            // Action buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+              child: Column(
+                children: [
+                  // Edit Access Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showEditAccessBottomSheet(employee);
+                      },
+                      icon: const Icon(Icons.edit, size: 20),
+                      label: const Text('Edit Access'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: AppTheme.spacing12),
+                  
+                  // Revoke Access Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showRevokeAccessBottomSheet(employee);
+                      },
+                      icon: const Icon(Icons.remove_circle, size: 20),
+                      label: const Text('Revoke Access'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.errorColor,
+                        side: BorderSide(color: AppTheme.errorColor, width: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Bottom padding for safe area
+            const SizedBox(height: AppTheme.spacing20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleUserAction(String action, Employee employee) {
     switch (action) {
-      case 'edit':
-        _showEditAccessBottomSheet(user);
+              case 'edit':
+          _showEditAccessBottomSheet(employee);
         break;
-      case 'revoke':
-        _showRevokeAccessBottomSheet(user);
+              case 'revoke':
+          _showRevokeAccessBottomSheet(employee);
         break;
     }
   }
@@ -125,186 +424,304 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
     );
   }
 
-  void _showEditAccessBottomSheet(User user) {
-    String selectedRole = AccountAccess.roleViewer;
+  void _showEditAccessBottomSheet(Employee employee) {
+    String selectedRole = employee.role.isNotEmpty ? employee.role : AccountAccess.roleViewer;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spacing16,
-          left: AppTheme.spacing16,
-          right: AppTheme.spacing16,
-          top: AppTheme.spacing16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Container(
+          decoration: const BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondaryColor.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              'Edit ${user.name}\'s Access',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.bold,
+              
+              // Header
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing20),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      size: 32,
+                      color: AppTheme.primaryColor,
+                    ),
+                    const SizedBox(height: AppTheme.spacing12),
+                    Text(
+                      'Edit ${employee.name}\'s Access',
+                      style: AppTheme.titleMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    Text(
+                      'Update role and permissions',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            DropdownButtonFormField<String>(
-              value: selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Role',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.security),
+
+              // Form content
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedRole,
+                      decoration: InputDecoration(
+                        labelText: 'Role',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                        prefixIcon: const Icon(Icons.security),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: AccountAccess.roleViewer,
+                          child: const Text('Viewer - Read only access'),
+                        ),
+                        DropdownMenuItem(
+                          value: AccountAccess.roleAgent,
+                          child: const Text('Agent - Collect & sell milk'),
+                        ),
+                        DropdownMenuItem(
+                          value: AccountAccess.roleManager,
+                          child: const Text('Manager - Can edit data'),
+                        ),
+                        DropdownMenuItem(
+                          value: AccountAccess.roleAdmin,
+                          child: const Text('Admin - Full access'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedRole = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-              items: [
-                DropdownMenuItem(
-                  value: AccountAccess.roleViewer,
-                  child: const Text('Viewer - Read only access'),
+
+              const SizedBox(height: AppTheme.spacing24),
+
+              // Action buttons
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing24,
+                            vertical: AppTheme.spacing16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final success = await ref.read(accountAccessProvider.notifier).updateAccess(
+                            accessId: employee.accessId,
+                            role: selectedRole,
+                            permissions: _getPermissionsForRole(selectedRole),
+                          );
+                          
+                          if (success && mounted) {
+                            Navigator.of(context).pop();
+                            ref.invalidate(accountUsersProvider(widget.accountId));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${employee.name}\'s access updated successfully!'),
+                                backgroundColor: AppTheme.successColor,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing24,
+                            vertical: AppTheme.spacing16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                        ),
+                        child: const Text('Update Access'),
+                      ),
+                    ),
+                  ],
                 ),
-                DropdownMenuItem(
-                  value: AccountAccess.roleAgent,
-                  child: const Text('Agent - Collect & sell milk'),
-                ),
-                DropdownMenuItem(
-                  value: AccountAccess.roleManager,
-                  child: const Text('Manager - Can edit data'),
-                ),
-                DropdownMenuItem(
-                  value: AccountAccess.roleAdmin,
-                  child: const Text('Admin - Full access'),
-                ),
-              ],
-              onChanged: (value) => selectedRole = value!,
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: PrimaryButton(
-                    label: 'Update',
-                    onPressed: () async {
-                      final success = await ref.read(accountAccessProvider.notifier).updateAccess(
-                        accessId: 'mock_access_id',
-                        role: selectedRole,
-                        permissions: _getPermissionsForRole(selectedRole),
-                      );
-                      
-                      if (success && mounted) {
-                        Navigator.of(context).pop();
-                        ref.invalidate(accountUsersProvider(widget.accountId));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Access updated successfully!')),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-          ],
+              ),
+
+              // Bottom padding for safe area
+              const SizedBox(height: AppTheme.spacing20),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showRevokeAccessBottomSheet(User user) {
+  void _showRevokeAccessBottomSheet(Employee employee) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
         ),
-        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Handle bar
             Container(
+              margin: const EdgeInsets.only(top: 12),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppTheme.textSecondaryColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: AppTheme.spacing16),
-            Icon(
-              Icons.warning_amber_rounded,
-              size: 48,
-              color: Colors.orange[600],
-            ),
-            const SizedBox(height: AppTheme.spacing16),
-            Text(
-              'Revoke Access',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              'Are you sure you want to revoke ${user.name}\'s access?',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppTheme.spacing24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+            
+            // Warning icon and title
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing20),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 48,
+                    color: AppTheme.errorColor,
                   ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: PrimaryButton(
-                    label: 'Revoke',
-                    onPressed: () async {
-                      final success = await ref.read(accountAccessProvider.notifier).revokeAccess('mock_access_id');
-                      
-                      if (success && mounted) {
-                        Navigator.of(context).pop();
-                        ref.invalidate(accountUsersProvider(widget.accountId));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Access revoked successfully!')),
-                        );
-                      }
-                    },
+                  const SizedBox(height: AppTheme.spacing16),
+                  Text(
+                    'Revoke Access',
+                    style: AppTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppTheme.spacing12),
+                  Text(
+                    'Are you sure you want to revoke ${employee.name}\'s access?',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  Text(
+                    'This action cannot be undone.',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.errorColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: AppTheme.spacing16),
+
+            // Action buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final success = await ref.read(accountAccessProvider.notifier).revokeAccess(employee.accessId);
+                        
+                        if (success && mounted) {
+                          Navigator.of(context).pop();
+                          ref.invalidate(accountUsersProvider(widget.accountId));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${employee.name}\'s access revoked successfully!'),
+                              backgroundColor: AppTheme.successColor,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing24,
+                          vertical: AppTheme.spacing16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                      ),
+                      child: const Text('Revoke Access'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Bottom padding for safe area
+            const SizedBox(height: AppTheme.spacing20),
           ],
         ),
       ),

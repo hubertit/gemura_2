@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -23,7 +24,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title),
+                Text(
+                  title,
+                  style: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+                ),
                 Text(
                   subtitle!,
                   style: const TextStyle(
@@ -33,7 +37,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
             )
-          : Text(title),
+          : Text(
+              title,
+              style: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
+            ),
       centerTitle: centerTitle,
       backgroundColor: backgroundColor,
       elevation: 0,

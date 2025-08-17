@@ -7,6 +7,7 @@ import '../../../../shared/widgets/layout_widgets.dart';
 import '../../../sales/presentation/screens/record_sale_screen.dart';
 import '../../../sales/presentation/providers/sales_provider.dart';
 import '../../../../shared/models/sale.dart';
+import '../../../../core/providers/localization_provider.dart';
 
 class SoldMilkScreen extends ConsumerStatefulWidget {
   const SoldMilkScreen({super.key});
@@ -181,7 +182,12 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Sold Milk'),
+        title: Consumer(
+          builder: (context, ref, child) {
+            final localizationService = ref.watch(localizationServiceProvider);
+            return Text(localizationService.translate('soldMilk'));
+          },
+        ),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),

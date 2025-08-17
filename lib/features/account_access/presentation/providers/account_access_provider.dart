@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/account_access.dart';
-import '../../../../shared/models/user.dart';
+import '../../../../shared/models/employee.dart';
+import '../../../../core/services/employee_service.dart';
 
 class AccountAccessNotifier extends StateNotifier<AsyncValue<List<AccountAccess>>> {
   AccountAccessNotifier() : super(const AsyncValue.loading());
@@ -61,12 +62,9 @@ class AccountAccessNotifier extends StateNotifier<AsyncValue<List<AccountAccess>
   // Revoke access
   Future<bool> revokeAccess(String accessId) async {
     try {
-      // TODO: Implement API call to revoke access
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Mock success
-      return true;
+      return await EmployeeService().revokeEmployeeAccess(accessId);
     } catch (e) {
+      print('Revoke access error: $e');
       return false;
     }
   }
@@ -78,33 +76,26 @@ class AccountAccessNotifier extends StateNotifier<AsyncValue<List<AccountAccess>
     required Map<String, dynamic> permissions,
   }) async {
     try {
-      // TODO: Implement API call to update access
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Mock success
-      return true;
+      return await EmployeeService().updateEmployeeAccess(
+        accessId: accessId,
+        role: role,
+        permissions: permissions.values.where((p) => p == true).map((p) => p.toString()).toList(),
+      );
     } catch (e) {
+      print('Update access error: $e');
       return false;
     }
   }
 
   // Get users who have access to an account
-  Future<List<User>> getAccountUsers(String accountId) async {
-    // TODO: Implement API call to get account users
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock data
-    return [
-      User(
-        id: '1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: '',
-        role: 'user',
-        createdAt: DateTime.now(),
-        phoneNumber: '+250123456789',
-      ),
-    ];
+  Future<List<Employee>> getAccountUsers(String accountId) async {
+    try {
+      return await EmployeeService().getAccountEmployees(accountId);
+    } catch (e) {
+      print('Failed to get employees: $e');
+      // Return empty list if API fails
+      return [];
+    }
   }
 
   // Register a new employee
@@ -113,19 +104,13 @@ class AccountAccessNotifier extends StateNotifier<AsyncValue<List<AccountAccess>
     required Map<String, dynamic> accountAccess,
   }) async {
     try {
-      // TODO: Implement API call to register employee
-      // This should call the employee registration endpoint with the payload:
-      // {
-      //   "token": "{{token}}",
-      //   "user_data": userData,
-      //   "account_access": accountAccess
-      // }
-      
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Mock success
-      return true;
+      return await EmployeeService().registerEmployee(
+        userData: userData,
+        accountAccess: accountAccess,
+      );
     } catch (e) {
+      // Log error for debugging
+      print('Employee registration error: $e');
       return false;
     }
   }
@@ -144,7 +129,7 @@ final userAccountsProvider = FutureProvider.family<List<SharedAccount>, String>(
 );
 
 // Provider for account users
-final accountUsersProvider = FutureProvider.family<List<User>, String>(
+final accountUsersProvider = FutureProvider.family<List<Employee>, String>(
   (ref, accountId) async {
     final notifier = ref.read(accountAccessProvider.notifier);
     return await notifier.getAccountUsers(accountId);
