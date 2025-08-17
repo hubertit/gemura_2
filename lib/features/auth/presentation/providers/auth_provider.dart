@@ -134,7 +134,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
   Future<void> signUpWithEmailAndPassword(
     String name,
-    String email,
+    String accountName,
+    String? email,
     String phoneNumber,
     String password,
     String role,
@@ -143,19 +144,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       state = const AsyncValue.loading();
       
-      // Create registration request with default permissions for dairy business
+      // Create registration request (permissions will be set by API)
       final registrationRequest = RegistrationRequest(
         name: name,
+        accountName: accountName,
         email: email,
         phone: phoneNumber,
         password: password,
         nid: nid, // Optional field, can be null
         role: role,
-        permissions: {
-          'can_collect': true,
-          'can_add_supplier': true,
-          'can_view_reports': true,
-        },
+        permissions: {}, // API will set default permissions
       );
       
       await _authService.register(registrationRequest);

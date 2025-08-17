@@ -539,6 +539,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                   '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw • ${overview.summary.collection.transactions} txns',
                                   Icons.local_shipping,
                                   AppTheme.primaryColor,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => const CollectedMilkScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               const SizedBox(width: AppTheme.spacing8),
@@ -549,6 +556,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                   '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw • ${overview.summary.sales.transactions} txns',
                                   Icons.shopping_cart,
                                   Colors.green,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => const SoldMilkScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -563,6 +577,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                   overview.summary.suppliers.inactive,
                                   Icons.person_add,
                                   Colors.orange,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => const SuppliersListScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               const SizedBox(width: AppTheme.spacing8),
@@ -573,6 +594,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                   overview.summary.customers.inactive,
                                   Icons.business,
                                   Colors.purple,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => const CustomersListScreen(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -862,48 +890,51 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     }
   }
 
-  Widget _buildMetricCard(String title, String value, String subtitle, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: AppTheme.spacing4),
-              Text(
-                title,
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+  Widget _buildMetricCard(String title, String value, String subtitle, IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 16),
+                const SizedBox(width: AppTheme.spacing4),
+                Text(
+                  title,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              value,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textPrimaryColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
               ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            value,
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textPrimaryColor,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
             ),
-          ),
-          Text(
-            subtitle,
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondaryColor,
-              fontSize: 10,
+            Text(
+              subtitle,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+                fontSize: 10,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -911,88 +942,89 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
   Widget _buildOverviewTransactionItem(OverviewTransaction transaction) {
     final isCollection = transaction.type.toLowerCase() == 'collection';
     final statusColor = _getStatusColor(transaction.status);
-    final statusIcon = _getStatusIcon(transaction.status);
-    
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
-      padding: const EdgeInsets.all(AppTheme.spacing12),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing4),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+        border: Border.all(
+          color: AppTheme.thinBorderColor,
+          width: AppTheme.thinBorderWidth,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isCollection ? AppTheme.primaryColor.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  isCollection ? Icons.local_shipping : Icons.shopping_cart,
-                  color: isCollection ? AppTheme.primaryColor : Colors.green,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isCollection 
-                        ? (transaction.supplierAccount?.name ?? 'Unknown Supplier')
-                        : (transaction.customerAccount?.name ?? 'Unknown Customer'),
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textPrimaryColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      '${transaction.quantity.toStringAsFixed(1)} L • ${NumberFormat('#,###').format(transaction.totalAmount)} Frw',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Icon(statusIcon, color: statusColor, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        _capitalize(transaction.status),
-                        style: AppTheme.bodySmall.copyWith(
-                          color: statusColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    _formatTransactionDate(transaction.transactionAt),
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textHintColor,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spacing16,
+          vertical: AppTheme.spacing4,
+        ),
+        onTap: () => _showTransactionDetails(context, transaction),
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+          child: Icon(
+            isCollection ? Icons.arrow_downward : Icons.arrow_upward,
+            color: AppTheme.primaryColor,
+            size: 20,
           ),
-
-        ],
+        ),
+        title: Text(
+          isCollection
+            ? (transaction.supplierAccount?.name ?? 'Unknown Supplier')
+            : (transaction.customerAccount?.name ?? 'Unknown Customer'),
+          style: AppTheme.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
+        subtitle: Text(
+          _formatTransactionDate(transaction.transactionAt),
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textHintColor,
+            fontSize: 11,
+          ),
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${transaction.quantity.toStringAsFixed(1)} L',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${NumberFormat('#,###').format(transaction.totalAmount)} Frw',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: statusColor.withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                _capitalize(transaction.status).toUpperCase(),
+                style: AppTheme.bodySmall.copyWith(
+                  color: statusColor,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1089,83 +1121,234 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     );
   }
 
-  Widget _buildCombinedMetricCard(String title, int activeCount, int inactiveCount, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+  Widget _buildCombinedMetricCard(String title, int activeCount, int inactiveCount, IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 16),
+                const SizedBox(width: AppTheme.spacing4),
+                Text(
+                  title,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$activeCount',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textPrimaryColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Active',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '$inactiveCount',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'Inactive',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      child: Column(
+    );
+  }
+
+  void _showTransactionDetails(BuildContext context, OverviewTransaction transaction) {
+    final isCollection = transaction.type.toLowerCase() == 'collection';
+    final statusColor = _getStatusColor(transaction.status);
+    final statusIcon = _getStatusIcon(transaction.status);
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with icon and title
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        child: Icon(
+                          isCollection ? Icons.arrow_downward : Icons.arrow_upward,
+                          color: AppTheme.primaryColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _capitalize(transaction.type),
+                              style: AppTheme.titleMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimaryColor,
+                              ),
+                            ),
+                            Text(
+                              isCollection
+                                ? (transaction.supplierAccount?.name ?? 'Unknown Supplier')
+                                : (transaction.customerAccount?.name ?? 'Unknown Customer'),
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: statusColor.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(statusIcon, color: statusColor, size: 12),
+                            const SizedBox(width: 4),
+                            Text(
+                              _capitalize(transaction.status),
+                              style: AppTheme.bodySmall.copyWith(
+                                color: statusColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Transaction details
+                  _buildDetailRow('Quantity', '${transaction.quantity.toStringAsFixed(1)} L'),
+                  _buildDetailRow('Amount', '${NumberFormat('#,###').format(transaction.totalAmount)} Frw'),
+                  _buildDetailRow('Date', _formatTransactionDate(transaction.transactionAt)),
+                  _buildDetailRow('Time', _formatTransactionTime(DateTime.parse(transaction.transactionAt))),
+
+                ],
+              ),
+            ),
+            const SizedBox(height: AppTheme.actionSheetBottomSpacing),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: AppTheme.spacing4),
-              Text(
-                title,
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+                fontWeight: FontWeight.w500,
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: AppTheme.spacing4),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$activeCount',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textPrimaryColor,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      'Active',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textPrimaryColor,
+                fontWeight: FontWeight.w600,
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$inactiveCount',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      'Inactive',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  String _formatTransactionTime(DateTime dateTime) {
+    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -1505,7 +1688,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           ),
                         ),
                       ),
-                      _buildInfoTile(Icons.email_outlined, 'Email', user?.email ?? 'Not provided'),
+                      if (user?.email != null && user!.email!.isNotEmpty)
+                        _buildInfoTile(Icons.email_outlined, 'Email', user.email!),
                       if (user?.phoneNumber != null && user?.phoneNumber != '')
                         _buildInfoTile(Icons.phone, 'Phone', user!.phoneNumber),
                       if (user?.address != null && user?.address != '')
@@ -1920,6 +2104,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           }
           
           if (success && context.mounted) {
+            // Navigate to home tab after successful account switch
+            print('Switching to home tab...');
+            
+            // Use a small delay to ensure modal is closed and UI is ready
+            Future.delayed(const Duration(milliseconds: 100), () {
+              ref.read(tabIndexProvider.notifier).state = 0;
+              print('Tab index updated to: ${ref.read(tabIndexProvider)}');
+            });
+            
             ScaffoldMessenger.of(context).showSnackBar(
               AppTheme.successSnackBar(
                 message: 'Switched to ${account.accountName}',

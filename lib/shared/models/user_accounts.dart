@@ -46,7 +46,7 @@ class UserInfo {
   @JsonKey(name: 'name')
   final String name;
   @JsonKey(name: 'email')
-  final String email;
+  final String? email;
   @JsonKey(name: 'phone')
   final String phone;
   @JsonKey(name: 'default_account_id')
@@ -55,7 +55,7 @@ class UserInfo {
   UserInfo({
     required this.id,
     required this.name,
-    required this.email,
+    this.email,
     required this.phone,
     required this.defaultAccountId,
   });

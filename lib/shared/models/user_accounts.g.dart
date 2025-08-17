@@ -43,7 +43,7 @@ Map<String, dynamic> _$UserAccountsDataToJson(UserAccountsData instance) =>
 UserInfo _$UserInfoFromJson(Map<String, dynamic> json) => UserInfo(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
-      email: json['email'] as String,
+      email: json['email'] as String?,
       phone: json['phone'] as String,
       defaultAccountId: (json['default_account_id'] as num).toInt(),
     );

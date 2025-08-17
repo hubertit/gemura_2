@@ -1,7 +1,7 @@
 class User {
   final String id;
   final String name;
-  final String email;
+  final String? email;
   final String password;
   final String role;
   final DateTime createdAt;
@@ -19,7 +19,7 @@ class User {
   User({
     required this.id,
     required this.name,
-    required this.email,
+    this.email,
     required this.password,
     required this.role,
     required this.createdAt,
@@ -60,7 +60,7 @@ class User {
     return User(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
+      email: json['email']?.toString(),
       password: json['password']?.toString() ?? '',
       role: json['role']?.toString() ?? '',
       createdAt: json['createdAt'] != null 

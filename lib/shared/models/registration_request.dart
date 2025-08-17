@@ -1,6 +1,7 @@
 class RegistrationRequest {
   final String name;
-  final String email;
+  final String accountName;
+  final String? email;
   final String phone;
   final String password;
   final String? nid;
@@ -9,7 +10,8 @@ class RegistrationRequest {
 
   RegistrationRequest({
     required this.name,
-    required this.email,
+    required this.accountName,
+    this.email,
     required this.phone,
     required this.password,
     this.nid,
@@ -20,19 +22,21 @@ class RegistrationRequest {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'email': email,
+      'account_name': accountName,
+      if (email != null) 'email': email,
       'phone': phone,
       'password': password,
       if (nid != null) 'nid': nid,
       'role': role,
-      'permissions': permissions,
+      if (permissions.isNotEmpty) 'permissions': permissions,
     };
   }
 
   factory RegistrationRequest.fromJson(Map<String, dynamic> json) {
     return RegistrationRequest(
       name: json['name'] as String,
-      email: json['email'] as String,
+      accountName: json['account_name'] as String,
+      email: json['email'] as String?,
       phone: json['phone'] as String,
       password: json['password'] as String,
       nid: json['nid'] as String?,

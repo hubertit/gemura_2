@@ -19,6 +19,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _accountNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _nidController = TextEditingController();
@@ -33,6 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _accountNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _nidController.dispose();
@@ -52,7 +54,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       
       await ref.read(authProvider.notifier).signUpWithEmailAndPassword(
             _nameController.text.trim(),
-            _emailController.text.trim(),
+            _accountNameController.text.trim(),
+            _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
             fullPhoneNumber,
             _passwordController.text,
             _selectedRole,
@@ -186,19 +189,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: AppTheme.spacing16),
 
-                  // Email Field
+                  // Business Name Field
+                  TextFormField(
+                    controller: _accountNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Business Name',
+                      prefixIcon: Icon(Icons.business_outlined),
+                      hintText: 'e.g., MCC Gicumbi, Dairy Farm Ltd',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your business name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+
+                  // Email Field (Optional)
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
-                      labelText: 'Email',
+                      labelText: 'Email (Optional)',
                       prefixIcon: Icon(Icons.email_outlined),
+                      hintText: 'Enter your email address',
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
+                      if (value != null && value.isNotEmpty && !value.contains('@')) {
                         return 'Please enter a valid email';
                       }
                       return null;

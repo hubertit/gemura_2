@@ -45,7 +45,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _saving = true);
     await ref.read(authProvider.notifier).updateUserProfile(
       name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
+      email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       about: _aboutController.text.trim(),
       address: _addressController.text.trim(),
@@ -98,12 +98,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     icon: Icons.person_outline,
                     validator: (value) => value == null || value.trim().isEmpty ? 'Name is required' : null,
                   ),
-                  _ProfileFieldCard(
-                    label: 'Email',
-                    controller: _emailController,
-                    icon: Icons.email_outlined,
-                    validator: (value) => value == null || value.trim().isEmpty ? 'Email is required' : null,
-                  ),
+                  // Only show email field if user has an email
+                  if (user?.email != null)
+                    _ProfileFieldCard(
+                      label: 'Email',
+                      controller: _emailController,
+                      icon: Icons.email_outlined,
+                      validator: (value) {
+                        if (value != null && value.trim().isNotEmpty && !value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
                   _ProfileFieldCard(
                     label: 'Phone Number',
                     controller: _phoneController,

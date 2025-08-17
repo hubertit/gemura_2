@@ -71,7 +71,7 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
               ),
             ),
             title: Text(user.name, style: AppTheme.bodyMedium),
-            subtitle: Text(user.email, style: AppTheme.bodySmall),
+            subtitle: Text(user.email ?? 'No email', style: AppTheme.bodySmall),
             trailing: PopupMenuButton<String>(
               onSelected: (value) => _handleUserAction(value, user),
               itemBuilder: (context) => [
