@@ -12,7 +12,7 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
-
+import '../../../../../core/providers/localization_provider.dart';
 
 import '../../../../shared/models/overview.dart';
 import 'package:d_chart/d_chart.dart';
@@ -30,8 +30,6 @@ import '../../../account_access/presentation/screens/manage_account_access_scree
 import '../providers/overview_provider.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../providers/user_accounts_provider.dart';
-import '../../../auth/presentation/screens/login_screen.dart';
-import 'edit_profile_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -39,6 +37,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(tabIndexProvider);
+    final localizationService = ref.watch(localizationServiceProvider);
+    
     final tabs = [
       const _DashboardTab(), // Index 0: Home
       const WalletsScreen(), // Index 1: Ikofi
@@ -52,26 +52,26 @@ class HomeScreen extends ConsumerWidget {
         onDestinationSelected: (index) {
           ref.read(tabIndexProvider.notifier).state = index;
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Home',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard),
+            label: localizationService.translate('home'),
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: const Icon(Icons.account_balance_wallet),
             label: 'Ikofi',
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
+            icon: const Icon(Icons.chat_bubble_outline),
+            selectedIcon: const Icon(Icons.chat_bubble),
             label: 'Chats',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: localizationService.translate('profile'),
           ),
         ],
       ),
@@ -357,62 +357,68 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                   color: AppTheme.primaryColor.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: _QuickActionButton(
-                        icon: Icons.local_shipping,
-                        label: 'Collect',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const CollectedMilkScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: _QuickActionButton(
-                        icon: Icons.shopping_cart,
-                        label: 'Sell',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SoldMilkScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: _QuickActionButton(
-                        icon: Icons.person_add,
-                        label: 'Supplier',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SuppliersListScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: _QuickActionButton(
-                        icon: Icons.business,
-                        label: 'Customer',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const CustomersListScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final localizationService = ref.watch(localizationServiceProvider);
+                    
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.local_shipping,
+                            label: localizationService.translate('collect'),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const CollectedMilkScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.shopping_cart,
+                            label: localizationService.translate('sell'),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const SoldMilkScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.person_add,
+                            label: localizationService.translate('supplier'),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const SuppliersListScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.business,
+                            label: localizationService.translate('customer'),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const CustomersListScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),

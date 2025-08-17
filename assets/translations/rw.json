@@ -1,5 +1,4 @@
 {
-  "@@locale": "rw",
   "appTitle": "Gemura",
   "appDescription": "Porogaramu ya Mari",
   
@@ -100,7 +99,6 @@
   
   "language": "Ururimi",
   "english": "Icyongereza",
-  "french": "Igifaransa",
   "kinyarwanda": "Ikinyarwanda",
   
   "darkMode": "Uko byoroshye",
@@ -130,5 +128,10 @@
   "manageEmployees": "Cunga abakozi",
   "account": "Konti",
   "supportSettings": "Ubufasha & Igenamiterere",
-  "appPreferences": "Igenamiterere rya porogaramu"
+  "appPreferences": "Igenamiterere rya porogaramu",
+  
+  "sell": "Gemura",
+  "collect": "Akira",
+  "supplier": "Abagemura",
+  "customer": "Abakiriya"
 }

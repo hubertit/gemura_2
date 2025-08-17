@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -16,7 +15,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          AppLocalizations.of(context)!.language,
+          localizationService.translate('language'),
           style: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
         ),
         backgroundColor: AppTheme.surfaceColor,
@@ -29,7 +28,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppLocalizations.of(context)!.language,
+              localizationService.translate('language'),
               style: AppTheme.titleLarge.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimaryColor,
@@ -37,31 +36,31 @@ class LanguageSelectionScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Choose your preferred language',
+              'Hitamo ururimi wawe',
               style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.textSecondaryColor,
               ),
             ),
             const SizedBox(height: 24),
             
-            // English Option
+            // Kinyarwanda Option (Default)
             _LanguageOption(
-              title: AppLocalizations.of(context)!.english,
-              subtitle: 'English',
-              isSelected: isEnglish,
-              onTap: () => localizationService.setEnglish(),
-              flag: '🇺🇸',
+              title: 'Ikinyarwanda',
+              subtitle: 'Kinyarwanda',
+              isSelected: isKinyarwanda,
+              onTap: () => localizationService.setKinyarwanda(),
+              flag: '🇷🇼',
             ),
             
             const SizedBox(height: 16),
             
-            // Kinyarwanda Option
+            // English Option
             _LanguageOption(
-              title: AppLocalizations.of(context)!.kinyarwanda,
-              subtitle: 'Ikinyarwanda',
-              isSelected: isKinyarwanda,
-              onTap: () => localizationService.setKinyarwanda(),
-              flag: '🇷🇼',
+              title: localizationService.translate('english'),
+              subtitle: 'English',
+              isSelected: isEnglish,
+              onTap: () => localizationService.setEnglish(),
+              flag: '🇺🇸',
             ),
             
             const Spacer(),
@@ -86,7 +85,7 @@ class LanguageSelectionScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Language changes will be applied immediately',
+                      'Urugero rw\'ururimi ruzagaragazwa mu porogaramu yawe',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.primaryColor,
                       ),
@@ -119,61 +118,53 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isSelected 
-                ? AppTheme.primaryColor.withOpacity(0.1)
-                : AppTheme.surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected 
-                  ? AppTheme.primaryColor
-                  : AppTheme.thinBorderColor,
-              width: AppTheme.thinBorderWidth,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppTheme.primaryColor : AppTheme.thinBorderColor,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(
+              flag,
+              style: const TextStyle(fontSize: 24),
             ),
-          ),
-          child: Row(
-            children: [
-              Text(
-                flag,
-                style: const TextStyle(fontSize: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTheme.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimaryColor,
-                      ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimaryColor,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: AppTheme.primaryColor,
-                  size: 24,
-                ),
-            ],
-          ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: AppTheme.primaryColor,
+                size: 24,
+              ),
+          ],
         ),
       ),
     );
