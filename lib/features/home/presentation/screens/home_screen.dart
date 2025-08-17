@@ -1701,15 +1701,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                           ),
                                         ),
                                         if (userAccounts.data.accounts.length > 1)
-                                          TextButton(
-                                            onPressed: () => _showAccountSwitcher(context, ref, userAccounts.data.accounts),
-                                            child: Text(
-                                              'Switch',
-                                              style: AppTheme.bodySmall.copyWith(
-                                                color: AppTheme.primaryColor,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
+                                          Consumer(
+                                            builder: (context, ref, child) {
+                                              final localizationService = ref.watch(localizationServiceProvider);
+                                              return TextButton(
+                                                onPressed: () => _showAccountSwitcher(context, ref, userAccounts.data.accounts),
+                                                child: Text(
+                                                  localizationService.translate('switchAccount'),
+                                                  style: AppTheme.bodySmall.copyWith(
+                                                    color: AppTheme.primaryColor,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              );
+                                            },
                                           ),
                                       ],
                                     ),
@@ -1727,17 +1732,22 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                   width: 1,
                                 ),
                               ),
-                              child: const Row(
-                                children: [
-                                  SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text('Loading accounts...'),
-                                ],
-                              ),
+                                                              child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final localizationService = ref.watch(localizationServiceProvider);
+                                    return Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(localizationService.translate('loadingAccounts')),
+                                      ],
+                                    );
+                                  },
+                                ),
                             ),
                             error: (error, stack) => Container(
                               padding: const EdgeInsets.all(12),
@@ -1758,11 +1768,16 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: Text(
-                                      'Failed to load accounts',
-                                      style: AppTheme.bodySmall.copyWith(
-                                        color: AppTheme.errorColor,
-                                      ),
+                                    child: Consumer(
+                                      builder: (context, ref, child) {
+                                        final localizationService = ref.watch(localizationServiceProvider);
+                                        return Text(
+                                          localizationService.translate('failedToLoadAccounts'),
+                                          style: AppTheme.bodySmall.copyWith(
+                                            color: AppTheme.errorColor,
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ],
@@ -1798,12 +1813,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Contact Information',
-                          style: AppTheme.titleMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimaryColor,
-                          ),
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final localizationService = ref.watch(localizationServiceProvider);
+                            return Text(
+                              localizationService.translate('contactInformation'),
+                              style: AppTheme.titleMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimaryColor,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       if (user?.email != null && user!.email!.isNotEmpty)
@@ -1829,46 +1849,66 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Account',
-                          style: AppTheme.titleMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimaryColor,
-                          ),
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final localizationService = ref.watch(localizationServiceProvider);
+                            return Text(
+                              localizationService.translate('account'),
+                              style: AppTheme.titleMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimaryColor,
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      _buildActionTile(
-                        Icons.edit_outlined,
-                        'Edit Profile',
-                        'Update your personal information',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const EditProfileScreen(),
-                            ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.edit_outlined,
+                            localizationService.translate('editProfile'),
+                            localizationService.translate('updatePersonalInfo'),
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const EditProfileScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
-                      _buildActionTile(
-                        Icons.lock_outline,
-                        'Change Password',
-                        'Update your account password',
-                        () {
-                          // TODO: Implement change password
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.lock_outline,
+                            localizationService.translate('changePassword'),
+                            localizationService.translate('updatePassword'),
+                            () {
+                              // TODO: Implement change password
+                            },
+                          );
                         },
                       ),
-                      _buildActionTile(
-                        Icons.people,
-                        'Manage Employees',
-                        'Add and manage team members',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const ManageAccountAccessScreen(
-                                accountId: '1',
-                                accountName: 'My Farm',
-                              ),
-                            ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.people,
+                            localizationService.translate('manageEmployees'),
+                            localizationService.translate('addManageTeam'),
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const ManageAccountAccessScreen(
+                                    accountId: '1',
+                                    accountName: 'My Farm',
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -1889,47 +1929,67 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Support & Settings',
-                          style: AppTheme.titleMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimaryColor,
-                          ),
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final localizationService = ref.watch(localizationServiceProvider);
+                            return Text(
+                              localizationService.translate('supportSettings'),
+                              style: AppTheme.titleMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimaryColor,
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      _buildActionTile(
-                        Icons.settings,
-                        'Settings',
-                        'App preferences and configurations',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsScreen(),
-                            ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.settings,
+                            localizationService.translate('settings'),
+                            localizationService.translate('appPreferencesConfig'),
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const SettingsScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
-                      _buildActionTile(
-                        Icons.help_outline,
-                        'Help & Support',
-                        'Get help and contact support',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const HelpSupportScreen(),
-                            ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.help_outline,
+                            localizationService.translate('helpSupport'),
+                            localizationService.translate('getHelpContact'),
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const HelpSupportScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
-                      _buildActionTile(
-                        Icons.info_outline,
-                        'About',
-                        'App information and version',
-                        () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const AboutScreen(),
-                            ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.info_outline,
+                            localizationService.translate('about'),
+                            localizationService.translate('appInfoVersion'),
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const AboutScreen(),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -2075,12 +2135,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                   color: AppTheme.primaryColor,
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  'Switch Account',
-                  style: AppTheme.titleMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimaryColor,
-                  ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final localizationService = ref.watch(localizationServiceProvider);
+                    return Text(
+                      localizationService.translate('switchAccount'),
+                      style: AppTheme.titleMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimaryColor,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -2157,12 +2222,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                 color: AppTheme.primaryColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                'Current',
-                style: AppTheme.bodySmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final localizationService = ref.watch(localizationServiceProvider);
+                  return Text(
+                    localizationService.translate('current'),
+                    style: AppTheme.bodySmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                },
               ),
             )
           : Consumer(
@@ -2190,29 +2260,30 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           
           Navigator.pop(context);
           
-          // Show loading snackbar
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      // Show loading snackbar
+            if (context.mounted) {
+              final localizationService = ref.read(localizationServiceProvider);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text('Switching to ${account.accountName}...'),
-                  ],
+                      const SizedBox(width: 12),
+                      Text(localizationService.translate('switchingToAccount').replaceAll('{account}', account.accountName)),
+                    ],
+                  ),
+                  backgroundColor: AppTheme.primaryColor,
+                  duration: const Duration(seconds: 5), // Reduced from 10 to 5 seconds
                 ),
-                backgroundColor: AppTheme.primaryColor,
-                duration: const Duration(seconds: 5), // Reduced from 10 to 5 seconds
-              ),
-            );
-          }
+              );
+            }
           
           final success = await ref.read(userAccountsNotifierProvider.notifier).switchAccount(account.accountId);
           
@@ -2231,15 +2302,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
               print('Tab index updated to: ${ref.read(tabIndexProvider)}');
             });
             
+            final localizationService = ref.read(localizationServiceProvider);
             ScaffoldMessenger.of(context).showSnackBar(
               AppTheme.successSnackBar(
-                message: 'Switched to ${account.accountName}',
+                message: localizationService.translate('switchedToAccount').replaceAll('{account}', account.accountName),
               ),
             );
           } else if (context.mounted) {
+            final localizationService = ref.read(localizationServiceProvider);
             ScaffoldMessenger.of(context).showSnackBar(
               AppTheme.errorSnackBar(
-                message: 'Failed to switch account',
+                message: localizationService.translate('failedToSwitchAccount'),
               ),
             );
           }
@@ -2266,95 +2339,110 @@ class _AccountActionsWidget extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: Text(
-              'Account Actions',
-              style: AppTheme.titleMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimaryColor,
-              ),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final localizationService = ref.watch(localizationServiceProvider);
+                return Text(
+                  localizationService.translate('accountActions'),
+                  style: AppTheme.titleMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+                );
+              },
             ),
           ),
-          _buildActionTile(
-            Icons.logout,
-            'Sign Out',
-            'Sign out of your account',
-            () async {
-              // Show confirmation dialog
-              final shouldLogout = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: Colors.white,
-                  title: const Text('Sign Out'),
-                  content: const Text('Are you sure you want to sign out?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancel'),
+          Consumer(
+            builder: (context, ref, child) {
+              final localizationService = ref.watch(localizationServiceProvider);
+              return _buildActionTile(
+                Icons.logout,
+                localizationService.translate('signOut'),
+                localizationService.translate('signOutAccount'),
+                () async {
+                  // Show confirmation dialog
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: Colors.white,
+                      title: Text(localizationService.translate('signOut')),
+                      content: Text(localizationService.translate('signOutConfirm')),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: Text(localizationService.translate('cancel')),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: Text(localizationService.translate('signOut')),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('Sign Out'),
-                    ),
-                  ],
-                ),
-              );
-              
-              if (shouldLogout == true) {
-                // Sign out and navigate to login screen
-                await ref.read(authProvider.notifier).signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    (route) => false,
                   );
-                }
-              }
+                  
+                  if (shouldLogout == true) {
+                    // Sign out and navigate to login screen
+                    await ref.read(authProvider.notifier).signOut();
+                    if (context.mounted) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
+                  }
+                },
+              );
             },
           ),
-          _buildActionTile(
-            Icons.delete_forever,
-            'Delete Account',
-            'Permanently delete your account',
-            () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: AppTheme.surfaceColor,
-                  title: Text('Delete Account', style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor)),
-                  content: Text('Are you sure you want to delete your account? This action cannot be undone.', style: AppTheme.bodyMedium),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text('Cancel', style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryColor)),
+          Consumer(
+            builder: (context, ref, child) {
+              final localizationService = ref.watch(localizationServiceProvider);
+              return _buildActionTile(
+                Icons.delete_forever,
+                localizationService.translate('deleteAccount'),
+                localizationService.translate('permanentlyDeleteAccount'),
+                () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      backgroundColor: AppTheme.surfaceColor,
+                      title: Text(localizationService.translate('deleteAccount'), style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor)),
+                      content: Text(localizationService.translate('deleteAccountConfirm'), style: AppTheme.bodyMedium),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(localizationService.translate('cancel'), style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryColor)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: Text(localizationService.translate('delete'), style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
+                        ),
+                      ],
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text('Delete', style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
-                    ),
-                  ],
-                ),
+                  );
+                  if (confirm == true) {
+                    try {
+                      await ref.read(authProvider.notifier).deleteAccount();
+                      if (context.mounted) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          AppTheme.errorSnackBar(message: 'Error: $e'),
+                        );
+                      }
+                    }
+                  }
+                },
+                isDestructive: true,
               );
-              if (confirm == true) {
-                try {
-                  await ref.read(authProvider.notifier).deleteAccount();
-                  if (context.mounted) {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      AppTheme.errorSnackBar(message: 'Error: $e'),
-                    );
-                  }
-                }
-              }
             },
-            isDestructive: true,
           ),
         ],
       ),
