@@ -45,7 +45,7 @@ UserInfo _$UserInfoFromJson(Map<String, dynamic> json) => UserInfo(
       name: json['name'] as String,
       email: json['email'] as String?,
       phone: json['phone'] as String,
-      defaultAccountId: (json['default_account_id'] as num).toInt(),
+      defaultAccountId: (json['default_account_id'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$UserInfoToJson(UserInfo instance) => <String, dynamic>{
@@ -88,9 +88,10 @@ Map<String, dynamic> _$UserAccountToJson(UserAccount instance) =>
 
 AccountPermissions _$AccountPermissionsFromJson(Map<String, dynamic> json) =>
     AccountPermissions(
-      canCollect: json['can_collect'] as bool,
-      canAddSupplier: json['can_add_supplier'] as bool,
-      canViewReports: json['can_view_reports'] as bool,
+      canCollect: json['can_collect'] as bool?,
+      canAddSupplier: json['can_add_supplier'] as bool?,
+      canViewReports: json['can_view_reports'] as bool?,
+      canManageEmployees: json['can_manage_employees'] as bool?,
     );
 
 Map<String, dynamic> _$AccountPermissionsToJson(AccountPermissions instance) =>
@@ -98,6 +99,7 @@ Map<String, dynamic> _$AccountPermissionsToJson(AccountPermissions instance) =>
       'can_collect': instance.canCollect,
       'can_add_supplier': instance.canAddSupplier,
       'can_view_reports': instance.canViewReports,
+      'can_manage_employees': instance.canManageEmployees,
     };
 
 SwitchAccountResponse _$SwitchAccountResponseFromJson(

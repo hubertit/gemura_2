@@ -565,9 +565,15 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                             Navigator.of(context).pop();
                             ref.invalidate(accountUsersProvider(widget.accountId));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${employee.name}\'s access updated successfully!'),
-                                backgroundColor: AppTheme.successColor,
+                              AppTheme.successSnackBar(
+                                message: '✅ ${employee.name}\'s role has been updated to ${_getRoleDisplayName(selectedRole)}',
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          } else if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              AppTheme.errorSnackBar(
+                                message: '❌ Failed to update ${employee.name}\'s access. Please try again.',
                               ),
                             );
                           }
@@ -695,9 +701,15 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                           Navigator.of(context).pop();
                           ref.invalidate(accountUsersProvider(widget.accountId));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${employee.name}\'s access revoked successfully!'),
-                              backgroundColor: AppTheme.successColor,
+                            AppTheme.successSnackBar(
+                              message: '✅ ${employee.name}\'s access has been revoked from ${widget.accountName}',
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        } else if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            AppTheme.errorSnackBar(
+                              message: '❌ Failed to revoke ${employee.name}\'s access. Please try again.',
                             ),
                           );
                         }
@@ -765,6 +777,23 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
           'share': false,
           'manage_users': false,
         };
+    }
+  }
+
+  String _getRoleDisplayName(String role) {
+    switch (role) {
+      case AccountAccess.roleViewer:
+        return 'Viewer';
+      case 'umucunda':
+        return 'Umucunda';
+      case AccountAccess.roleAgent:
+        return 'Agent';
+      case AccountAccess.roleManager:
+        return 'Manager';
+      case AccountAccess.roleAdmin:
+        return 'Admin';
+      default:
+        return 'Employee';
     }
   }
 }

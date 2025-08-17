@@ -339,36 +339,94 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
     final selectedPermissions = _getSelectedPermissions();
     if (selectedPermissions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one permission')),
+        AppTheme.errorSnackBar(
+          message: 'Please select at least one permission for the employee',
+        ),
       );
       return;
     }
 
-    final success = await ref.read(accountAccessProvider.notifier).registerEmployee(
-      userData: {
-        'name': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'nid': _nidController.text.trim(),
-      },
-      accountAccess: {
-        'account_id': int.parse(widget.accountId),
-        'role': _selectedRole,
-        'permissions': selectedPermissions,
-        'set_as_default': false,
-      },
+    // Show loading state
+    ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.infoSnackBar(
+        message: 'Adding employee to ${widget.accountName}...',
+        duration: const Duration(seconds: 2),
+      ),
     );
 
-    if (success && mounted) {
-      Navigator.of(context).pop();
-      ref.invalidate(accountUsersProvider(widget.accountId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Employee registered successfully!')),
+    try {
+      final success = await ref.read(accountAccessProvider.notifier).registerEmployee(
+        userData: {
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'nid': _nidController.text.trim(),
+        },
+        accountAccess: {
+          'account_id': int.parse(widget.accountId),
+          'role': _selectedRole,
+          'permissions': selectedPermissions,
+          'set_as_default': false,
+        },
       );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to register employee. Please try again.')),
-      );
+
+      if (success && mounted) {
+        Navigator.of(context).pop();
+        ref.invalidate(accountUsersProvider(widget.accountId));
+        
+        // Show success message with employee details
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar(
+            message: '✅ ${_nameController.text.trim()} has been successfully added as ${_getRoleDisplayName(_selectedRole)} to ${widget.accountName}',
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(
+            message: '❌ Failed to add employee. Please check your connection and try again.',
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = '❌ Failed to add employee';
+        
+        // Provide more specific error messages based on the exception
+        if (e.toString().contains('phone') || e.toString().contains('email')) {
+          errorMessage = '❌ An employee with this phone number or email already exists';
+        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+          errorMessage = '❌ Network error. Please check your connection and try again';
+        } else if (e.toString().contains('unauthorized') || e.toString().contains('403')) {
+          errorMessage = '❌ You don\'t have permission to add employees to this account';
+        } else if (e.toString().contains('validation')) {
+          errorMessage = '❌ Please check the information provided and try again';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(
+            message: errorMessage,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  String _getRoleDisplayName(String role) {
+    switch (role) {
+      case AccountAccess.roleViewer:
+        return 'Viewer';
+      case 'umucunda':
+        return 'Umucunda';
+      case AccountAccess.roleAgent:
+        return 'Agent';
+      case AccountAccess.roleManager:
+        return 'Manager';
+      case AccountAccess.roleAdmin:
+        return 'Admin';
+      default:
+        return 'Employee';
     }
   }
 }

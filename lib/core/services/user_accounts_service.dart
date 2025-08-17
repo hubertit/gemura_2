@@ -45,6 +45,9 @@ class UserAccountsService {
         throw Exception('No authentication token available');
       }
 
+      print('🔄 Switching to account ID: $accountId');
+      print('🌐 API URL: ${AppConfig.apiBaseUrl}/accounts/switch');
+
       final response = await AuthenticatedDioService.instance.post(
         '/accounts/switch',
         data: {
@@ -53,10 +56,14 @@ class UserAccountsService {
         },
       );
 
+      print('✅ Switch account response: ${response.data}');
       return SwitchAccountResponse.fromJson(response.data);
     } on DioException catch (e) {
+      print('❌ Switch account DioException: ${e.message}');
+      print('❌ Response: ${e.response?.data}');
       throw _handleDioError(e);
     } catch (e) {
+      print('❌ Switch account Exception: $e');
       throw Exception('Failed to switch account: $e');
     }
   }

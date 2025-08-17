@@ -2285,34 +2285,50 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
               );
             }
           
-          final success = await ref.read(userAccountsNotifierProvider.notifier).switchAccount(account.accountId);
-          
-          // Dismiss loading snackbar
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          }
-          
-          if (success && context.mounted) {
-            // Navigate to home tab after successful account switch
-            print('Switching to home tab...');
+          try {
+            final success = await ref.read(userAccountsNotifierProvider.notifier).switchAccount(account.accountId);
             
-            // Use a small delay to ensure modal is closed and UI is ready
-            Future.delayed(const Duration(milliseconds: 100), () {
-              ref.read(tabIndexProvider.notifier).state = 0;
-              print('Tab index updated to: ${ref.read(tabIndexProvider)}');
-            });
+            // Dismiss loading snackbar
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            }
             
-            final localizationService = ref.read(localizationServiceProvider);
-            ScaffoldMessenger.of(context).showSnackBar(
-              AppTheme.successSnackBar(
-                message: localizationService.translate('switchedToAccount').replaceAll('{account}', account.accountName),
-              ),
-            );
-          } else if (context.mounted) {
+            if (success && context.mounted) {
+              // Navigate to home tab after successful account switch
+              print('Switching to home tab...');
+              
+              // Use a small delay to ensure modal is closed and UI is ready
+              Future.delayed(const Duration(milliseconds: 100), () {
+                ref.read(tabIndexProvider.notifier).state = 0;
+                print('Tab index updated to: ${ref.read(tabIndexProvider)}');
+              });
+              
+              final localizationService = ref.read(localizationServiceProvider);
+              ScaffoldMessenger.of(context).showSnackBar(
+                AppTheme.successSnackBar(
+                  message: localizationService.translate('switchedToAccount').replaceAll('{account}', account.accountName),
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            } else if (context.mounted) {
+              final localizationService = ref.read(localizationServiceProvider);
+              ScaffoldMessenger.of(context).showSnackBar(
+                AppTheme.errorSnackBar(
+                  message: localizationService.translate('failedToSwitchAccount'),
+                ),
+              );
+            }
+          } catch (e) {
+            // Dismiss loading snackbar
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            }
+            
+            print('Switch account error: $e');
             final localizationService = ref.read(localizationServiceProvider);
             ScaffoldMessenger.of(context).showSnackBar(
               AppTheme.errorSnackBar(
-                message: localizationService.translate('failedToSwitchAccount'),
+                message: '❌ ${localizationService.translate('failedToSwitchAccount')}',
               ),
             );
           }

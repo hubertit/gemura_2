@@ -50,14 +50,14 @@ class UserInfo {
   @JsonKey(name: 'phone')
   final String phone;
   @JsonKey(name: 'default_account_id')
-  final int defaultAccountId;
+  final int? defaultAccountId;
 
   UserInfo({
     required this.id,
     required this.name,
     this.email,
     required this.phone,
-    required this.defaultAccountId,
+    this.defaultAccountId,
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) =>
@@ -112,16 +112,19 @@ class UserAccount {
 @JsonSerializable()
 class AccountPermissions {
   @JsonKey(name: 'can_collect')
-  final bool canCollect;
+  final bool? canCollect;
   @JsonKey(name: 'can_add_supplier')
-  final bool canAddSupplier;
+  final bool? canAddSupplier;
   @JsonKey(name: 'can_view_reports')
-  final bool canViewReports;
+  final bool? canViewReports;
+  @JsonKey(name: 'can_manage_employees')
+  final bool? canManageEmployees;
 
   AccountPermissions({
-    required this.canCollect,
-    required this.canAddSupplier,
-    required this.canViewReports,
+    this.canCollect,
+    this.canAddSupplier,
+    this.canViewReports,
+    this.canManageEmployees,
   });
 
   factory AccountPermissions.fromJson(Map<String, dynamic> json) =>

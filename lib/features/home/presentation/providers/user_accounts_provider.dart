@@ -42,22 +42,28 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
     
     _isSwitching = true;
     try {
-      // Only make the switch account API call
+      print('🔄 Switching to account ID: $accountId');
+      
+      // Make the switch account API call
       final response = await _service.switchAccount(accountId);
       
       if (response.code == 200) {
-        // Update accounts first for immediate UI feedback
+        print('✅ Account switch API successful');
+        
+        // Update accounts for immediate UI feedback
         await fetchUserAccounts();
         
-        // Then refresh profile in background
+        // Refresh profile in background
         _ref.read(authProvider.notifier).refreshProfile();
         
+        print('✅ Account switch completed successfully');
         return true;
+      } else {
+        print('❌ Account switch API returned code: ${response.code}');
+        return false;
       }
-      
-      return false;
     } catch (error) {
-      print('Switch account error: $error');
+      print('❌ Switch account error: $error');
       return false;
     } finally {
       _isSwitching = false;
