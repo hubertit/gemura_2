@@ -567,7 +567,6 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                             ScaffoldMessenger.of(context).showSnackBar(
                               AppTheme.successSnackBar(
                                 message: '✅ ${employee.name}\'s role has been updated to ${_getRoleDisplayName(selectedRole)}',
-                                duration: const Duration(seconds: 3),
                               ),
                             );
                           } else if (mounted) {
@@ -703,7 +702,6 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                           ScaffoldMessenger.of(context).showSnackBar(
                             AppTheme.successSnackBar(
                               message: '✅ ${employee.name}\'s access has been revoked from ${widget.accountName}',
-                              duration: const Duration(seconds: 4),
                             ),
                           );
                         } else if (mounted) {

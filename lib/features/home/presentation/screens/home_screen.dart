@@ -2307,7 +2307,6 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
               ScaffoldMessenger.of(context).showSnackBar(
                 AppTheme.successSnackBar(
                   message: localizationService.translate('switchedToAccount').replaceAll('{account}', account.accountName),
-                  duration: const Duration(seconds: 3),
                 ),
               );
             } else if (context.mounted) {

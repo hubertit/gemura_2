@@ -347,12 +347,11 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
     }
 
     // Show loading state
-    ScaffoldMessenger.of(context).showSnackBar(
-      AppTheme.infoSnackBar(
-        message: 'Adding employee to ${widget.accountName}...',
-        duration: const Duration(seconds: 2),
-      ),
-    );
+          ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.infoSnackBar(
+          message: 'Adding employee to ${widget.accountName}...',
+        ),
+      );
 
     try {
       final success = await ref.read(accountAccessProvider.notifier).registerEmployee(
@@ -378,7 +377,6 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           AppTheme.successSnackBar(
             message: '✅ ${_nameController.text.trim()} has been successfully added as ${_getRoleDisplayName(_selectedRole)} to ${widget.accountName}',
-            duration: const Duration(seconds: 4),
           ),
         );
       } else if (mounted) {
@@ -406,7 +404,6 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           AppTheme.errorSnackBar(
             message: errorMessage,
-            duration: const Duration(seconds: 5),
           ),
         );
       }
