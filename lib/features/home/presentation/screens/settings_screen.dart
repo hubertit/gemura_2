@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'edit_profile_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../settings/presentation/screens/language_selection_screen.dart';
 
 final notificationsEnabledProvider = StateProvider<bool>((ref) => true);
 
@@ -12,7 +14,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(AppLocalizations.of(context)!.settings),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -31,7 +33,7 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.person_outline),
-                  title: Text('Edit Profile', style: AppTheme.bodyMedium),
+                  title: Text(AppLocalizations.of(context)!.editProfile, style: AppTheme.bodyMedium),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.of(context).push(
@@ -43,7 +45,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.lock_outline),
-                  title: Text('Change Password', style: AppTheme.bodyMedium),
+                  title: Text(AppLocalizations.of(context)!.changePassword, style: AppTheme.bodyMedium),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     // TODO: Implement ChangePasswordScreen
@@ -62,7 +64,7 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
-                  title: Text('Notifications', style: AppTheme.bodyMedium),
+                  title: Text(AppLocalizations.of(context)!.notifications, style: AppTheme.bodyMedium),
                   trailing: Consumer(
                     builder: (context, ref, _) {
                       final enabled = ref.watch(notificationsEnabledProvider);
@@ -72,6 +74,18 @@ class SettingsScreen extends ConsumerWidget {
                       );
                     },
                   ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: Text(AppLocalizations.of(context)!.language, style: AppTheme.bodyMedium),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LanguageSelectionScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -83,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             child: ListTile(
               leading: const Icon(Icons.info_outline),
-              title: Text('About App', style: AppTheme.bodyMedium),
+              title: Text(AppLocalizations.of(context)!.about, style: AppTheme.bodyMedium),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 showAboutDialog(
@@ -103,7 +117,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             child: ListTile(
               leading: Icon(Icons.logout, color: AppTheme.errorColor),
-              title: Text('Logout', style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
+              title: Text(AppLocalizations.of(context)!.logout, style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
               onTap: () async {
                 // TODO: Implement logout logic
               },
