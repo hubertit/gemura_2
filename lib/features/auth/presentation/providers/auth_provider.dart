@@ -299,4 +299,20 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       return false;
     }
   }
+
+  Future<void> refreshProfile() async {
+    try {
+      // Force refresh from API, ignore cache
+      final profileResponse = await _authService.refreshProfile();
+      if (profileResponse['data'] != null) {
+        final updatedUser = User.fromJson(profileResponse['data']);
+        // Force state update to trigger UI rebuild
+        state = AsyncValue.data(updatedUser);
+        print('Profile refreshed: ${updatedUser.name} - ${updatedUser.role}');
+      }
+    } catch (e) {
+      // If refresh fails, keep current user data but log the error
+      print('Failed to refresh profile: $e');
+    }
+  }
 } 

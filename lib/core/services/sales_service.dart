@@ -24,7 +24,7 @@ class SalesService {
       }
       
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/sales/sales',
+        '/sales/sales',
         data: requestData,
       );
 
@@ -72,7 +72,7 @@ class SalesService {
       final token = SecureStorageService.getAuthToken();
       
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/sales/sell',
+        '/sales/sell',
         data: {
           'token': token,
           'customer_account_code': customerAccountCode,
@@ -113,7 +113,7 @@ class SalesService {
       final token = SecureStorageService.getAuthToken();
       
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/sales/update',
+        '/sales/update',
         data: {
           'token': token,
           'sale_id': saleId,
@@ -158,7 +158,7 @@ class SalesService {
       final token = SecureStorageService.getAuthToken();
       
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/sales/cancel',
+        '/sales/cancel',
         data: {
           'token': token,
           'sale_id': saleId,

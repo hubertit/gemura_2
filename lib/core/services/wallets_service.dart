@@ -20,7 +20,7 @@ class WalletsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/wallets/get',
+        '/wallets/get',
         data: {
           'token': token,
         },
@@ -77,7 +77,7 @@ class WalletsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/wallets/create',
+        '/wallets/create',
         data: {
           'token': token,
           'name': name,
@@ -134,7 +134,7 @@ class WalletsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/wallets/details',
+        '/wallets/details',
         data: {
           'token': token,
           'wallet_code': walletCode,

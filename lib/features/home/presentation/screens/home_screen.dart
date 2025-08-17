@@ -28,6 +28,10 @@ import '../../../suppliers/presentation/screens/collected_milk_screen.dart';
 import '../../../customers/presentation/screens/sold_milk_screen.dart';
 import '../../../account_access/presentation/screens/manage_account_access_screen.dart';
 import '../providers/overview_provider.dart';
+import '../../../../shared/models/user_accounts.dart';
+import '../providers/user_accounts_provider.dart';
+import '../../../auth/presentation/screens/login_screen.dart';
+import 'edit_profile_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -1221,11 +1225,25 @@ class _WalletsTab extends StatelessWidget {
     return const Center(child: Text('Wallets'));
   }
 }
-class ProfileTab extends ConsumerWidget {
+class ProfileTab extends ConsumerStatefulWidget {
   const ProfileTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends ConsumerState<ProfileTab> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize user accounts data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(userAccountsNotifierProvider.notifier).fetchUserAccounts();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     return authState.when(
       data: (user) {
@@ -1304,48 +1322,153 @@ class ProfileTab extends ConsumerWidget {
                       // User Name
                       Text(
                         user?.name ?? 'User Name',
-                        style: AppTheme.titleMedium.copyWith(
-                          fontWeight: FontWeight.bold,
+                        style: AppTheme.headlineLarge.copyWith(
+                          fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimaryColor,
-                          fontSize: 20,
+                          fontSize: 24,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 4),
-                      // User Role
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          user?.role ?? 'User',
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Account Information
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.textSecondaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.textSecondaryColor.withOpacity(0.3),
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Text(
-                          'Account: ${user?.accountCode ?? 'N/A'}',
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.textSecondaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                      // Account Switcher
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final userAccountsState = ref.watch(userAccountsNotifierProvider);
+                          
+                          return userAccountsState.when(
+                            data: (userAccounts) {
+                              if (userAccounts == null || userAccounts.data.accounts.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+                              
+                              final currentAccount = userAccounts.data.accounts.firstWhere(
+                                (account) => account.isDefault,
+                                orElse: () => userAccounts.data.accounts.first,
+                              );
+                              
+                              return Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppTheme.primaryColor.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.account_balance,
+                                          size: 16,
+                                          color: AppTheme.primaryColor,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Current Account',
+                                          style: AppTheme.bodySmall.copyWith(
+                                            color: AppTheme.textSecondaryColor,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                currentAccount.accountName,
+                                                style: AppTheme.bodyMedium.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppTheme.textPrimaryColor,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Role: ${currentAccount.role}',
+                                                style: AppTheme.bodySmall.copyWith(
+                                                  color: AppTheme.textSecondaryColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (userAccounts.data.accounts.length > 1)
+                                          TextButton(
+                                            onPressed: () => _showAccountSwitcher(context, ref, userAccounts.data.accounts),
+                                            child: Text(
+                                              'Switch',
+                                              style: AppTheme.bodySmall.copyWith(
+                                                color: AppTheme.primaryColor,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            loading: () => Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppTheme.primaryColor.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Row(
+                                children: [
+                                  SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Loading accounts...'),
+                                ],
+                              ),
+                            ),
+                            error: (error, stack) => Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.errorColor.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppTheme.errorColor.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 16,
+                                    color: AppTheme.errorColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Failed to load accounts',
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.errorColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       if (user?.about != null && user?.about != '')
                         Padding(
@@ -1356,6 +1479,7 @@ class ProfileTab extends ConsumerWidget {
                             textAlign: TextAlign.center,
                           ),
                         ),
+
                     ],
                   ),
                 ),
@@ -1375,10 +1499,9 @@ class ProfileTab extends ConsumerWidget {
                         padding: const EdgeInsets.all(16),
                         child: Text(
                           'Contact Information',
-                          style: AppTheme.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
+                          style: AppTheme.titleMedium.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimaryColor,
-                            fontSize: 16,
                           ),
                         ),
                       ),
@@ -1406,12 +1529,23 @@ class ProfileTab extends ConsumerWidget {
                         padding: const EdgeInsets.all(16),
                         child: Text(
                           'Account',
-                          style: AppTheme.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
+                          style: AppTheme.titleMedium.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimaryColor,
-                            fontSize: 16,
                           ),
                         ),
+                      ),
+                      _buildActionTile(
+                        Icons.edit_outlined,
+                        'Edit Profile',
+                        'Update your personal information',
+                        () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const EditProfileScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _buildActionTile(
                         Icons.lock_outline,
@@ -1421,7 +1555,6 @@ class ProfileTab extends ConsumerWidget {
                           // TODO: Implement change password
                         },
                       ),
-
                       _buildActionTile(
                         Icons.people,
                         'Manage Employees',
@@ -1437,7 +1570,6 @@ class ProfileTab extends ConsumerWidget {
                           );
                         },
                       ),
-
                     ],
                   ),
                 ),
@@ -1457,10 +1589,9 @@ class ProfileTab extends ConsumerWidget {
                         padding: const EdgeInsets.all(16),
                         child: Text(
                           'Support & Settings',
-                          style: AppTheme.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
+                          style: AppTheme.titleMedium.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimaryColor,
-                            fontSize: 16,
                           ),
                         ),
                       ),
@@ -1504,6 +1635,9 @@ class ProfileTab extends ConsumerWidget {
                   ),
                 ),
 
+                const SizedBox(height: 24),
+                // Account Actions Section (Logout & Delete)
+                _AccountActionsWidget(),
                 const SizedBox(height: 24),
               ],
             ),
@@ -1567,7 +1701,7 @@ class ProfileTab extends ConsumerWidget {
       title: Text(
         title,
         style: AppTheme.bodyMedium.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
           color: AppTheme.textPrimaryColor,
         ),
       ),
@@ -1575,6 +1709,7 @@ class ProfileTab extends ConsumerWidget {
         subtitle,
         style: AppTheme.bodySmall.copyWith(
           color: AppTheme.textSecondaryColor,
+          fontWeight: FontWeight.w400,
         ),
       ),
     );
@@ -1599,7 +1734,7 @@ class ProfileTab extends ConsumerWidget {
       title: Text(
         title,
         style: AppTheme.bodyMedium.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
           color: isDestructive ? AppTheme.errorColor : AppTheme.textPrimaryColor,
         ),
       ),
@@ -1607,6 +1742,342 @@ class ProfileTab extends ConsumerWidget {
         subtitle,
         style: AppTheme.bodySmall.copyWith(
           color: AppTheme.textSecondaryColor,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppTheme.textSecondaryColor,
+      ),
+      onTap: onTap,
+    );
+  }
+
+  void _showAccountSwitcher(BuildContext context, WidgetRef ref, List<UserAccount> accounts) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.account_balance,
+                  color: AppTheme.primaryColor,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Switch Account',
+                  style: AppTheme.titleMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ...accounts.map((account) => _buildAccountOption(context, ref, account)),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAccountOption(BuildContext context, WidgetRef ref, UserAccount account) {
+    final isCurrentAccount = account.isDefault;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isCurrentAccount 
+          ? AppTheme.primaryColor.withOpacity(0.1)
+          : AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isCurrentAccount 
+            ? AppTheme.primaryColor.withOpacity(0.3)
+            : AppTheme.thinBorderColor,
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isCurrentAccount 
+              ? AppTheme.primaryColor
+              : AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.account_balance,
+            color: isCurrentAccount ? Colors.white : AppTheme.primaryColor,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          account.accountName,
+          style: AppTheme.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              account.accountCode,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            Text(
+              'Role: ${account.role}',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ],
+        ),
+        trailing: isCurrentAccount 
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Current',
+                style: AppTheme.bodySmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : Consumer(
+              builder: (context, ref, child) {
+                final isSwitching = ref.watch(userAccountsNotifierProvider.notifier).isSwitching;
+                return isSwitching
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.textSecondaryColor,
+                    );
+              },
+            ),
+        onTap: isCurrentAccount ? null : () async {
+          // Check if already switching
+          final isSwitching = ref.read(userAccountsNotifierProvider.notifier).isSwitching;
+          if (isSwitching) return;
+          
+          Navigator.pop(context);
+          
+          // Show loading snackbar
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Switching to ${account.accountName}...'),
+                  ],
+                ),
+                backgroundColor: AppTheme.primaryColor,
+                duration: const Duration(seconds: 5), // Reduced from 10 to 5 seconds
+              ),
+            );
+          }
+          
+          final success = await ref.read(userAccountsNotifierProvider.notifier).switchAccount(account.accountId);
+          
+          // Dismiss loading snackbar
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          }
+          
+          if (success && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              AppTheme.successSnackBar(
+                message: 'Switched to ${account.accountName}',
+              ),
+            );
+          } else if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              AppTheme.errorSnackBar(
+                message: 'Failed to switch account',
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _AccountActionsWidget extends ConsumerWidget {
+  const _AccountActionsWidget();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Account Actions',
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimaryColor,
+              ),
+            ),
+          ),
+          _buildActionTile(
+            Icons.logout,
+            'Sign Out',
+            'Sign out of your account',
+            () async {
+              // Show confirmation dialog
+              final shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: Colors.white,
+                  title: const Text('Sign Out'),
+                  content: const Text('Are you sure you want to sign out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Sign Out'),
+                    ),
+                  ],
+                ),
+              );
+              
+              if (shouldLogout == true) {
+                // Sign out and navigate to login screen
+                await ref.read(authProvider.notifier).signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              }
+            },
+          ),
+          _buildActionTile(
+            Icons.delete_forever,
+            'Delete Account',
+            'Permanently delete your account',
+            () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: AppTheme.surfaceColor,
+                  title: Text('Delete Account', style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor)),
+                  content: Text('Are you sure you want to delete your account? This action cannot be undone.', style: AppTheme.bodyMedium),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text('Cancel', style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryColor)),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text('Delete', style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                try {
+                  await ref.read(authProvider.notifier).deleteAccount();
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      AppTheme.errorSnackBar(message: 'Error: $e'),
+                    );
+                  }
+                }
+              }
+            },
+            isDestructive: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionTile(IconData icon, String title, String subtitle, VoidCallback onTap, {bool isDestructive = false}) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isDestructive 
+            ? AppTheme.errorColor.withOpacity(0.1)
+            : AppTheme.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: isDestructive ? AppTheme.errorColor : AppTheme.primaryColor,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        title,
+        style: AppTheme.bodyMedium.copyWith(
+          fontWeight: FontWeight.w500,
+          color: isDestructive ? AppTheme.errorColor : AppTheme.textPrimaryColor,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTheme.bodySmall.copyWith(
+          color: AppTheme.textSecondaryColor,
+          fontWeight: FontWeight.w400,
         ),
       ),
       trailing: const Icon(

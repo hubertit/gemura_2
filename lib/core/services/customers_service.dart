@@ -20,7 +20,7 @@ class CustomersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/customers/get',
+        '/customers/get',
         data: {
           'token': token,
         },
@@ -85,7 +85,7 @@ class CustomersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/customers/create',
+        '/customers/create',
         data: {
           'token': token,
           'name': name,
@@ -144,7 +144,7 @@ class CustomersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/customers/details',
+        '/customers/details',
         data: {
           'token': token,
           'customer_id': customerId,
@@ -199,7 +199,7 @@ class CustomersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/customers/update',
+        '/customers/update',
         data: {
           'token': token,
           'relation_id': relationId,
@@ -256,7 +256,7 @@ class CustomersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/customers/delete',
+        '/customers/delete',
         data: {
           'token': token,
           'relationship_id': relationshipId,

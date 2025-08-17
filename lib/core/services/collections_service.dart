@@ -20,7 +20,7 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/get',
+        '/collections/get',
         data: {
           'token': token,
         },
@@ -127,7 +127,7 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/get',
+        '/collections/get',
         data: {
           'token': token,
           'filters': filters,
@@ -199,7 +199,7 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/create',
+        '/collections/create',
         data: {
           'token': token,
           'supplier_account_code': supplierAccountCode,
@@ -275,7 +275,7 @@ class CollectionsService {
       if (notes != null) updateData['notes'] = notes;
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/update',
+        '/collections/update',
         data: updateData,
       );
 
@@ -328,7 +328,7 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/cancel',
+        '/collections/cancel',
         data: {
           'token': token,
           'collection_id': collectionId,
@@ -384,7 +384,7 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/delete',
+        '/collections/delete',
         data: {
           'token': token,
           'collection_id': collectionId,
@@ -436,7 +436,7 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/collections/stats',
+        '/collections/stats',
         data: {
           'token': token,
         },

@@ -34,7 +34,7 @@ class OverviewService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/stats/overview',
+        '/stats/overview',
         data: requestData,
       );
 

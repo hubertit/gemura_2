@@ -184,6 +184,33 @@ class AuthService {
     }
   }
 
+  /// Force refresh user profile from API (ignores cache)
+  Future<Map<String, dynamic>> refreshProfile() async {
+    try {
+      // Always fetch from API, ignore cache
+      final response = await _authenticatedDio.get(
+        AppConfig.authEndpoint + '/profile',
+        options: Options(
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
+      
+      // Cache the fresh profile data
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        await SecureStorageService.saveUserData(response.data['data']);
+      }
+      
+      return response.data;
+    } on DioException catch (e) {
+      print('Refresh profile DioException: ${e.message}');
+      throw _handleDioError(e);
+    } catch (e) {
+      print('Refresh profile error: $e');
+      throw Exception('Refresh profile failed: $e');
+    }
+  }
+
   /// Update user profile
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> profileData) async {
     try {

@@ -20,7 +20,7 @@ class SuppliersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/suppliers/get',
+        '/suppliers/get',
         data: {
           'token': token,
         },
@@ -85,7 +85,7 @@ class SuppliersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/suppliers/create',
+        '/suppliers/create',
         data: {
           'token': token,
           'name': name,
@@ -144,7 +144,7 @@ class SuppliersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/suppliers/details',
+        '/suppliers/details',
         data: {
           'token': token,
           'supplier_id': supplierId,
@@ -199,7 +199,7 @@ class SuppliersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/suppliers/update',
+        '/suppliers/update',
         data: {
           'token': token,
           'relation_id': relationId,
@@ -256,7 +256,7 @@ class SuppliersService {
       }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/suppliers/delete',
+        '/suppliers/delete',
         data: {
           'token': token,
           'relationship_id': relationshipId,
