@@ -8,8 +8,15 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/primary_button.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
-  final String email;
-  const ResetPasswordScreen({super.key, required this.email});
+  final int userId;
+  final String? phone;
+  final String? email;
+  const ResetPasswordScreen({
+    super.key, 
+    required this.userId,
+    this.phone,
+    this.email,
+  });
 
   @override
   ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -35,7 +42,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     });
     try {
       await ref.read(authProvider.notifier).resetPasswordWithCode(
-        widget.email,
+        widget.userId,
         _codeController.text.trim(),
         _passwordController.text,
       );
@@ -98,10 +105,21 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Enter the code sent to your email and your new password.',
+                  'Enter the code sent to your ${widget.phone != null ? 'phone' : 'email'} and your new password.',
                   style: Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
+                if (widget.phone != null || widget.email != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      widget.phone ?? widget.email ?? '',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 const SizedBox(height: AppTheme.spacing32),
                 TextFormField(
                   controller: _codeController,

@@ -177,38 +177,23 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     }
   }
 
-  Future<void> resetPassword(String email) async {
-    try {
-      await _authService.forgotPassword(email);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   Future<String?> getUserRole() async {
     final user = state.value;
     return user?.role;
   }
 
-  Future<void> sendResetCode(String email) async {
+  Future<Map<String, dynamic>> requestPasswordReset({String? phone, String? email}) async {
     try {
-      await _authService.forgotPassword(email);
+      final response = await _authService.requestPasswordReset(phone: phone, email: email);
+      return response;
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> requestPasswordReset(String email) async {
+  Future<void> resetPasswordWithCode(int userId, String code, String newPassword) async {
     try {
-      await _authService.forgotPassword(email);
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<void> resetPasswordWithCode(String email, String code, String newPassword) async {
-    try {
-      await _authService.resetPassword(code, newPassword);
+      await _authService.resetPasswordWithCode(userId, code, newPassword);
     } catch (e) {
       rethrow;
     }

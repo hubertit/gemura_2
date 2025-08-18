@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:country_picker/country_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'reset_password_screen.dart';
@@ -17,32 +18,113 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _isLoading = false;
-  final bool _codeSent = false;
+  bool _codeSent = false;
   final bool _canResend = false;
   String? _error;
+  int? _userId;
+  bool _isPhoneReset = true; // Toggle between email and phone reset (default to phone)
+  
+  // Country picker for phone reset
+  Country _selectedCountry = Country(
+    phoneCode: '250',
+    countryCode: 'RW',
+    e164Sc: 0,
+    geographic: true,
+    level: 1,
+    name: 'Rwanda',
+    example: '250123456789',
+    displayName: 'Rwanda (RW) [+250]',
+    displayNameNoCountryCode: 'Rwanda (RW)',
+    e164Key: '250-RW-0',
+  );
+
+  void _showCountryPicker() {
+    showCountryPicker(
+      context: context,
+      showPhoneCode: true,
+      countryListTheme: CountryListThemeData(
+        flagSize: 25,
+        backgroundColor: AppTheme.backgroundColor,
+        textStyle: Theme.of(context).textTheme.bodyLarge!,
+        bottomSheetHeight: 500,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20.0),
+          topRight: Radius.circular(20.0),
+        ),
+        inputDecoration: InputDecoration(
+          labelText: 'Search',
+          hintText: 'Start typing to search',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: const Color(0xFF8C98A8).withOpacity(0.2),
+            ),
+          ),
+        ),
+      ),
+      onSelect: (Country country) {
+        setState(() {
+          _selectedCountry = country;
+        });
+      },
+    );
+  }
 
   Future<void> _sendCode() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    String phone = '';
+    String email = '';
+    
+    if (_isPhoneReset) {
+      phone = '+${_selectedCountry.phoneCode}${_phoneController.text.trim()}';
+    } else {
+      email = _emailController.text.trim();
+    }
+    
+    if (phone.isEmpty && email.isEmpty) {
+      setState(() {
+        _error = 'Please enter either phone number or email';
+      });
+      return;
+    }
+    
     setState(() {
       _isLoading = true;
       _error = null;
     });
+    
     try {
-      await ref.read(authProvider.notifier).requestPasswordReset(_emailController.text.trim());
-      if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-        AppTheme.successSnackBar(message: 'Reset code sent to email.'),
+      final response = await ref.read(authProvider.notifier).requestPasswordReset(
+        phone: phone.isNotEmpty ? phone : null,
+        email: email.isNotEmpty ? email : null,
       );
+      
+      if (mounted) {
+        setState(() {
+          _codeSent = true;
+          _userId = response['data']['user_id'];
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.successSnackBar(message: 'Reset code sent successfully.'),
+        );
+        
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => ResetPasswordScreen(email: _emailController.text.trim()),
+            builder: (context) => ResetPasswordScreen(
+              userId: _userId!,
+              phone: phone.isNotEmpty ? phone : null,
+              email: email.isNotEmpty ? email : null,
+            ),
           ),
         );
       }
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = e.toString().replaceFirst('Exception: ', '');
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -74,28 +156,210 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: AppTheme.spacing8),
                 Text(
-                  "Enter your email and we'll send you a reset code.",
+                  "Enter your phone number or email and we'll send you a reset code.",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondaryColor),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppTheme.spacing32),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                
+                // Reset Method Toggle
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    border: Border.all(
+                      color: AppTheme.thinBorderColor,
+                      width: AppTheme.thinBorderWidth,
+                    ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isPhoneReset = true;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.spacing12,
+                              horizontal: AppTheme.spacing16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _isPhoneReset 
+                                  ? Colors.grey[300] 
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.phone_outlined,
+                                  color: _isPhoneReset 
+                                      ? Colors.grey[700] 
+                                      : AppTheme.textSecondaryColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: AppTheme.spacing8),
+                                Text(
+                                  'Phone',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: _isPhoneReset 
+                                        ? Colors.grey[700] 
+                                        : AppTheme.textSecondaryColor,
+                                    fontWeight: _isPhoneReset 
+                                        ? FontWeight.w600 
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _isPhoneReset = false;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.spacing12,
+                              horizontal: AppTheme.spacing16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: !_isPhoneReset 
+                                  ? Colors.grey[300] 
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.email_outlined,
+                                  color: !_isPhoneReset 
+                                      ? Colors.grey[700] 
+                                      : AppTheme.textSecondaryColor,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: AppTheme.spacing8),
+                                Text(
+                                  'Email',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: !_isPhoneReset 
+                                        ? Colors.grey[700] 
+                                        : AppTheme.textSecondaryColor,
+                                    fontWeight: !_isPhoneReset 
+                                        ? FontWeight.w600 
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: AppTheme.spacing16),
+                
+                // Email or Phone Input Field
+                if (!_isPhoneReset) ...[
+                  // Email Field
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(
+                      labelText: 'Email Address',
+                      hintText: 'your.email@example.com',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email address';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email address';
+                      }
+                      return null;
+                    },
+                  ),
+                ] else ...[
+                  // Phone Field with Country Code
+                  IntrinsicHeight(
+                    child: Row(
+                      children: [
+                        // Country Code Picker
+                        InkWell(
+                          onTap: _showCountryPicker,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spacing12,
+                              vertical: AppTheme.spacing12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceColor,
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                              border: Border.all(
+                                color: AppTheme.thinBorderColor,
+                                width: AppTheme.thinBorderWidth,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _selectedCountry.flagEmoji,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                const SizedBox(width: AppTheme.spacing4),
+                                Text(
+                                  '+${_selectedCountry.phoneCode}',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                const SizedBox(width: AppTheme.spacing4),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: AppTheme.textSecondaryColor,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing8),
+                        // Phone Number Input
+                        Expanded(
+                          child: TextFormField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            textInputAction: TextInputAction.done,
+                            decoration: const InputDecoration(
+                              labelText: 'Phone Number',
+                              prefixIcon: Icon(Icons.phone_outlined),
+                              hintText: '788606765',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your phone number';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppTheme.spacing24),
                 if (_error != null)
                   Padding(

@@ -97,32 +97,35 @@ class AuthService {
     }
   }
 
-  /// Forgot password
-  Future<Map<String, dynamic>> forgotPassword(String email) async {
+  /// Request password reset
+  Future<Map<String, dynamic>> requestPasswordReset({String? phone, String? email}) async {
     try {
+      final data = <String, dynamic>{};
+      if (phone != null && phone.isNotEmpty) data['phone'] = phone;
+      if (email != null && email.isNotEmpty) data['email'] = email;
+      
       final response = await _dio.post(
-        AppConfig.authEndpoint + '/forgot-password',
-        data: {
-          'email': email,
-        },
+        AppConfig.authEndpoint + '/request_reset.php',
+        data: data,
       );
       
       return response.data;
     } on DioException catch (e) {
       throw _handleDioError(e);
     } catch (e) {
-      throw Exception('Forgot password failed: $e');
+      throw Exception('Request password reset failed: $e');
     }
   }
 
-  /// Reset password
-  Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
+  /// Reset password with code
+  Future<Map<String, dynamic>> resetPasswordWithCode(int userId, String resetCode, String newPassword) async {
     try {
       final response = await _dio.post(
-        AppConfig.authEndpoint + '/reset-password',
+        AppConfig.authEndpoint + '/reset_password.php',
         data: {
-          'token': token,
-          'password': newPassword,
+          'user_id': userId,
+          'reset_code': resetCode,
+          'new_password': newPassword,
         },
       );
       

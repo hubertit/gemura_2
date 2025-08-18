@@ -31,11 +31,18 @@ The app helps streamline milk collection, sales, supplier management, customer r
    - **Default Wallet** → For managing payments and transactions
    - **User Profile** → With appropriate role permissions
 7. **Success** → Welcome message, navigate to Home Dashboard
+   - **Welcome SMS**: A confirmation SMS is sent to your phone
+     - Message:
+       - "Murakaza neza kuri Gemura,
+
+         Mukoreshe numero ya telefone n'ijambo banga mwijire muri konti yanyu
+
+         NB: Ijambobanga ni ibanga ryanyu gusa"
 8. **Failure** → Show error message, retry registration
 
 ### Login
 1. **Launch App** → Splash screen with Gemura logo
-2. **Enter Credentials** → Phone number + Password
+2. **Enter Credentials** → Phone number or Email + Password
 3. **Authenticate** → Server validates credentials
 4. **Success** → Navigate to Home Dashboard
 5. **Failure** → Show error message, retry
@@ -45,6 +52,21 @@ The app helps streamline milk collection, sales, supplier management, customer r
 2. **Select Account** → Choose from available accounts
 3. **Confirm Switch** → App refreshes with new account data
 4. **Success** → Show confirmation snackbar
+
+### Forgot / Reset Password
+1. **Open Reset** → From Login, tap "Forgot Password"
+2. **Enter Contact** → Provide Phone number or Email (either works)
+3. **Receive Code** → A 6-digit reset code is sent:
+   - **SMS** to your phone (primary)
+   - **Email** if available (fallback)
+   - SMS content:
+     - "Kode yanyu yo guhindura ijambo banga: [CODE]\n\nIyi kode irarangira mu minota 15."
+4. **Enter Code & New Password** → Type the 6-digit code and your new password
+5. **Confirm** → Submit to reset your password
+6. **Success** → Password updated, proceed to Login
+7. **Notes** →
+   - The code expires in 15 minutes
+   - If you didn’t request a reset, ignore the message
 
 ## 🏠 Home Dashboard Flow
 
