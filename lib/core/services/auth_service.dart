@@ -214,20 +214,51 @@ class AuthService {
   /// Update user profile
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> profileData) async {
     try {
-      final response = await _authenticatedDio.put(
-        AppConfig.authEndpoint + '/profile',
-        data: profileData,
+      print('🔧 AuthService: Starting profile update...');
+      print('🔧 AuthService: Profile data: $profileData');
+      
+      // v2 PHP APIs expect token in body
+      final token = SecureStorageService.getAuthToken();
+      if (token == null || token.isEmpty) {
+        print('🔧 AuthService: No authentication token found');
+        throw Exception('No authentication token found');
+      }
+      print('🔧 AuthService: Token found: ${token.substring(0, 10)}...');
+
+      final body = {
+        'token': token,
+        ...profileData,
+      };
+      print('🔧 AuthService: Request body: $body');
+
+      print('🔧 AuthService: Making API call to: ${AppConfig.apiBaseUrl}/profile/update.php');
+      final response = await _authenticatedDio.post(
+        AppConfig.apiBaseUrl + '/profile/update.php',
+        data: body,
       );
       
-      // Update cached user data
+      print('🔧 AuthService: Response status: ${response.statusCode}');
+      print('🔧 AuthService: Response data: ${response.data}');
+      
+      // Update cached user data (response shape: { data: { user: {...}, account: {...} } })
       if (response.statusCode == 200 && response.data['data'] != null) {
-        await SecureStorageService.saveUserData(response.data['data']);
+        final updatedUser = response.data['data']['user'];
+        if (updatedUser != null) {
+          print('🔧 AuthService: Updating cached user data');
+          await SecureStorageService.saveUserData(updatedUser);
+        }
       }
       
+      print('🔧 AuthService: Profile update completed successfully');
       return response.data;
     } on DioException catch (e) {
+      print('🔧 AuthService: DioException occurred: ${e.message}');
+      print('🔧 AuthService: DioException type: ${e.type}');
+      print('🔧 AuthService: DioException response: ${e.response?.data}');
+      print('🔧 AuthService: DioException status: ${e.response?.statusCode}');
       throw _handleDioError(e);
     } catch (e) {
+      print('🔧 AuthService: General exception: $e');
       throw Exception('Update profile failed: $e');
     }
   }

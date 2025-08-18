@@ -225,10 +225,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     String? address,
     String? profileImg,
     String? coverImg,
+    String? businessName,
   }) async {
     try {
+      print('🔧 AuthProvider: Starting updateUserProfile...');
+      print('🔧 AuthProvider: Parameters - name: $name, email: $email, phone: $phoneNumber, address: $address, businessName: $businessName');
+      
       final currentUser = state.value;
-      if (currentUser == null) throw Exception('No user logged in');
+      if (currentUser == null) {
+        print('🔧 AuthProvider: No user logged in');
+        throw Exception('No user logged in');
+      }
+      print('🔧 AuthProvider: Current user: ${currentUser.name}');
 
       final profileData = <String, dynamic>{};
       if (name != null && name.isNotEmpty) profileData['name'] = name;
@@ -237,15 +245,24 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       if (phoneNumber != null && phoneNumber.isNotEmpty) profileData['phone'] = phoneNumber;
       if (profileImg != null && profileImg.isNotEmpty) profileData['profile_img'] = profileImg;
       if (coverImg != null && coverImg.isNotEmpty) profileData['cover_img'] = coverImg;
+      if (email != null && email.isNotEmpty) profileData['email'] = email;
+      if (businessName != null && businessName.isNotEmpty) profileData['business_name'] = businessName;
+
+      print('🔧 AuthProvider: Profile data to send: $profileData');
 
       final response = await _authService.updateProfile(profileData);
+      print('🔧 AuthProvider: Service response: $response');
       
       // Update local user data
       if (response['data'] != null) {
-        final updatedUser = User.fromJson(response['data']);
+        final updatedUser = User.fromJson(response['data']['user'] ?? response['data']);
+        print('🔧 AuthProvider: Updated user: ${updatedUser.name}');
         state = AsyncValue.data(updatedUser);
       }
+      
+      print('🔧 AuthProvider: Profile update completed successfully');
     } catch (e) {
+      print('🔧 AuthProvider: Error updating profile: $e');
       state = AsyncValue.error(e, StackTrace.current);
       rethrow;
     }

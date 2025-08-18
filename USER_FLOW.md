@@ -56,16 +56,20 @@ The app helps streamline milk collection, sales, supplier management, customer r
 4. **View Collections** → See recent milk collections
 
 **For Suppliers:**
-1. **View Dashboard** → See delivery history and earnings
-2. **Track Deliveries** → View milk delivery records
-3. **Check Payments** → Monitor payment status
-4. **View Schedule** → See collection schedules
+1. **View Dashboard** → See account overview and basic information
+2. **Profile Management** → Update personal and business information
+3. **Settings** → Manage app preferences and notifications
+4. **Track Deliveries** → View milk delivery records *(Coming Soon)*
+5. **Check Payments** → Monitor payment status *(Coming Soon)*
+6. **View Schedule** → See collection schedules *(Coming Soon)*
 
 **For Customers:**
-1. **View Dashboard** → See purchase history and balances
-2. **Buy Milk** → Tap "Buy" → Navigate to purchase screen
-3. **Track Orders** → View order status and history
-4. **Manage Payments** → Handle payment transactions
+1. **View Dashboard** → See account overview and basic information
+2. **Profile Management** → Update personal and business information
+3. **Settings** → Manage app preferences and notifications
+4. **Buy Milk** → Tap "Buy" → Navigate to purchase screen *(Coming Soon)*
+5. **Track Orders** → View order status and history *(Coming Soon)*
+6. **Manage Payments** → Handle payment transactions *(Coming Soon)*
 
 **For All Users:**
 - **Notifications** → View important updates and alerts
@@ -93,11 +97,13 @@ The app helps streamline milk collection, sales, supplier management, customer r
 3. **Filter/Search** → Use search and filter options
 4. **View Details** → Tap collection for detailed view
 
-### Supplier Delivery Tracking
+### Supplier Delivery Tracking *(Coming Soon)*
 1. **Navigate** → Home → "My Deliveries"
 2. **View History** → See all milk deliveries made
 3. **Check Status** → View payment status for each delivery
 4. **View Schedule** → See upcoming collection schedules
+
+
 
 ## 💰 Sales & Purchase Flow
 
@@ -114,12 +120,14 @@ The app helps streamline milk collection, sales, supplier management, customer r
 3. **Filter/Search** → Use search and filter options
 4. **View Details** → Tap sale for detailed view
 
-### Purchase Milk (Customers)
+### Purchase Milk (Customers) *(Coming Soon)*
 1. **Navigate** → Home → Tap "Buy"
 2. **Select Supplier/MCC** → Choose milk source
 3. **Enter Details** → Quantity needed, delivery preferences
 4. **Submit Order** → Place milk order
 5. **Track Order** → Monitor order status and delivery
+
+
 
 ## 👥 Supplier Management Flow
 
@@ -277,3 +285,5 @@ The app helps streamline milk collection, sales, supplier management, customer r
 - Advanced inventory management
 - Multi-location support
 - Export functionality for reports
+- Supplier delivery tracking and management *(In Development)*
+- Customer purchase and order management *(In Development)*
