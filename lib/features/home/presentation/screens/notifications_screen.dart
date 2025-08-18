@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../core/providers/notification_provider.dart';
-import '../../../../shared/models/notification.dart';
+import '../../../../shared/models/notification.dart' as notification_model;
 import '../../../../core/providers/localization_provider.dart';
-import '../../../../core/providers/user_accounts_provider.dart';
+import '../providers/user_accounts_provider.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -14,16 +14,15 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final localizationService = ref.watch(localizationServiceProvider);
-    final userInfo = ref.watch(userInfoProvider);
+    final userInfo = ref.watch(userAccountsProvider);
     
     return Scaffold(
       appBar: CustomAppBar(
         title: localizationService.translate('notifications'),
-        showBackButton: true,
       ),
       body: userInfo.when(
         data: (user) {
-          final accountId = user.defaultAccountId;
+          final accountId = user.data.user.defaultAccountId;
           final notificationsAsync = ref.watch(notificationsNotifierProvider(accountId));
           
           return RefreshIndicator(
@@ -71,11 +70,11 @@ class NotificationsScreen extends ConsumerWidget {
                 
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing16,
-                    vertical: AppTheme.spacing8,
+                    horizontal: AppTheme.spacing12,
+                    vertical: AppTheme.spacing4,
                   ),
                   itemCount: notifications.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spacing12),
+                  separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spacing8),
                   itemBuilder: (context, index) {
                     final notification = notifications[index];
                     return _NotificationCard(
@@ -145,7 +144,7 @@ class NotificationsScreen extends ConsumerWidget {
 }
 
 class _NotificationCard extends ConsumerWidget {
-  final Notification notification;
+  final notification_model.Notification notification;
   final int? accountId;
 
   const _NotificationCard({

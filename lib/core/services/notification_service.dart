@@ -2,9 +2,10 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import '../../shared/models/notification.dart';
 import 'authenticated_dio_service.dart';
+import 'secure_storage_service.dart';
 
 class NotificationService {
-  final Dio _dio = AuthenticatedDioService.dio;
+  final Dio _dio = AuthenticatedDioService.instance;
 
   // Get notifications with optional filtering
   Future<NotificationsResponse> getNotifications({
@@ -16,9 +17,16 @@ class NotificationService {
     int offset = 0,
   }) async {
     try {
+      final token = SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      print('🔔 NotificationService: Fetching notifications for accountId: $accountId');
       final response = await _dio.post(
-        '${AppConfig.baseUrl}/notifications/get.php',
+        '${AppConfig.apiBaseUrl}/notifications/get.php',
         data: {
+          'token': token,
           'account_id': accountId,
           'status': status,
           'type': type,
@@ -28,8 +36,10 @@ class NotificationService {
         },
       );
 
+      print('🔔 NotificationService: Response received: ${response.data}');
       return NotificationsResponse.fromJson(response.data);
     } on DioException catch (e) {
+      print('🔔 NotificationService: Error fetching notifications: ${e.message}');
       throw _handleDioError(e);
     }
   }
@@ -47,9 +57,15 @@ class NotificationService {
     int? accountId,
   }) async {
     try {
+      final token = SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
       final response = await _dio.post(
-        '${AppConfig.baseUrl}/notifications/create.php',
+        '${AppConfig.apiBaseUrl}/notifications/create.php',
         data: {
+          'token': token,
           'title': title,
           'message': message,
           'type': type,
@@ -75,9 +91,15 @@ class NotificationService {
     int? accountId,
   }) async {
     try {
+      final token = SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
       final response = await _dio.post(
-        '${AppConfig.baseUrl}/notifications/update.php',
+        '${AppConfig.apiBaseUrl}/notifications/update.php',
         data: {
+          'token': token,
           'notification_id': notificationId,
           'status': status,
           'account_id': accountId,
@@ -132,9 +154,15 @@ class NotificationService {
     int? accountId,
   }) async {
     try {
+      final token = SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
       final response = await _dio.post(
-        '${AppConfig.baseUrl}/notifications/delete.php',
+        '${AppConfig.apiBaseUrl}/notifications/delete.php',
         data: {
+          'token': token,
           'notification_id': notificationId,
           'account_id': accountId,
         },

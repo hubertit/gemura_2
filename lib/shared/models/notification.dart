@@ -33,9 +33,9 @@ class Notification {
 
   factory Notification.fromJson(Map<String, dynamic> json) {
     return Notification(
-      id: json['id'],
-      userId: json['user_id'],
-      accountId: json['account_id'],
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      userId: json['user_id'] is int ? json['user_id'] : int.parse(json['user_id'].toString()),
+      accountId: json['account_id'] is int ? json['account_id'] : int.parse(json['account_id'].toString()),
       title: json['title'],
       message: json['message'],
       type: json['type'],
@@ -149,10 +149,10 @@ class NotificationsData {
       notifications: (json['notifications'] as List)
           .map((notification) => Notification.fromJson(notification))
           .toList(),
-      totalCount: json['total_count'],
-      unreadCount: json['unread_count'],
-      limit: json['limit'],
-      offset: json['offset'],
+      totalCount: json['total_count'] is int ? json['total_count'] : int.parse(json['total_count'].toString()),
+      unreadCount: json['unread_count'] is int ? json['unread_count'] : int.parse(json['unread_count'].toString()),
+      limit: json['limit'] is int ? json['limit'] : int.parse(json['limit'].toString()),
+      offset: json['offset'] is int ? json['offset'] : int.parse(json['offset'].toString()),
     );
   }
 }

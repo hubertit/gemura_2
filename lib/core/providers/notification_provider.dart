@@ -28,11 +28,14 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<NotificationsRespon
   NotificationsNotifier(this._service, this._ref) : super(const AsyncValue.loading());
 
   Future<void> loadNotifications({int? accountId}) async {
+    print('🔔 NotificationsNotifier: Loading notifications for accountId: $accountId');
     state = const AsyncValue.loading();
     try {
       final response = await _service.getNotifications(accountId: accountId);
+      print('🔔 NotificationsNotifier: Notifications loaded successfully');
       state = AsyncValue.data(response);
     } catch (error, stackTrace) {
+      print('🔔 NotificationsNotifier: Error loading notifications: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }
@@ -200,7 +203,12 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<NotificationsRespon
 // Notifications notifier provider
 final notificationsNotifierProvider = StateNotifierProvider.family<NotificationsNotifier, AsyncValue<NotificationsResponse>, int?>((ref, accountId) {
   final service = ref.read(notificationServiceProvider);
-  return NotificationsNotifier(service, ref);
+  final notifier = NotificationsNotifier(service, ref);
+  // Load notifications when the provider is created
+  if (accountId != null) {
+    notifier.loadNotifications(accountId: accountId);
+  }
+  return notifier;
 });
 
 // Filtered notifications provider

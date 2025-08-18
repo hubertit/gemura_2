@@ -231,8 +231,8 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           ),
           Consumer(
             builder: (context, ref, child) {
-              final userInfo = ref.watch(userInfoProvider);
-              final accountId = userInfo.value?.defaultAccountId;
+              final userInfo = ref.watch(userAccountsProvider);
+              final accountId = userInfo.value?.data.user.defaultAccountId;
               
               return userInfo.when(
                 data: (user) {
@@ -250,30 +250,37 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               );
                             },
                           ),
-                          if (unreadCount > 0)
-                            Positioned(
-                              right: 8,
-                              top: 8,
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                child: Text(
-                                  unreadCount > 99 ? '99+' : unreadCount.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
+                                                     if (unreadCount > 0)
+                             Positioned(
+                               right: 8,
+                               top: 8,
+                               child: GestureDetector(
+                                 onTap: () {
+                                   Navigator.of(context).push(
+                                     MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                                   );
+                                 },
+                                 child: Container(
+                                   padding: const EdgeInsets.all(2),
+                                   decoration: BoxDecoration(
+                                     color: Colors.red,
+                                     borderRadius: BorderRadius.circular(10),
+                                   ),
+                                   constraints: const BoxConstraints(
+                                     minWidth: 16,
+                                     minHeight: 16,
+                                   ),
+                                   child: Text(
+                                     unreadCount > 99 ? '99+' : unreadCount.toString(),
+                                     style: const TextStyle(
+                                       color: Colors.white,
+                                       fontSize: 10,
+                                     ),
+                                     textAlign: TextAlign.center,
+                                   ),
+                                 ),
+                               ),
+                             ),
                         ],
                       );
                     },
