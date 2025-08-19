@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:country_picker/country_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../utils/phone_validator.dart';
+import '../utils/rwandan_phone_input_formatter.dart';
 
 class PhoneInputField extends StatefulWidget {
   final TextEditingController controller;
@@ -92,6 +94,9 @@ class PhoneInputFieldState extends State<PhoneInputField> {
               textInputAction: widget.textInputAction,
               enabled: widget.enabled,
               onTap: widget.onTap,
+              inputFormatters: [
+                RwandanPhoneInputFormatter(),
+              ],
               decoration: InputDecoration(
                 labelText: widget.labelText ?? 'Phone Number',
                 prefixIcon: const Icon(Icons.phone_outlined),

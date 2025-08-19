@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:country_picker/country_picker.dart';
 import '../../../../shared/utils/phone_validator.dart';
+import '../../../../shared/utils/rwandan_phone_input_formatter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'reset_password_screen.dart';
@@ -345,6 +347,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             textInputAction: TextInputAction.done,
+                            inputFormatters: [
+                              RwandanPhoneInputFormatter(),
+                            ],
                             decoration: const InputDecoration(
                               labelText: 'Phone Number',
                               prefixIcon: Icon(Icons.phone_outlined),

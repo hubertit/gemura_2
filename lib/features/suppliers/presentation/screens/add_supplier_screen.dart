@@ -6,34 +6,8 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/utils/phone_validator.dart';
+import '../../../../shared/utils/rwandan_phone_input_formatter.dart';
 import '../providers/suppliers_provider.dart';
-
-// Custom input formatter to prepend "250" when starting with "0"
-class RwandanPhoneInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    // Remove any non-digit characters
-    String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    
-    // If it starts with "0", prepend "250" and keep the rest
-    if (cleaned.startsWith('0') && cleaned.length >= 1) {
-      cleaned = '250${cleaned.substring(1)}';
-    }
-    
-    // Limit to 12 digits
-    if (cleaned.length > 12) {
-      cleaned = cleaned.substring(0, 12);
-    }
-    
-    return TextEditingValue(
-      text: cleaned,
-      selection: TextSelection.collapsed(offset: cleaned.length),
-    );
-  }
-}
 
 class AddSupplierScreen extends ConsumerStatefulWidget {
   const AddSupplierScreen({super.key});

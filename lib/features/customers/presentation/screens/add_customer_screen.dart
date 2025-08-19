@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/shared/widgets/primary_button.dart';
 import 'package:gemura/shared/utils/phone_validator.dart';
+import 'package:gemura/shared/utils/rwandan_phone_input_formatter.dart';
 import '../providers/customers_provider.dart';
 
 class AddCustomerScreen extends ConsumerStatefulWidget {
@@ -127,6 +129,9 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                 controller: _phoneController,
                 style: AppTheme.bodyMedium,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  RwandanPhoneInputFormatter(),
+                ],
                 decoration: InputDecoration(
                   hintText: '788606765',
                   prefixIcon: const Icon(Icons.phone),

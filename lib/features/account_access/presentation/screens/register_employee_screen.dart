@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/utils/phone_validator.dart';
+import '../../../../shared/utils/rwandan_phone_input_formatter.dart';
 import '../providers/account_access_provider.dart';
 import '../../../../shared/models/account_access.dart';
 
@@ -119,6 +121,9 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                   hintText: '788606765',
                 ),
                 keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  RwandanPhoneInputFormatter(),
+                ],
                 validator: PhoneValidator.validateRwandanPhone,
               ),
               const SizedBox(height: AppTheme.spacing16),
