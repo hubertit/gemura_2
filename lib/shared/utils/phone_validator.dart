@@ -6,6 +6,7 @@ class PhoneValidator {
 
   /// Validates a Rwandan phone number
   /// Returns null if valid, error message if invalid
+  /// Now accepts both formats: 788606765 or 250788606765
   static String? validateRwandanPhone(String? phoneNumber) {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
       return 'Phone number is required';
@@ -23,7 +24,7 @@ class PhoneValidator {
 
     // Check length (should be 9 digits after removing country code)
     if (cleanNumber.length != _expectedLength) {
-      return 'Phone number must be 9 digits (e.g., 788606765)';
+      return 'Phone number must be 9 digits (e.g., 788606765 or 250788606765)';
     }
 
     // Check if it's all digits
