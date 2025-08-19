@@ -349,7 +349,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               labelText: 'Phone Number',
                               prefixIcon: Icon(Icons.phone_outlined),
                               hintText: '788606765',
-                              helperText: 'Must start with 78, 79, 72, or 73',
                             ),
                             validator: PhoneValidator.validateRwandanPhone,
                           ),

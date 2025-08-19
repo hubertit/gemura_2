@@ -117,7 +117,6 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.phone),
                   hintText: '788606765',
-                  helperText: 'Must start with 78, 79, 72, or 73',
                 ),
                 keyboardType: TextInputType.phone,
                 validator: PhoneValidator.validateRwandanPhone,

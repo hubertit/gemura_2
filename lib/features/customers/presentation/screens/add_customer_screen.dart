@@ -130,7 +130,6 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                 decoration: InputDecoration(
                   hintText: '788606765',
                   prefixIcon: const Icon(Icons.phone),
-                  helperText: 'Must start with 78, 79, 72, or 73',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),

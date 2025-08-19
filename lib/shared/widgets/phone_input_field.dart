@@ -96,7 +96,6 @@ class PhoneInputFieldState extends State<PhoneInputField> {
                 labelText: widget.labelText ?? 'Phone Number',
                 prefixIcon: const Icon(Icons.phone_outlined),
                 hintText: '788606765',
-                helperText: 'Must start with 78, 79, 72, or 73',
               ),
               validator: widget.validator ?? PhoneValidator.validateRwandanPhone,
             ),

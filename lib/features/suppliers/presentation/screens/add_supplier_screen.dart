@@ -122,7 +122,6 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 decoration: const InputDecoration(
                   hintText: '788606765',
                   prefixIcon: Icon(Icons.phone),
-                  helperText: 'Must start with 78, 79, 72, or 73',
                 ),
                 keyboardType: TextInputType.phone,
                 validator: PhoneValidator.validateRwandanPhone,
