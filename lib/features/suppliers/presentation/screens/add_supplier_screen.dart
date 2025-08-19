@@ -8,7 +8,7 @@ import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/utils/phone_validator.dart';
 import '../providers/suppliers_provider.dart';
 
-// Custom input formatter to prepend "25" when starting with "0"
+// Custom input formatter to prepend "250" when starting with "0"
 class RwandanPhoneInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -18,9 +18,9 @@ class RwandanPhoneInputFormatter extends TextInputFormatter {
     // Remove any non-digit characters
     String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
     
-    // If it starts with "0", prepend "25" and keep the rest
+    // If it starts with "0", prepend "250" and keep the rest
     if (cleaned.startsWith('0') && cleaned.length >= 1) {
-      cleaned = '25${cleaned.substring(1)}';
+      cleaned = '250${cleaned.substring(1)}';
     }
     
     // Limit to 12 digits
