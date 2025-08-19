@@ -8,6 +8,33 @@ import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/utils/phone_validator.dart';
 import '../providers/suppliers_provider.dart';
 
+// Custom input formatter to prepend "25" when starting with "07"
+class RwandanPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Remove any non-digit characters
+    String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    // If it starts with "07", prepend "25"
+    if (cleaned.startsWith('07') && cleaned.length >= 2) {
+      cleaned = '25${cleaned.substring(2)}';
+    }
+    
+    // Limit to 12 digits
+    if (cleaned.length > 12) {
+      cleaned = cleaned.substring(0, 12);
+    }
+    
+    return TextEditingValue(
+      text: cleaned,
+      selection: TextSelection.collapsed(offset: cleaned.length),
+    );
+  }
+}
+
 class AddSupplierScreen extends ConsumerStatefulWidget {
   const AddSupplierScreen({super.key});
 
@@ -195,7 +222,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                       ),
                       keyboardType: TextInputType.phone,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                        RwandanPhoneInputFormatter(),
                       ],
                       validator: PhoneValidator.validateRwandanPhone,
                     ),
