@@ -189,7 +189,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                       controller: _phoneController,
                       style: AppTheme.bodySmall,
                       decoration: const InputDecoration(
-                        hintText: '788606765 or 250788606765',
+                        hintText: '250788606765',
                         prefixIcon: Icon(Icons.phone),
                       ),
                       keyboardType: TextInputType.phone,
