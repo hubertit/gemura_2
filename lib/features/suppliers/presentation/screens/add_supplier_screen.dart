@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -189,10 +190,13 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                       controller: _phoneController,
                       style: AppTheme.bodySmall,
                       decoration: const InputDecoration(
-                        hintText: '250788606765',
+                        hintText: '250788123456',
                         prefixIcon: Icon(Icons.phone),
                       ),
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                      ],
                       validator: PhoneValidator.validateRwandanPhone,
                     ),
                   ),

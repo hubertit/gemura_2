@@ -24,7 +24,7 @@ class PhoneValidator {
 
     // Check length (should be 9 digits after removing country code)
     if (cleanNumber.length != _expectedLength) {
-      return 'Phone number must be 9 digits (e.g., 250788606765)';
+      return 'Phone number must be 9 digits (e.g., 250788123456)';
     }
 
     // Check if it's all digits
