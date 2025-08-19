@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/shared/widgets/primary_button.dart';
+import 'package:gemura/shared/utils/phone_validator.dart';
 import '../providers/customers_provider.dart';
 
 class AddCustomerScreen extends ConsumerStatefulWidget {
@@ -127,8 +128,9 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                 style: AppTheme.bodyMedium,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
-                  hintText: 'Phone Number',
+                  hintText: '788606765',
                   prefixIcon: const Icon(Icons.phone),
+                  helperText: 'Must start with 78, 79, 72, or 73',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -143,12 +145,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceColor,
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter phone number';
-                  }
-                  return null;
-                },
+                validator: PhoneValidator.validateRwandanPhone,
               ),
               const SizedBox(height: AppTheme.spacing12),
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/utils/phone_validator.dart';
 import '../providers/suppliers_provider.dart';
 
 class AddSupplierScreen extends ConsumerStatefulWidget {
@@ -119,16 +120,12 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 controller: _phoneController,
                 style: AppTheme.bodySmall,
                 decoration: const InputDecoration(
-                  hintText: 'Phone number',
+                  hintText: '788606765',
                   prefixIcon: Icon(Icons.phone),
+                  helperText: 'Must start with 78, 79, 72, or 73',
                 ),
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Phone number is required';
-                  }
-                  return null;
-                },
+                validator: PhoneValidator.validateRwandanPhone,
               ),
               const SizedBox(height: AppTheme.spacing12),
               

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:country_picker/country_picker.dart';
 import '../../core/theme/app_theme.dart';
+import '../utils/phone_validator.dart';
 
 class PhoneInputField extends StatefulWidget {
   final TextEditingController controller;
@@ -94,9 +95,10 @@ class PhoneInputFieldState extends State<PhoneInputField> {
               decoration: InputDecoration(
                 labelText: widget.labelText ?? 'Phone Number',
                 prefixIcon: const Icon(Icons.phone_outlined),
-                hintText: 'Enter phone number',
+                hintText: '788606765',
+                helperText: 'Must start with 78, 79, 72, or 73',
               ),
-              validator: widget.validator,
+              validator: widget.validator ?? PhoneValidator.validateRwandanPhone,
             ),
           ),
         ],

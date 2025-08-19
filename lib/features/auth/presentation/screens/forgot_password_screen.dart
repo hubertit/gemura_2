@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:country_picker/country_picker.dart';
+import '../../../../shared/utils/phone_validator.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'reset_password_screen.dart';
@@ -348,13 +349,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               labelText: 'Phone Number',
                               prefixIcon: Icon(Icons.phone_outlined),
                               hintText: '788606765',
+                              helperText: 'Must start with 78, 79, 72, or 73',
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your phone number';
-                              }
-                              return null;
-                            },
+                            validator: PhoneValidator.validateRwandanPhone,
                           ),
                         ),
                       ],

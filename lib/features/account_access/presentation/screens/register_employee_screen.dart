@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/utils/phone_validator.dart';
 import '../providers/account_access_provider.dart';
 import '../../../../shared/models/account_access.dart';
 
@@ -115,14 +116,11 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                   labelText: 'Phone Number',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.phone),
+                  hintText: '788606765',
+                  helperText: 'Must start with 78, 79, 72, or 73',
                 ),
                 keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter phone number';
-                  }
-                  return null;
-                },
+                validator: PhoneValidator.validateRwandanPhone,
               ),
               const SizedBox(height: AppTheme.spacing16),
               
