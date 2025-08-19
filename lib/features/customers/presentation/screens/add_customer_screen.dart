@@ -130,7 +130,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                 style: AppTheme.bodyMedium,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
-                  RwandanPhoneInputFormatter(),
+                  PhoneInputFormatter(),
                 ],
                 decoration: InputDecoration(
                   hintText: '788606765',

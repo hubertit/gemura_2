@@ -67,7 +67,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
         ),
       ),
-      countryFilter: const ['RW'], // Restrict to Rwanda only
+      // Allow all countries
       onSelect: (Country country) {
         setState(() {
           _selectedCountry = country;
@@ -348,14 +348,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             keyboardType: TextInputType.phone,
                             textInputAction: TextInputAction.done,
                             inputFormatters: [
-                              RwandanPhoneInputFormatter(),
+                              PhoneInputFormatter(),
                             ],
                             decoration: const InputDecoration(
                               labelText: 'Phone Number',
                               prefixIcon: Icon(Icons.phone_outlined),
                               hintText: '788606765',
                             ),
-                            validator: PhoneValidator.validateRwandanPhone,
+                            validator: PhoneValidator.validateInternationalPhone,
                           ),
                         ),
                       ],

@@ -82,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
       ),
-      countryFilter: const ['RW'], // Restrict to Rwanda only
+      // Allow all countries
       onSelect: (Country country) {
         setState(() {
           _selectedCountry = country;
@@ -400,14 +400,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               keyboardType: TextInputType.phone,
                               textInputAction: TextInputAction.next,
                               inputFormatters: [
-                                RwandanPhoneInputFormatter(),
+                                PhoneInputFormatter(),
                               ],
                               decoration: const InputDecoration(
                                 labelText: 'Phone Number',
                                 prefixIcon: Icon(Icons.phone_outlined),
                                 hintText: '788606765',
                               ),
-                              validator: PhoneValidator.validateRwandanPhone,
+                              validator: PhoneValidator.validateInternationalPhone,
                             ),
                           ),
                         ],

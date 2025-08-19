@@ -122,7 +122,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                 ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
-                  RwandanPhoneInputFormatter(),
+                  PhoneInputFormatter(),
                 ],
                 validator: PhoneValidator.validateRwandanPhone,
               ),

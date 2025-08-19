@@ -77,6 +77,29 @@ class PhoneValidator {
     return validateRwandanPhone(phoneNumber);
   }
 
+  /// Validates any international phone number (more flexible)
+  /// Returns null if valid, error message if invalid
+  static String? validateInternationalPhone(String? phoneNumber) {
+    if (phoneNumber == null || phoneNumber.trim().isEmpty) {
+      return 'Phone number is required';
+    }
+
+    // Remove any spaces, dashes, or other separators
+    String cleanNumber = phoneNumber.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+    
+    // Check if it's all digits
+    if (!RegExp(r'^\d+$').hasMatch(cleanNumber)) {
+      return 'Phone number must contain only digits';
+    }
+
+    // Check length (should be between 7 and 15 digits for international numbers)
+    if (cleanNumber.length < 7 || cleanNumber.length > 15) {
+      return 'Phone number must be between 7 and 15 digits';
+    }
+
+    return null; // Valid phone number
+  }
+
   /// Gets valid Rwandan phone prefixes
   static List<String> getValidPrefixes() {
     return List.from(_validPrefixes);

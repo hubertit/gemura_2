@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 
-/// Custom input formatter to prepend "250" when starting with "0"
-/// This formatter is designed to work with country code pickers
-/// It automatically handles Rwandan phone number formatting
-class RwandanPhoneInputFormatter extends TextInputFormatter {
+/// Custom input formatter for phone numbers with country code pickers
+/// This formatter automatically handles phone number formatting
+/// It removes non-digit characters and limits length appropriately
+class PhoneInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -12,14 +12,9 @@ class RwandanPhoneInputFormatter extends TextInputFormatter {
     // Remove any non-digit characters
     String cleaned = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
     
-    // If it starts with "0", prepend "250" and keep the rest
-    if (cleaned.startsWith('0') && cleaned.length >= 1) {
-      cleaned = '250${cleaned.substring(1)}';
-    }
-    
-    // Limit to 12 digits
-    if (cleaned.length > 12) {
-      cleaned = cleaned.substring(0, 12);
+    // Limit to reasonable length (15 digits max for international numbers)
+    if (cleaned.length > 15) {
+      cleaned = cleaned.substring(0, 15);
     }
     
     return TextEditingValue(

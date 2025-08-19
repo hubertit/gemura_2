@@ -196,7 +196,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                       ),
                       keyboardType: TextInputType.phone,
                       inputFormatters: [
-                        RwandanPhoneInputFormatter(),
+                        PhoneInputFormatter(),
                       ],
                       validator: PhoneValidator.validateRwandanPhone,
                     ),

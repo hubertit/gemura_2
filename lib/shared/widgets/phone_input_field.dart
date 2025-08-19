@@ -95,14 +95,14 @@ class PhoneInputFieldState extends State<PhoneInputField> {
               enabled: widget.enabled,
               onTap: widget.onTap,
               inputFormatters: [
-                RwandanPhoneInputFormatter(),
+                PhoneInputFormatter(),
               ],
               decoration: InputDecoration(
                 labelText: widget.labelText ?? 'Phone Number',
                 prefixIcon: const Icon(Icons.phone_outlined),
                 hintText: '788606765',
               ),
-              validator: widget.validator ?? PhoneValidator.validateRwandanPhone,
+              validator: widget.validator ?? PhoneValidator.validateInternationalPhone,
             ),
           ),
         ],
@@ -135,7 +135,7 @@ class PhoneInputFieldState extends State<PhoneInputField> {
         ),
         searchTextStyle: Theme.of(context).textTheme.bodyMedium!,
       ),
-      countryFilter: const ['RW'], // Restrict to Rwanda only
+      // Allow all countries
       onSelect: (Country country) {
         setState(() {
           _selectedCountry = country;
