@@ -132,23 +132,24 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                 inputFormatters: [
                   PhoneInputFormatter(),
                 ],
-                decoration: InputDecoration(
-                  hintText: '788606765',
-                  prefixIcon: const Icon(Icons.phone),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.surfaceColor,
+                              decoration: InputDecoration(
+                hintText: '788606765',
+                prefixIcon: const Icon(Icons.phone),
+                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                 ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                ),
+                filled: true,
+                fillColor: AppTheme.surfaceColor,
+              ),
                 validator: PhoneValidator.validateRwandanPhone,
               ),
               const SizedBox(height: AppTheme.spacing12),

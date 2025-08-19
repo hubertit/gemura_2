@@ -352,10 +352,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             inputFormatters: [
                               PhoneInputFormatter(),
                             ],
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Phone Number',
-                              prefixIcon: Icon(Icons.phone_outlined),
+                              prefixIcon: const Icon(Icons.phone_outlined),
                               hintText: '788606765',
+                              hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                             ),
                             validator: PhoneValidator.validateInternationalPhone,
                           ),

@@ -190,10 +190,11 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                     child: TextFormField(
                       controller: _phoneController,
                       style: AppTheme.bodySmall,
-                      decoration: const InputDecoration(
-                        hintText: '250788123456',
-                        prefixIcon: Icon(Icons.phone),
-                      ),
+                                    decoration: InputDecoration(
+                hintText: '250788123456',
+                prefixIcon: const Icon(Icons.phone),
+                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+              ),
                       keyboardType: TextInputType.phone,
                       inputFormatters: [
                         PhoneInputFormatter(),

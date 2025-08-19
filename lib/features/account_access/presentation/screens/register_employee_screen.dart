@@ -114,12 +114,13 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
               // Phone Field
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
-                  hintText: '788606765',
-                ),
+                              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.phone),
+                hintText: '788606765',
+                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+              ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
                   PhoneInputFormatter(),
