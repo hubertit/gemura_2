@@ -79,6 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
       ),
+      countryFilter: const ['RW'], // Restrict to Rwanda only
       onSelect: (Country country) {
         setState(() {
           _selectedCountry = country;

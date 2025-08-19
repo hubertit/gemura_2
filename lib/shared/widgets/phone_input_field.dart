@@ -129,6 +129,7 @@ class PhoneInputFieldState extends State<PhoneInputField> {
         ),
         searchTextStyle: Theme.of(context).textTheme.bodyMedium!,
       ),
+      countryFilter: const ['RW'], // Restrict to Rwanda only
       onSelect: (Country country) {
         setState(() {
           _selectedCountry = country;
