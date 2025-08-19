@@ -51,9 +51,9 @@ class PhoneInputFieldState extends State<PhoneInputField> {
             onTap: widget.enabled ? _showCountryPicker : null,
             borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
             child: Container(
+              height: 56, // Match TextFormField height
               padding: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spacing12,
-                vertical: AppTheme.spacing12,
               ),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceColor,
@@ -65,6 +65,8 @@ class PhoneInputFieldState extends State<PhoneInputField> {
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     _selectedCountry.flagEmoji,

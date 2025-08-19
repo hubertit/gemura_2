@@ -203,6 +203,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                   ),
                   const SizedBox(width: AppTheme.spacing8),
                   Container(
+                    height: 56, // Match TextFormField height
                     decoration: BoxDecoration(
                       color: AppTheme.surfaceColor,
                       borderRadius: BorderRadius.circular(AppTheme.borderRadius8),

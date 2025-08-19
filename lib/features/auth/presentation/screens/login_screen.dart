@@ -358,9 +358,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onTap: _showCountryPicker,
                             borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                             child: Container(
+                              height: 56, // Match TextFormField height
                               padding: const EdgeInsets.symmetric(
                                 horizontal: AppTheme.spacing12,
-                                vertical: AppTheme.spacing12,
                               ),
                               decoration: BoxDecoration(
                                 color: AppTheme.surfaceColor,
@@ -372,6 +372,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
                                     _selectedCountry.flagEmoji,
