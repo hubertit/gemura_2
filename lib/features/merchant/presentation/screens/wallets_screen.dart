@@ -16,9 +16,10 @@ import '../../../loans/presentation/screens/loans_screen.dart';
 import '../../../insurance/presentation/screens/insurance_screen.dart';
 import 'transactions_screen.dart';
 import '../../../home/presentation/screens/request_payment_screen.dart';
-// Removed unused import
+import '../../../home/presentation/screens/pay_screen.dart';
 import '../../../home/presentation/screens/payouts_screen.dart';
 import '../providers/wallets_provider.dart';
+import '../../../../shared/services/transaction_service.dart';
 
 class WalletsScreen extends ConsumerStatefulWidget {
   const WalletsScreen({super.key});
@@ -38,7 +39,7 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
     });
   }
 
-  // Static mock wallets as fallback
+  // Static mock wallets as fallback - Joint ikofi temporarily hidden
   List<Wallet> get mockWallets => [
         Wallet(
           id: 'WALLET-1',
@@ -51,20 +52,21 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
           owners: ['You'],
           isDefault: true,
         ),
-        Wallet(
-          id: 'WALLET-2',
-          name: 'Joint Ikofi',
-          balance: 1200000,
-          currency: 'RWF',
-          type: 'joint',
-          status: 'active',
-          createdAt: DateTime.now().subtract(const Duration(days: 60)),
-          owners: ['You', 'Alice', 'Eric'],
-          isDefault: false,
-          description: 'Joint savings for family expenses',
-          targetAmount: 2000000,
-          targetDate: DateTime.now().add(const Duration(days: 180)),
-        ),
+        // Temporarily hidden - Joint Ikofi
+        // Wallet(
+        //   id: 'WALLET-2',
+        //   name: 'Joint Ikofi',
+        //   balance: 1200000,
+        //   currency: 'RWF',
+        //   type: 'joint',
+        //   status: 'active',
+        //   createdAt: DateTime.now().subtract(const Duration(days: 60)),
+        //   owners: ['You', 'Alice', 'Eric'],
+        //   isDefault: false,
+        //   description: 'Joint savings for family expenses',
+        //   targetAmount: 2000000,
+        //   targetDate: DateTime.now().add(const Duration(days: 180)),
+        // ),
         Wallet(
           id: 'WALLET-3',
           name: 'Vacation Fund',
@@ -176,75 +178,76 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
           ? _buildEmptyState(context)
           : Column(
               children: [
-                // Temporarily hidden - Quick actions
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
-                //   child: Container(
-                //     padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
-                //     decoration: BoxDecoration(
-                //       color: AppTheme.primaryColor.withOpacity(0.06),
-                //       borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                //     ),
-                //     child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                //       children: [
-                //         Expanded(
-                //           child: _QuickActionButton(
-                //             icon: Icons.qr_code,
-                //             label: 'Request',
-                //             onTap: () {
-                //               Navigator.of(context).push(
-                //                 MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
-                //               );
-                //             },
-                //           ),
-                //         ),
-                //         Expanded(
-                //           child: _QuickActionButton(
-                //             icon: Icons.send,
-                //             label: 'Pay',
-                //             onTap: () {
-                //               Navigator.of(context).push(
-                //                 MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
-                //               );
-                //             },
-                //           ),
-                //         ),
-                //         Expanded(
-                //           child: _QuickActionButton(
-                //             icon: Icons.account_balance_wallet,
-                //             label: 'Top Up',
-                //             onTap: () async {
-                //               final result = await showModalBottomSheet<bool>(
-                //                 context: context,
-                //                 isScrollControlled: true,
-                //                 shape: const RoundedRectangleBorder(
-                //                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                //               ),
-                //               builder: (context) => const _TopUpSheet(),
-                //             );
-                //             if (result == true && context.mounted) {
-                //               ScaffoldMessenger.of(context).showSnackBar(
-                //                 AppTheme.successSnackBar(message: 'Top up successful!'),
-                //               );
-                //             }
-                //           ),
-                //         ),
-                //         Expanded(
-                //           child: _QuickActionButton(
-                //             icon: Icons.history,
-                //             label: 'Payouts',
-                //             onTap: () {
-                //               Navigator.of(context).push(
-                //                 MaterialPageRoute(builder: (context) => const PayoutsScreen()),
-                //               );
-                //             },
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   ),
-                // ),
+                // Quick actions
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.qr_code,
+                            label: 'Request',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const RequestPaymentScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.send,
+                            label: 'Pay',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const PayScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.account_balance_wallet,
+                            label: 'Top Up',
+                            onTap: () async {
+                              final result = await showModalBottomSheet<bool>(
+                                context: context,
+                                isScrollControlled: true,
+                                shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                              ),
+                              builder: (context) => const _TopUpSheet(),
+                            );
+                            if (result == true && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                AppTheme.successSnackBar(message: 'Top up successful!'),
+                              );
+                            }
+                          },
+                        ),
+                        ),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: Icons.history,
+                            label: 'Payouts',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => const PayoutsScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
@@ -257,7 +260,13 @@ class _WalletsScreenState extends ConsumerState<WalletsScreen> {
                           wallet: wallet,
                           showBalance: _walletBalanceVisibility[wallet.id] ?? true,
                           onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
-                          onTap: () {}, // Disable navigation to wallet details
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => TransactionsScreen(wallet: wallet),
+                              ),
+                            );
+                          },
                         )),
                         const SizedBox(height: AppTheme.spacing16),
                         // Temporarily hidden - Add Wallet Card
@@ -922,7 +931,7 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const TransactionsScreen(),
+                          builder: (context) => TransactionsScreen(wallet: wallet),
                         ),
                       );
                     },
@@ -936,64 +945,11 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
     );
   }
 
-  List<Transaction> get mockTransactions => [
-        Transaction(
-          id: 'TXN-1001',
-          amount: 25000,
-          currency: 'RWF',
-          type: 'payment',
-          status: 'success',
-          date: DateTime.now().subtract(const Duration(hours: 2)),
-          description: 'TXN #1234',
-          paymentMethod: 'Mobile Money',
-          customerName: 'Alice Umutoni',
-          customerPhone: '0788123456',
-          reference: 'PMT-20240601-001',
-          walletId: 'WALLET-1',
-        ),
-        Transaction(
-          id: 'TXN-1002',
-          amount: 120000,
-          currency: 'RWF',
-          type: 'payment',
-          status: 'pending',
-          date: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-          description: 'TXN #1235',
-          paymentMethod: 'Card',
-          customerName: 'Eric Niyonsaba',
-          customerPhone: '0722123456',
-          reference: 'PMT-20240601-002',
-          walletId: 'WALLET-2',
-        ),
-        Transaction(
-          id: 'TXN-1003',
-          amount: 50000,
-          currency: 'RWF',
-          type: 'refund',
-          status: 'success',
-          date: DateTime.now().subtract(const Duration(days: 2)),
-          description: 'Refund for TXN #1232',
-          paymentMethod: 'Bank',
-          customerName: 'Claudine Mukamana',
-          customerPhone: '0733123456',
-          reference: 'REF-20240530-001',
-          walletId: 'WALLET-1',
-        ),
-        Transaction(
-          id: 'TXN-1004',
-          amount: 15000,
-          currency: 'RWF',
-          type: 'payment',
-          status: 'failed',
-          date: DateTime.now().subtract(const Duration(days: 3)),
-          description: 'TXN #1231',
-          paymentMethod: 'QR/USSD',
-          customerName: 'Jean Bosco',
-          customerPhone: '0799123456',
-          reference: 'PMT-20240529-001',
-          walletId: 'WALLET-3',
-        ),
-      ];
+  List<Transaction> get mockTransactions {
+    final allTransactions = TransactionService().getAllTransactions();
+    // Return only the first 3 transactions for the wallet details view
+    return allTransactions.take(3).toList();
+  }
 
   Color getCardColor() {
     if (wallet.status == 'inactive') return const Color(0xFFE6E6E6); // 15% darker gray
@@ -2292,12 +2248,13 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
     
-    if (_walletType == 'joint' && _members.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        AppTheme.warningSnackBar(message: 'Please add at least one member for joint wallet'),
-      );
-      return;
-    }
+    // Temporarily hidden - Joint wallet validation
+    // if (_walletType == 'joint' && _members.isEmpty) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     AppTheme.warningSnackBar(message: 'Please add at least one member for joint wallet'),
+    //   );
+    //   return;
+    // }
 
     setState(() => _isLoading = true);
 
@@ -2372,108 +2329,109 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       activeColor: AppTheme.primaryColor,
                     ),
                     Divider(color: AppTheme.thinBorderColor, height: 1),
-                    RadioListTile<String>(
-                      title: Row(
-                        children: [
-                          Icon(Icons.group, color: AppTheme.primaryColor, size: 20),
-                          const SizedBox(width: AppTheme.spacing8),
-                          Text('Joint Wallet', style: AppTheme.bodySmall),
-                        ],
-                      ),
-                      value: 'joint',
-                      groupValue: _walletType,
-                      onChanged: (value) => setState(() => _walletType = value!),
-                      activeColor: AppTheme.primaryColor,
-                    ),
+                    // Temporarily hidden - Joint Wallet option
+                    // RadioListTile<String>(
+                    //   title: Row(
+                    //     children: [
+                    //       Icon(Icons.group, color: AppTheme.primaryColor, size: 20),
+                    //       const SizedBox(width: AppTheme.spacing8),
+                    //       Text('Joint Wallet', style: AppTheme.bodySmall),
+                    //     ],
+                    //   ),
+                    //   value: 'joint',
+                    //   groupValue: _walletType,
+                    //   onChanged: (value) => setState(() => _walletType = value!),
+                    //   activeColor: AppTheme.primaryColor,
+                    // ),
                   ],
                 ),
               ),
               
               const SizedBox(height: AppTheme.spacing16),
               
-              if (_walletType == 'joint') ...[
-                // Joint Wallet Rules Section
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    border: Border.all(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      width: AppTheme.thinBorderWidth,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.rule,
-                            color: AppTheme.primaryColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: AppTheme.spacing8),
-                          Text(
-                            'Joint Wallet Rules',
-                            style: AppTheme.bodySmall.copyWith(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: AppTheme.textPrimaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppTheme.spacing12),
-                      _buildRuleItem('1', 'All members have equal access to the wallet'),
-                      _buildRuleItem('2', 'Minimum contribution is 1,000 RWF per member'),
-                      _buildRuleItem('3', 'Members can withdraw up to 50% of their contribution'),
-                      _buildRuleItem('4', 'All transactions require majority approval'),
-                      _buildRuleItem('5', 'Monthly contribution is required'),
-                      _buildRuleItem('6', 'No penalties for late contributions'),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                            border: Border.all(
-                              color: AppTheme.primaryColor.withOpacity(0.2),
-                              width: AppTheme.thinBorderWidth,
-                            ),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                _showCustomRulesDialog(context);
-                              },
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppTheme.spacing12,
-                                  vertical: AppTheme.spacing8,
-                                ),
-                                child: Text(
-                                  'Customize rules',
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.primaryColor,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: AppTheme.spacing16),
-              ],
+              // Temporarily hidden - Joint Wallet Rules Section
+              // if (_walletType == 'joint') ...[
+              //   // Joint Wallet Rules Section
+              //   Container(
+              //     padding: const EdgeInsets.all(AppTheme.spacing16),
+              //     decoration: BoxDecoration(
+              //       color: AppTheme.primaryColor.withOpacity(0.05),
+              //       borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+              //       border: Border.all(
+              //         color: AppTheme.primaryColor.withOpacity(0.1),
+              //         width: AppTheme.thinBorderWidth,
+              //       ),
+              //     ),
+              //     child: Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //         Row(
+              //           children: [
+              //           Icon(
+              //             Icons.rule,
+              //             color: AppTheme.primaryColor,
+              //             size: 20,
+              //           ),
+              //           const SizedBox(width: AppTheme.spacing8),
+              //           Text(
+              //             'Joint Wallet Rules',
+              //             style: AppTheme.bodySmall.copyWith(
+              //               fontWeight: FontWeight.w700,
+              //               fontSize: 13,
+              //               color: AppTheme.textPrimaryColor,
+              //             ),
+              //           ),
+              //         ],
+              //         const SizedBox(height: AppTheme.spacing12),
+              //         _buildRuleItem('1', 'All members have equal access to the wallet'),
+              //         _buildRuleItem('2', 'Minimum contribution is 1,000 RWF per member'),
+              //         _buildRuleItem('3', 'Members can withdraw up to 50% of their contribution'),
+              //         _buildRuleItem('4', 'All transactions require majority approval'),
+              //         _buildRuleItem('5', 'Monthly contribution is required'),
+              //         _buildRuleItem('6', 'No penalties for late contributions'),
+              //         const SizedBox(height: AppTheme.spacing8),
+              //         Align(
+              //           alignment: Alignment.centerRight,
+              //           child: Container(
+              //             decoration: BoxDecoration(
+              //               color: AppTheme.primaryColor.withOpacity(0.1),
+              //               borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              //               border: Border.all(
+              //                 color: AppTheme.primaryColor.withOpacity(0.2),
+              //                 width: AppTheme.thinBorderWidth,
+              //               ),
+              //             ),
+              //             child: Material(
+              //               color: Colors.transparent,
+              //               child: InkWell(
+              //                 onTap: () {
+              //                   _showCustomRulesDialog(context);
+              //                 },
+              //                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              //                 child: Padding(
+              //                   padding: const EdgeInsets.symmetric(
+              //                     horizontal: AppTheme.spacing12,
+              //                     vertical: AppTheme.spacing8,
+              //                   ),
+              //                   child: Text(
+              //                     'Customize rules',
+              //                     style: AppTheme.bodySmall.copyWith(
+              //                       color: AppTheme.primaryColor,
+              //                       fontWeight: FontWeight.w600,
+              //                       fontSize: 12,
+              //                     ),
+              //                   ),
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              //   
+              //   const SizedBox(height: AppTheme.spacing16),
+              // ],
               
               // Basic Information
               Text(
@@ -2616,146 +2574,146 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
               
               const SizedBox(height: AppTheme.spacing16),
               
-              if (_walletType == 'joint') ...[
-                // Members Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Members',
-                      style: AppTheme.bodySmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      '${_members.length} member${_members.length != 1 ? 's' : ''}',
-                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.spacing8),
-                
-                // Add Member Form - WhatsApp Style
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _memberNameController,
-                              style: AppTheme.bodySmall,
-                              decoration: const InputDecoration(
-                                hintText: 'Search contacts or enter name',
-                                prefixIcon: Icon(Icons.search),
-                                suffixIcon: Icon(Icons.contacts),
-                              ),
-                              onFieldSubmitted: (value) => _addMember(),
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.spacing8),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.surfaceColor,
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                              border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                            ),
-                            child: IconButton(
-                              onPressed: _addMember,
-                              icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 20),
-                              tooltip: 'Add Member',
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Text(
-                        'Tap the + button to add members to your joint wallet',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: AppTheme.textHintColor,
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                
-                if (_members.isNotEmpty) ...[
-                  const SizedBox(height: AppTheme.spacing8),
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.spacing12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                      border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                    ),
-                    child: Column(
-                      children: _members.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final member = entry.value;
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: index < _members.length - 1 ? AppTheme.spacing8 : 0),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
-                                child: Text(
-                                  member['name'][0].toUpperCase(),
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.primaryColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppTheme.spacing12),
-                              Expanded(
-                                child: Text(
-                                  member['name'],
-                                  style: AppTheme.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  member['role'],
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.primaryColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppTheme.spacing8),
-                              IconButton(
-                                icon: const Icon(Icons.remove_circle_outline, size: 22, color: AppTheme.errorColor),
-                                onPressed: () => _removeMember(index),
-                                tooltip: 'Remove',
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ],
+              // Temporarily hidden - Members Section for Joint Wallets
+              // if (_walletType == 'joint') ...[
+              //   // Members Section
+              //   Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       Text(
+              //         'Members',
+              //         style: AppTheme.bodySmall.copyWith(
+              //           fontWeight: FontWeight.w700,
+              //           fontSize: 13,
+              //         ),
+              //       ),
+              //       Text(
+              //         '${_members.length} member${_members.length != 1 ? 's' : ''}',
+              //         style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+              //       ),
+              //     ],
+              //   ),
+              //   const SizedBox(height: AppTheme.spacing8),
+              //   
+              //   // Add Member Form - WhatsApp Style
+              //   Container(
+              //     padding: const EdgeInsets.all(AppTheme.spacing12),
+              //     decoration: BoxDecoration(
+              //       color: AppTheme.surfaceColor,
+              //       borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+              //       border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+              //     ),
+              //     child: Column(
+              //       children: [
+              //         Row(
+              //           children: [
+              //           Expanded(
+              //             child: TextFormField(
+              //               controller: _memberNameController,
+              //               style: AppTheme.bodySmall,
+              //               decoration: const InputDecoration(
+              //                 hintText: 'Search contacts or enter name',
+              //                 prefixIcon: Icon(Icons.search),
+              //                 suffixIcon: Icon(Icons.contacts),
+              //               ),
+              //               onFieldSubmitted: (value) => _addMember(),
+              //             ),
+              //           ),
+              //           const SizedBox(width: AppTheme.spacing8),
+              //           Container(
+              //             decoration: BoxDecoration(
+              //               color: AppTheme.surfaceColor,
+              //               borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              //               border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+              //             ),
+              //             child: IconButton(
+              //               onPressed: _addMember,
+              //               icon: Icon(Icons.add, color: AppTheme.primaryColor, size: 20),
+              //               tooltip: 'Add Member',
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //       const SizedBox(height: AppTheme.spacing8),
+              //       Text(
+              //         'Tap the + button to add members to your joint wallet',
+              //         style: AppTheme.bodySmall.copyWith(
+              //           color: AppTheme.textHintColor,
+              //           fontSize: 12,
+              //         ),
+              //         textAlign: TextAlign.center,
+              //       ),
+              //     ],
+              //   ),
+              //   
+              //   if (_members.isNotEmpty) ...[
+              //     const SizedBox(height: AppTheme.spacing8),
+              //     Container(
+              //       padding: const EdgeInsets.all(AppTheme.spacing12),
+              //       decoration: BoxDecoration(
+              //         color: AppTheme.surfaceColor,
+              //         borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+              //         border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+              //       ),
+              //       child: Column(
+              //         children: _members.asMap().entries.map((entry) {
+              //           final index = entry.key;
+              //           final member = entry.value;
+              //           return Padding(
+              //             padding: EdgeInsets.only(bottom: index < _members.length - 1 ? AppTheme.spacing8 : 0),
+              //             child: Row(
+              //               children: [
+              //                 CircleAvatar(
+              //                   radius: 20,
+              //                   backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
+              //                   child: Text(
+              //                     member['name'][0].toUpperCase(),
+              //                     style: AppTheme.bodySmall.copyWith(
+              //                       color: AppTheme.primaryColor,
+              //                       fontWeight: FontWeight.bold,
+              //                       fontSize: 16,
+              //                     ),
+              //                   ),
+              //                 ),
+              //                 const SizedBox(width: AppTheme.spacing12),
+              //                 Expanded(
+              //                   child: Text(
+              //                     member['name'],
+              //                     style: AppTheme.bodySmall.copyWith(
+              //                       fontWeight: FontWeight.w600,
+              //                       fontSize: 15,
+              //                     ),
+              //                   ),
+              //                 ),
+              //                 Container(
+              //                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              //                   decoration: BoxDecoration(
+              //                     color: AppTheme.primaryColor.withOpacity(0.08),
+              //                     borderRadius: BorderRadius.circular(12),
+              //                   ),
+              //                   child: Text(
+              //                     member['role'],
+              //                     style: AppTheme.bodySmall.copyWith(
+              //                       color: AppTheme.primaryColor,
+              //                       fontSize: 12,
+              //                       fontWeight: FontWeight.w500,
+              //                     ),
+              //                   ),
+              //                 ),
+              //                 const SizedBox(width: AppTheme.spacing8),
+              //                 IconButton(
+              //                   icon: const Icon(Icons.remove_circle_outline, size: 22, color: AppTheme.errorColor),
+              //                   onPressed: () => _removeMember(index),
+              //                   tooltip: 'Remove',
+              //                 ),
+              //               ],
+              //             ),
+              //           );
+              //         }).toList(),
+              //       ),
+              //     ),
+              //   ],
+              // ],
               
               const SizedBox(height: AppTheme.actionSheetBottomSpacing),
               
@@ -3061,7 +3019,7 @@ class _TopUpSheet extends StatefulWidget {
 class _TopUpSheetState extends State<_TopUpSheet> {
   final TextEditingController _amountController = TextEditingController();
   String _selectedWallet = 'Main Ikofi';
-  final List<String> _wallets = ['Main Ikofi', 'Joint Ikofi'];
+  final List<String> _wallets = ['Main Ikofi']; // Joint Ikofi temporarily hidden
 
   @override
   void dispose() {

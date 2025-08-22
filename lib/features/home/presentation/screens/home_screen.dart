@@ -10,6 +10,7 @@ import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
+import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../../core/providers/localization_provider.dart';
@@ -27,6 +28,7 @@ import '../../../customers/presentation/screens/customers_list_screen.dart';
 import '../../../suppliers/presentation/screens/collected_milk_screen.dart';
 import '../../../customers/presentation/screens/sold_milk_screen.dart';
 import '../../../account_access/presentation/screens/manage_account_access_screen.dart';
+import '../../../agent_reports/presentation/screens/agent_report_screen.dart';
 import '../providers/overview_provider.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../providers/user_accounts_provider.dart';
@@ -104,7 +106,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // Static mock wallets as fallback for home screen
+  // Static mock wallets as fallback for home screen - Joint ikofi temporarily hidden
   List<Wallet> get homeWallets => [
     Wallet(
       id: 'WALLET-1',
@@ -117,20 +119,21 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
       owners: ['You'],
       isDefault: true,
     ),
-    Wallet(
-      id: 'WALLET-2',
-      name: 'Joint Ikofi',
-      balance: 1200000,
-      currency: 'RWF',
-      type: 'joint',
-      status: 'active',
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
-      owners: ['You', 'Alice', 'Eric'],
-      isDefault: false,
-      description: 'Joint savings for family expenses',
-      targetAmount: 2000000,
-      targetDate: DateTime.now().add(const Duration(days: 180)),
-    ),
+    // Temporarily hidden - Joint Ikofi
+    // Wallet(
+    //   id: 'WALLET-2',
+    //   name: 'Joint Ikofi',
+    //   balance: 1200000,
+    //   currency: 'RWF',
+    //   type: 'joint',
+    //   status: 'active',
+    //   createdAt: DateTime.now().subtract(const Duration(days: 60)),
+    //   owners: ['You', 'Alice', 'Eric'],
+    //   isDefault: false,
+    //   description: 'Joint savings for family expenses',
+    //   targetAmount: 2000000,
+    //   targetDate: DateTime.now().add(const Duration(days: 180)),
+    // ),
     Wallet(
       id: 'WALLET-3',
       name: 'Vacation Fund',
@@ -405,7 +408,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               wallet: wallets[index], 
                               showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
                               onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
-                              onTap: () {}, // Disable navigation to wallet details
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => TransactionsScreen(wallet: wallets[index]),
+                                  ),
+                                );
+                              },
                             ),
                           );
                         },
@@ -2017,6 +2026,18 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           );
                         },
                       ),
+                              _buildActionTile(
+          Icons.analytics,
+          'My Report',
+          'View your performance metrics and commissions',
+          () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const AgentReportScreen(),
+              ),
+            );
+          },
+        ),
                       Consumer(
                         builder: (context, ref, child) {
                           final localizationService = ref.watch(localizationServiceProvider);
@@ -2573,7 +2594,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
   String? _selectedMethod = 'Mobile Money';
   final List<String> _methods = ['Mobile Money', 'Card', 'Bank'];
 
-  // Mock ikofi (same as homeWallets)
+  // Mock ikofi (same as homeWallets) - Joint ikofi temporarily hidden
   final List<Wallet> _wallets = [
     Wallet(
       id: 'WALLET-1',
@@ -2586,17 +2607,18 @@ class _TopUpSheetState extends State<_TopUpSheet> {
       owners: ['You'],
       isDefault: true,
     ),
-    Wallet(
-      id: 'WALLET-2',
-      name: 'Joint Ikofi',
-      balance: 1200000,
-      currency: 'RWF',
-      type: 'joint',
-      status: 'active',
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
-      owners: ['You', 'Alice', 'Eric'],
-      isDefault: false,
-    ),
+    // Temporarily hidden - Joint Ikofi
+    // Wallet(
+    //   id: 'WALLET-2',
+    //   name: 'Joint Ikofi',
+    //   balance: 1200000,
+    //   currency: 'RWF',
+    //   type: 'joint',
+    //   status: 'active',
+    //   createdAt: DateTime.now().subtract(const Duration(days: 60)),
+    //   owners: ['You', 'Alice', 'Eric'],
+    //   isDefault: false,
+    // ),
     Wallet(
       id: 'WALLET-3',
       name: 'Vacation Fund',

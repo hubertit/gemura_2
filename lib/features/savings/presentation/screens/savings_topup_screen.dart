@@ -106,7 +106,8 @@ class _SavingsTopupSheetState extends ConsumerState<SavingsTopupSheet> {
               style: AppTheme.bodySmall,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
-                prefixIcon: Icon(Icons.attach_money),
+                                        prefixIcon: Icon(Icons.monetization_on),
+                        prefixText: 'RWF ',
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Amount required';

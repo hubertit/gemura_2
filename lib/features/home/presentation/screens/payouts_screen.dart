@@ -189,7 +189,7 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
   String? _selectedBank;
   MomoProvider _momoProvider = MomoProvider.mtn;
 
-  // Mock wallets
+  // Mock wallets - Joint ikofi temporarily hidden
   final List<Wallet> _wallets = [
     Wallet(
       id: 'WALLET-1',
@@ -202,17 +202,18 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
       owners: ['You'],
       isDefault: true,
     ),
-    Wallet(
-      id: 'WALLET-2',
-      name: 'Joint Ikofi',
-      balance: 1200000,
-      currency: 'RWF',
-      type: 'joint',
-      status: 'active',
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
-      owners: ['You', 'Alice', 'Eric'],
-      isDefault: false,
-    ),
+    // Temporarily hidden - Joint Ikofi
+    // Wallet(
+    //   id: 'WALLET-2',
+    //   name: 'Joint Ikofi',
+    //   balance: 1200000,
+    //   currency: 'RWF',
+    //   type: 'joint',
+    //   status: 'active',
+    //   createdAt: DateTime.now().subtract(const Duration(days: 60)),
+    //   owners: ['You', 'Alice', 'Eric'],
+    //   isDefault: false,
+    // ),
     Wallet(
       id: 'WALLET-3',
       name: 'Savings',
@@ -294,7 +295,8 @@ class _PayoutFormSheetState extends State<_PayoutFormSheet> {
               style: AppTheme.bodySmall,
               decoration: const InputDecoration(
                 hintText: 'Enter amount',
-                prefixIcon: Icon(Icons.attach_money),
+                                        prefixIcon: Icon(Icons.monetization_on),
+                        prefixText: 'RWF ',
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Amount required';

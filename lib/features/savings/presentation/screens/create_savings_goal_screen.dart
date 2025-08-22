@@ -131,7 +131,8 @@ class _CreateSavingsGoalScreenState extends ConsumerState<CreateSavingsGoalScree
               decoration: const InputDecoration(
                 labelText: 'Target Amount',
                 hintText: 'Enter your target amount',
-                prefixIcon: Icon(Icons.attach_money),
+                                        prefixIcon: Icon(Icons.monetization_on),
+                        prefixText: 'RWF ',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.numberWithOptions(decimal: true),

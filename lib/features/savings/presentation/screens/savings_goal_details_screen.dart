@@ -442,7 +442,8 @@ class SavingsGoalDetailsScreen extends ConsumerWidget {
                 controller: amountController,
                 decoration: const InputDecoration(
                   labelText: 'Amount',
-                  prefixIcon: Icon(Icons.attach_money),
+                                          prefixIcon: Icon(Icons.monetization_on),
+                        prefixText: 'RWF ',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),

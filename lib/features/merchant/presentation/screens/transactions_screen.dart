@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/widgets/status_badge.dart';
 import '../../../../shared/models/wallet.dart';
+import '../../../../shared/services/transaction_service.dart';
 
 class TransactionDetailsScreen extends StatelessWidget {
   final Transaction transaction;
@@ -142,7 +143,8 @@ class TransactionDetailsScreen extends StatelessWidget {
 }
 
 class TransactionsScreen extends StatefulWidget {
-  const TransactionsScreen({super.key});
+  final Wallet? wallet;
+  const TransactionsScreen({super.key, this.wallet});
 
   @override
   State<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -193,107 +195,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     ),
   ];
 
-  // Mock data for demonstration
-  List<Transaction> get mockTransactions => [
-    Transaction(
-      id: 'TXN-1001',
-      amount: 25000,
-      currency: 'RWF',
-      type: 'payment',
-      status: 'success',
-      date: DateTime.now().subtract(const Duration(hours: 2)),
-      description: 'TXN #1234',
-      paymentMethod: 'Mobile Money',
-      customerName: 'Alice Umutoni',
-      customerPhone: '0788123456',
-      reference: 'PMT-20240601-001',
-      walletId: 'WALLET-1',
-    ),
-    Transaction(
-      id: 'TXN-1002',
-      amount: 120000,
-      currency: 'RWF',
-      type: 'payment',
-      status: 'pending',
-      date: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-      description: 'TXN #1235',
-      paymentMethod: 'Card',
-      customerName: 'Eric Niyonsaba',
-      customerPhone: '0722123456',
-      reference: 'PMT-20240601-002',
-      walletId: 'WALLET-2',
-    ),
-    Transaction(
-      id: 'TXN-1003',
-      amount: 50000,
-      currency: 'RWF',
-      type: 'refund',
-      status: 'success',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      description: 'Refund for TXN #1232',
-      paymentMethod: 'Bank',
-      customerName: 'Claudine Mukamana',
-      customerPhone: '0733123456',
-      reference: 'REF-20240530-001',
-      walletId: 'WALLET-1',
-    ),
-    Transaction(
-      id: 'TXN-1004',
-      amount: 15000,
-      currency: 'RWF',
-      type: 'payment',
-      status: 'failed',
-      date: DateTime.now().subtract(const Duration(days: 3)),
-      description: 'TXN #1231',
-      paymentMethod: 'QR/USSD',
-      customerName: 'Jean Bosco',
-      customerPhone: '0799123456',
-      reference: 'PMT-20240529-001',
-      walletId: 'WALLET-3',
-    ),
-    Transaction(
-      id: 'TXN-1005',
-      amount: 80000,
-      currency: 'RWF',
-      type: 'payment',
-      status: 'success',
-      date: DateTime.now().subtract(const Duration(hours: 5)),
-      description: 'TXN #1236',
-      paymentMethod: 'Mobile Money',
-      customerName: 'Marie Claire',
-      customerPhone: '0788456123',
-      reference: 'PMT-20240601-003',
-      walletId: 'WALLET-2',
-    ),
-    Transaction(
-      id: 'TXN-1006',
-      amount: 30000,
-      currency: 'RWF',
-      type: 'payment',
-      status: 'pending',
-      date: DateTime.now().subtract(const Duration(days: 1, hours: 6)),
-      description: 'TXN #1237',
-      paymentMethod: 'Card',
-      customerName: 'Samuel Mugisha',
-      customerPhone: '0722987654',
-      reference: 'PMT-20240601-004',
-      walletId: 'WALLET-1',
-    ),
-    Transaction(
-      id: 'TXN-1007',
-      amount: 45000,
-      currency: 'RWF',
-      type: 'refund',
-      status: 'failed',
-      date: DateTime.now().subtract(const Duration(days: 2, hours: 2)),
-      description: 'Refund for TXN #1233',
-      paymentMethod: 'Bank',
-      customerName: 'Innocent Habimana',
-      customerPhone: '0733123499',
-      reference: 'REF-20240530-002',
-      walletId: 'WALLET-3',
-    ),
-  ];
+  // Get transactions from service
+  List<Transaction> get mockTransactions {
+    if (widget.wallet != null) {
+      return TransactionService().getTransactionsByWallet(widget.wallet!.id);
+    }
+    return TransactionService().getAllTransactions();
+  }
 
   // Filter state
   String? _selectedType;
@@ -302,6 +210,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   RangeValues _amountRange = const RangeValues(0, 200000);
   DateTimeRange? _dateRange;
   bool _hasActiveFilters = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-filter by wallet if provided
+    if (widget.wallet != null) {
+      _selectedWalletId = widget.wallet!.id;
+      _hasActiveFilters = true;
+    }
+  }
 
   List<Transaction> get filteredTransactions {
     List<Transaction> filtered = mockTransactions;
@@ -391,7 +309,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final transactions = filteredTransactions;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transactions'),
+        title: Text(widget.wallet != null ? '${widget.wallet!.name} Transactions' : 'Transactions'),
         backgroundColor: AppTheme.surfaceColor,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
         titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
@@ -435,12 +353,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           Icon(Icons.receipt_long_rounded, size: 64, color: AppTheme.textHintColor),
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            'No transactions yet',
+            'No transactions found',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppTheme.textSecondaryColor),
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Your recent transactions will appear here.',
+            'Try adjusting your filters or check back later.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textHintColor),
           ),
         ],
