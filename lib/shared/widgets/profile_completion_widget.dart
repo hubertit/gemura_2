@@ -62,8 +62,8 @@ class ProfileCompletionWidget extends StatelessWidget {
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing8,
-                      vertical: AppTheme.spacing4,
+                      horizontal: AppTheme.spacing4,
+                      vertical: AppTheme.spacing2,
                     ),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.1),
@@ -75,6 +75,7 @@ class ProfileCompletionWidget extends StatelessWidget {
                       style: AppTheme.bodySmall.copyWith(
                         color: color,
                         fontWeight: FontWeight.w600,
+                        fontSize: 11, // Reduced from 14 to 11 (about 50% smaller)
                       ),
                     ),
                   ),
