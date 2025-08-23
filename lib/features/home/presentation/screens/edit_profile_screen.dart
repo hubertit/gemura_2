@@ -176,16 +176,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Profile Picture Section
-                    Center(
-                      child: CircleAvatar(
-                        radius: 54,
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.08),
-                        child: Icon(Icons.person, size: 48, color: AppTheme.primaryColor),
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing16),
-                    
                     // Profile Completion Widget
                     if (user != null) ProfileCompletionWidget(user: user),
                     const SizedBox(height: AppTheme.spacing16),
