@@ -954,11 +954,11 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
               color: AppTheme.primaryColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-                      child: Icon(
-            isSearch ? Icons.search_off : Icons.inventory_outlined,
-            size: 40,
-            color: AppTheme.primaryColor,
-          ),
+            child: Icon(
+              isSearch ? Icons.search_off : Icons.inventory_outlined,
+              size: 40,
+              color: AppTheme.primaryColor,
+            ),
           ),
           const SizedBox(height: AppTheme.spacing24),
           Consumer(
@@ -977,12 +977,72 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                   Text(
                     isSearch 
                         ? 'Try adjusting your search terms or browse all collected milk'
-                        : localizationService.translate('collectedMilkWillAppear'),
+                        : 'Record your first collection to get started',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: AppTheme.spacing32),
+                  if (!isSearch)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const RecordCollectionScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.add, size: 20),
+                        label: const Text('Record Collection'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing24,
+                            vertical: AppTheme.spacing16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          // Clear search filters
+                          setState(() {
+                            _selectedSupplier = 'All';
+                            _selectedStatus = 'All';
+                            _startDate = null;
+                            _endDate = null;
+                            _quantityRange = const RangeValues(0, 200);
+                            _priceRange = const RangeValues(0, 2000);
+                            _currentApiFilters = null;
+                          });
+                        },
+                        icon: const Icon(Icons.clear, size: 20),
+                        label: const Text('Clear Filters'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.primaryColor,
+                          side: BorderSide(color: AppTheme.primaryColor, width: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing24,
+                            vertical: AppTheme.spacing16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               );
             },

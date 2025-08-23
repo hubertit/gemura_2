@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/kyc_service.dart';
 import '../../core/services/secure_storage_service.dart';
@@ -49,7 +49,12 @@ class _KYCPhotoUploadWidgetState extends State<KYCPhotoUploadWidget> {
         print('🔧 KYCPhotoUploadWidget: Image picked successfully');
         print('🔧 KYCPhotoUploadWidget: Image path: ${image.path}');
         print('🔧 KYCPhotoUploadWidget: Image name: ${image.name}');
-        await _uploadPhoto(File(image.path));
+        
+        // Crop the image before uploading
+        final croppedImage = await _cropImage(image.path);
+        if (croppedImage != null) {
+          await _uploadPhoto(croppedImage);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -63,13 +68,65 @@ class _KYCPhotoUploadWidgetState extends State<KYCPhotoUploadWidget> {
     }
   }
 
+  Future<File?> _cropImage(String imagePath) async {
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imagePath,
+        cropStyle: CropStyle.rectangle,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop ${widget.title}',
+            toolbarColor: AppTheme.primaryColor,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: false,
+            hideBottomControls: false,
+            showCropGrid: true,
+            cropGridColor: AppTheme.primaryColor.withOpacity(0.5),
+            cropFrameColor: AppTheme.primaryColor,
+            cropFrameStrokeWidth: 2,
+            cropGridColumnCount: 3,
+            cropGridRowCount: 3,
+          ),
+          IOSUiSettings(
+            title: 'Crop ${widget.title}',
+            aspectRatioLockEnabled: false,
+            aspectRatioPickerButtonHidden: false,
+            resetAspectRatioEnabled: true,
+            rotateButtonsHidden: true,
+            rotateClockwiseButtonHidden: true,
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        print('🔧 KYCPhotoUploadWidget: Image cropped successfully');
+        print('🔧 KYCPhotoUploadWidget: Cropped image path: ${croppedFile.path}');
+        return File(croppedFile.path);
+      }
+      return null;
+    } catch (e) {
+      print('🔧 KYCPhotoUploadWidget: Error cropping image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cropping image: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
+
+
   Future<void> _uploadPhoto(File photoFile) async {
     try {
       setState(() {
         _isUploading = true;
       });
 
-      final token = await SecureStorageService.getAuthToken();
+      final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
@@ -248,7 +305,7 @@ class _KYCPhotoUploadWidgetState extends State<KYCPhotoUploadWidget> {
                     : const Icon(Icons.upload),
                 label: Text(_isUploading ? 'Uploading...' : 'Upload Photo'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: Colors.grey[700],
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
                   shape: RoundedRectangleBorder(
