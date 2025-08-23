@@ -256,9 +256,24 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       
       // Update local user data
       if (response['data'] != null) {
-        final updatedUser = User.fromJson(response['data']['user'] ?? response['data']);
-        print('🔧 AuthProvider: Updated user: ${updatedUser.name}');
-        state = AsyncValue.data(updatedUser);
+        try {
+          final userData = response['data']['user'] ?? response['data'];
+          print('🔧 AuthProvider: User data from response: $userData');
+          
+          // Ensure accountName is preserved if not in response
+          if (userData['accountName'] == null && currentUser != null) {
+            userData['accountName'] = currentUser.accountName;
+            print('🔧 AuthProvider: Preserved accountName: ${currentUser.accountName}');
+          }
+          
+          final updatedUser = User.fromJson(userData);
+          print('🔧 AuthProvider: Updated user: ${updatedUser.name}');
+          state = AsyncValue.data(updatedUser);
+        } catch (e) {
+          print('🔧 AuthProvider: Error parsing user data: $e');
+          // If parsing fails, keep the current user
+          print('🔧 AuthProvider: Keeping current user: ${currentUser?.name}');
+        }
       }
       
       print('🔧 AuthProvider: Profile update completed successfully');
