@@ -18,10 +18,18 @@ class EmployeeService {
     required Map<String, dynamic> accountAccess,
   }) async {
     try {
+      print('🔧 EmployeeService: Starting employee registration...');
+      print('🔧 EmployeeService: User data: $userData');
+      print('🔧 EmployeeService: Account access: $accountAccess');
+      
       final token = SecureStorageService.getAuthToken();
       if (token == null) {
+        print('🔧 EmployeeService: No authentication token found');
         throw Exception('No authentication token found');
       }
+      
+      print('🔧 EmployeeService: Token found: ${token.substring(0, 10)}...');
+      print('🔧 EmployeeService: Making API call to: /employees/create');
 
       final response = await _dio.post(
         '/employees/create',
@@ -32,19 +40,30 @@ class EmployeeService {
         },
       );
 
+      print('🔧 EmployeeService: Response status: ${response.statusCode}');
+      print('🔧 EmployeeService: Response data: ${response.data}');
+      
       if (response.statusCode == 200) {
         final data = response.data;
         // Check if the API response indicates success
         if (data['code'] == 200 || data['status'] == 'success') {
+          print('🔧 EmployeeService: Employee registration successful');
           return true;
         } else {
           final errorMessage = data['message'] ?? 'Failed to register employee';
+          print('🔧 EmployeeService: API returned error: $errorMessage');
           throw Exception(errorMessage);
         }
       } else {
+        print('🔧 EmployeeService: HTTP error: ${response.statusCode}');
         throw Exception('Failed to register employee: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print('🔧 EmployeeService: DioException occurred: ${e.message}');
+      print('🔧 EmployeeService: DioException type: ${e.type}');
+      print('🔧 EmployeeService: DioException response: ${e.response?.data}');
+      print('🔧 EmployeeService: DioException status: ${e.response?.statusCode}');
+      
       String errorMessage = 'Failed to register employee. ';
       
       if (e.response?.statusCode == 401) {
@@ -64,6 +83,7 @@ class EmployeeService {
         errorMessage += backendMsg ?? 'Please try again.';
       }
       
+      print('🔧 EmployeeService: Final error message: $errorMessage');
       throw Exception(errorMessage);
     } catch (e) {
       throw Exception('Unexpected error: $e');
