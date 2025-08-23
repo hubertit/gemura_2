@@ -13,6 +13,7 @@ import 'forgot_password_screen.dart';
 import 'package:dio/dio.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../home/presentation/screens/home_screen.dart';
+import '../../../home/presentation/screens/edit_profile_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -53,9 +54,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _navigateAfterLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
+    final user = ref.read(authProvider).value;
+    if (user != null) {
+      final completionPercentage = user.profileCompletionPercentage;
+      
+      if (completionPercentage < 50) {
+        // Navigate to edit profile if completion is less than 50%
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+        );
+      } else {
+        // Navigate to home if profile is sufficiently complete
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
+    } else {
+      // Fallback to home if user data is not available
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
   }
 
   void _showCountryPicker() {
@@ -110,11 +129,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       final user = ref.read(authProvider).value;
       if (mounted && user != null) {
-        showIntentionSnackBar(
-          context,
-          'Login successful! Welcome back.',
-          intent: SnackBarIntent.success,
-        );
+        final completionPercentage = user.profileCompletionPercentage;
+        
+        if (completionPercentage < 50) {
+          showIntentionSnackBar(
+            context,
+            'Login successful! Please complete your profile to continue.',
+            intent: SnackBarIntent.warning,
+          );
+        } else {
+          showIntentionSnackBar(
+            context,
+            'Login successful! Welcome back.',
+            intent: SnackBarIntent.success,
+          );
+        }
         _navigateAfterLogin();
       }
     } catch (e) {
