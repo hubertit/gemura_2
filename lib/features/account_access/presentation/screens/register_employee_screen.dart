@@ -393,15 +393,26 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
       if (mounted) {
         String errorMessage = '❌ Failed to add employee';
         
-        // Provide more specific error messages based on the exception
-        if (e.toString().contains('phone') || e.toString().contains('email')) {
+        // Extract the actual error message from the exception
+        final errorString = e.toString();
+        
+        // Check for specific API error messages first
+        if (errorString.contains('User already has access to this account')) {
+          errorMessage = '❌ User already has access to this account';
+        } else if (errorString.contains('phone') || errorString.contains('email')) {
           errorMessage = '❌ An employee with this phone number or email already exists';
-        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+        } else if (errorString.contains('network') || errorString.contains('connection')) {
           errorMessage = '❌ Network error. Please check your connection and try again';
-        } else if (e.toString().contains('unauthorized') || e.toString().contains('403')) {
+        } else if (errorString.contains('unauthorized') || errorString.contains('403')) {
           errorMessage = '❌ You don\'t have permission to add employees to this account';
-        } else if (e.toString().contains('validation')) {
+        } else if (errorString.contains('validation')) {
           errorMessage = '❌ Please check the information provided and try again';
+        } else {
+          // Use the actual error message from the API if available
+          final apiMessage = errorString.contains('Exception: ') 
+              ? errorString.split('Exception: ').last
+              : errorString;
+          errorMessage = '❌ $apiMessage';
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
