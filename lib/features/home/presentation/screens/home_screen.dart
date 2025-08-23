@@ -1641,12 +1641,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           CircleAvatar(
                             radius: 50,
                             backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                            backgroundImage: (user?.profileImg != null && user?.profileImg != ''
-                              ? NetworkImage(user!.profileImg)
-                              : (user?.profilePicture != null && user?.profilePicture != ''
-                                ? NetworkImage(user!.profilePicture)
+                            backgroundImage: (user?.profileImg != null && user!.profileImg!.isNotEmpty
+                              ? NetworkImage(user!.profileImg!)
+                              : (user?.profilePicture != null && user!.profilePicture!.isNotEmpty
+                                ? NetworkImage(user!.profilePicture!)
                                 : null)) as ImageProvider<Object>?,
-                            child: ((user?.profileImg == null || user?.profileImg == '') && (user?.profilePicture == null || user?.profilePicture == ''))
+                                                          child: ((user?.profileImg == null || user?.profileImg?.isEmpty == true) && (user?.profilePicture == null || user?.profilePicture?.isEmpty == true))
                                 ? Text(
                                     (user?.name != null && user?.name != '' ? user!.name[0].toUpperCase() : ''),
                                     style: AppTheme.headlineLarge.copyWith(
@@ -1855,14 +1855,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                         },
                       ),
                       if (user?.about != null && user?.about != '')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Text(
-                            user!.about,
-                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
-                            textAlign: TextAlign.center,
+                        if (user?.about != null && user!.about!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(
+                              user!.about!,
+                              style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                        ),
 
                     ],
                   ),
@@ -1904,9 +1905,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                       if (user?.email != null && user!.email!.isNotEmpty)
                         _buildInfoTile(Icons.email_outlined, 'Email', user.email!),
                       if (user?.phoneNumber != null && user?.phoneNumber != '')
-                        _buildInfoTile(Icons.phone, 'Phone', user!.phoneNumber),
-                      if (user?.address != null && user?.address != '')
-                        _buildInfoTile(Icons.location_on_outlined, 'Address', user!.address),
+                                                    if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty)
+                              _buildInfoTile(Icons.phone, 'Phone', user!.phoneNumber!),
+                                              if (user?.address != null && user!.address!.isNotEmpty)
+                          _buildInfoTile(Icons.location_on_outlined, 'Address', user!.address!),
                     ],
                   ),
                 ),

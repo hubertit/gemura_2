@@ -152,8 +152,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return authState.when(
       data: (user) {
         // Set business name from user's account name (from login response)
-        if (user != null && _businessNameController.text != user.accountName) {
-          _businessNameController.text = user.accountName;
+        if (user != null && user.accountName != null && _businessNameController.text != user.accountName) {
+          _businessNameController.text = user.accountName!;
         }
         
         return Scaffold(
