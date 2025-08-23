@@ -14,6 +14,25 @@ class KYCService {
     required String token,
   }) async {
     try {
+      if (kDebugMode) {
+        print('🔧 KYCService: Starting photo upload for type: $photoType');
+        print('🔧 KYCService: File path: ${photoFile.path}');
+        print('🔧 KYCService: File exists: ${await photoFile.exists()}');
+        print('🔧 KYCService: File size: ${await photoFile.length()} bytes');
+        
+        // Check file size limit (5MB)
+        final fileSize = await photoFile.length();
+        if (fileSize > 5 * 1024 * 1024) {
+          throw Exception('File size too large. Maximum size is 5MB.');
+        }
+        
+        // Check file extension
+        final extension = photoFile.path.split('.').last.toLowerCase();
+        if (!['jpg', 'jpeg', 'png'].contains(extension)) {
+          throw Exception('Invalid file format. Only JPG, JPEG, and PNG are allowed.');
+        }
+      }
+
       // Create form data
       FormData formData = FormData.fromMap({
         'token': token,
@@ -24,6 +43,11 @@ class KYCService {
         ),
       });
 
+      if (kDebugMode) {
+        print('🔧 KYCService: Form data created successfully');
+        print('🔧 KYCService: Making API call to: ${AppConfig.apiBaseUrl}/kyc/upload_photo.php');
+      }
+
       // Make API call
       Response response = await _dio.post(
         '${AppConfig.apiBaseUrl}/kyc/upload_photo.php',
@@ -32,17 +56,25 @@ class KYCService {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
+          validateStatus: (status) {
+            return status! < 500; // Accept all status codes less than 500
+          },
         ),
       );
+
+      if (kDebugMode) {
+        print('🔧 KYCService: Response status: ${response.statusCode}');
+        print('🔧 KYCService: Response data: ${response.data}');
+      }
 
       if (response.statusCode == 200) {
         return response.data;
       } else {
-        throw Exception('Upload failed: ${response.statusCode}');
+        throw Exception('Upload failed: ${response.statusCode} - ${response.data}');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('KYC Photo Upload Error: $e');
+        print('🔧 KYCService: Photo Upload Error: $e');
       }
       rethrow;
     }

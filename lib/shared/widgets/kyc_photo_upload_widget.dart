@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/kyc_service.dart';
@@ -41,9 +42,13 @@ class _KYCPhotoUploadWidgetState extends State<KYCPhotoUploadWidget> {
         maxWidth: 1920,
         maxHeight: 1080,
         imageQuality: 85,
+        preferredCameraDevice: CameraDevice.rear,
       );
 
       if (image != null) {
+        print('🔧 KYCPhotoUploadWidget: Image picked successfully');
+        print('🔧 KYCPhotoUploadWidget: Image path: ${image.path}');
+        print('🔧 KYCPhotoUploadWidget: Image name: ${image.name}');
         await _uploadPhoto(File(image.path));
       }
     } catch (e) {
