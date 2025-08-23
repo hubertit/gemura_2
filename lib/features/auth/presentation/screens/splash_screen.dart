@@ -31,7 +31,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       final info = await PackageInfo.fromPlatform();
       if (!mounted) return;
       setState(() {
-        _appVersionText = 'Version ${info.version}+${info.buildNumber}';
+        _appVersionText = 'Version ${info.version} (${info.buildNumber})';
       });
     } catch (_) {
       // Ignore version fetch errors; keep UI clean
