@@ -97,22 +97,28 @@ class User {
   }
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely parse DateTime
+    DateTime? _parseDateTime(dynamic value) {
+      if (value == null || value.toString().isEmpty) return null;
+      try {
+        return DateTime.parse(value.toString());
+      } catch (e) {
+        print('🔧 User.fromJson: Failed to parse DateTime: $value, error: $e');
+        return null;
+      }
+    }
+
     return User(
       id: json['id']?.toString() ?? json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString(),
       password: json['password']?.toString() ?? '',
       role: json['role']?.toString() ?? '',
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt'].toString())
-          : (json['created_at'] != null 
-              ? DateTime.parse(json['created_at'].toString())
-              : DateTime.now()),
-      lastLoginAt: json['lastLoginAt'] != null 
-          ? DateTime.parse(json['lastLoginAt'].toString()) 
-          : (json['last_login_at'] != null 
-              ? DateTime.parse(json['last_login_at'].toString())
-              : null),
+      createdAt: _parseDateTime(json['createdAt']) ?? 
+                 _parseDateTime(json['created_at']) ?? 
+                 DateTime.now(),
+      lastLoginAt: _parseDateTime(json['lastLoginAt']) ?? 
+                   _parseDateTime(json['last_login_at']),
       isActive: json['isActive'] as bool? ?? (json['status']?.toString() == 'active'),
       about: json['about']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
@@ -134,9 +140,7 @@ class User {
       idBackPhotoUrl: json['id_back_photo_url']?.toString(),
       selfiePhotoUrl: json['selfie_photo_url']?.toString(),
       kycStatus: json['kyc_status']?.toString(),
-      kycVerifiedAt: json['kyc_verified_at'] != null 
-          ? DateTime.parse(json['kyc_verified_at'].toString()) 
-          : null,
+      kycVerifiedAt: _parseDateTime(json['kyc_verified_at']),
     );
   }
 
