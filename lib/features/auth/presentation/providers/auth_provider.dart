@@ -50,8 +50,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         try {
           final profileResponse = await _authService.getProfile();
                                 // print('🔍 DEBUG: Profile API Response: $profileResponse');
-          if (profileResponse['data'] != null) {
-            final updatedUser = User.fromJson(profileResponse['data']);
+          if (profileResponse['data'] != null && profileResponse['data']['user'] != null) {
+            final updatedUser = User.fromJson(profileResponse['data']['user']);
                       // print('🔍 DEBUG: Updated User Role: ${updatedUser.role}');
           // print('🔍 DEBUG: Updated User AccountCode: ${updatedUser.accountCode}');
             state = AsyncValue.data(updatedUser);
@@ -116,8 +116,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       // Try to get complete profile data to ensure we have the latest role and account info
       try {
         final profileResponse = await _authService.getProfile();
-        if (profileResponse['data'] != null) {
-          final updatedUser = User.fromJson(profileResponse['data']);
+        if (profileResponse['data'] != null && profileResponse['data']['user'] != null) {
+          final updatedUser = User.fromJson(profileResponse['data']['user']);
           state = AsyncValue.data(updatedUser);
         } else {
           state = AsyncValue.data(user);
@@ -263,7 +263,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       print('🔧 AuthProvider: Profile update completed successfully');
     } catch (e) {
       print('🔧 AuthProvider: Error updating profile: $e');
-      state = AsyncValue.error(e, StackTrace.current);
+      // Don't change state to error - just rethrow the exception
+      // This keeps the UI in the data state and lets the calling code handle the error
       rethrow;
     }
   }
@@ -319,15 +320,24 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       // Force refresh from API, ignore cache
       final profileResponse = await _authService.refreshProfile();
-      if (profileResponse['data'] != null) {
-        final updatedUser = User.fromJson(profileResponse['data']);
+      print('🔧 AuthProvider: Profile response: $profileResponse');
+      
+      if (profileResponse['data'] != null && profileResponse['data']['user'] != null) {
+        final userData = profileResponse['data']['user'];
+        print('🔧 AuthProvider: User data from API: $userData');
+        
+        final updatedUser = User.fromJson(userData);
+        print('🔧 AuthProvider: Parsed user: ${updatedUser.name} - ${updatedUser.phoneNumber} - ${updatedUser.email}');
+        
         // Force state update to trigger UI rebuild
         state = AsyncValue.data(updatedUser);
-        print('Profile refreshed: ${updatedUser.name} - ${updatedUser.role}');
+        print('✅ Profile refreshed successfully: ${updatedUser.name}');
+      } else {
+        print('❌ AuthProvider: No user data in profile response');
       }
     } catch (e) {
       // If refresh fails, keep current user data but log the error
-      print('Failed to refresh profile: $e');
+      print('❌ Failed to refresh profile: $e');
     }
   }
 } 

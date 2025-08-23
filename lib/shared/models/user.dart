@@ -95,26 +95,30 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString(),
       password: json['password']?.toString() ?? '',
       role: json['role']?.toString() ?? '',
       createdAt: json['createdAt'] != null 
           ? DateTime.parse(json['createdAt'].toString())
-          : DateTime.now(),
+          : (json['created_at'] != null 
+              ? DateTime.parse(json['created_at'].toString())
+              : DateTime.now()),
       lastLoginAt: json['lastLoginAt'] != null 
           ? DateTime.parse(json['lastLoginAt'].toString()) 
-          : null,
-      isActive: json['isActive'] as bool? ?? true,
+          : (json['last_login_at'] != null 
+              ? DateTime.parse(json['last_login_at'].toString())
+              : null),
+      isActive: json['isActive'] as bool? ?? (json['status']?.toString() == 'active'),
       about: json['about']?.toString() ?? '',
       address: json['address']?.toString() ?? '',
-      profilePicture: json['profilePicture']?.toString() ?? '',
+      profilePicture: json['profilePicture']?.toString() ?? json['profile_picture']?.toString() ?? '',
       profileImg: json['profile_img']?.toString() ?? '',
-      profileCover: json['profileCover']?.toString() ?? '',
+      profileCover: json['profileCover']?.toString() ?? json['profile_cover']?.toString() ?? '',
       coverImg: json['cover_img']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? json['phone']?.toString() ?? '',
-      accountCode: json['accountCode']?.toString() ?? '',
+      accountCode: json['accountCode']?.toString() ?? json['account_code']?.toString() ?? '',
       // KYC Fields
       province: json['province']?.toString(),
       district: json['district']?.toString(),

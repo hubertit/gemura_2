@@ -57,15 +57,17 @@ Map<String, dynamic> _$UserInfoToJson(UserInfo instance) => <String, dynamic>{
     };
 
 UserAccount _$UserAccountFromJson(Map<String, dynamic> json) => UserAccount(
-      accountId: (json['account_id'] as num).toInt(),
+      accountId: UserAccount._parseInt(json['account_id']),
       accountCode: json['account_code'] as String,
       accountName: json['account_name'] as String,
       accountType: json['account_type'] as String,
       accountStatus: json['account_status'] as String,
       accountCreatedAt: json['account_created_at'] as String,
       role: json['role'] as String,
-      permissions: AccountPermissions.fromJson(
-          json['permissions'] as Map<String, dynamic>),
+      permissions: json['permissions'] == null
+          ? null
+          : AccountPermissions.fromJson(
+              json['permissions'] as Map<String, dynamic>),
       userAccountStatus: json['user_account_status'] as String,
       accessGrantedAt: json['access_granted_at'] as String,
       isDefault: json['is_default'] as bool,
@@ -122,31 +124,31 @@ Map<String, dynamic> _$SwitchAccountResponseToJson(
 
 SwitchAccountData _$SwitchAccountDataFromJson(Map<String, dynamic> json) =>
     SwitchAccountData(
-      userId: (json['userId'] as num).toInt(),
-      userName: json['userName'] as String,
+      userId: SwitchAccountData._parseInt(json['user_id']),
+      userName: json['user_name'] as String,
       newDefaultAccount: DefaultAccount.fromJson(
-          json['newDefaultAccount'] as Map<String, dynamic>),
+          json['new_default_account'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$SwitchAccountDataToJson(SwitchAccountData instance) =>
     <String, dynamic>{
-      'userId': instance.userId,
-      'userName': instance.userName,
-      'newDefaultAccount': instance.newDefaultAccount,
+      'user_id': instance.userId,
+      'user_name': instance.userName,
+      'new_default_account': instance.newDefaultAccount,
     };
 
 DefaultAccount _$DefaultAccountFromJson(Map<String, dynamic> json) =>
     DefaultAccount(
-      accountId: (json['accountId'] as num).toInt(),
-      accountCode: json['accountCode'] as String,
-      accountName: json['accountName'] as String,
+      accountId: DefaultAccount._parseInt(json['account_id']),
+      accountCode: json['account_code'] as String,
+      accountName: json['account_name'] as String,
       role: json['role'] as String,
     );
 
 Map<String, dynamic> _$DefaultAccountToJson(DefaultAccount instance) =>
     <String, dynamic>{
-      'accountId': instance.accountId,
-      'accountCode': instance.accountCode,
-      'accountName': instance.accountName,
+      'account_id': instance.accountId,
+      'account_code': instance.accountCode,
+      'account_name': instance.accountName,
       'role': instance.role,
     };

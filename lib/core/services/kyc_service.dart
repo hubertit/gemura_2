@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
-import 'secure_storage_service.dart';
 
 class KYCService {
   static final Dio _dio = Dio();
@@ -34,17 +33,26 @@ class KYCService {
       }
 
       // Create form data
+      final extension = photoFile.path.split('.').last.toLowerCase();
+      
+      // Ensure file exists and is readable
+      if (!await photoFile.exists()) {
+        throw Exception('Photo file does not exist: ${photoFile.path}');
+      }
+      
       FormData formData = FormData.fromMap({
         'token': token,
         'photo_type': photoType,
-        'photo': MultipartFile.fromFile(
+        'photo': await MultipartFile.fromFile(
           photoFile.path,
-          filename: '${photoType}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          filename: '${photoType}_${DateTime.now().millisecondsSinceEpoch}.$extension',
         ),
       });
 
       if (kDebugMode) {
         print('🔧 KYCService: Form data created successfully');
+        print('🔧 KYCService: Form data fields: ${formData.fields}');
+        print('🔧 KYCService: Form data files: ${formData.files}');
         print('🔧 KYCService: Making API call to: ${AppConfig.apiBaseUrl}/kyc/upload_photo.php');
       }
 
@@ -53,9 +61,7 @@ class KYCService {
         '${AppConfig.apiBaseUrl}/kyc/upload_photo.php',
         data: formData,
         options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          // Don't manually set Content-Type - let Dio handle it automatically
           validateStatus: (status) {
             return status! < 500; // Accept all status codes less than 500
           },

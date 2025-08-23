@@ -67,7 +67,7 @@ class UserInfo {
 
 @JsonSerializable()
 class UserAccount {
-  @JsonKey(name: 'account_id')
+  @JsonKey(name: 'account_id', fromJson: _parseInt)
   final int accountId;
   @JsonKey(name: 'account_code')
   final String accountCode;
@@ -82,7 +82,7 @@ class UserAccount {
   @JsonKey(name: 'role')
   final String role;
   @JsonKey(name: 'permissions')
-  final AccountPermissions permissions;
+  final AccountPermissions? permissions;
   @JsonKey(name: 'user_account_status')
   final String userAccountStatus;
   @JsonKey(name: 'access_granted_at')
@@ -98,7 +98,7 @@ class UserAccount {
     required this.accountStatus,
     required this.accountCreatedAt,
     required this.role,
-    required this.permissions,
+    this.permissions,
     required this.userAccountStatus,
     required this.accessGrantedAt,
     required this.isDefault,
@@ -107,6 +107,12 @@ class UserAccount {
   factory UserAccount.fromJson(Map<String, dynamic> json) =>
       _$UserAccountFromJson(json);
   Map<String, dynamic> toJson() => _$UserAccountToJson(this);
+  
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
 }
 
 @JsonSerializable()
@@ -153,8 +159,11 @@ class SwitchAccountResponse {
 
 @JsonSerializable()
 class SwitchAccountData {
+  @JsonKey(name: 'user_id', fromJson: _parseInt)
   final int userId;
+  @JsonKey(name: 'user_name')
   final String userName;
+  @JsonKey(name: 'new_default_account')
   final DefaultAccount newDefaultAccount;
 
   SwitchAccountData({
@@ -166,12 +175,21 @@ class SwitchAccountData {
   factory SwitchAccountData.fromJson(Map<String, dynamic> json) =>
       _$SwitchAccountDataFromJson(json);
   Map<String, dynamic> toJson() => _$SwitchAccountDataToJson(this);
+  
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
 }
 
 @JsonSerializable()
 class DefaultAccount {
+  @JsonKey(name: 'account_id', fromJson: _parseInt)
   final int accountId;
+  @JsonKey(name: 'account_code')
   final String accountCode;
+  @JsonKey(name: 'account_name')
   final String accountName;
   final String role;
 
@@ -185,4 +203,10 @@ class DefaultAccount {
   factory DefaultAccount.fromJson(Map<String, dynamic> json) =>
       _$DefaultAccountFromJson(json);
   Map<String, dynamic> toJson() => _$DefaultAccountToJson(this);
+  
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
 }

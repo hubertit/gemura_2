@@ -2367,7 +2367,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             }
           
           try {
-            final success = await ref.read(userAccountsNotifierProvider.notifier).switchAccount(account.accountId);
+            final success = await ref.read(userAccountsNotifierProvider.notifier).switchAccount(account.accountId, context);
             
             // Dismiss loading snackbar
             if (context.mounted) {
@@ -2375,21 +2375,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             }
             
             if (success && context.mounted) {
-              // Navigate to home tab after successful account switch
-              print('Switching to home tab...');
-              
-              // Use a small delay to ensure modal is closed and UI is ready
-              Future.delayed(const Duration(milliseconds: 100), () {
-                ref.read(tabIndexProvider.notifier).state = 0;
-                print('Tab index updated to: ${ref.read(tabIndexProvider)}');
-              });
-              
-              final localizationService = ref.read(localizationServiceProvider);
-              ScaffoldMessenger.of(context).showSnackBar(
-                AppTheme.successSnackBar(
-                  message: localizationService.translate('switchedToAccount').replaceAll('{account}', account.accountName),
-                ),
-              );
+              // Account switch successful - app will restart automatically
+              // No need to show additional success message as it's handled in the provider
+              print('Account switch successful - app restarting...');
             } else if (context.mounted) {
               final localizationService = ref.read(localizationServiceProvider);
               ScaffoldMessenger.of(context).showSnackBar(

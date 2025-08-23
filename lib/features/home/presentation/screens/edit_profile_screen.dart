@@ -152,13 +152,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     
     return authState.when(
       data: (user) {
-        // Set business name from user accounts if available
+        // Set business name from user accounts - always update to reflect current account
         userAccountsState.whenData((userAccounts) {
           final defaultAccount = userAccounts.data.accounts.firstWhere(
             (account) => account.isDefault,
             orElse: () => userAccounts.data.accounts.first,
           );
-          if (_businessNameController.text.isEmpty) {
+          // Always update the business name to reflect the current account
+          // Use accountName as the business name (this is the account's name)
+          if (_businessNameController.text != defaultAccount.accountName) {
             _businessNameController.text = defaultAccount.accountName;
           }
         });

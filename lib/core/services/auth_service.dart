@@ -192,7 +192,7 @@ class AuthService {
     try {
       // Always fetch from API, ignore cache
       final response = await _authenticatedDio.get(
-        AppConfig.authEndpoint + '/profile',
+        AppConfig.apiBaseUrl + '/profile/get.php',
         options: Options(
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
@@ -201,7 +201,10 @@ class AuthService {
       
       // Cache the fresh profile data
       if (response.statusCode == 200 && response.data['data'] != null) {
-        await SecureStorageService.saveUserData(response.data['data']);
+        final userData = response.data['data']['user'];
+        if (userData != null) {
+          await SecureStorageService.saveUserData(userData);
+        }
       }
       
       return response.data;

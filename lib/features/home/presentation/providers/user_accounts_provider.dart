@@ -1,8 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 import '../../../../core/services/user_accounts_service.dart';
-import '../../../../core/services/authenticated_dio_service.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../merchant/presentation/providers/wallets_provider.dart';
+import '../providers/overview_provider.dart';
+import '../../../collection/presentation/providers/collections_provider.dart';
+import '../../../suppliers/presentation/providers/suppliers_provider.dart';
+import '../../../customers/presentation/providers/customers_provider.dart';
+import '../../../loans/presentation/providers/loans_provider.dart';
+import '../../../savings/presentation/providers/savings_provider.dart';
+import '../../../../core/providers/notification_provider.dart';
 
 final userAccountsServiceProvider = Provider<UserAccountsService>((ref) {
   return UserAccountsService();
@@ -37,7 +47,7 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
     }
   }
 
-  Future<bool> switchAccount(int accountId) async {
+  Future<bool> switchAccount(int accountId, BuildContext? context) async {
     if (_isSwitching) return false; // Prevent multiple simultaneous switches
     
     _isSwitching = true;
@@ -52,9 +62,120 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
         
         // Update accounts for immediate UI feedback
         await fetchUserAccounts();
+        _ref.invalidate(userAccountsProvider); // Also invalidate the FutureProvider used by UI
         
-        // Refresh profile in background
-        _ref.read(authProvider.notifier).refreshProfile();
+        // Refresh profile to get updated user data with new account context
+        print('🔄 Refreshing profile with new account context');
+        await _ref.read(authProvider.notifier).refreshProfile();
+        
+        // Refresh all data providers to get updated data for the new account
+        print('🔄 Refreshing all data providers for new account context');
+        
+        // Refresh wallets data
+        try {
+          await _ref.read(walletsNotifierProvider.notifier).refreshWallets();
+          _ref.invalidate(walletsProvider); // Also invalidate the FutureProvider
+          print('✅ Wallets refreshed');
+        } catch (e) {
+          print('⚠️ Failed to refresh wallets: $e');
+        }
+        
+        // Refresh overview/stats data
+        try {
+          await _ref.read(overviewNotifierProvider.notifier).refreshOverview();
+          _ref.invalidate(overviewProvider); // Also invalidate the FutureProvider used by UI
+          print('✅ Overview refreshed');
+        } catch (e) {
+          print('⚠️ Failed to refresh overview: $e');
+        }
+        
+        // Refresh collections data
+        try {
+          await _ref.read(collectionsNotifierProvider.notifier).refreshCollections();
+          _ref.invalidate(collectionsProvider); // Also invalidate the FutureProvider
+          print('✅ Collections refreshed');
+        } catch (e) {
+          print('⚠️ Failed to refresh collections: $e');
+        }
+        
+        // Refresh suppliers data
+        try {
+          await _ref.read(suppliersNotifierProvider.notifier).refreshSuppliers();
+          _ref.invalidate(suppliersProvider); // Also invalidate the FutureProvider
+          print('✅ Suppliers refreshed');
+        } catch (e) {
+          print('⚠️ Failed to refresh suppliers: $e');
+        }
+        
+        // Refresh customers data
+        try {
+          await _ref.read(customersNotifierProvider.notifier).refreshCustomers();
+          _ref.invalidate(customersProvider); // Also invalidate the FutureProvider
+          print('✅ Customers refreshed');
+        } catch (e) {
+          print('⚠️ Failed to refresh customers: $e');
+        }
+        
+        // Refresh loans data (using invalidate since no refresh method)
+        try {
+          _ref.invalidate(loansProvider);
+          print('✅ Loans invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate loans: $e');
+        }
+        
+        // Refresh savings data (using invalidate since no refresh method)
+        try {
+          _ref.invalidate(savingsProvider);
+          print('✅ Savings invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate savings: $e');
+        }
+        
+        // Refresh notifications data
+        try {
+          final currentUser = _ref.read(authProvider).value;
+          if (currentUser != null) {
+            final userId = int.tryParse(currentUser.id);
+            if (userId != null) {
+              await _ref.read(notificationsNotifierProvider(userId).notifier).refreshNotifications();
+              print('✅ Notifications refreshed');
+            }
+          }
+        } catch (e) {
+          print('⚠️ Failed to refresh notifications: $e');
+        }
+        
+        // Restart the app completely to reload with fresh data
+        print('🔄 Restarting app completely after account switch');
+        if (context != null && context.mounted) {
+          // Show a brief message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Switched to ${response.data.newDefaultAccount.accountName}. Restarting app...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              duration: const Duration(seconds: 1),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          
+          // Restart the app after a short delay
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (context.mounted && (Platform.isAndroid || Platform.isIOS)) {
+              SystemNavigator.pop();
+            }
+          });
+        }
         
         print('✅ Account switch completed successfully');
         return true;
