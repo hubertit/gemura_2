@@ -389,14 +389,6 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
           ),
         );
       }
-    } finally {
-      // Reset loading state
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
     } catch (e) {
       if (mounted) {
         String errorMessage = '❌ Failed to add employee';
@@ -417,6 +409,13 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
             message: errorMessage,
           ),
         );
+      }
+    } finally {
+      // Reset loading state
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
