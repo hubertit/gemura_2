@@ -37,8 +37,43 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
 
   Future<void> _pickContact() async {
     try {
-      final status = await Permission.contacts.request();
-      if (!status.isGranted) {
+      // Check current permission status first
+      PermissionStatus currentStatus = await Permission.contacts.status;
+      
+      if (currentStatus.isDenied) {
+        // Request permission
+        currentStatus = await Permission.contacts.request();
+      }
+      
+      if (currentStatus.isPermanentlyDenied) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Permission Required'),
+              content: const Text(
+                'Contacts permission is required to select contacts. Please enable it in your device settings.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    openAppSettings();
+                  },
+                  child: const Text('Open Settings'),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+      
+      if (!currentStatus.isGranted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
