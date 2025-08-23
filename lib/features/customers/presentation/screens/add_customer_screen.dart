@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:contacts_service/contacts_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/shared/widgets/primary_button.dart';
 import 'package:gemura/shared/utils/phone_validator.dart';
@@ -32,6 +33,69 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
     _addressController.dispose();
     _priceController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickContact() async {
+    try {
+      final status = await Permission.contacts.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Contacts permission is required to select a contact'),
+              backgroundColor: AppTheme.snackbarErrorColor,
+            ),
+          );
+        }
+        return;
+      }
+
+      final contacts = await ContactsService.getContacts(withThumbnails: false);
+      final contactsWithPhones = contacts.where((c) => (c.phones?.isNotEmpty ?? false)).toList();
+
+      if (contactsWithPhones.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No contacts with phone numbers found'),
+              backgroundColor: AppTheme.snackbarErrorColor,
+            ),
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        final selectedContact = await showModalBottomSheet<Contact>(
+          context: context,
+          backgroundColor: AppTheme.surfaceColor,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) => _ContactPickerSheet(contacts: contactsWithPhones),
+        );
+
+        if (selectedContact != null && selectedContact.phones!.isNotEmpty) {
+          final phone = selectedContact.phones!.first.value ?? '';
+          setState(() {
+            _phoneController.text = phone;
+            // Also populate name if it's empty
+            if (_nameController.text.trim().isEmpty) {
+              _nameController.text = selectedContact.displayName ?? '';
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error accessing contacts: $e'),
+            backgroundColor: AppTheme.snackbarErrorColor,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _saveCustomer() async {
@@ -124,33 +188,53 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
               ),
               const SizedBox(height: AppTheme.spacing12),
 
-              // Phone
-              TextFormField(
-                controller: _phoneController,
-                style: AppTheme.bodyMedium,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  PhoneInputFormatter(),
+              // Phone number field with contact picker
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _phoneController,
+                      style: AppTheme.bodyMedium,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        PhoneInputFormatter(),
+                      ],
+                      decoration: InputDecoration(
+                        hintText: '788606765',
+                        prefixIcon: const Icon(Icons.phone),
+                        hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceColor,
+                      ),
+                      validator: PhoneValidator.validateRwandanPhone,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Container(
+                    height: 56, // Match TextFormField height
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor,
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.contacts, color: AppTheme.primaryColor),
+                      tooltip: 'Select from contacts',
+                      onPressed: _pickContact,
+                    ),
+                  ),
                 ],
-                              decoration: InputDecoration(
-                hintText: '788606765',
-                prefixIcon: const Icon(Icons.phone),
-                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                  borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
-                ),
-                filled: true,
-                fillColor: AppTheme.surfaceColor,
-              ),
-                validator: PhoneValidator.validateRwandanPhone,
               ),
               const SizedBox(height: AppTheme.spacing12),
 
@@ -265,6 +349,55 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
       style: AppTheme.titleMedium.copyWith(
         color: AppTheme.textPrimaryColor,
         fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+// Contact picker bottom sheet
+class _ContactPickerSheet extends StatelessWidget {
+  final List<Contact> contacts;
+
+  const _ContactPickerSheet({required this.contacts});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(top: AppTheme.spacing12),
+            decoration: BoxDecoration(
+              color: AppTheme.textSecondaryColor.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing16),
+            child: Text('Select Contact', style: AppTheme.titleMedium),
+          ),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: contacts.length,
+              itemBuilder: (context, i) {
+                final contact = contacts[i];
+                final phone = contact.phones!.isNotEmpty ? contact.phones!.first.value ?? '' : '';
+                return ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(contact.displayName ?? '', style: AppTheme.bodySmall),
+                  subtitle: Text(phone, style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor)),
+                  onTap: () => Navigator.of(context).pop(contact),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: AppTheme.actionSheetBottomSpacing),
+        ],
       ),
     );
   }
