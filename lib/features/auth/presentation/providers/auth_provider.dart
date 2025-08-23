@@ -271,14 +271,23 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
             print('🔧 AuthProvider: Preserved accountName: ${currentUser.accountName}');
           }
           
+          print('🔧 AuthProvider: About to call User.fromJson with data: $userData');
           final updatedUser = User.fromJson(userData);
-          print('🔧 AuthProvider: Updated user: ${updatedUser.name}');
+          print('🔧 AuthProvider: Successfully created updated user: ${updatedUser.name}');
+          print('🔧 AuthProvider: Updated user details - email: ${updatedUser.email}, phone: ${updatedUser.phoneNumber}, accountName: ${updatedUser.accountName}');
+          
+          // Update the state
           state = AsyncValue.data(updatedUser);
-        } catch (e) {
+          print('🔧 AuthProvider: State updated successfully');
+        } catch (e, stackTrace) {
           print('🔧 AuthProvider: Error parsing user data: $e');
-          // If parsing fails, keep the current user
+          print('🔧 AuthProvider: Stack trace: $stackTrace');
+          // If parsing fails, keep the current user and don't change state
           print('🔧 AuthProvider: Keeping current user: ${currentUser?.name}');
+          // Don't update state - keep the current user data
         }
+      } else {
+        print('🔧 AuthProvider: No data in response, keeping current user');
       }
       
       print('🔧 AuthProvider: Profile update completed successfully');

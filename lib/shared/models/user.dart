@@ -97,6 +97,8 @@ class User {
   }
 
   factory User.fromJson(Map<String, dynamic> json) {
+    print('🔧 User.fromJson: Starting to parse JSON: $json');
+    
     // Helper function to safely parse DateTime
     DateTime? _parseDateTime(dynamic value) {
       if (value == null || value.toString().isEmpty) return null;
@@ -115,40 +117,51 @@ class User {
       return str.isEmpty ? null : str;
     }
 
-    return User(
-      id: json['id']?.toString() ?? json['code']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      email: _toStringOrNull(json['email']),
-      password: json['password']?.toString() ?? '',
-      role: json['role']?.toString() ?? '',
-      createdAt: _parseDateTime(json['createdAt']) ?? 
-                 _parseDateTime(json['created_at']) ?? 
-                 DateTime.now(),
-      lastLoginAt: _parseDateTime(json['lastLoginAt']) ?? 
-                   _parseDateTime(json['last_login_at']),
-      isActive: json['isActive'] as bool? ?? (json['status']?.toString() == 'active'),
-      about: _toStringOrNull(json['about']),
-      address: _toStringOrNull(json['address']),
-      profilePicture: _toStringOrNull(json['profilePicture']) ?? _toStringOrNull(json['profile_picture']),
-      profileImg: _toStringOrNull(json['profile_img']),
-      profileCover: _toStringOrNull(json['profileCover']) ?? _toStringOrNull(json['profile_cover']),
-      coverImg: _toStringOrNull(json['cover_img']),
-      phoneNumber: _toStringOrNull(json['phoneNumber']) ?? _toStringOrNull(json['phone']),
-      accountCode: _toStringOrNull(json['accountCode']) ?? _toStringOrNull(json['account_code']),
-      accountName: _toStringOrNull(json['accountName']) ?? _toStringOrNull(json['account_name']),
-      // KYC Fields
-      province: _toStringOrNull(json['province']),
-      district: _toStringOrNull(json['district']),
-      sector: _toStringOrNull(json['sector']),
-      cell: _toStringOrNull(json['cell']),
-      village: _toStringOrNull(json['village']),
-      idNumber: _toStringOrNull(json['id_number']),
-      idFrontPhotoUrl: _toStringOrNull(json['id_front_photo_url']),
-      idBackPhotoUrl: _toStringOrNull(json['id_back_photo_url']),
-      selfiePhotoUrl: _toStringOrNull(json['selfie_photo_url']),
-      kycStatus: _toStringOrNull(json['kyc_status']),
-      kycVerifiedAt: _parseDateTime(json['kyc_verified_at']),
-    );
+    try {
+      print('🔧 User.fromJson: Parsing individual fields...');
+      
+      final user = User(
+        id: json['id']?.toString() ?? json['code']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        email: _toStringOrNull(json['email']),
+        password: json['password']?.toString() ?? '',
+        role: json['role']?.toString() ?? '',
+        createdAt: _parseDateTime(json['createdAt']) ?? 
+                   _parseDateTime(json['created_at']) ?? 
+                   DateTime.now(),
+        lastLoginAt: _parseDateTime(json['lastLoginAt']) ?? 
+                     _parseDateTime(json['last_login_at']),
+        isActive: json['isActive'] as bool? ?? (json['status']?.toString() == 'active'),
+        about: _toStringOrNull(json['about']),
+        address: _toStringOrNull(json['address']),
+        profilePicture: _toStringOrNull(json['profilePicture']) ?? _toStringOrNull(json['profile_picture']),
+        profileImg: _toStringOrNull(json['profile_img']),
+        profileCover: _toStringOrNull(json['profileCover']) ?? _toStringOrNull(json['profile_cover']),
+        coverImg: _toStringOrNull(json['cover_img']),
+        phoneNumber: _toStringOrNull(json['phoneNumber']) ?? _toStringOrNull(json['phone']),
+        accountCode: _toStringOrNull(json['accountCode']) ?? _toStringOrNull(json['account_code']),
+        accountName: _toStringOrNull(json['accountName']) ?? _toStringOrNull(json['account_name']),
+        // KYC Fields
+        province: _toStringOrNull(json['province']),
+        district: _toStringOrNull(json['district']),
+        sector: _toStringOrNull(json['sector']),
+        cell: _toStringOrNull(json['cell']),
+        village: _toStringOrNull(json['village']),
+        idNumber: _toStringOrNull(json['id_number']),
+        idFrontPhotoUrl: _toStringOrNull(json['id_front_photo_url']),
+        idBackPhotoUrl: _toStringOrNull(json['id_back_photo_url']),
+        selfiePhotoUrl: _toStringOrNull(json['selfie_photo_url']),
+        kycStatus: _toStringOrNull(json['kyc_status']),
+        kycVerifiedAt: _parseDateTime(json['kyc_verified_at']),
+      );
+      
+      print('🔧 User.fromJson: Successfully created User object: ${user.name}');
+      return user;
+    } catch (e, stackTrace) {
+      print('🔧 User.fromJson: Error creating User object: $e');
+      print('🔧 User.fromJson: Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   User copyWith({
