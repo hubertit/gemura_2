@@ -408,10 +408,15 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
         } else if (errorString.contains('validation')) {
           errorMessage = '❌ Please check the information provided and try again';
         } else {
-          // Use the actual error message from the API if available
-          final apiMessage = errorString.contains('Exception: ') 
-              ? errorString.split('Exception: ').last
-              : errorString;
+          // Extract the actual API message from the exception
+          String apiMessage = errorString;
+          if (errorString.contains('Exception: ')) {
+            apiMessage = errorString.split('Exception: ').last;
+          }
+          // Remove the "Failed to register employee." prefix if present
+          if (apiMessage.startsWith('Failed to register employee. ')) {
+            apiMessage = apiMessage.substring('Failed to register employee. '.length);
+          }
           errorMessage = '❌ $apiMessage';
         }
         
