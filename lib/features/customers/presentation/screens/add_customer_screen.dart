@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:contacts_service/contacts_service.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/shared/widgets/primary_button.dart';
 import 'package:gemura/shared/utils/phone_validator.dart';
@@ -37,53 +36,6 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
 
   Future<void> _pickContact() async {
     try {
-      // Check current permission status first
-      PermissionStatus currentStatus = await Permission.contacts.status;
-      
-      if (currentStatus.isDenied) {
-        // Request permission
-        currentStatus = await Permission.contacts.request();
-      }
-      
-      if (currentStatus.isPermanentlyDenied) {
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Permission Required'),
-              content: const Text(
-                'Contacts permission is required to select contacts. Please enable it in your device settings.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    openAppSettings();
-                  },
-                  child: const Text('Open Settings'),
-                ),
-              ],
-            ),
-          );
-        }
-        return;
-      }
-      
-      if (!currentStatus.isGranted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Contacts permission is required to select a contact'),
-              backgroundColor: AppTheme.snackbarErrorColor,
-            ),
-          );
-        }
-        return;
-      }
 
       final contacts = await ContactsService.getContacts(withThumbnails: false);
       final contactsWithPhones = contacts.where((c) => (c.phones?.isNotEmpty ?? false)).toList();
