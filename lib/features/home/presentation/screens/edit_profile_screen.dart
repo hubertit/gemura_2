@@ -4,6 +4,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../shared/widgets/phone_input_field.dart';
 import '../../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../../shared/widgets/profile_completion_widget.dart';
+import '../../../../../shared/widgets/kyc_photo_upload_widget.dart';
 import '../../../../../core/providers/localization_provider.dart';
 import '../providers/user_accounts_provider.dart';
 
@@ -22,8 +24,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _phoneController;
   late final TextEditingController _nidController;
   late final TextEditingController _addressController;
+  
+  // KYC Controllers
+  late final TextEditingController _provinceController;
+  late final TextEditingController _districtController;
+  late final TextEditingController _sectorController;
+  late final TextEditingController _cellController;
+  late final TextEditingController _villageController;
+  late final TextEditingController _idNumberController;
+  
   final _phoneInputKey = GlobalKey<PhoneInputFieldState>();
   bool _saving = false;
+  
+  // KYC Photo URLs
+  String? _idFrontPhotoUrl;
+  String? _idBackPhotoUrl;
+  String? _selfiePhotoUrl;
 
   @override
   void initState() {
@@ -35,6 +51,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _phoneController = TextEditingController(text: _removeCountryCode(user?.phoneNumber ?? ''));
     _nidController = TextEditingController(text: ''); // NID not in current user model
     _addressController = TextEditingController(text: user?.address ?? '');
+    
+    // Initialize KYC controllers
+    _provinceController = TextEditingController(text: user?.province ?? '');
+    _districtController = TextEditingController(text: user?.district ?? '');
+    _sectorController = TextEditingController(text: user?.sector ?? '');
+    _cellController = TextEditingController(text: user?.cell ?? '');
+    _villageController = TextEditingController(text: user?.village ?? '');
+    _idNumberController = TextEditingController(text: user?.idNumber ?? '');
+    
+    // Initialize KYC photo URLs
+    _idFrontPhotoUrl = user?.idFrontPhotoUrl;
+    _idBackPhotoUrl = user?.idBackPhotoUrl;
+    _selfiePhotoUrl = user?.selfiePhotoUrl;
   }
 
   String _removeCountryCode(String phoneNumber) {
@@ -53,6 +82,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _phoneController.dispose();
     _nidController.dispose();
     _addressController.dispose();
+    
+    // Dispose KYC controllers
+    _provinceController.dispose();
+    _districtController.dispose();
+    _sectorController.dispose();
+    _cellController.dispose();
+    _villageController.dispose();
+    _idNumberController.dispose();
+    
     super.dispose();
   }
 
@@ -76,6 +114,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         phoneNumber: fullPhoneNumber,
         address: _addressController.text.trim(),
         businessName: _businessNameController.text.trim().isEmpty ? null : _businessNameController.text.trim(),
+        // KYC Fields
+        province: _provinceController.text.trim().isEmpty ? null : _provinceController.text.trim(),
+        district: _districtController.text.trim().isEmpty ? null : _districtController.text.trim(),
+        sector: _sectorController.text.trim().isEmpty ? null : _sectorController.text.trim(),
+        cell: _cellController.text.trim().isEmpty ? null : _cellController.text.trim(),
+        village: _villageController.text.trim().isEmpty ? null : _villageController.text.trim(),
+        idNumber: _idNumberController.text.trim().isEmpty ? null : _idNumberController.text.trim(),
       );
       
       print('🔧 EditProfileScreen: Profile update successful');
@@ -125,7 +170,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppTheme.spacing24),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -139,7 +184,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child: Icon(Icons.person, size: 48, color: AppTheme.primaryColor),
                       ),
                     ),
-                    const SizedBox(height: AppTheme.spacing32),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // Profile Completion Widget
+                    if (user != null) ProfileCompletionWidget(user: user),
+                    const SizedBox(height: AppTheme.spacing16),
 
                     // Full Name Field
                     TextFormField(
@@ -229,6 +278,163 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         prefixIcon: const Icon(Icons.location_on_outlined),
                         hintText: localizationService.translate('addressHint'),
                       ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // KYC Section Header
+                    Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.verified_user,
+                            color: AppTheme.primaryColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Text(
+                            'KYC Information',
+                            style: AppTheme.titleMedium.copyWith(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // Province Field
+                    TextFormField(
+                      controller: _provinceController,
+                      decoration: InputDecoration(
+                        labelText: 'Province',
+                        prefixIcon: const Icon(Icons.location_city_outlined),
+                        hintText: 'e.g., Northern Province',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // District Field
+                    TextFormField(
+                      controller: _districtController,
+                      decoration: InputDecoration(
+                        labelText: 'District',
+                        prefixIcon: const Icon(Icons.location_city_outlined),
+                        hintText: 'e.g., Gicumbi',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // Sector Field
+                    TextFormField(
+                      controller: _sectorController,
+                      decoration: InputDecoration(
+                        labelText: 'Sector',
+                        prefixIcon: const Icon(Icons.location_city_outlined),
+                        hintText: 'e.g., Gicumbi',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // Cell Field
+                    TextFormField(
+                      controller: _cellController,
+                      decoration: InputDecoration(
+                        labelText: 'Cell',
+                        prefixIcon: const Icon(Icons.location_city_outlined),
+                        hintText: 'e.g., Gicumbi',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // Village Field
+                    TextFormField(
+                      controller: _villageController,
+                      decoration: InputDecoration(
+                        labelText: 'Village',
+                        prefixIcon: const Icon(Icons.location_city_outlined),
+                        hintText: 'e.g., Gicumbi Town',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // ID Number Field
+                    TextFormField(
+                      controller: _idNumberController,
+                      decoration: InputDecoration(
+                        labelText: 'ID Number',
+                        prefixIcon: const Icon(Icons.badge_outlined),
+                        hintText: 'e.g., 119908457694884870',
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // KYC Photo Upload Section
+                    Container(
+                      padding: const EdgeInsets.all(AppTheme.spacing12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.warningColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusMedium),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.camera_alt,
+                            color: AppTheme.warningColor,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppTheme.spacing8),
+                          Text(
+                            'KYC Photo Upload',
+                            style: AppTheme.titleMedium.copyWith(
+                              color: AppTheme.warningColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing16),
+                    
+                    // ID Front Photo Upload
+                    KYCPhotoUploadWidget(
+                      photoType: 'id_front',
+                      title: 'ID Front Photo',
+                      currentPhotoUrl: _idFrontPhotoUrl,
+                      onPhotoUploaded: (photoUrl) {
+                        setState(() {
+                          _idFrontPhotoUrl = photoUrl;
+                        });
+                      },
+                    ),
+                    
+                    // ID Back Photo Upload
+                    KYCPhotoUploadWidget(
+                      photoType: 'id_back',
+                      title: 'ID Back Photo',
+                      currentPhotoUrl: _idBackPhotoUrl,
+                      onPhotoUploaded: (photoUrl) {
+                        setState(() {
+                          _idBackPhotoUrl = photoUrl;
+                        });
+                      },
+                    ),
+                    
+                    // Selfie Photo Upload
+                    KYCPhotoUploadWidget(
+                      photoType: 'selfie',
+                      title: 'Selfie Photo',
+                      currentPhotoUrl: _selfiePhotoUrl,
+                      onPhotoUploaded: (photoUrl) {
+                        setState(() {
+                          _selfiePhotoUrl = photoUrl;
+                        });
+                      },
                     ),
                     const SizedBox(height: AppTheme.spacing32),
 

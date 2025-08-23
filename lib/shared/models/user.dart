@@ -15,6 +15,19 @@ class User {
   final String profileImg;
   final String coverImg;
   final String accountCode;
+  
+  // KYC Fields
+  final String? province;
+  final String? district;
+  final String? sector;
+  final String? cell;
+  final String? village;
+  final String? idNumber;
+  final String? idFrontPhotoUrl;
+  final String? idBackPhotoUrl;
+  final String? selfiePhotoUrl;
+  final String? kycStatus;
+  final DateTime? kycVerifiedAt;
 
   User({
     required this.id,
@@ -33,6 +46,18 @@ class User {
     this.coverImg = '',
     this.phoneNumber = '',
     this.accountCode = '',
+    // KYC Fields
+    this.province,
+    this.district,
+    this.sector,
+    this.cell,
+    this.village,
+    this.idNumber,
+    this.idFrontPhotoUrl,
+    this.idBackPhotoUrl,
+    this.selfiePhotoUrl,
+    this.kycStatus,
+    this.kycVerifiedAt,
   });
 
   Map<String, dynamic> toJson() {
@@ -53,6 +78,18 @@ class User {
       'coverImg': coverImg,
       'phoneNumber': phoneNumber,
       'accountCode': accountCode,
+      // KYC Fields
+      'province': province,
+      'district': district,
+      'sector': sector,
+      'cell': cell,
+      'village': village,
+      'id_number': idNumber,
+      'id_front_photo_url': idFrontPhotoUrl,
+      'id_back_photo_url': idBackPhotoUrl,
+      'selfie_photo_url': selfiePhotoUrl,
+      'kyc_status': kycStatus,
+      'kyc_verified_at': kycVerifiedAt?.toIso8601String(),
     };
   }
 
@@ -78,6 +115,20 @@ class User {
       coverImg: json['cover_img']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? json['phone']?.toString() ?? '',
       accountCode: json['accountCode']?.toString() ?? '',
+      // KYC Fields
+      province: json['province']?.toString(),
+      district: json['district']?.toString(),
+      sector: json['sector']?.toString(),
+      cell: json['cell']?.toString(),
+      village: json['village']?.toString(),
+      idNumber: json['id_number']?.toString(),
+      idFrontPhotoUrl: json['id_front_photo_url']?.toString(),
+      idBackPhotoUrl: json['id_back_photo_url']?.toString(),
+      selfiePhotoUrl: json['selfie_photo_url']?.toString(),
+      kycStatus: json['kyc_status']?.toString(),
+      kycVerifiedAt: json['kyc_verified_at'] != null 
+          ? DateTime.parse(json['kyc_verified_at'].toString()) 
+          : null,
     );
   }
 
@@ -98,6 +149,18 @@ class User {
     String? coverImg,
     String? phoneNumber,
     String? accountCode,
+    // KYC Fields
+    String? province,
+    String? district,
+    String? sector,
+    String? cell,
+    String? village,
+    String? idNumber,
+    String? idFrontPhotoUrl,
+    String? idBackPhotoUrl,
+    String? selfiePhotoUrl,
+    String? kycStatus,
+    DateTime? kycVerifiedAt,
   }) {
     return User(
       id: id ?? this.id,
@@ -116,6 +179,18 @@ class User {
       coverImg: coverImg ?? this.coverImg,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       accountCode: accountCode ?? this.accountCode,
+      // KYC Fields
+      province: province ?? this.province,
+      district: district ?? this.district,
+      sector: sector ?? this.sector,
+      cell: cell ?? this.cell,
+      village: village ?? this.village,
+      idNumber: idNumber ?? this.idNumber,
+      idFrontPhotoUrl: idFrontPhotoUrl ?? this.idFrontPhotoUrl,
+      idBackPhotoUrl: idBackPhotoUrl ?? this.idBackPhotoUrl,
+      selfiePhotoUrl: selfiePhotoUrl ?? this.selfiePhotoUrl,
+      kycStatus: kycStatus ?? this.kycStatus,
+      kycVerifiedAt: kycVerifiedAt ?? this.kycVerifiedAt,
     );
   }
 
@@ -132,4 +207,62 @@ class User {
 
   @override
   int get hashCode => id.hashCode;
+
+  /// Calculate profile completion percentage
+  double get profileCompletionPercentage {
+    int totalFields = 0;
+    int completedFields = 0;
+
+    // Basic profile fields
+    totalFields += 4; // name, email, phone, address
+    if (name.isNotEmpty) completedFields++;
+    if (email != null && email!.isNotEmpty) completedFields++;
+    if (phoneNumber.isNotEmpty) completedFields++;
+    if (address.isNotEmpty) completedFields++;
+
+    // KYC location fields
+    totalFields += 5; // province, district, sector, cell, village
+    if (province != null && province!.isNotEmpty) completedFields++;
+    if (district != null && district!.isNotEmpty) completedFields++;
+    if (sector != null && sector!.isNotEmpty) completedFields++;
+    if (cell != null && cell!.isNotEmpty) completedFields++;
+    if (village != null && village!.isNotEmpty) completedFields++;
+
+    // KYC ID fields
+    totalFields += 1; // id_number
+    if (idNumber != null && idNumber!.isNotEmpty) completedFields++;
+
+    // KYC photo fields
+    totalFields += 3; // id_front, id_back, selfie
+    if (idFrontPhotoUrl != null && idFrontPhotoUrl!.isNotEmpty) completedFields++;
+    if (idBackPhotoUrl != null && idBackPhotoUrl!.isNotEmpty) completedFields++;
+    if (selfiePhotoUrl != null && selfiePhotoUrl!.isNotEmpty) completedFields++;
+
+    return totalFields > 0 ? (completedFields / totalFields) * 100 : 0.0;
+  }
+
+  /// Get profile completion status
+  String get profileCompletionStatus {
+    final percentage = profileCompletionPercentage;
+    if (percentage >= 90) return 'Complete';
+    if (percentage >= 70) return 'Almost Complete';
+    if (percentage >= 50) return 'Partially Complete';
+    if (percentage >= 30) return 'Basic';
+    return 'Incomplete';
+  }
+
+  /// Check if KYC is complete
+  bool get isKycComplete {
+    return kycStatus == 'verified';
+  }
+
+  /// Check if KYC is pending
+  bool get isKycPending {
+    return kycStatus == 'pending';
+  }
+
+  /// Check if KYC is rejected
+  bool get isKycRejected {
+    return kycStatus == 'rejected';
+  }
 } 

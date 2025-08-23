@@ -211,6 +211,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     String? profileImg,
     String? coverImg,
     String? businessName,
+    // KYC Fields
+    String? province,
+    String? district,
+    String? sector,
+    String? cell,
+    String? village,
+    String? idNumber,
   }) async {
     try {
       print('🔧 AuthProvider: Starting updateUserProfile...');
@@ -232,6 +239,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       if (coverImg != null && coverImg.isNotEmpty) profileData['cover_img'] = coverImg;
       if (email != null && email.isNotEmpty) profileData['email'] = email;
       if (businessName != null && businessName.isNotEmpty) profileData['business_name'] = businessName;
+      
+      // KYC Fields
+      if (province != null && province.isNotEmpty) profileData['province'] = province;
+      if (district != null && district.isNotEmpty) profileData['district'] = district;
+      if (sector != null && sector.isNotEmpty) profileData['sector'] = sector;
+      if (cell != null && cell.isNotEmpty) profileData['cell'] = cell;
+      if (village != null && village.isNotEmpty) profileData['village'] = village;
+      if (idNumber != null && idNumber.isNotEmpty) profileData['id_number'] = idNumber;
 
       print('🔧 AuthProvider: Profile data to send: $profileData');
 

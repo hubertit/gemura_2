@@ -23,6 +23,10 @@ class AppTheme {
   static const Color snackbarWarningColor = Color(0xFFFFA000);
   static const Color snackbarInfoColor = Color(0xFF2196F3);
   static const Color snackbarNeutralColor = Color(0xFF424242);
+  
+  // Additional Colors
+  static const Color infoColor = Color(0xFF2196F3);
+  static const Color borderColor = Color(0xFFE0E0E0);
 
   // Spacing
   static const double spacing2 = 2.0;
@@ -45,6 +49,9 @@ class AppTheme {
   static const double borderRadius12 = 12.0;
   static const double borderRadius16 = 16.0;
   static const double borderRadius24 = 24.0;
+  static const double borderRadiusSmall = 8.0;
+  static const double borderRadiusMedium = 12.0;
+  static const double borderRadiusLarge = 16.0;
 
   // Text Styles (using Inter font)
   static const TextStyle headlineLarge = TextStyle(

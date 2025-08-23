@@ -33,6 +33,7 @@ import '../providers/overview_provider.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../providers/user_accounts_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
+import '../../../../shared/widgets/profile_completion_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -1867,6 +1868,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                // Profile Completion Status Section
+                if (user != null)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ProfileCompletionWidget(user: user),
+                  ),
+                const SizedBox(height: 16),
                 // Contact Information Section
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -1935,7 +1943,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           return _buildActionTile(
                             Icons.edit_outlined,
                             localizationService.translate('editProfile'),
-                            localizationService.translate('updatePersonalInfo'),
+                            '',
                             () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -1952,7 +1960,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           return _buildActionTile(
                             Icons.lock_outline,
                             localizationService.translate('changePassword'),
-                            localizationService.translate('updatePassword'),
+                            '',
                             () {
                               // TODO: Implement change password
                             },
@@ -1965,7 +1973,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           return _buildActionTile(
                             Icons.people,
                             localizationService.translate('manageEmployees'),
-                            localizationService.translate('addManageTeam'),
+                            '',
                             () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -2015,7 +2023,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           return _buildActionTile(
                             Icons.settings,
                             localizationService.translate('settings'),
-                            localizationService.translate('appPreferencesConfig'),
+                            '',
                             () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -2029,7 +2037,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                               _buildActionTile(
           Icons.analytics,
           'My Report',
-          'View your performance metrics and commissions',
+          '',
           () {
             Navigator.of(context).push(
               MaterialPageRoute(
@@ -2044,7 +2052,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           return _buildActionTile(
                             Icons.help_outline,
                             localizationService.translate('helpSupport'),
-                            localizationService.translate('getHelpContact'),
+                            '',
                             () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -2061,7 +2069,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           return _buildActionTile(
                             Icons.info_outline,
                             localizationService.translate('about'),
-                            localizationService.translate('appInfoVersion'),
+                            '',
                             () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
@@ -2159,17 +2167,17 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   Widget _buildActionTile(IconData icon, String title, String subtitle, VoidCallback onTap, {bool isDestructive = false}) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: isDestructive 
             ? AppTheme.errorColor.withOpacity(0.1)
             : AppTheme.primaryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
           color: isDestructive ? AppTheme.errorColor : AppTheme.primaryColor,
-          size: 20,
+          size: 22,
         ),
       ),
       title: Text(
@@ -2179,18 +2187,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
           color: isDestructive ? AppTheme.errorColor : AppTheme.textPrimaryColor,
         ),
       ),
-      subtitle: Text(
-        subtitle,
-        style: AppTheme.bodySmall.copyWith(
-          color: AppTheme.textSecondaryColor,
-          fontWeight: FontWeight.w400,
-        ),
-      ),
       trailing: const Icon(
         Icons.chevron_right,
         color: AppTheme.textSecondaryColor,
+        size: 20,
       ),
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
 

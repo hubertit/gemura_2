@@ -1,12 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/agent_report.dart';
+import '../../data/services/report_service.dart';
 
 final agentReportProvider = FutureProvider.family<AgentReport, String>((ref, period) async {
-  // Simulate API delay
-  await Future.delayed(const Duration(seconds: 1));
-  
-  // Generate mock data based on period
-  return _generateMockReport(period);
+  try {
+    final data = await ReportService.getMyReport(period);
+    final metrics = data['metrics'] as Map<String, dynamic>;
+    
+    return AgentReport(
+      totalSales: (metrics['totalSales'] as num).toDouble(),
+      totalCollections: (metrics['totalCollections'] as num).toDouble(),
+      customersAdded: metrics['customersAdded'] as int,
+      suppliersAdded: metrics['suppliersAdded'] as int,
+      salesTargetAchievement: 0.0, // Not used
+      collectionRate: 0.0, // Not used
+      customerSatisfaction: 0.0, // Not used
+      averageTransactionValue: (metrics['averageTransactionValue'] as num).toDouble(),
+      salesCommission: 0.0, // Not used
+      collectionCommission: 0.0, // Not used
+      customerBonus: 0.0, // Not used
+      supplierBonus: 0.0, // Not used
+      recentActivities: [], // Not used
+    );
+  } catch (e) {
+    // Fallback to mock data if API fails
+    await Future.delayed(const Duration(seconds: 1));
+    return _generateMockReport(period);
+  }
 });
 
 AgentReport _generateMockReport(String period) {

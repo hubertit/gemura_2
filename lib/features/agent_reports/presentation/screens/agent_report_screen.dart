@@ -16,6 +16,7 @@ class AgentReportScreen extends ConsumerStatefulWidget {
 class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
   String _selectedPeriod = 'This Month';
   final List<String> _periods = ['Today', 'This Week', 'This Month', 'Last Month', 'This Year'];
+  DateTime? _lastRefreshed;
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +28,16 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-        titleTextStyle: AppTheme.titleMedium.copyWith(
+        titleTextStyle: AppTheme.titleLarge.copyWith(
           color: AppTheme.textPrimaryColor,
-          fontWeight: FontWeight.bold,
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
+              setState(() {
+                _lastRefreshed = DateTime.now();
+              });
               ref.refresh(agentReportProvider(_selectedPeriod));
             },
           ),
@@ -52,35 +55,52 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
                 bottom: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Period:',
-                  style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedPeriod,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
+                Row(
+                  children: [
+                    Text(
+                      'Period:',
+                      style: AppTheme.titleMedium,
                     ),
-                    items: _periods.map((period) {
-                      return DropdownMenuItem(
-                        value: period,
-                        child: Text(period),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedPeriod = value;
-                        });
-                      }
-                    },
-                  ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedPeriod,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
+                        ),
+                        items: _periods.map((period) {
+                          return DropdownMenuItem(
+                            value: period,
+                            child: Text(
+                              period,
+                              style: AppTheme.bodyMedium,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedPeriod = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
+                if (_lastRefreshed != null) ...[
+                  const SizedBox(height: AppTheme.spacing8),
+                  Text(
+                    'Last updated: ${DateFormat('MMM dd, HH:mm').format(_lastRefreshed!)}',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -89,52 +109,68 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
           Expanded(
             child: reportAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 64, color: AppTheme.textHintColor),
-                    const SizedBox(height: AppTheme.spacing16),
-                    Text(
-                      'Failed to load report',
-                      style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondaryColor),
+              error: (error, stack) => RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {
+                    _lastRefreshed = DateTime.now();
+                  });
+                  ref.refresh(agentReportProvider(_selectedPeriod));
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 64, color: AppTheme.textHintColor),
+                          const SizedBox(height: AppTheme.spacing16),
+                          Text(
+                            'Failed to load report',
+                            style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondaryColor),
+                          ),
+                          const SizedBox(height: AppTheme.spacing8),
+                          Text(
+                            error.toString(),
+                            style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppTheme.spacing16),
+                          PrimaryButton(
+                            label: 'Retry',
+                            onPressed: () {
+                              ref.refresh(agentReportProvider(_selectedPeriod));
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: AppTheme.spacing8),
-                    Text(
-                      error.toString(),
-                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: AppTheme.spacing16),
-                    PrimaryButton(
-                      label: 'Retry',
-                      onPressed: () {
-                        ref.refresh(agentReportProvider(_selectedPeriod));
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              data: (report) => SingleChildScrollView(
-                padding: const EdgeInsets.all(AppTheme.spacing16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Summary Cards
-                    _buildSummaryCards(report),
-                    const SizedBox(height: AppTheme.spacing24),
-                    
-                    // Performance Metrics
-                    _buildPerformanceMetrics(report),
-                    const SizedBox(height: AppTheme.spacing24),
-                    
-                    // Recent Activities
-                    _buildRecentActivities(report),
-                    const SizedBox(height: AppTheme.spacing24),
-                    
-                    // Commission Breakdown
-                    _buildCommissionBreakdown(report),
-                  ],
+              data: (report) => RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {
+                    _lastRefreshed = DateTime.now();
+                  });
+                  ref.refresh(agentReportProvider(_selectedPeriod));
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppTheme.spacing16,
+                    AppTheme.spacing16,
+                    AppTheme.spacing16,
+                    AppTheme.spacing32,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Summary Cards
+                      _buildSummaryCards(report),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -150,7 +186,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
       children: [
         Text(
           'Summary',
-          style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
+          style: AppTheme.titleLarge,
         ),
         const SizedBox(height: AppTheme.spacing16),
         GridView.count(
@@ -159,7 +195,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
           crossAxisCount: 2,
           crossAxisSpacing: AppTheme.spacing12,
           mainAxisSpacing: AppTheme.spacing12,
-          childAspectRatio: 1.2,
+          childAspectRatio: 1.4,
           children: [
             _buildSummaryCard(
               'Total Sales',
@@ -193,7 +229,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
 
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
@@ -201,255 +237,48 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            value,
-            style: AppTheme.titleMedium.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimaryColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            title,
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondaryColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPerformanceMetrics(AgentReport report) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Performance Metrics',
-            style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildMetricRow('Sales Target Achievement', '${report.salesTargetAchievement}%', AppTheme.successColor),
-          _buildMetricRow('Collection Rate', '${report.collectionRate}%', AppTheme.primaryColor),
-          _buildMetricRow('Customer Satisfaction', '${report.customerSatisfaction}%', AppTheme.warningColor),
-          _buildMetricRow('Average Transaction Value', '${NumberFormat('#,##0').format(report.averageTransactionValue)} RWF', AppTheme.snackbarInfoColor),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricRow(String label, String value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
-          ),
-          Text(
-            value,
-            style: AppTheme.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentActivities(AgentReport report) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Activities',
-                style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Navigate to detailed activities
-                },
-                child: Text(
-                  'View All',
-                  style: AppTheme.bodySmall.copyWith(color: AppTheme.primaryColor),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          if (report.recentActivities.isEmpty)
-            Center(
-              child: Column(
-                children: [
-                  Icon(Icons.history, size: 48, color: AppTheme.textHintColor),
-                  const SizedBox(height: AppTheme.spacing8),
-                  Text(
-                    'No recent activities',
-                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.textHintColor),
-                  ),
-                ],
-              ),
-            )
-          else
-            ...report.recentActivities.take(5).map((activity) => _buildActivityItem(activity)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivityItem(AgentActivity activity) {
-    IconData getActivityIcon() {
-      switch (activity.type) {
-        case 'sale':
-          return Icons.shopping_cart;
-        case 'collection':
-          return Icons.account_balance_wallet;
-        case 'customer_added':
-          return Icons.person_add;
-        case 'supplier_added':
-          return Icons.business;
-        default:
-          return Icons.info;
-      }
-    }
-
-    Color getActivityColor() {
-      switch (activity.type) {
-        case 'sale':
-          return AppTheme.successColor;
-        case 'collection':
-          return AppTheme.primaryColor;
-        case 'customer_added':
-          return AppTheme.warningColor;
-        case 'supplier_added':
-          return AppTheme.snackbarInfoColor;
-        default:
-          return AppTheme.textSecondaryColor;
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
-      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.all(AppTheme.spacing8),
             decoration: BoxDecoration(
-              color: getActivityColor().withOpacity(0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
             ),
-            child: Icon(getActivityIcon(), color: getActivityColor(), size: 16),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: AppTheme.spacing12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.description,
-                  style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w500),
-                ),
-                Text(
-                  DateFormat('MMM dd, yyyy HH:mm').format(activity.timestamp),
-                  style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-                ),
-              ],
-            ),
-          ),
-          if (activity.amount != null)
-            Text(
-              '${NumberFormat('#,##0').format(activity.amount)} RWF',
-              style: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: getActivityColor(),
+          const SizedBox(height: AppTheme.spacing8),
+          Flexible(
+            child: Text(
+              value,
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textPrimaryColor,
               ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Flexible(
+            child: Text(
+              title,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCommissionBreakdown(AgentReport report) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Commission Breakdown',
-            style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
-          _buildCommissionRow('Sales Commission', report.salesCommission, AppTheme.successColor),
-          _buildCommissionRow('Collection Commission', report.collectionCommission, AppTheme.primaryColor),
-          _buildCommissionRow('Customer Bonus', report.customerBonus, AppTheme.warningColor),
-          _buildCommissionRow('Supplier Bonus', report.supplierBonus, AppTheme.snackbarInfoColor),
-          const Divider(),
-          _buildCommissionRow('Total Commission', report.totalCommission, AppTheme.primaryColor, isTotal: true),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildCommissionRow(String label, double amount, Color color, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.textSecondaryColor,
-              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-          Text(
-            '${NumberFormat('#,##0').format(amount)} RWF',
-            style: AppTheme.bodyMedium.copyWith(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
+
+
+
 }
