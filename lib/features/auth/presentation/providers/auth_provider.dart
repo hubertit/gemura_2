@@ -109,6 +109,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         coverImg: userData['cover_img']?.toString() ?? '',
         phoneNumber: userData['phone']?.toString() ?? '',
         accountCode: accountData['code']?.toString() ?? '',
+        accountName: accountData['name']?.toString() ?? '', // Account name from login response
       );
       
       // User data and token are already saved by AuthService

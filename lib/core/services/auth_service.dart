@@ -78,6 +78,7 @@ class AuthService {
             final userData = Map<String, dynamic>.from(data['user']);
             userData['role'] = data['account']['type'];
             userData['accountCode'] = data['account']['code'];
+            userData['accountName'] = data['account']['name']; // Save account name
             await SecureStorageService.saveUserData(userData);
           }
           

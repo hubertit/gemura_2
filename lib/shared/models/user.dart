@@ -15,6 +15,7 @@ class User {
   final String profileImg;
   final String coverImg;
   final String accountCode;
+  final String accountName;
   
   // KYC Fields
   final String? province;
@@ -46,6 +47,7 @@ class User {
     this.coverImg = '',
     this.phoneNumber = '',
     this.accountCode = '',
+    this.accountName = '',
     // KYC Fields
     this.province,
     this.district,
@@ -78,6 +80,7 @@ class User {
       'coverImg': coverImg,
       'phoneNumber': phoneNumber,
       'accountCode': accountCode,
+      'accountName': accountName,
       // KYC Fields
       'province': province,
       'district': district,
@@ -119,6 +122,7 @@ class User {
       coverImg: json['cover_img']?.toString() ?? '',
       phoneNumber: json['phoneNumber']?.toString() ?? json['phone']?.toString() ?? '',
       accountCode: json['accountCode']?.toString() ?? json['account_code']?.toString() ?? '',
+      accountName: json['accountName']?.toString() ?? json['account_name']?.toString() ?? '',
       // KYC Fields
       province: json['province']?.toString(),
       district: json['district']?.toString(),

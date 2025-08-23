@@ -7,7 +7,7 @@ import '../../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../../shared/widgets/kyc_photo_upload_widget.dart';
 import '../../../../../core/providers/localization_provider.dart';
-import '../providers/user_accounts_provider.dart';
+
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -148,22 +148,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final localizationService = ref.watch(localizationServiceProvider);
     final authState = ref.watch(authProvider);
-    final userAccountsState = ref.watch(userAccountsProvider);
     
     return authState.when(
       data: (user) {
-        // Set business name from user accounts - always update to reflect current account
-        userAccountsState.whenData((userAccounts) {
-          final defaultAccount = userAccounts.data.accounts.firstWhere(
-            (account) => account.isDefault,
-            orElse: () => userAccounts.data.accounts.first,
-          );
-          // Always update the business name to reflect the current account
-          // Use accountName as the business name (this is the account's name)
-          if (_businessNameController.text != defaultAccount.accountName) {
-            _businessNameController.text = defaultAccount.accountName;
-          }
-        });
+        // Set business name from user's account name (from login response)
+        if (user != null && _businessNameController.text != user.accountName) {
+          _businessNameController.text = user.accountName;
+        }
         
         return Scaffold(
           backgroundColor: AppTheme.backgroundColor,
