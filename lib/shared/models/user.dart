@@ -7,15 +7,15 @@ class User {
   final DateTime createdAt;
   final DateTime? lastLoginAt;
   final bool isActive;
-  final String about;
-  final String profilePicture;
-  final String profileCover;
-  final String phoneNumber;
-  final String address;
-  final String profileImg;
-  final String coverImg;
-  final String accountCode;
-  final String accountName;
+  final String? about;
+  final String? profilePicture;
+  final String? profileCover;
+  final String? phoneNumber;
+  final String? address;
+  final String? profileImg;
+  final String? coverImg;
+  final String? accountCode;
+  final String? accountName;
   
   // KYC Fields
   final String? province;
@@ -39,15 +39,15 @@ class User {
     required this.createdAt,
     this.lastLoginAt,
     this.isActive = true,
-    this.about = '',
-    this.address = '',
-    this.profilePicture = '',
-    this.profileImg = '',
-    this.profileCover = '',
-    this.coverImg = '',
-    this.phoneNumber = '',
-    this.accountCode = '',
-    this.accountName = '',
+    this.about,
+    this.address,
+    this.profilePicture,
+    this.profileImg,
+    this.profileCover,
+    this.coverImg,
+    this.phoneNumber,
+    this.accountCode,
+    this.accountName,
     // KYC Fields
     this.province,
     this.district,
@@ -108,10 +108,17 @@ class User {
       }
     }
 
+    // Helper function to safely convert to string or null
+    String? _toStringOrNull(dynamic value) {
+      if (value == null) return null;
+      final str = value.toString().trim();
+      return str.isEmpty ? null : str;
+    }
+
     return User(
       id: json['id']?.toString() ?? json['code']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      email: json['email']?.toString(),
+      email: _toStringOrNull(json['email']),
       password: json['password']?.toString() ?? '',
       role: json['role']?.toString() ?? '',
       createdAt: _parseDateTime(json['createdAt']) ?? 
@@ -120,26 +127,26 @@ class User {
       lastLoginAt: _parseDateTime(json['lastLoginAt']) ?? 
                    _parseDateTime(json['last_login_at']),
       isActive: json['isActive'] as bool? ?? (json['status']?.toString() == 'active'),
-      about: json['about']?.toString() ?? '',
-      address: json['address']?.toString() ?? '',
-      profilePicture: json['profilePicture']?.toString() ?? json['profile_picture']?.toString() ?? '',
-      profileImg: json['profile_img']?.toString() ?? '',
-      profileCover: json['profileCover']?.toString() ?? json['profile_cover']?.toString() ?? '',
-      coverImg: json['cover_img']?.toString() ?? '',
-      phoneNumber: json['phoneNumber']?.toString() ?? json['phone']?.toString() ?? '',
-      accountCode: json['accountCode']?.toString() ?? json['account_code']?.toString() ?? '',
-      accountName: json['accountName']?.toString() ?? json['account_name']?.toString() ?? '',
+      about: _toStringOrNull(json['about']),
+      address: _toStringOrNull(json['address']),
+      profilePicture: _toStringOrNull(json['profilePicture']) ?? _toStringOrNull(json['profile_picture']),
+      profileImg: _toStringOrNull(json['profile_img']),
+      profileCover: _toStringOrNull(json['profileCover']) ?? _toStringOrNull(json['profile_cover']),
+      coverImg: _toStringOrNull(json['cover_img']),
+      phoneNumber: _toStringOrNull(json['phoneNumber']) ?? _toStringOrNull(json['phone']),
+      accountCode: _toStringOrNull(json['accountCode']) ?? _toStringOrNull(json['account_code']),
+      accountName: _toStringOrNull(json['accountName']) ?? _toStringOrNull(json['account_name']),
       // KYC Fields
-      province: json['province']?.toString(),
-      district: json['district']?.toString(),
-      sector: json['sector']?.toString(),
-      cell: json['cell']?.toString(),
-      village: json['village']?.toString(),
-      idNumber: json['id_number']?.toString(),
-      idFrontPhotoUrl: json['id_front_photo_url']?.toString(),
-      idBackPhotoUrl: json['id_back_photo_url']?.toString(),
-      selfiePhotoUrl: json['selfie_photo_url']?.toString(),
-      kycStatus: json['kyc_status']?.toString(),
+      province: _toStringOrNull(json['province']),
+      district: _toStringOrNull(json['district']),
+      sector: _toStringOrNull(json['sector']),
+      cell: _toStringOrNull(json['cell']),
+      village: _toStringOrNull(json['village']),
+      idNumber: _toStringOrNull(json['id_number']),
+      idFrontPhotoUrl: _toStringOrNull(json['id_front_photo_url']),
+      idBackPhotoUrl: _toStringOrNull(json['id_back_photo_url']),
+      selfiePhotoUrl: _toStringOrNull(json['selfie_photo_url']),
+      kycStatus: _toStringOrNull(json['kyc_status']),
       kycVerifiedAt: _parseDateTime(json['kyc_verified_at']),
     );
   }
@@ -191,6 +198,7 @@ class User {
       coverImg: coverImg ?? this.coverImg,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       accountCode: accountCode ?? this.accountCode,
+      accountName: accountName ?? this.accountName,
       // KYC Fields
       province: province ?? this.province,
       district: district ?? this.district,
@@ -229,8 +237,8 @@ class User {
     totalFields += 4; // name, email, phone, address
     if (name.isNotEmpty) completedFields++;
     if (email != null && email!.isNotEmpty) completedFields++;
-    if (phoneNumber.isNotEmpty) completedFields++;
-    if (address.isNotEmpty) completedFields++;
+    if (phoneNumber != null && phoneNumber!.isNotEmpty) completedFields++;
+    if (address != null && address!.isNotEmpty) completedFields++;
 
     // KYC location fields
     totalFields += 5; // province, district, sector, cell, village
