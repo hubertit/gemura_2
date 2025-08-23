@@ -31,6 +31,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
   final _nidController = TextEditingController();
   
   String _selectedRole = AccountAccess.roleViewer;
+  bool _isLoading = false;
   final Map<String, bool> _permissions = {
     'view_sales': false,
     'create_sales': false,
@@ -237,7 +238,8 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
               // Register Button
               PrimaryButton(
                 label: 'Add Employee',
-                onPressed: _registerEmployee,
+                onPressed: _isLoading ? null : _registerEmployee,
+                isLoading: _isLoading,
               ),
               const SizedBox(height: AppTheme.spacing16),
             ],
@@ -349,12 +351,10 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
       return;
     }
 
-    // Show loading state
-          ScaffoldMessenger.of(context).showSnackBar(
-        AppTheme.infoSnackBar(
-          message: 'Adding employee to ${widget.accountName}...',
-        ),
-      );
+    // Set loading state
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final success = await ref.read(accountAccessProvider.notifier).registerEmployee(
@@ -389,6 +389,14 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
           ),
         );
       }
+    } finally {
+      // Reset loading state
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
     } catch (e) {
       if (mounted) {
         String errorMessage = '❌ Failed to add employee';
