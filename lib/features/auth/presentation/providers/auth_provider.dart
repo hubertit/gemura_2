@@ -260,8 +260,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
           final userData = response['data']['user'] ?? response['data'];
           print('🔧 AuthProvider: User data from response: $userData');
           
-          // Ensure accountName is preserved if not in response
-          if (userData['accountName'] == null && currentUser != null) {
+          // Get account name from API response (accounts.name is returned as account_name)
+          final accountData = response['data']['account'];
+          if (accountData != null && accountData['account_name'] != null) {
+            userData['accountName'] = accountData['account_name'];
+            print('🔧 AuthProvider: Updated accountName from API: ${accountData['account_name']}');
+          } else if (currentUser != null) {
+            // Fallback to current user's account name if not in response
             userData['accountName'] = currentUser.accountName;
             print('🔧 AuthProvider: Preserved accountName: ${currentUser.accountName}');
           }
