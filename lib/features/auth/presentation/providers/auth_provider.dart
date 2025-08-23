@@ -272,13 +272,38 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
           }
           
           print('🔧 AuthProvider: About to call User.fromJson with data: $userData');
-          final updatedUser = User.fromJson(userData);
+          User updatedUser = User.fromJson(userData);
           print('🔧 AuthProvider: Successfully created updated user: ${updatedUser.name}');
+          
+          // Validate the user object
+          if (updatedUser.name.isEmpty) {
+            print('🔧 AuthProvider: Warning - User name is empty, using fallback');
+            // Create a fallback user with required fields
+            final fallbackUser = updatedUser.copyWith(
+              name: currentUser?.name ?? 'User',
+              email: updatedUser.email ?? currentUser?.email ?? '',
+              phoneNumber: updatedUser.phoneNumber ?? currentUser?.phoneNumber ?? '',
+              accountName: updatedUser.accountName ?? currentUser?.accountName ?? '',
+            );
+            print('🔧 AuthProvider: Using fallback user: ${fallbackUser.name}');
+            updatedUser = fallbackUser;
+          }
           print('🔧 AuthProvider: Updated user details - email: ${updatedUser.email}, phone: ${updatedUser.phoneNumber}, accountName: ${updatedUser.accountName}');
           
-          // Update the state
-          state = AsyncValue.data(updatedUser);
-          print('🔧 AuthProvider: State updated successfully');
+          // Update the state with error handling
+          try {
+            print('🔧 AuthProvider: About to update state with user: ${updatedUser.name}');
+            state = AsyncValue.data(updatedUser);
+            print('🔧 AuthProvider: State updated successfully');
+            
+            // Add a small delay to ensure state propagation
+            await Future.delayed(const Duration(milliseconds: 50));
+            print('🔧 AuthProvider: State propagation delay completed');
+          } catch (e) {
+            print('🔧 AuthProvider: Error updating state: $e');
+            // Keep the current state if update fails
+            print('🔧 AuthProvider: Keeping current state');
+          }
         } catch (e, stackTrace) {
           print('🔧 AuthProvider: Error parsing user data: $e');
           print('🔧 AuthProvider: Stack trace: $stackTrace');

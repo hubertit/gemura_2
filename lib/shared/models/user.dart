@@ -181,6 +181,7 @@ class User {
     String? coverImg,
     String? phoneNumber,
     String? accountCode,
+    String? accountName,
     // KYC Fields
     String? province,
     String? district,

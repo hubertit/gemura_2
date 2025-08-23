@@ -33,6 +33,7 @@ import '../providers/overview_provider.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../providers/user_accounts_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
+import '../../../../shared/widgets/error_boundary.dart';
 import '../../../../shared/widgets/profile_completion_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -49,8 +50,20 @@ class HomeScreen extends ConsumerWidget {
       const ChatListScreen(), // Index 2: Chat
       const ProfileTab(), // Index 3: Profile
     ];
+    
+    // Add error boundary for tabs
+    Widget currentTab;
+    try {
+      currentTab = tabs[currentIndex];
+    } catch (e) {
+      print('🔧 HomeScreen: Error loading tab at index $currentIndex: $e');
+      currentTab = const _DashboardTab(); // Fallback to home tab
+    }
+    
     return Scaffold(
-      body: tabs[currentIndex],
+      body: ErrorBoundary(
+        child: currentTab,
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) {
@@ -1601,6 +1614,54 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     final authState = ref.watch(authProvider);
     return authState.when(
       data: (user) {
+        // Add null check and logging
+        print('🔧 ProfileTab: Received user data: ${user?.name}');
+        print('🔧 ProfileTab: User is null: ${user == null}');
+        
+        if (user == null) {
+          print('🔧 ProfileTab: User is null, showing loading state');
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // Validate user data
+        if (user.name.isEmpty) {
+          print('🔧 ProfileTab: User name is empty, showing error state');
+          return Scaffold(
+            appBar: AppBar(
+              title: Consumer(
+                builder: (context, ref, child) {
+                  final localizationService = ref.watch(localizationServiceProvider);
+                  return Text(localizationService.translate('profile'));
+                },
+              ),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  const Text('Profile data is incomplete'),
+                  const SizedBox(height: 8),
+                  const Text('Please try refreshing or contact support'),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Refresh the profile data
+                      ref.read(authProvider.notifier).refreshProfile();
+                    },
+                    child: const Text('Refresh Profile'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        
         return Scaffold(
           appBar: AppBar(
             title: Consumer(
@@ -1641,14 +1702,14 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           CircleAvatar(
                             radius: 50,
                             backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                            backgroundImage: (user?.profileImg != null && user!.profileImg!.isNotEmpty
-                              ? NetworkImage(user!.profileImg!)
-                              : (user?.profilePicture != null && user!.profilePicture!.isNotEmpty
-                                ? NetworkImage(user!.profilePicture!)
+                            backgroundImage: (user.profileImg != null && user.profileImg!.isNotEmpty
+                              ? NetworkImage(user.profileImg!)
+                              : (user.profilePicture != null && user.profilePicture!.isNotEmpty
+                                ? NetworkImage(user.profilePicture!)
                                 : null)) as ImageProvider<Object>?,
-                                                          child: ((user?.profileImg == null || user?.profileImg?.isEmpty == true) && (user?.profilePicture == null || user?.profilePicture?.isEmpty == true))
+                            child: ((user.profileImg == null || user.profileImg!.isEmpty) && (user.profilePicture == null || user.profilePicture!.isEmpty))
                                 ? Text(
-                                    (user?.name != null && user?.name != '' ? user!.name[0].toUpperCase() : ''),
+                                    (user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U'),
                                     style: AppTheme.headlineLarge.copyWith(
                                           color: AppTheme.primaryColor,
                                           fontWeight: FontWeight.bold,
@@ -1663,13 +1724,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                             child: Container(
                               width: 20,
                               height: 20,
-                              decoration: BoxDecoration(
-                                color: (user?.isActive ?? false) ? Colors.green : Colors.grey,
+                                                          decoration: BoxDecoration(
+                              color: user.isActive ? Colors.green : Colors.grey,
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppTheme.surfaceColor, width: 2),
                               ),
                               child: Icon(
-                                (user?.isActive ?? false) ? Icons.check : Icons.close,
+                                user.isActive ? Icons.check : Icons.close,
                                 size: 12,
                                 color: Colors.white,
                               ),
@@ -1683,7 +1744,7 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                         builder: (context, ref, child) {
                           final localizationService = ref.watch(localizationServiceProvider);
                           return Text(
-                            user?.name ?? localizationService.translate('userName'),
+                            user.name.isNotEmpty ? user.name : localizationService.translate('userName'),
                             style: AppTheme.headlineLarge.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimaryColor,

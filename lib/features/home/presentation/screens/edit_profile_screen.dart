@@ -7,6 +7,7 @@ import '../../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../../shared/widgets/kyc_photo_upload_widget.dart';
 import '../../../../../core/providers/localization_provider.dart';
+import 'home_screen.dart';
 
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -102,6 +103,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
     setState(() => _saving = true);
     
+    // Add a small delay to ensure UI updates are processed
+    await Future.delayed(const Duration(milliseconds: 100));
+    
     try {
       final phoneInputState = _phoneInputKey.currentState;
       final fullPhoneNumber = phoneInputState?.fullPhoneNumber ?? _phoneController.text.trim();
@@ -125,10 +129,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       
       print('🔧 EditProfileScreen: Profile update successful');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          AppTheme.successSnackBar(message: ref.read(localizationServiceProvider).translate('profileUpdatedSuccessfully')),
-        );
-        Navigator.pop(context);
+        try {
+          ScaffoldMessenger.of(context).showSnackBar(
+            AppTheme.successSnackBar(message: ref.read(localizationServiceProvider).translate('profileUpdatedSuccessfully')),
+          );
+          print('🔧 EditProfileScreen: About to navigate back');
+          Navigator.pop(context);
+          print('🔧 EditProfileScreen: Navigation completed');
+        } catch (e) {
+          print('🔧 EditProfileScreen: Error during navigation: $e');
+          // Fallback navigation
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
       }
     } catch (e) {
       print('🔧 EditProfileScreen: Error updating profile: $e');
