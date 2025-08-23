@@ -311,7 +311,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        height: MediaQuery.of(context).size.height * 0.85,
+        height: MediaQuery.of(context).size.height * 0.95,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -435,22 +435,22 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             : '';
                         
                         return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 1),
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                             leading: CircleAvatar(
-                              radius: 20,
+                              radius: 18,
                               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                               child: Text(
                                 (contact.displayName ?? '?')[0].toUpperCase(),
                                 style: TextStyle(
                                   color: AppTheme.primaryColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                 ),
                               ),
                             ),
@@ -458,7 +458,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                               contact.displayName ?? 'Unknown Contact',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                             ),
                             subtitle: phone.isNotEmpty
@@ -466,7 +466,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                                     phone,
                                     style: TextStyle(
                                       color: Colors.grey[600],
-                                      fontSize: 13,
+                                      fontSize: 12,
                                     ),
                                   )
                                 : null,
