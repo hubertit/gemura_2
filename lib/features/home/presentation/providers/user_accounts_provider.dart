@@ -69,6 +69,20 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
         print('🔄 Refreshing profile with new account context');
         await _ref.read(authProvider.notifier).refreshProfile();
         
+        // Force refresh accounts again to ensure UI updates with new default account
+        print('🔄 Force refreshing accounts to update UI');
+        await fetchUserAccounts();
+        _ref.invalidate(userAccountsProvider);
+        
+        // Debug: Check the updated accounts data
+        final updatedAccounts = state.value?.data.accounts ?? [];
+        final defaultAccount = updatedAccounts.where((acc) => acc.isDefault).firstOrNull;
+        print('🔍 Updated accounts count: ${updatedAccounts.length}');
+        print('🔍 Default account: ${defaultAccount?.accountName} (ID: ${defaultAccount?.accountId})');
+        
+        // Add a small delay to ensure UI updates are processed
+        await Future.delayed(const Duration(milliseconds: 200));
+        
         // Refresh all data providers to get updated data for the new account
         print('🔄 Refreshing all data providers for new account context');
         
