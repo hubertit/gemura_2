@@ -199,9 +199,18 @@ class AuthService {
   /// Force refresh user profile from API (ignores cache)
   Future<Map<String, dynamic>> refreshProfile() async {
     try {
+      // Get token for request body
+      final token = SecureStorageService.getAuthToken();
+      if (token == null || token.isEmpty) {
+        print('🔧 AuthService: No authentication token found for profile refresh');
+        throw Exception('No authentication token found');
+      }
+      print('🔧 AuthService: Token found for profile refresh: ${token.substring(0, 10)}...');
+
       // Always fetch from API, ignore cache
-      final response = await _authenticatedDio.get(
+      final response = await _authenticatedDio.post(
         AppConfig.apiBaseUrl + '/profile/get.php',
+        data: {'token': token},
         options: Options(
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
