@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'dart:io';
 import '../../../../core/services/user_accounts_service.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -63,6 +61,9 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
         // Update accounts for immediate UI feedback
         await fetchUserAccounts();
         _ref.invalidate(userAccountsProvider); // Also invalidate the FutureProvider used by UI
+        
+        // Add a small delay to ensure account switch is processed
+        await Future.delayed(const Duration(milliseconds: 500));
         
         // Refresh profile to get updated user data with new account context
         print('🔄 Refreshing profile with new account context');
@@ -146,20 +147,19 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
           print('⚠️ Failed to refresh notifications: $e');
         }
         
-        // Restart the app completely to reload with fresh data
-        print('🔄 Restarting app completely after account switch');
+        // Show success message
+        print('✅ Account switch completed successfully');
         if (context != null && context.mounted) {
-          // Show a brief message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Switched to ${response.data.newDefaultAccount.accountName}. Restarting app...',
+                'Switched to ${response.data.account.name}',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              duration: const Duration(seconds: 1),
+              duration: const Duration(seconds: 2),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -168,13 +168,6 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
               margin: const EdgeInsets.all(16),
             ),
           );
-          
-          // Restart the app after a short delay
-          Future.delayed(const Duration(milliseconds: 1500), () {
-            if (context.mounted && (Platform.isAndroid || Platform.isIOS)) {
-              SystemNavigator.pop();
-            }
-          });
         }
         
         print('✅ Account switch completed successfully');

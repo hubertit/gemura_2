@@ -2443,9 +2443,9 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             }
             
             if (success && context.mounted) {
-              // Account switch successful - app will restart automatically
-              // No need to show additional success message as it's handled in the provider
-              print('Account switch successful - app restarting...');
+              // Account switch successful - all data has been refreshed
+              // Success message is handled in the provider
+              print('Account switch successful - all data refreshed');
             } else if (context.mounted) {
               final localizationService = ref.read(localizationServiceProvider);
               ScaffoldMessenger.of(context).showSnackBar(

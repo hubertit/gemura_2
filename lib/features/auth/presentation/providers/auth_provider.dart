@@ -356,12 +356,20 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         final userData = profileResponse['data']['user'];
         print('🔧 AuthProvider: User data from API: $userData');
         
+        // Get account data from response if available
+        final accountData = profileResponse['data']['account'];
+        if (accountData != null) {
+          userData['accountName'] = accountData['name']?.toString() ?? '';
+          userData['accountCode'] = accountData['code']?.toString() ?? '';
+          print('🔧 AuthProvider: Account data from API: ${accountData['name']}');
+        }
+        
         final updatedUser = User.fromJson(userData);
-        print('🔧 AuthProvider: Parsed user: ${updatedUser.name} - ${updatedUser.phoneNumber} - ${updatedUser.email}');
+        print('🔧 AuthProvider: Parsed user: ${updatedUser.name} - ${updatedUser.phoneNumber} - ${updatedUser.email} - ${updatedUser.accountName}');
         
         // Force state update to trigger UI rebuild
         state = AsyncValue.data(updatedUser);
-        print('✅ Profile refreshed successfully: ${updatedUser.name}');
+        print('✅ Profile refreshed successfully: ${updatedUser.name} with account: ${updatedUser.accountName}');
       } else {
         print('❌ AuthProvider: No user data in profile response');
       }

@@ -159,54 +159,36 @@ class SwitchAccountResponse {
 
 @JsonSerializable()
 class SwitchAccountData {
-  @JsonKey(name: 'user_id', fromJson: _parseInt)
-  final int userId;
-  @JsonKey(name: 'user_name')
-  final String userName;
-  @JsonKey(name: 'new_default_account')
-  final DefaultAccount newDefaultAccount;
+  final Map<String, dynamic> user;
+  final DefaultAccount account;
+  final List<UserAccount> accounts;
 
   SwitchAccountData({
-    required this.userId,
-    required this.userName,
-    required this.newDefaultAccount,
+    required this.user,
+    required this.account,
+    required this.accounts,
   });
 
   factory SwitchAccountData.fromJson(Map<String, dynamic> json) =>
       _$SwitchAccountDataFromJson(json);
   Map<String, dynamic> toJson() => _$SwitchAccountDataToJson(this);
-  
-  static int _parseInt(dynamic value) {
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value) ?? 0;
-    return 0;
-  }
 }
 
 @JsonSerializable()
 class DefaultAccount {
-  @JsonKey(name: 'account_id', fromJson: _parseInt)
-  final int accountId;
-  @JsonKey(name: 'account_code')
-  final String accountCode;
-  @JsonKey(name: 'account_name')
-  final String accountName;
-  final String role;
+  final int id;
+  final String code;
+  final String name;
+  final String type;
 
   DefaultAccount({
-    required this.accountId,
-    required this.accountCode,
-    required this.accountName,
-    required this.role,
+    required this.id,
+    required this.code,
+    required this.name,
+    required this.type,
   });
 
   factory DefaultAccount.fromJson(Map<String, dynamic> json) =>
       _$DefaultAccountFromJson(json);
   Map<String, dynamic> toJson() => _$DefaultAccountToJson(this);
-  
-  static int _parseInt(dynamic value) {
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value) ?? 0;
-    return 0;
-  }
 }

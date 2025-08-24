@@ -124,31 +124,32 @@ Map<String, dynamic> _$SwitchAccountResponseToJson(
 
 SwitchAccountData _$SwitchAccountDataFromJson(Map<String, dynamic> json) =>
     SwitchAccountData(
-      userId: SwitchAccountData._parseInt(json['user_id']),
-      userName: json['user_name'] as String,
-      newDefaultAccount: DefaultAccount.fromJson(
-          json['new_default_account'] as Map<String, dynamic>),
+      user: json['user'] as Map<String, dynamic>,
+      account: DefaultAccount.fromJson(json['account'] as Map<String, dynamic>),
+      accounts: (json['accounts'] as List<dynamic>)
+          .map((e) => UserAccount.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$SwitchAccountDataToJson(SwitchAccountData instance) =>
     <String, dynamic>{
-      'user_id': instance.userId,
-      'user_name': instance.userName,
-      'new_default_account': instance.newDefaultAccount,
+      'user': instance.user,
+      'account': instance.account,
+      'accounts': instance.accounts,
     };
 
 DefaultAccount _$DefaultAccountFromJson(Map<String, dynamic> json) =>
     DefaultAccount(
-      accountId: DefaultAccount._parseInt(json['account_id']),
-      accountCode: json['account_code'] as String,
-      accountName: json['account_name'] as String,
-      role: json['role'] as String,
+      id: (json['id'] as num).toInt(),
+      code: json['code'] as String,
+      name: json['name'] as String,
+      type: json['type'] as String,
     );
 
 Map<String, dynamic> _$DefaultAccountToJson(DefaultAccount instance) =>
     <String, dynamic>{
-      'account_id': instance.accountId,
-      'account_code': instance.accountCode,
-      'account_name': instance.accountName,
-      'role': instance.role,
+      'id': instance.id,
+      'code': instance.code,
+      'name': instance.name,
+      'type': instance.type,
     };
