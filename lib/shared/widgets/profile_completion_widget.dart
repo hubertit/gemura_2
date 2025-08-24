@@ -34,14 +34,18 @@ class ProfileCompletionWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const EditProfileScreen(),
-          ),
-        );
+        // Only navigate to edit profile if completion is low
+        if (percentage < 70) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const EditProfileScreen(),
+            ),
+          );
+        }
       },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+        color: percentage < 70 ? AppTheme.surfaceColor : AppTheme.surfaceColor.withOpacity(0.8),
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
@@ -59,6 +63,12 @@ class ProfileCompletionWidget extends StatelessWidget {
                     'Profile Completion',
                     style: AppTheme.titleMedium,
                   ),
+                  if (percentage >= 70)
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 20,
+                    ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
