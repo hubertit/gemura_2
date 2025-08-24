@@ -52,6 +52,11 @@
   "submit": "Ohereza",
   "update": "Vugurura",
   "create": "Kora",
+  "switchAccount": "Hindura Konti",
+  "switch": "Hindura",
+  "switching": "Urahindura...",
+  "switchingToAccount": "Urahindura kuri {account}...",
+  "failedToSwitchAccount": "Ntibyashoboye guhindura konti",
   "view": "Reba",
   "details": "Ibisobanura",
   

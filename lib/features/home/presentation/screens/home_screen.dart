@@ -2311,98 +2311,199 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   Widget _buildAccountOption(BuildContext context, WidgetRef ref, UserAccount account) {
     final isCurrentAccount = account.isDefault;
     
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isCurrentAccount 
-          ? AppTheme.primaryColor.withOpacity(0.1)
+          ? AppTheme.primaryColor.withOpacity(0.08)
           : AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCurrentAccount 
-            ? AppTheme.primaryColor.withOpacity(0.3)
-            : AppTheme.thinBorderColor,
-          width: 1,
+            ? AppTheme.primaryColor.withOpacity(0.4)
+            : AppTheme.borderColor,
+          width: isCurrentAccount ? 2 : 1,
         ),
+        boxShadow: isCurrentAccount ? [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ] : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        leading: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isCurrentAccount 
               ? AppTheme.primaryColor
               : AppTheme.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isCurrentAccount ? [
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ] : null,
           ),
           child: Icon(
-            Icons.account_balance,
+            isCurrentAccount ? Icons.account_balance_wallet : Icons.account_balance,
             color: isCurrentAccount ? Colors.white : AppTheme.primaryColor,
-            size: 20,
+            size: 24,
           ),
         ),
         title: Text(
           account.accountName,
           style: AppTheme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimaryColor,
+            fontWeight: FontWeight.w700,
+            color: isCurrentAccount ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
+            fontSize: 16,
           ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              account.accountCode,
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.textSecondaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                account.accountCode,
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                ),
               ),
             ),
-            Text(
-              'Role: ${account.role}',
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 14,
+                  color: AppTheme.textSecondaryColor,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  account.role.toUpperCase(),
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        trailing: isCurrentAccount 
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final localizationService = ref.watch(localizationServiceProvider);
-                  return Text(
-                    localizationService.translate('current'),
-                    style: AppTheme.bodySmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+        trailing: Consumer(
+          builder: (context, ref, child) {
+            final isSwitching = ref.watch(userAccountsNotifierProvider.notifier).isSwitching;
+            
+            if (isCurrentAccount) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  );
-                },
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      ref.watch(localizationServiceProvider).translate('current'),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSwitching ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.surfaceColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSwitching ? AppTheme.primaryColor : AppTheme.borderColor,
+                  width: 1.5,
+                ),
+                boxShadow: isSwitching ? [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ] : null,
               ),
-            )
-          : Consumer(
-              builder: (context, ref, child) {
-                final isSwitching = ref.watch(userAccountsNotifierProvider.notifier).isSwitching;
-                return isSwitching
-                  ? const SizedBox(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isSwitching) ...[
+                    const SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                       ),
-                    )
-                  : const Icon(
-                      Icons.chevron_right,
-                      color: AppTheme.textSecondaryColor,
-                    );
-              },
-            ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    isSwitching 
+                      ? ref.watch(localizationServiceProvider).translate('switching')
+                      : ref.watch(localizationServiceProvider).translate('switch'),
+                    style: AppTheme.bodySmall.copyWith(
+                      color: isSwitching ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (!isSwitching) ...[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.swap_horiz,
+                      color: AppTheme.primaryColor,
+                      size: 16,
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
         onTap: isCurrentAccount ? null : () async {
           // Check if already switching
           final isSwitching = ref.read(userAccountsNotifierProvider.notifier).isSwitching;
