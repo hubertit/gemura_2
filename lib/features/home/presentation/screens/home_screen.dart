@@ -1834,84 +1834,43 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                             builder: (context, ref, child) {
                                               final localizationService = ref.watch(localizationServiceProvider);
                                               final isSwitching = ref.watch(userAccountsNotifierProvider.notifier).isSwitching;
-                                              final currentAccount = ref.watch(userAccountsNotifierProvider.notifier).getCurrentAccount();
                                               
                                               return Container(
                                                 margin: const EdgeInsets.only(top: 8),
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(milliseconds: 200),
-                                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                                  decoration: BoxDecoration(
-                                                    color: isSwitching 
-                                                      ? AppTheme.primaryColor.withOpacity(0.1)
-                                                      : AppTheme.surfaceColor,
-                                                    borderRadius: BorderRadius.circular(20),
-                                                    border: Border.all(
-                                                      color: isSwitching 
-                                                        ? AppTheme.primaryColor 
-                                                        : AppTheme.borderColor,
-                                                      width: 1.5,
-                                                    ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.black.withOpacity(0.05),
-                                                        blurRadius: 8,
-                                                        offset: const Offset(0, 2),
+                                                child: TextButton.icon(
+                                                  onPressed: isSwitching ? null : () => _showAccountSwitcher(context, ref, userAccounts.data.accounts),
+                                                  icon: isSwitching 
+                                                    ? const SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                                                        ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.swap_horiz,
+                                                        color: AppTheme.primaryColor,
+                                                        size: 18,
                                                       ),
-                                                    ],
+                                                  label: Text(
+                                                    isSwitching 
+                                                      ? localizationService.translate('switching')
+                                                      : localizationService.translate('switchAccount'),
+                                                    style: AppTheme.bodySmall.copyWith(
+                                                      color: AppTheme.primaryColor,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
                                                   ),
-                                                  child: InkWell(
-                                                    onTap: isSwitching ? null : () => _showAccountSwitcher(context, ref, userAccounts.data.accounts),
-                                                    borderRadius: BorderRadius.circular(20),
-                                                    child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        if (isSwitching) ...[
-                                                          const SizedBox(
-                                                            width: 16,
-                                                            height: 16,
-                                                            child: CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(width: 8),
-                                                        ],
-                                                        Icon(
-                                                          isSwitching ? Icons.swap_horiz : Icons.swap_horiz,
-                                                          color: AppTheme.primaryColor,
-                                                          size: 18,
-                                                        ),
-                                                        const SizedBox(width: 8),
-                                                        Text(
-                                                          isSwitching 
-                                                            ? localizationService.translate('switching')
-                                                            : localizationService.translate('switchAccount'),
-                                                          style: AppTheme.bodySmall.copyWith(
-                                                            color: AppTheme.primaryColor,
-                                                            fontWeight: FontWeight.w600,
-                                                            fontSize: 13,
-                                                          ),
-                                                        ),
-                                                        if (!isSwitching && currentAccount != null) ...[
-                                                          const SizedBox(width: 8),
-                                                          Container(
-                                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                            decoration: BoxDecoration(
-                                                              color: AppTheme.primaryColor.withOpacity(0.1),
-                                                              borderRadius: BorderRadius.circular(8),
-                                                            ),
-                                                            child: Text(
-                                                              currentAccount.accountName,
-                                                              style: AppTheme.bodySmall.copyWith(
-                                                                color: AppTheme.primaryColor,
-                                                                fontWeight: FontWeight.w500,
-                                                                fontSize: 11,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ],
+                                                  style: TextButton.styleFrom(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                                    backgroundColor: AppTheme.surfaceColor,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      side: BorderSide(
+                                                        color: AppTheme.borderColor,
+                                                        width: 1,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
