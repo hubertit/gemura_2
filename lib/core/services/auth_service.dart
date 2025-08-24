@@ -166,22 +166,30 @@ class AuthService {
   /// Get user profile
   Future<Map<String, dynamic>> getProfile() async {
     try {
-      // Try to get from cache first
-      final cachedUserData = SecureStorageService.getUserData();
-      if (cachedUserData != null) {
-        return {'data': cachedUserData};
-      }
-      
-      // If no cache, fetch from API
-      final response = await _authenticatedDio.get(AppConfig.authEndpoint + '/profile');
+      // Always fetch from API to ensure we have the latest data
+      final response = await _authenticatedDio.get(
+        AppConfig.apiBaseUrl + '/profile/get.php',
+        options: Options(
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
       
       // Cache the profile data
       if (response.statusCode == 200 && response.data['data'] != null) {
-        await SecureStorageService.saveUserData(response.data['data']);
+        final userData = response.data['data']['user'];
+        if (userData != null) {
+          await SecureStorageService.saveUserData(userData);
+        }
       }
       
       return response.data;
     } on DioException catch (e) {
+      // If API call fails, try to get from cache as fallback
+      final cachedUserData = SecureStorageService.getUserData();
+      if (cachedUserData != null) {
+        return {'data': cachedUserData};
+      }
       throw _handleDioError(e);
     } catch (e) {
       throw Exception('Get profile failed: $e');

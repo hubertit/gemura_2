@@ -92,41 +92,18 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
                       // print('🔍 DEBUG: accountData[type]: ${accountData['type']}');
                       // print('🔍 DEBUG: accountData[code]: ${accountData['code']}');
       
-      final user = User(
-        id: userData['code']?.toString() ?? '1',
-        name: userData['name'] ?? 'User',
-        email: userData['email'] ?? emailOrPhone,
-        password: '',
-        role: accountData['type']?.toString() ?? 'owner', // Role is in account.type
-        createdAt: DateTime.now(), // API doesn't provide this
-        lastLoginAt: DateTime.now(),
-        isActive: userData['status'] == 'active',
-        about: userData['about']?.toString() ?? '',
-        address: userData['address']?.toString() ?? '',
-        profilePicture: userData['profile_picture']?.toString() ?? '',
-        profileImg: userData['profile_img']?.toString() ?? '',
-        profileCover: userData['profile_cover']?.toString() ?? '',
-        coverImg: userData['cover_img']?.toString() ?? '',
-        phoneNumber: userData['phone']?.toString() ?? '',
-        accountCode: accountData['code']?.toString() ?? '',
-        accountName: accountData['name']?.toString() ?? '', // Account name from login response
-      );
+      // Create user from login response data, which already contains complete profile info
+      final userDataWithRole = Map<String, dynamic>.from(userData);
+      userDataWithRole['role'] = accountData['type']?.toString() ?? 'owner';
+      userDataWithRole['accountCode'] = accountData['code']?.toString() ?? '';
+      userDataWithRole['accountName'] = accountData['name']?.toString() ?? '';
+      
+      final user = User.fromJson(userDataWithRole);
       
       // User data and token are already saved by AuthService
       
-      // Try to get complete profile data to ensure we have the latest role and account info
-      try {
-        final profileResponse = await _authService.getProfile();
-        if (profileResponse['data'] != null && profileResponse['data']['user'] != null) {
-          final updatedUser = User.fromJson(profileResponse['data']['user']);
-          state = AsyncValue.data(updatedUser);
-        } else {
-          state = AsyncValue.data(user);
-        }
-      } catch (e) {
-        // If profile fetch fails, use the user data from login
-        state = AsyncValue.data(user);
-      }
+      // Login response already contains complete profile data, so we can use it directly
+      state = AsyncValue.data(user);
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
       rethrow;
