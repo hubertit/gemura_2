@@ -2097,18 +2097,23 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                           );
                         },
                       ),
-                              _buildActionTile(
-          Icons.analytics,
-          'My Report',
-          '',
-          () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const AgentReportScreen(),
-              ),
-            );
-          },
-        ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.analytics,
+                            localizationService.translate('myReport'),
+                            '',
+                            () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const AgentReportScreen(),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                       Consumer(
                         builder: (context, ref, child) {
                           final localizationService = ref.watch(localizationServiceProvider);

@@ -214,5 +214,16 @@
   "notifications": "Amatangazo",
   "noNotifications": "Nta matangazo yarangiye",
   "notificationsWillAppearHere": "Amatangazo yawe azagaragara hano.",
-  "failedToLoadNotifications": "Kugenzura amatangazo byanze"
+  "failedToLoadNotifications": "Kugenzura amatangazo byanze",
+  
+  "myReport": "Raporo Yange",
+  "period": "Igihe",
+  "lastUpdated": "Vugururwa bwa nyuma",
+  "summary": "Incamake",
+  "totalSales": "Igiteranyo cy'Amaguzi",
+  "totalCollections": "Igiteranyo cy'Ayakusanyijwe",
+  "customersAdded": "Abakiriya Bongeyeho",
+  "suppliersAdded": "Abagemura Bongeyeho",
+  "failedToLoadReport": "Kugenzura raporo byanze",
+  "retry": "Ongera ugerageze"
 }

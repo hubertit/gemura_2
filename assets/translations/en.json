@@ -214,5 +214,16 @@
   "notifications": "Notifications",
   "noNotifications": "No notifications yet",
   "notificationsWillAppearHere": "Your notifications will appear here.",
-  "failedToLoadNotifications": "Failed to load notifications"
+  "failedToLoadNotifications": "Failed to load notifications",
+  
+  "myReport": "My Report",
+  "period": "Period",
+  "lastUpdated": "Last updated",
+  "summary": "Summary",
+  "totalSales": "Total Sales",
+  "totalCollections": "Total Collections",
+  "customersAdded": "Customers Added",
+  "suppliersAdded": "Suppliers Added",
+  "failedToLoadReport": "Failed to load report",
+  "retry": "Retry"
 }

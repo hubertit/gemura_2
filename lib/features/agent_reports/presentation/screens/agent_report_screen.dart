@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../providers/agent_report_provider.dart';
 import '../models/agent_report.dart';
+import '../../../../core/providers/localization_provider.dart';
 
 class AgentReportScreen extends ConsumerStatefulWidget {
   const AgentReportScreen({super.key});
@@ -21,10 +22,11 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
   @override
   Widget build(BuildContext context) {
     final reportAsync = ref.watch(agentReportProvider(_selectedPeriod));
+    final localizationService = ref.watch(localizationServiceProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Report'),
+        title: Text(localizationService.translate('myReport')),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -61,7 +63,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
                 Row(
                   children: [
                     Text(
-                      'Period:',
+                      '${localizationService.translate('period')}:',
                       style: AppTheme.titleMedium,
                     ),
                     const SizedBox(width: AppTheme.spacing12),
@@ -95,7 +97,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
                 if (_lastRefreshed != null) ...[
                   const SizedBox(height: AppTheme.spacing8),
                   Text(
-                    'Last updated: ${DateFormat('MMM dd, HH:mm').format(_lastRefreshed!)}',
+                    '${localizationService.translate('lastUpdated')}: ${DateFormat('MMM dd, HH:mm').format(_lastRefreshed!)}',
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),
@@ -127,7 +129,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
                           Icon(Icons.error_outline, size: 64, color: AppTheme.textHintColor),
                           const SizedBox(height: AppTheme.spacing16),
                           Text(
-                            'Failed to load report',
+                            localizationService.translate('failedToLoadReport'),
                             style: AppTheme.titleMedium.copyWith(color: AppTheme.textSecondaryColor),
                           ),
                           const SizedBox(height: AppTheme.spacing8),
@@ -138,7 +140,7 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
                           ),
                           const SizedBox(height: AppTheme.spacing16),
                           PrimaryButton(
-                            label: 'Retry',
+                            label: localizationService.translate('retry'),
                             onPressed: () {
                               ref.refresh(agentReportProvider(_selectedPeriod));
                             },
@@ -181,11 +183,12 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
   }
 
   Widget _buildSummaryCards(AgentReport report) {
+    final localizationService = ref.read(localizationServiceProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Summary',
+          localizationService.translate('summary'),
           style: AppTheme.titleLarge,
         ),
         const SizedBox(height: AppTheme.spacing16),
@@ -198,25 +201,25 @@ class _AgentReportScreenState extends ConsumerState<AgentReportScreen> {
           childAspectRatio: 1.4,
           children: [
             _buildSummaryCard(
-              'Total Sales',
+              localizationService.translate('totalSales'),
               '${NumberFormat('#,##0').format(report.totalSales)} RWF',
               Icons.trending_up,
               AppTheme.successColor,
             ),
             _buildSummaryCard(
-              'Total Collections',
+              localizationService.translate('totalCollections'),
               '${NumberFormat('#,##0').format(report.totalCollections)} RWF',
               Icons.account_balance_wallet,
               AppTheme.primaryColor,
             ),
             _buildSummaryCard(
-              'Customers Added',
+              localizationService.translate('customersAdded'),
               '${report.customersAdded}',
               Icons.person_add,
               AppTheme.warningColor,
             ),
             _buildSummaryCard(
-              'Suppliers Added',
+              localizationService.translate('suppliersAdded'),
               '${report.suppliersAdded}',
               Icons.business,
               AppTheme.snackbarInfoColor,
