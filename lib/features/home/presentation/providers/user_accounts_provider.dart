@@ -197,6 +197,12 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
     } finally {
       _isSwitching = false;
       print('🔧 UserAccountsProvider: Switching state reset to false');
+      
+      // Force UI rebuild by invalidating the provider
+      _ref.invalidate(userAccountsNotifierProvider);
+      
+      // Add a small delay to ensure UI updates
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 
