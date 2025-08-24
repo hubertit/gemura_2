@@ -188,7 +188,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     String? address,
     String? profileImg,
     String? coverImg,
-    String? businessName,
     // KYC Fields
     String? province,
     String? district,
@@ -199,7 +198,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   }) async {
     try {
       print('🔧 AuthProvider: Starting updateUserProfile...');
-      print('🔧 AuthProvider: Parameters - name: $name, email: $email, phone: $phoneNumber, address: $address, businessName: $businessName');
+      print('🔧 AuthProvider: Parameters - name: $name, email: $email, phone: $phoneNumber, address: $address');
       
       final currentUser = state.value;
       if (currentUser == null) {
@@ -216,7 +215,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       if (profileImg != null && profileImg.isNotEmpty) profileData['profile_img'] = profileImg;
       if (coverImg != null && coverImg.isNotEmpty) profileData['cover_img'] = coverImg;
       if (email != null && email.isNotEmpty) profileData['email'] = email;
-      if (businessName != null && businessName.isNotEmpty) profileData['business_name'] = businessName;
       
       // KYC Fields
       if (province != null && province.isNotEmpty) profileData['province'] = province;
@@ -237,11 +235,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
           final userData = response['data']['user'] ?? response['data'];
           print('🔧 AuthProvider: User data from response: $userData');
           
-          // Get account name from API response (accounts.name is returned as account_name)
+          // Get account name from default account in response
           final accountData = response['data']['account'];
-          if (accountData != null && accountData['account_name'] != null) {
-            userData['accountName'] = accountData['account_name'];
-            print('🔧 AuthProvider: Updated accountName from API: ${accountData['account_name']}');
+          if (accountData != null && accountData['name'] != null) {
+            userData['accountName'] = accountData['name'];
+            print('🔧 AuthProvider: Updated accountName from API: ${accountData['name']}');
           } else if (currentUser != null) {
             // Fallback to current user's account name if not in response
             userData['accountName'] = currentUser.accountName;

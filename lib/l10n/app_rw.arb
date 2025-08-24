@@ -10,6 +10,8 @@
   "phoneNumber": "Telefoni",
   "fullName": "Amazina yose",
   "businessName": "Izina rya bizinesi",
+  "noBusinessName": "Nta izina rya bizinesi ryashyizwemo",
+  "readOnly": "SOMA GUSA",
   "confirmPassword": "Emeza ijambo banga",
   "forgotPassword": "Wibagiwe ijambo banga?",
   "dontHaveAccount": "Niba utarafungura konti?",

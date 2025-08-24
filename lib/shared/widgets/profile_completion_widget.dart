@@ -43,9 +43,25 @@ class ProfileCompletionWidget extends StatelessWidget {
           );
         }
       },
-      child: Card(
+      child: Container(
         margin: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
-        color: percentage < 70 ? AppTheme.surfaceColor : AppTheme.surfaceColor.withOpacity(0.8),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: percentage < 70 
+              ? AppTheme.warningColor.withOpacity(0.3)
+              : AppTheme.successColor.withOpacity(0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.borderColor.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           child: Column(
@@ -116,11 +132,21 @@ class ProfileCompletionWidget extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppTheme.spacing8),
-                  LinearProgressIndicator(
-                    value: percentage / 100,
-                    backgroundColor: AppTheme.borderColor,
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                    minHeight: 8,
+                  Container(
+                    height: 10,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: AppTheme.borderColor),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: LinearProgressIndicator(
+                        value: percentage / 100,
+                        backgroundColor: AppTheme.borderColor.withOpacity(0.3),
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                        minHeight: 10,
+                      ),
+                    ),
                   ),
                 ],
               ),

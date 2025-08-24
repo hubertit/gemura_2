@@ -7,6 +7,7 @@ import '../../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../../shared/widgets/kyc_photo_upload_widget.dart';
 import '../../../../../core/providers/localization_provider.dart';
+import '../providers/user_accounts_provider.dart';
 import 'home_screen.dart';
 
 
@@ -20,7 +21,6 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _businessNameController;
   late final TextEditingController _emailController;
   late final TextEditingController _phoneController;
   late final TextEditingController _nidController;
@@ -47,7 +47,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.initState();
     final user = ref.read(authProvider).value;
     _nameController = TextEditingController(text: user?.name ?? '');
-    _businessNameController = TextEditingController(text: ''); // Will be set from user accounts
     _emailController = TextEditingController(text: user?.email ?? '');
     _phoneController = TextEditingController(text: _removeCountryCode(user?.phoneNumber ?? ''));
     _nidController = TextEditingController(text: ''); // NID not in current user model
@@ -75,10 +74,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return phoneNumber;
   }
 
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return AppTheme.successColor;
+      case 'admin':
+        return AppTheme.primaryColor;
+      case 'supplier':
+        return AppTheme.warningColor;
+      case 'customer':
+        return AppTheme.infoColor;
+      default:
+        return AppTheme.textSecondaryColor;
+    }
+  }
+
+  IconData _getRoleIcon(String role) {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return Icons.person_outline;
+      case 'admin':
+        return Icons.admin_panel_settings;
+      case 'supplier':
+        return Icons.local_shipping;
+      case 'customer':
+        return Icons.shopping_cart;
+      default:
+        return Icons.business_outlined;
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
-    _businessNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _nidController.dispose();
@@ -110,14 +138,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final phoneInputState = _phoneInputKey.currentState;
       final fullPhoneNumber = phoneInputState?.fullPhoneNumber ?? _phoneController.text.trim();
       
-      print('🔧 EditProfileScreen: Form data - name: ${_nameController.text.trim()}, email: ${_emailController.text.trim()}, phone: $fullPhoneNumber, address: ${_addressController.text.trim()}, businessName: ${_businessNameController.text.trim()}');
+      print('🔧 EditProfileScreen: Form data - name: ${_nameController.text.trim()}, email: ${_emailController.text.trim()}, phone: $fullPhoneNumber, address: ${_addressController.text.trim()}');
       
       await ref.read(authProvider.notifier).updateUserProfile(
         name: _nameController.text.trim(),
         email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
         phoneNumber: fullPhoneNumber,
         address: _addressController.text.trim(),
-        businessName: _businessNameController.text.trim().isEmpty ? null : _businessNameController.text.trim(),
         // KYC Fields
         province: _provinceController.text.trim().isEmpty ? null : _provinceController.text.trim(),
         district: _districtController.text.trim().isEmpty ? null : _districtController.text.trim(),
@@ -162,13 +189,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final localizationService = ref.watch(localizationServiceProvider);
     final authState = ref.watch(authProvider);
+    final userAccountsState = ref.watch(userAccountsNotifierProvider);
+    
+    // Get current account role and name
+    String currentRole = 'User';
+    String currentAccountName = '';
+    userAccountsState.whenData((accountsResponse) {
+      if (accountsResponse?.data.accounts.isNotEmpty == true) {
+        final currentAccount = accountsResponse!.data.accounts.firstWhere(
+          (account) => account.isDefault,
+          orElse: () => accountsResponse.data.accounts.first,
+        );
+        currentRole = currentAccount.role.toUpperCase();
+        currentAccountName = currentAccount.accountName;
+      }
+    });
     
     return authState.when(
       data: (user) {
-        // Set business name from user's account name (from login response)
-        if (user != null && user.accountName != null && _businessNameController.text != user.accountName) {
-          _businessNameController.text = user.accountName!;
-        }
         
         return Scaffold(
           backgroundColor: AppTheme.backgroundColor,
@@ -203,20 +241,79 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                     const SizedBox(height: AppTheme.spacing16),
 
-                    // Business Name Field
-                    TextFormField(
-                      controller: _businessNameController,
-                      decoration: InputDecoration(
-                        labelText: localizationService.translate('businessName'),
-                        prefixIcon: const Icon(Icons.business_outlined),
-                        hintText: localizationService.translate('businessNameHint'),
+                    // Business Name Field (Read Only)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.borderColor, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.borderColor.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return localizationService.translate('businessNameRequired');
-                        }
-                        return null;
-                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _getRoleColor(currentRole).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              _getRoleIcon(currentRole),
+                              color: _getRoleColor(currentRole),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  localizationService.translate('businessName'),
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: AppTheme.textSecondaryColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  currentAccountName.isNotEmpty 
+                                    ? currentAccountName 
+                                    : localizationService.translate('noBusinessName'),
+                                  style: AppTheme.bodyMedium.copyWith(
+                                    color: AppTheme.textPrimaryColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getRoleColor(currentRole).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              currentRole,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: _getRoleColor(currentRole),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: AppTheme.spacing16),
 
