@@ -49,6 +49,7 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
     if (_isSwitching) return false; // Prevent multiple simultaneous switches
     
     _isSwitching = true;
+    print('🔧 UserAccountsProvider: Switching state set to true');
     try {
       print('🔄 Switching to account ID: $accountId');
       
@@ -195,6 +196,7 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
       return false;
     } finally {
       _isSwitching = false;
+      print('🔧 UserAccountsProvider: Switching state reset to false');
     }
   }
 
