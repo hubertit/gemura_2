@@ -2070,14 +2070,27 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                             localizationService.translate('manageEmployees'),
                             '',
                             () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const ManageAccountAccessScreen(
-                                    accountId: '1',
-                                    accountName: 'My Farm',
+                              // Get current active account
+                              final userAccountsState = ref.read(userAccountsNotifierProvider);
+                              final currentAccount = userAccountsState.value?.data.accounts
+                                  .firstWhere((acc) => acc.isDefault, orElse: () => userAccountsState.value!.data.accounts.first);
+                              
+                              if (currentAccount != null) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ManageAccountAccessScreen(
+                                      accountId: currentAccount.accountId.toString(),
+                                      accountName: currentAccount.accountName,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  AppTheme.errorSnackBar(
+                                    message: 'No active account found. Please switch to an account first.',
+                                  ),
+                                );
+                              }
                             },
                           );
                         },

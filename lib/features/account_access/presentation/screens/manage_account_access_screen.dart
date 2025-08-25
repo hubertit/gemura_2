@@ -6,16 +6,17 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../providers/account_access_provider.dart';
 import '../../../../shared/models/account_access.dart';
 import '../../../../shared/models/employee.dart';
+import '../../../../features/home/presentation/providers/user_accounts_provider.dart';
 import 'register_employee_screen.dart';
 
 class ManageAccountAccessScreen extends ConsumerStatefulWidget {
-  final String accountId;
-  final String accountName;
+  final String? accountId;
+  final String? accountName;
 
   const ManageAccountAccessScreen({
     super.key,
-    required this.accountId,
-    required this.accountName,
+    this.accountId,
+    this.accountName,
   });
 
   @override
@@ -23,9 +24,32 @@ class ManageAccountAccessScreen extends ConsumerStatefulWidget {
 }
 
 class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessScreen> {
+  
+  // Helper method to get current account info
+  Map<String, String?> _getCurrentAccountInfo() {
+    String? accountId = widget.accountId;
+    String? accountName = widget.accountName;
+    
+    if (accountId == null) {
+      final userAccountsState = ref.read(userAccountsNotifierProvider);
+      final currentAccount = userAccountsState.value?.data.accounts
+          .firstWhere((acc) => acc.isDefault, orElse: () => userAccountsState.value!.data.accounts.first);
+      
+      if (currentAccount != null) {
+        accountId = currentAccount.accountId.toString();
+        accountName = currentAccount.accountName;
+      }
+    }
+    
+    return {'accountId': accountId, 'accountName': accountName};
+  }
+  
   @override
   Widget build(BuildContext context) {
-    final accountUsersAsync = ref.watch(accountUsersProvider(widget.accountId));
+    final accountInfo = _getCurrentAccountInfo();
+    final accountId = accountInfo['accountId'];
+    
+    final accountUsersAsync = ref.watch(accountUsersProvider(accountId));
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -414,14 +438,26 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
   }
 
   void _navigateToRegisterEmployee() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => RegisterEmployeeScreen(
-          accountId: widget.accountId,
-          accountName: widget.accountName,
+    final accountInfo = _getCurrentAccountInfo();
+    final accountId = accountInfo['accountId'];
+    final accountName = accountInfo['accountName'];
+    
+    if (accountId != null && accountName != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => RegisterEmployeeScreen(
+            accountId: accountId,
+            accountName: accountName,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.errorSnackBar(
+          message: 'No active account found. Please switch to an account first.',
+        ),
+      );
+    }
   }
 
   void _showEditAccessBottomSheet(Employee employee) {
@@ -555,7 +591,7 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                 Expanded(
                       child: ElevatedButton(
                     onPressed: () async {
-                      final success = await ref.read(accountAccessProvider.notifier).updateAccess(
+                                              final success = await ref.read(accountAccessProvider.notifier).updateAccess(
                             accessId: employee.accessId,
                         role: selectedRole,
                         permissions: _getPermissionsForRole(selectedRole),
@@ -563,7 +599,8 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                       
                       if (success && mounted) {
                         Navigator.of(context).pop();
-                        ref.invalidate(accountUsersProvider(widget.accountId));
+                        final accountInfo = _getCurrentAccountInfo();
+                        ref.invalidate(accountUsersProvider(accountInfo['accountId']));
                         ScaffoldMessenger.of(context).showSnackBar(
                               AppTheme.successSnackBar(
                                 message: '✅ ${employee.name}\'s role has been updated to ${_getRoleDisplayName(selectedRole)}',
@@ -698,10 +735,11 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                       
                       if (success && mounted) {
                         Navigator.of(context).pop();
-                        ref.invalidate(accountUsersProvider(widget.accountId));
+                        final accountInfo = _getCurrentAccountInfo();
+                        ref.invalidate(accountUsersProvider(accountInfo['accountId']));
                         ScaffoldMessenger.of(context).showSnackBar(
                             AppTheme.successSnackBar(
-                              message: '✅ ${employee.name}\'s access has been revoked from ${widget.accountName}',
+                              message: '✅ ${employee.name}\'s access has been revoked from ${accountInfo['accountName'] ?? 'this account'}',
                             ),
                           );
                         } else if (mounted) {
