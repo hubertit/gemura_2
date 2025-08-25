@@ -29,6 +29,16 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
         title: 'Manage Employees',
         actions: [
           IconButton(
+            onPressed: () {
+              ref.invalidate(accountUsersProvider);
+            },
+            icon: Icon(
+              Icons.refresh,
+              color: AppTheme.primaryColor,
+            ),
+            tooltip: 'Refresh',
+          ),
+          IconButton(
             onPressed: () => _navigateToRegisterEmployee(),
             icon: Icon(
               Icons.person_add,
@@ -38,11 +48,53 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
           ),
         ],
       ),
-      body: accountUsersAsync.when(
-        data: (users) => _buildUsersList(users),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text('Error: $error', style: AppTheme.bodyMedium),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Invalidate the provider to refresh data
+          ref.invalidate(accountUsersProvider);
+        },
+        child: accountUsersAsync.when(
+          data: (users) => _buildUsersList(users),
+          loading: () => const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: AppTheme.spacing16),
+                Text(
+                  'Loading employees...',
+                  style: AppTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppTheme.errorColor,
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+                Text(
+                  'Failed to load employees',
+                  style: AppTheme.titleMedium.copyWith(
+                    color: AppTheme.textPrimaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                Text(
+                  'Pull down to refresh',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -52,6 +104,8 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
     return ListView.builder(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       itemCount: employees.length,
+      // Ensure the list is scrollable for pull-to-refresh
+      physics: const AlwaysScrollableScrollPhysics(),
       itemBuilder: (context, index) {
         final employee = employees[index];
         return GestureDetector(
