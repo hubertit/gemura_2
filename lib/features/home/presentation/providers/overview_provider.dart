@@ -9,8 +9,8 @@ final overviewServiceProvider = Provider<OverviewService>((ref) {
 final overviewProvider = FutureProvider<Overview>((ref) async {
   final overviewService = ref.read(overviewServiceProvider);
   
-  // Get data from January 1, 2023 up to today
-  const String dateFrom = '2023-01-01';
+  // Get data for current year only
+  final String dateFrom = '${DateTime.now().year}-01-01';
   final String dateTo = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
   
   return await overviewService.getOverview(
@@ -43,8 +43,8 @@ class OverviewNotifier extends StateNotifier<AsyncValue<Overview>> {
     try {
       state = const AsyncValue.loading();
       
-      // Get data from January 1, 2023 up to today
-      const String dateFrom = '2023-01-01';
+      // Get data for current year only
+      final String dateFrom = '${DateTime.now().year}-01-01';
       final String dateTo = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
       
       final overview = await _overviewService.getOverview(
