@@ -29,16 +29,6 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
         title: 'Manage Employees',
         actions: [
           IconButton(
-            onPressed: () {
-              ref.invalidate(accountUsersProvider);
-            },
-            icon: Icon(
-              Icons.refresh,
-              color: AppTheme.primaryColor,
-            ),
-            tooltip: 'Refresh',
-          ),
-          IconButton(
             onPressed: () => _navigateToRegisterEmployee(),
             icon: Icon(
               Icons.person_add,
@@ -567,20 +557,24 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
               ),
               items: [
                 DropdownMenuItem(
-                  value: AccountAccess.roleViewer,
-                  child: const Text('Viewer - Read only access'),
+                  value: AccountAccess.roleOwner,
+                  child: const Text('Owner - Full control'),
                 ),
                 DropdownMenuItem(
-                  value: AccountAccess.roleAgent,
-                  child: const Text('Agent - Collect & sell milk'),
+                  value: AccountAccess.roleAdmin,
+                  child: const Text('Admin - Full access'),
                 ),
                 DropdownMenuItem(
                   value: AccountAccess.roleManager,
                   child: const Text('Manager - Can edit data'),
                 ),
                 DropdownMenuItem(
-                  value: AccountAccess.roleAdmin,
-                  child: const Text('Admin - Full access'),
+                  value: AccountAccess.roleAgent,
+                  child: const Text('Agent - Collect & sell milk'),
+                ),
+                DropdownMenuItem(
+                  value: AccountAccess.roleViewer,
+                  child: const Text('Viewer - Read only access'),
                 ),
               ],
                       onChanged: (value) {
@@ -804,6 +798,15 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
 
   Map<String, dynamic> _getPermissionsForRole(String role) {
     switch (role) {
+      case AccountAccess.roleOwner:
+        return {
+          'view': true,
+          'edit': true,
+          'delete': true,
+          'share': true,
+          'manage_users': true,
+          'manage_account': true,
+        };
       case AccountAccess.roleAdmin:
         return {
           'view': true,
@@ -844,6 +847,8 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
 
   String _getRoleDisplayName(String role) {
     switch (role) {
+      case AccountAccess.roleOwner:
+        return 'Owner';
       case AccountAccess.roleViewer:
         return 'Viewer';
       case 'umucunda':
