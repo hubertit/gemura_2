@@ -9,14 +9,9 @@ final overviewServiceProvider = Provider<OverviewService>((ref) {
 final overviewProvider = FutureProvider<Overview>((ref) async {
   final overviewService = ref.read(overviewServiceProvider);
   
-  // Get first date and today's date of current month
-  final now = DateTime.now();
-  final firstDayOfMonth = DateTime(now.year, now.month, 1);
-  final today = DateTime(now.year, now.month, now.day);
-  
-  // Format dates for API
-  final String dateFrom = '${firstDayOfMonth.year}-${firstDayOfMonth.month.toString().padLeft(2, '0')}-${firstDayOfMonth.day.toString().padLeft(2, '0')}';
-  final String dateTo = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+  // Get data from January 1, 2023 up to today
+  const String dateFrom = '2023-01-01';
+  final String dateTo = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
   
   return await overviewService.getOverview(
     dateFrom: dateFrom,
@@ -48,14 +43,9 @@ class OverviewNotifier extends StateNotifier<AsyncValue<Overview>> {
     try {
       state = const AsyncValue.loading();
       
-      // Get first date and today's date of current month
-      final now = DateTime.now();
-      final firstDayOfMonth = DateTime(now.year, now.month, 1);
-      final today = DateTime(now.year, now.month, now.day);
-      
-      // Format dates for API
-      final String dateFrom = '${firstDayOfMonth.year}-${firstDayOfMonth.month.toString().padLeft(2, '0')}-${firstDayOfMonth.day.toString().padLeft(2, '0')}';
-      final String dateTo = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      // Get data from January 1, 2023 up to today
+      const String dateFrom = '2023-01-01';
+      final String dateTo = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
       
       final overview = await _overviewService.getOverview(
         dateFrom: dateFrom,

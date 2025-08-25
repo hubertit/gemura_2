@@ -35,6 +35,13 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
 
   bool get isSwitching => _isSwitching;
 
+  void _setSwitching(bool value) {
+    _isSwitching = value;
+    // Force a rebuild by updating the state
+    final currentState = state;
+    state = currentState;
+  }
+
   Future<void> fetchUserAccounts() async {
     state = const AsyncValue.loading();
     try {
@@ -48,7 +55,7 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
   Future<bool> switchAccount(int accountId, BuildContext? context) async {
     if (_isSwitching) return false; // Prevent multiple simultaneous switches
     
-    _isSwitching = true;
+    _setSwitching(true);
     print('🔧 UserAccountsProvider: Switching state set to true');
     try {
       print('🔄 Switching to account ID: $accountId');
@@ -162,6 +169,10 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
           print('⚠️ Failed to refresh notifications: $e');
         }
         
+        // Reset switching state after all data refreshes are complete
+        _setSwitching(false);
+        print('🔧 UserAccountsProvider: Switching state reset to false after profile refresh');
+        
         // Show success message
         print('✅ Account switch completed successfully');
         if (context != null && context.mounted) {
@@ -195,14 +206,11 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
       print('❌ Switch account error: $error');
       return false;
     } finally {
-      _isSwitching = false;
-      print('🔧 UserAccountsProvider: Switching state reset to false');
-      
-      // Force UI rebuild by invalidating the provider
-      _ref.invalidate(userAccountsNotifierProvider);
-      
-      // Add a small delay to ensure UI updates
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Only reset if we haven't already reset it after successful completion
+      if (_isSwitching) {
+        _setSwitching(false);
+        print('🔧 UserAccountsProvider: Switching state reset to false in finally block');
+      }
     }
   }
 
