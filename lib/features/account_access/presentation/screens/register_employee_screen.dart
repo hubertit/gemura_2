@@ -365,7 +365,6 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
           'nid': _nidController.text.trim(),
         },
         accountAccess: {
-          'account_id': int.parse(widget.accountId),
           'role': _selectedRole,
           'permissions': selectedPermissions,
           'set_as_default': false,
@@ -374,7 +373,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
 
       if (success && mounted) {
         Navigator.of(context).pop();
-        ref.invalidate(accountUsersProvider(widget.accountId));
+        ref.invalidate(accountUsersProvider);
         
         // Show success message with employee details
         ScaffoldMessenger.of(context).showSnackBar(

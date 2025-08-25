@@ -10,13 +10,8 @@ import '../../../../features/home/presentation/providers/user_accounts_provider.
 import 'register_employee_screen.dart';
 
 class ManageAccountAccessScreen extends ConsumerStatefulWidget {
-  final String? accountId;
-  final String? accountName;
-
   const ManageAccountAccessScreen({
     super.key,
-    this.accountId,
-    this.accountName,
   });
 
   @override
@@ -25,31 +20,9 @@ class ManageAccountAccessScreen extends ConsumerStatefulWidget {
 
 class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessScreen> {
   
-  // Helper method to get current account info
-  Map<String, String?> _getCurrentAccountInfo() {
-    String? accountId = widget.accountId;
-    String? accountName = widget.accountName;
-    
-    if (accountId == null) {
-      final userAccountsState = ref.read(userAccountsNotifierProvider);
-      final currentAccount = userAccountsState.value?.data.accounts
-          .firstWhere((acc) => acc.isDefault, orElse: () => userAccountsState.value!.data.accounts.first);
-      
-      if (currentAccount != null) {
-        accountId = currentAccount.accountId.toString();
-        accountName = currentAccount.accountName;
-      }
-    }
-    
-    return {'accountId': accountId, 'accountName': accountName};
-  }
-  
   @override
   Widget build(BuildContext context) {
-    final accountInfo = _getCurrentAccountInfo();
-    final accountId = accountInfo['accountId'];
-    
-    final accountUsersAsync = ref.watch(accountUsersProvider(accountId));
+    final accountUsersAsync = ref.watch(accountUsersProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -438,16 +411,17 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
   }
 
   void _navigateToRegisterEmployee() {
-    final accountInfo = _getCurrentAccountInfo();
-    final accountId = accountInfo['accountId'];
-    final accountName = accountInfo['accountName'];
+    // Get current active account for display purposes
+    final userAccountsState = ref.read(userAccountsNotifierProvider);
+    final currentAccount = userAccountsState.value?.data.accounts
+        .firstWhere((acc) => acc.isDefault, orElse: () => userAccountsState.value!.data.accounts.first);
     
-    if (accountId != null && accountName != null) {
+    if (currentAccount != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => RegisterEmployeeScreen(
-            accountId: accountId,
-            accountName: accountName,
+            accountId: currentAccount.accountId.toString(),
+            accountName: currentAccount.accountName,
           ),
         ),
       );
@@ -599,8 +573,7 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                       
                       if (success && mounted) {
                         Navigator.of(context).pop();
-                        final accountInfo = _getCurrentAccountInfo();
-                        ref.invalidate(accountUsersProvider(accountInfo['accountId']));
+                        ref.invalidate(accountUsersProvider);
                         ScaffoldMessenger.of(context).showSnackBar(
                               AppTheme.successSnackBar(
                                 message: '✅ ${employee.name}\'s role has been updated to ${_getRoleDisplayName(selectedRole)}',
@@ -735,11 +708,10 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                       
                       if (success && mounted) {
                         Navigator.of(context).pop();
-                        final accountInfo = _getCurrentAccountInfo();
-                        ref.invalidate(accountUsersProvider(accountInfo['accountId']));
+                        ref.invalidate(accountUsersProvider);
                         ScaffoldMessenger.of(context).showSnackBar(
                             AppTheme.successSnackBar(
-                              message: '✅ ${employee.name}\'s access has been revoked from ${accountInfo['accountName'] ?? 'this account'}',
+                              message: '✅ ${employee.name}\'s access has been revoked from this account',
                             ),
                           );
                         } else if (mounted) {

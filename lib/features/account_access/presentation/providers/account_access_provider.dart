@@ -87,10 +87,10 @@ class AccountAccessNotifier extends StateNotifier<AsyncValue<List<AccountAccess>
     }
   }
 
-  // Get users who have access to an account
-  Future<List<Employee>> getAccountUsers([String? accountId]) async {
+  // Get users who have access to the default account
+  Future<List<Employee>> getAccountUsers() async {
     try {
-      return await EmployeeService().getAccountEmployees(accountId);
+      return await EmployeeService().getAccountEmployees();
     } catch (e) {
       print('Failed to get employees: $e');
       // Return empty list if API fails
@@ -129,9 +129,9 @@ final userAccountsProvider = FutureProvider.family<List<SharedAccount>, String>(
 );
 
 // Provider for account users
-final accountUsersProvider = FutureProvider.family<List<Employee>, String?>(
-  (ref, accountId) async {
+final accountUsersProvider = FutureProvider<List<Employee>>(
+  (ref) async {
     final notifier = ref.read(accountAccessProvider.notifier);
-    return await notifier.getAccountUsers(accountId);
+    return await notifier.getAccountUsers();
   },
 );

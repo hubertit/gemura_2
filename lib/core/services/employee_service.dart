@@ -90,26 +90,19 @@ class EmployeeService {
     }
   }
 
-  /// Get all employees for an account
-  Future<List<Employee>> getAccountEmployees([String? accountId]) async {
+  /// Get all employees for the default account
+  Future<List<Employee>> getAccountEmployees() async {
     try {
       final token = SecureStorageService.getAuthToken();
       if (token == null) {
         throw Exception('No authentication token found');
       }
 
-      final Map<String, dynamic> requestData = {
-        'token': token,
-      };
-      
-      // Only include account_id if provided, otherwise API will use default account
-      if (accountId != null && accountId.isNotEmpty) {
-        requestData['account_id'] = accountId;
-      }
-
       final response = await _dio.post(
         '/employees/get',
-        data: requestData,
+        data: {
+          'token': token,
+        },
       );
 
       if (response.statusCode == 200) {
