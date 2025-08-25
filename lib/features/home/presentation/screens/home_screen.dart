@@ -645,7 +645,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                     final localizationService = ref.watch(localizationServiceProvider);
                                     return _buildMetricCard(
                                       localizationService.translate('collections'),
-                                      '${overview.summary.collection.liters.toStringAsFixed(1)} L',
+                                      '${NumberFormat('#,##0.0').format(overview.summary.collection.liters)} L',
                                       '${NumberFormat('#,###').format(overview.summary.collection.value)} Frw • ${overview.summary.collection.transactions} txns',
                                       Icons.local_shipping,
                                       AppTheme.primaryColor,
@@ -667,7 +667,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                     final localizationService = ref.watch(localizationServiceProvider);
                                     return _buildMetricCard(
                                       localizationService.translate('sales'),
-                                      '${overview.summary.sales.liters.toStringAsFixed(1)} L',
+                                      '${NumberFormat('#,##0.0').format(overview.summary.sales.liters)} L',
                                       '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw • ${overview.summary.sales.transactions} txns',
                                       Icons.shopping_cart,
                                       Colors.green,
@@ -1146,7 +1146,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${transaction.quantity.toStringAsFixed(1)} L',
+              '${NumberFormat('#,##0.0').format(transaction.quantity)} L',
               style: AppTheme.bodySmall.copyWith(
                 color: AppTheme.primaryColor,
                 fontWeight: FontWeight.w600,
@@ -1471,7 +1471,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                       final localizationService = ref.watch(localizationServiceProvider);
                       return Column(
                         children: [
-                          _buildDetailRow(localizationService.translate('quantity'), '${transaction.quantity.toStringAsFixed(1)} L'),
+                          _buildDetailRow(localizationService.translate('quantity'), '${NumberFormat('#,##0.0').format(transaction.quantity)} L'),
                           _buildDetailRow(localizationService.translate('amount'), '${NumberFormat('#,###').format(transaction.totalAmount)} Frw'),
                           _buildDetailRow(localizationService.translate('date'), _formatTransactionDate(transaction.transactionAt)),
                           _buildDetailRow(localizationService.translate('time'), _formatTransactionTime(DateTime.parse(transaction.transactionAt))),
