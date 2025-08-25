@@ -22,7 +22,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
   String _selectedStatus = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
-  RangeValues _quantityRange = const RangeValues(0, 200);
+  RangeValues _quantityRange = const RangeValues(0, 5000);
   RangeValues _priceRange = const RangeValues(0, 2000);
   
   // Store current API filters to avoid recreation
@@ -138,38 +138,8 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
       return sales;
     }
     
-    // Otherwise, apply client-side filtering
-    return sales.where((sale) {
-      // Filter by customer
-      if (_selectedCustomer != 'All' && (sale.customerAccount?.name ?? 'Unknown') != _selectedCustomer) {
-        return false;
-      }
-      
-      // Filter by status
-      if (_selectedStatus != 'All' && sale.status != _selectedStatus) {
-        return false;
-      }
-      
-      // Filter by date range
-      if (_startDate != null && sale.saleAtDateTime.isBefore(_startDate!)) {
-        return false;
-      }
-      if (_endDate != null && sale.saleAtDateTime.isAfter(_endDate!)) {
-        return false;
-      }
-      
-      // Filter by quantity range
-      if (sale.quantityAsDouble < _quantityRange.start || sale.quantityAsDouble > _quantityRange.end) {
-        return false;
-      }
-      
-      // Filter by price range
-      if (sale.unitPriceAsDouble < _priceRange.start || sale.unitPriceAsDouble > _priceRange.end) {
-        return false;
-      }
-      
-      return true;
-    }).toList();
+    // Otherwise, return all sales (no client-side filtering)
+    return sales;
   }
 
   @override

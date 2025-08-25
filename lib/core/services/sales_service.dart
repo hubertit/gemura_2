@@ -32,17 +32,17 @@ class SalesService {
       
       if (data['code'] == 200) {
         final List<dynamic> salesData = data['data'] ?? [];
-        // print('🔍 DEBUG: Found ${salesData.length} sales in API response');
+        print('🔍 DEBUG: Found ${salesData.length} sales in API response');
         
         final List<Sale> sales = [];
         for (int i = 0; i < salesData.length; i++) {
           try {
             final sale = Sale.fromJson(salesData[i]);
             sales.add(sale);
-            // print('✅ DEBUG: Successfully parsed sale ${i + 1}: ${sale.id}');
+            print('✅ DEBUG: Successfully parsed sale ${i + 1}: ${sale.id}');
           } catch (e) {
-                    // print('❌ DEBUG: Failed to parse sale ${i + 1}: $e');
-        // print('❌ DEBUG: Sale data: ${salesData[i]}');
+            print('❌ DEBUG: Failed to parse sale ${i + 1}: $e');
+            print('❌ DEBUG: Sale data: ${salesData[i]}');
           }
         }
         

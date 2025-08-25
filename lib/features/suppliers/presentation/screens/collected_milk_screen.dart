@@ -23,7 +23,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
   String _selectedStatus = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
-  RangeValues _quantityRange = const RangeValues(0, 100);
+  RangeValues _quantityRange = const RangeValues(0, 5000);
   RangeValues _priceRange = const RangeValues(0, 1000);
   
   // Store current API filters to avoid recreation
