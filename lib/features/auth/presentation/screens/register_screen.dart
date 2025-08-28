@@ -29,6 +29,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
+  bool _isAgentCandidate = false;
   final String _selectedRole = 'owner'; // Default role for dairy business owners
 
   @override
@@ -60,6 +61,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             _passwordController.text,
             _selectedRole,
             _nidController.text.trim().isEmpty ? null : _nidController.text.trim(),
+            _isAgentCandidate,
           );
       
       // Show success message
@@ -193,14 +195,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: _accountNameController,
                     decoration: const InputDecoration(
-                      labelText: 'Business Name',
+                      labelText: 'Business Name (Optional)',
                       prefixIcon: Icon(Icons.business_outlined),
                       hintText: 'e.g., MCC Gicumbi, Dairy Farm Ltd',
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your business name';
-                      }
+                      // Business name is optional, so no validation required
                       return null;
                     },
                   ),
@@ -250,6 +250,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       // NID is optional, so no validation required
                       return null;
                     },
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+
+                  // Agent Candidate Checkbox
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: AppTheme.borderColor),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                    child: CheckboxListTile(
+                      title: const Text(
+                        'I want to become a Gemura Agent',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: const Text(
+                        'Apply to become an agent and help others in your community',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      value: _isAgentCandidate,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _isAgentCandidate = value ?? false;
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
                   ),
                   const SizedBox(height: AppTheme.spacing16),
 

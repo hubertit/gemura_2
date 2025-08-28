@@ -118,6 +118,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     String password,
     String role,
     String? nid,
+    bool isAgentCandidate,
   ) async {
     try {
       state = const AsyncValue.loading();
@@ -132,6 +133,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         nid: nid, // Optional field, can be null
         role: role,
         permissions: {}, // API will set default permissions
+        isAgentCandidate: isAgentCandidate,
       );
       
       await _authService.register(registrationRequest);

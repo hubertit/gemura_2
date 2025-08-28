@@ -7,6 +7,7 @@ class RegistrationRequest {
   final String? nid;
   final String role;
   final Map<String, bool> permissions;
+  final bool isAgentCandidate;
 
   RegistrationRequest({
     required this.name,
@@ -17,6 +18,7 @@ class RegistrationRequest {
     this.nid,
     required this.role,
     required this.permissions,
+    this.isAgentCandidate = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -29,6 +31,7 @@ class RegistrationRequest {
       if (nid != null) 'nid': nid,
       'role': role,
       if (permissions.isNotEmpty) 'permissions': permissions,
+      'is_agent_candidate': isAgentCandidate,
     };
   }
 
@@ -42,6 +45,7 @@ class RegistrationRequest {
       nid: json['nid'] as String?,
       role: json['role'] as String,
       permissions: Map<String, bool>.from(json['permissions'] as Map),
+      isAgentCandidate: json['is_agent_candidate'] as bool? ?? false,
     );
   }
 }
