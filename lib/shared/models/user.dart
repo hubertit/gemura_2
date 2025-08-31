@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
+
 class User {
   final String id;
   final String name;
   final String? email;
   final String password;
   final String role;
+  final String accountType; // New field for account type
   final DateTime createdAt;
   final DateTime? lastLoginAt;
   final bool isActive;
@@ -36,6 +39,7 @@ class User {
     this.email,
     required this.password,
     required this.role,
+    required this.accountType, // New required field
     required this.createdAt,
     this.lastLoginAt,
     this.isActive = true,
@@ -66,33 +70,34 @@ class User {
     return {
       'id': id,
       'name': name,
-      'email': email,
+      if (email != null) 'email': email,
       'password': password,
       'role': role,
-      'createdAt': createdAt.toIso8601String(),
-      'lastLoginAt': lastLoginAt?.toIso8601String(),
-      'isActive': isActive,
-      'about': about,
-      'address': address,
-      'profilePicture': profilePicture,
-      'profileImg': profileImg,
-      'profileCover': profileCover,
-      'coverImg': coverImg,
-      'phoneNumber': phoneNumber,
-      'accountCode': accountCode,
-      'accountName': accountName,
+      'account_type': accountType, // New field
+      'created_at': createdAt.toIso8601String(),
+      if (lastLoginAt != null) 'last_login_at': lastLoginAt!.toIso8601String(),
+      'is_active': isActive,
+      if (about != null) 'about': about,
+      if (address != null) 'address': address,
+      if (profilePicture != null) 'profile_picture': profilePicture,
+      if (profileImg != null) 'profile_img': profileImg,
+      if (profileCover != null) 'profile_cover': profileCover,
+      if (coverImg != null) 'cover_img': coverImg,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
+      if (accountCode != null) 'account_code': accountCode,
+      if (accountName != null) 'account_name': accountName,
       // KYC Fields
-      'province': province,
-      'district': district,
-      'sector': sector,
-      'cell': cell,
-      'village': village,
-      'id_number': idNumber,
-      'id_front_photo_url': idFrontPhotoUrl,
-      'id_back_photo_url': idBackPhotoUrl,
-      'selfie_photo_url': selfiePhotoUrl,
-      'kyc_status': kycStatus,
-      'kyc_verified_at': kycVerifiedAt?.toIso8601String(),
+      if (province != null) 'province': province,
+      if (district != null) 'district': district,
+      if (sector != null) 'sector': sector,
+      if (cell != null) 'cell': cell,
+      if (village != null) 'village': village,
+      if (idNumber != null) 'id_number': idNumber,
+      if (idFrontPhotoUrl != null) 'id_front_photo_url': idFrontPhotoUrl,
+      if (idBackPhotoUrl != null) 'id_back_photo_url': idBackPhotoUrl,
+      if (selfiePhotoUrl != null) 'selfie_photo_url': selfiePhotoUrl,
+      if (kycStatus != null) 'kyc_status': kycStatus,
+      if (kycVerifiedAt != null) 'kyc_verified_at': kycVerifiedAt?.toIso8601String(),
     };
   }
 
@@ -126,6 +131,7 @@ class User {
         email: _toStringOrNull(json['email']),
         password: json['password']?.toString() ?? '',
         role: json['role']?.toString() ?? '',
+        accountType: json['account_type']?.toString() ?? 'mcc', // New field with default
         createdAt: _parseDateTime(json['createdAt']) ?? 
                    _parseDateTime(json['created_at']) ?? 
                    DateTime.now(),
@@ -147,20 +153,78 @@ class User {
         sector: _toStringOrNull(json['sector']),
         cell: _toStringOrNull(json['cell']),
         village: _toStringOrNull(json['village']),
-        idNumber: _toStringOrNull(json['id_number']),
-        idFrontPhotoUrl: _toStringOrNull(json['id_front_photo_url']),
-        idBackPhotoUrl: _toStringOrNull(json['id_back_photo_url']),
-        selfiePhotoUrl: _toStringOrNull(json['selfie_photo_url']),
-        kycStatus: _toStringOrNull(json['kyc_status']),
-        kycVerifiedAt: _parseDateTime(json['kyc_verified_at']),
+        idNumber: _toStringOrNull(json['idNumber']) ?? _toStringOrNull(json['id_number']),
+        idFrontPhotoUrl: _toStringOrNull(json['idFrontPhotoUrl']) ?? _toStringOrNull(json['id_front_photo_url']),
+        idBackPhotoUrl: _toStringOrNull(json['idBackPhotoUrl']) ?? _toStringOrNull(json['id_back_photo_url']),
+        selfiePhotoUrl: _toStringOrNull(json['selfiePhotoUrl']) ?? _toStringOrNull(json['selfie_photo_url']),
+        kycStatus: _toStringOrNull(json['kycStatus']) ?? _toStringOrNull(json['kyc_status']),
+        kycVerifiedAt: _parseDateTime(json['kycVerifiedAt']) ?? _parseDateTime(json['kyc_verified_at']),
       );
       
-      print('🔧 User.fromJson: Successfully created User object: ${user.name}');
+      print('🔧 User.fromJson: Successfully created user object');
       return user;
-    } catch (e, stackTrace) {
-      print('🔧 User.fromJson: Error creating User object: $e');
-      print('🔧 User.fromJson: Stack trace: $stackTrace');
+    } catch (e, stack) {
+      print('🔧 User.fromJson: Error creating user object: $e');
+      print('🔧 User.fromJson: Stack trace: $stack');
       rethrow;
+    }
+  }
+
+  // Account type constants
+  static const String accountTypeMCC = 'mcc';
+  static const String accountTypeAgent = 'agent';
+  static const String accountTypeCollector = 'collector';
+  static const String accountTypeVeterinarian = 'veterinarian';
+  static const String accountTypeSupplier = 'supplier';
+  static const String accountTypeCustomer = 'customer';
+  static const String accountTypeFarmer = 'farmer';
+  static const String accountTypeOwner = 'owner';
+
+  // Helper method to get display name for account type
+  static String getAccountTypeDisplayName(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case accountTypeMCC:
+        return 'MCC (Milk Collection Center)';
+      case accountTypeAgent:
+        return 'Agent';
+      case accountTypeCollector:
+        return 'Collector (Abacunda)';
+      case accountTypeVeterinarian:
+        return 'Veterinarian';
+      case accountTypeSupplier:
+        return 'Supplier';
+      case accountTypeCustomer:
+        return 'Customer';
+      case accountTypeFarmer:
+        return 'Farmer';
+      case accountTypeOwner:
+        return 'Owner';
+      default:
+        return accountType;
+    }
+  }
+
+  // Helper method to get color for account type badge
+  static Color getAccountTypeColor(String accountType) {
+    switch (accountType.toLowerCase()) {
+      case accountTypeMCC:
+        return Colors.blue;
+      case accountTypeAgent:
+        return Colors.green;
+      case accountTypeCollector:
+        return Colors.orange;
+      case accountTypeVeterinarian:
+        return Colors.purple;
+      case accountTypeSupplier:
+        return Colors.teal;
+      case accountTypeCustomer:
+        return Colors.indigo;
+      case accountTypeFarmer:
+        return Colors.brown;
+      case accountTypeOwner:
+        return Colors.grey;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -170,6 +234,7 @@ class User {
     String? email,
     String? password,
     String? role,
+    String? accountType,
     DateTime? createdAt,
     DateTime? lastLoginAt,
     bool? isActive,
@@ -201,6 +266,7 @@ class User {
       email: email ?? this.email,
       password: password ?? this.password,
       role: role ?? this.role,
+      accountType: accountType ?? this.accountType,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       isActive: isActive ?? this.isActive,

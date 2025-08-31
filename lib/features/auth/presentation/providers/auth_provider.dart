@@ -97,6 +97,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       userDataWithRole['role'] = accountData['type']?.toString() ?? 'owner';
       userDataWithRole['accountCode'] = accountData['code']?.toString() ?? '';
       userDataWithRole['accountName'] = accountData['name']?.toString() ?? '';
+      userDataWithRole['accountType'] = accountData['type']?.toString() ?? 'owner'; // Add account type
       
       final user = User.fromJson(userDataWithRole);
       
@@ -117,8 +118,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     String phoneNumber,
     String password,
     String role,
+    String accountType, // New parameter
     String? nid,
-    bool isAgentCandidate,
   ) async {
     try {
       state = const AsyncValue.loading();
@@ -132,8 +133,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         password: password,
         nid: nid, // Optional field, can be null
         role: role,
+        accountType: accountType, // New field
         permissions: {}, // API will set default permissions
-        isAgentCandidate: isAgentCandidate,
+        isAgentCandidate: false, // Default to false since we removed the checkbox
       );
       
       await _authService.register(registrationRequest);

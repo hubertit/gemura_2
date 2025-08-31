@@ -79,6 +79,7 @@ class AuthService {
             userData['role'] = data['account']['type'];
             userData['accountCode'] = data['account']['code'];
             userData['accountName'] = data['account']['name']; // Save account name
+            userData['accountType'] = data['account']['type'] ?? 'mcc'; // Save account type
             await SecureStorageService.saveUserData(userData);
           }
           

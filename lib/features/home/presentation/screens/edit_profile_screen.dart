@@ -6,6 +6,7 @@ import '../../../../../shared/widgets/phone_input_field.dart';
 import '../../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../../shared/widgets/kyc_photo_upload_widget.dart';
+import '../../../../../shared/widgets/account_type_badge.dart';
 import '../../../../../core/providers/localization_provider.dart';
 import '../providers/user_accounts_provider.dart';
 import 'home_screen.dart';
@@ -311,6 +312,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 fontSize: 10,
                               ),
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          AccountTypeBadge(
+                            accountType: user?.accountType ?? 'owner',
+                            compact: true,
+                            showIcon: false,
                           ),
                         ],
                       ),

@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     
     <application
-        android:label="gemura_2"
+        android:label="Gemura"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

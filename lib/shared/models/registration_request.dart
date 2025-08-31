@@ -6,6 +6,7 @@ class RegistrationRequest {
   final String password;
   final String? nid;
   final String role;
+  final String accountType; // New field for account type
   final Map<String, bool> permissions;
   final bool isAgentCandidate;
 
@@ -17,6 +18,7 @@ class RegistrationRequest {
     required this.password,
     this.nid,
     required this.role,
+    required this.accountType, // New required field
     required this.permissions,
     this.isAgentCandidate = false,
   });
@@ -30,6 +32,7 @@ class RegistrationRequest {
       'password': password,
       if (nid != null) 'nid': nid,
       'role': role,
+      'account_type': accountType, // New field
       if (permissions.isNotEmpty) 'permissions': permissions,
       'is_agent_candidate': isAgentCandidate,
     };
@@ -44,6 +47,7 @@ class RegistrationRequest {
       password: json['password'] as String,
       nid: json['nid'] as String?,
       role: json['role'] as String,
+      accountType: json['account_type'] as String? ?? 'mcc', // New field with default
       permissions: Map<String, bool>.from(json['permissions'] as Map),
       isAgentCandidate: json['is_agent_candidate'] as bool? ?? false,
     );

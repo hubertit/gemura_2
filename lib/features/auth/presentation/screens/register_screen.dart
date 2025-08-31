@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../../../../shared/utils/snackbar_helper.dart';
 import '../../../../shared/widgets/phone_input_field.dart';
+import '../../../../shared/models/user.dart'; // Import User model for account type constants
 import 'login_screen.dart';
 import '../../../../shared/widgets/primary_button.dart';
 
@@ -29,8 +30,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
-  bool _isAgentCandidate = false;
   final String _selectedRole = 'owner'; // Default role for dairy business owners
+  String _selectedAccountType = User.accountTypeMCC; // Default account type
 
   @override
   void dispose() {
@@ -60,8 +61,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             fullPhoneNumber,
             _passwordController.text,
             _selectedRole,
+            _selectedAccountType, // New parameter
             _nidController.text.trim().isEmpty ? null : _nidController.text.trim(),
-            _isAgentCandidate,
           );
       
       // Show success message
@@ -191,6 +192,87 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: AppTheme.spacing16),
 
+                  // Account Type Selection
+                  DropdownButtonFormField<String>(
+                    value: _selectedAccountType,
+                    decoration: const InputDecoration(
+                      labelText: 'Account Type *',
+                      prefixIcon: Icon(Icons.business_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: User.accountTypeMCC,
+                        child: Text(
+                          'MCC (Milk Collection Center)',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: User.accountTypeAgent,
+                        child: Text(
+                          'Agent',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: User.accountTypeCollector,
+                        child: Text(
+                          'Collector (Abacunda)',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: User.accountTypeVeterinarian,
+                        child: Text(
+                          'Veterinarian',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: User.accountTypeSupplier,
+                        child: Text(
+                          'Supplier',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: User.accountTypeCustomer,
+                        child: Text(
+                          'Customer',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: User.accountTypeFarmer,
+                        child: Text(
+                          'Farmer',
+                          style: AppTheme.bodyMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedAccountType = value!;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select an account type';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+
                   // Business Name Field
                   TextFormField(
                     controller: _accountNameController,
@@ -237,7 +319,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: AppTheme.spacing16),
 
-                  // NID Field (Optional)
+                  // NID Field (Optional/Mandatory for agent candidates)
                   TextFormField(
                     controller: _nidController,
                     keyboardType: TextInputType.number,
@@ -247,39 +329,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       hintText: 'Enter your National ID number',
                     ),
                     validator: (value) {
-                      // NID is optional, so no validation required
+                      // NID is optional
                       return null;
                     },
                   ),
                   const SizedBox(height: AppTheme.spacing16),
 
-                  // Agent Candidate Checkbox
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppTheme.borderColor),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                    ),
-                    child: CheckboxListTile(
-                      title: const Text(
-                        'I want to become a Gemura Agent',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: const Text(
-                        'Apply to become an agent and help others in your community',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      value: _isAgentCandidate,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          _isAgentCandidate = value ?? false;
-                        });
-                      },
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spacing16),
+
 
                   // Password Field
                   TextFormField(

@@ -35,6 +35,7 @@ import '../providers/user_accounts_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
 import '../../../../shared/widgets/error_boundary.dart';
 import '../../../../shared/widgets/profile_completion_widget.dart';
+import '../../../../shared/widgets/account_type_badge.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -1825,6 +1826,12 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                                 style: AppTheme.bodySmall.copyWith(
                                                   color: AppTheme.textSecondaryColor,
                                                 ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              AccountTypeBadge(
+                                                accountType: user.accountType,
+                                                compact: true,
+                                                showIcon: false,
                                               ),
                                             ],
                                           ),
