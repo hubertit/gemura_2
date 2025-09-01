@@ -47,9 +47,10 @@ class HomeScreen extends ConsumerWidget {
     
     final tabs = [
       const _DashboardTab(), // Index 0: Home
-      const WalletsScreen(), // Index 1: Ikofi
-      const ChatListScreen(), // Index 2: Chat
-      const ProfileTab(), // Index 3: Profile
+      const _MarketTab(), // Index 1: Market
+      const WalletsScreen(), // Index 2: Ikofi
+      const ChatListScreen(), // Index 3: Chat
+      const ProfileTab(), // Index 4: Profile
     ];
     
     // Add error boundary for tabs
@@ -77,6 +78,11 @@ class HomeScreen extends ConsumerWidget {
             label: localizationService.translate('home'),
           ),
           NavigationDestination(
+            icon: const Icon(Icons.store_outlined),
+            selectedIcon: const Icon(Icons.store),
+            label: localizationService.translate('market'),
+          ),
+          NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: const Icon(Icons.account_balance_wallet),
             label: 'Ikofi',
@@ -94,6 +100,494 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class _MarketTab extends ConsumerWidget {
+  const _MarketTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final localizationService = ref.watch(localizationServiceProvider);
+    
+    return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            localizationService.translate('market'),
+            style: TextStyle(
+              fontSize: 31,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.primaryColor,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: Implement market search
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () {
+              // TODO: Implement shopping cart
+            },
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // TODO: Refresh market data
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: CustomScrollView(
+          slivers: [
+            // Featured Products Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _buildSectionTitle(localizationService.translate('featuredProducts'), localizationService),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 5, // Placeholder count
+                  itemBuilder: (context, index) {
+                    return _buildFeaturedProductCard(index, localizationService);
+                  },
+                ),
+              ),
+            ),
+
+            // Categories Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _buildSectionTitle(localizationService.translate('categories'), localizationService),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 100,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _getMarketCategories().length,
+                  itemBuilder: (context, index) {
+                    final category = _getMarketCategories()[index];
+                    return _buildCategoryCard(category, localizationService);
+                  },
+                ),
+              ),
+            ),
+
+            // Recent Listings Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _buildSectionTitle(localizationService.translate('recentListings'), localizationService),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                child: Column(
+                  children: List.generate(3, (index) => 
+                    _buildProductCard(index, localizationService)
+                  ),
+                ),
+              ),
+            ),
+
+            // Top Sellers Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _buildSectionTitle(localizationService.translate('topSellers'), localizationService),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 120,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 4, // Placeholder count
+                  itemBuilder: (context, index) {
+                    return _buildSellerCard(index, localizationService);
+                  },
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 100), // Bottom padding
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, dynamic localizationService) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: AppTheme.titleMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
+                  TextButton(
+            onPressed: () {
+              // TODO: Navigate to see all
+            },
+            child: Text(
+              localizationService.translate('seeAll'),
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFeaturedProductCard(int index, dynamic localizationService) {
+    final productNames = ['Fresh Milk', 'Cheese', 'Yogurt', 'Butter', 'Cream'];
+    final prices = ['2,500', '5,000', '1,200', '3,800', '1,500'];
+    
+    return Container(
+      width: 160,
+      margin: const EdgeInsets.only(right: AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTheme.borderRadius12),
+                topRight: Radius.circular(AppTheme.borderRadius12),
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                _getProductIcon(index),
+                size: 40,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spacing12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  productNames[index],
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Frw ${prices[index]}',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(Map<String, dynamic> category, dynamic localizationService) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to category
+      },
+      child: Container(
+        width: 90,
+        margin: const EdgeInsets.only(right: AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              ),
+              child: Icon(
+                category['icon'],
+                color: AppTheme.primaryColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              category['name'],
+              style: AppTheme.bodySmall,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductCard(int index, dynamic localizationService) {
+    final productNames = ['Organic Milk 5L', 'Fresh Cheese 1kg', 'Natural Yogurt 500ml'];
+    final prices = ['12,500', '8,000', '2,500'];
+    final sellers = ['MCC Gicumbi', 'Dairy Farm Ltd', 'Fresh Milk Co'];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTheme.borderRadius12),
+                bottomLeft: Radius.circular(AppTheme.borderRadius12),
+              ),
+            ),
+            child: Icon(
+              _getProductIcon(index),
+              size: 32,
+              color: AppTheme.primaryColor,
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    productNames[index],
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    sellers[index],
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Frw ${prices[index]}',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        ),
+                        child: Text(
+                          localizationService.translate('buyNow'),
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSellerCard(int index, dynamic localizationService) {
+    final sellerNames = ['MCC Gicumbi', 'Dairy Farm Ltd', 'Fresh Milk Co', 'Organic Dairy'];
+    final ratings = ['4.8', '4.9', '4.7', '4.6'];
+    
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Icon(
+                Icons.store,
+                color: AppTheme.primaryColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              sellerNames[index],
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimaryColor,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.star,
+                  size: 14,
+                  color: Colors.amber,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  ratings[index],
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _getMarketCategories() {
+    return [
+      {'name': 'Milk', 'icon': Icons.local_drink},
+      {'name': 'Cheese', 'icon': Icons.restaurant},
+      {'name': 'Yogurt', 'icon': Icons.icecream},
+      {'name': 'Butter', 'icon': Icons.cake},
+      {'name': 'Cream', 'icon': Icons.water_drop},
+      {'name': 'Other', 'icon': Icons.more_horiz},
+    ];
+  }
+
+  IconData _getProductIcon(int index) {
+    final icons = [
+      Icons.local_drink,
+      Icons.restaurant,
+      Icons.icecream,
+      Icons.cake,
+      Icons.water_drop,
+    ];
+    return icons[index % icons.length];
   }
 }
 
@@ -2129,6 +2623,20 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                                   builder: (context) => const SettingsScreen(),
                                 ),
                               );
+                            },
+                          );
+                        },
+                      ),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final localizationService = ref.watch(localizationServiceProvider);
+                          return _buildActionTile(
+                            Icons.store,
+                            localizationService.translate('market'),
+                            'Buy and sell dairy products',
+                            () {
+                              // Navigate to market tab
+                              ref.read(tabIndexProvider.notifier).state = 1;
                             },
                           );
                         },
