@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
@@ -175,8 +176,8 @@ class AllProductsScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'RWF ${product.price.toStringAsFixed(0)}',
-                          style: AppTheme.titleMedium.copyWith(
+                          'RWF ${NumberFormat('#,##0').format(product.price)}',
+                          style: AppTheme.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppTheme.primaryColor,
                           ),

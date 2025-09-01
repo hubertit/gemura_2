@@ -141,12 +141,7 @@ class _MarketTab extends ConsumerWidget {
               // TODO: Implement market search
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            onPressed: () {
-              // TODO: Implement shopping cart
-            },
-          ),
+
         ],
       ),
       body: RefreshIndicator(
@@ -951,7 +946,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         ),
                         Expanded(
                           child: _QuickActionButton(
-                            icon: Icons.shopping_cart,
+                            icon: Icons.point_of_sale,
                             label: localizationService.translate('sell'),
                             onTap: () {
                               Navigator.of(context).push(
@@ -1150,7 +1145,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                       localizationService.translate('sales'),
                                       '${NumberFormat('#,##0.0').format(overview.summary.sales.liters)} L',
                                       '${NumberFormat('#,###').format(overview.summary.sales.value)} Frw • ${overview.summary.sales.transactions} txns',
-                                      Icons.shopping_cart,
+                                      Icons.point_of_sale,
                                       Colors.green,
                                       onTap: () {
                                         Navigator.of(context).push(
@@ -1374,7 +1369,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                       _buildLegendItem(
                                         localizationService.translate('sales'),
                                         Colors.grey.withOpacity(0.85),
-                                        Icons.shopping_cart,
+                                        Icons.point_of_sale,
                                       ),
                                     ],
                                   );
