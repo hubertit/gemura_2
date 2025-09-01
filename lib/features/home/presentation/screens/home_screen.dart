@@ -38,6 +38,7 @@ import '../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../shared/widgets/account_type_badge.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 import '../../../market/presentation/screens/all_products_screen.dart';
+import '../../../market/presentation/screens/product_details_screen.dart';
 
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
@@ -173,7 +174,7 @@ class _MarketTab extends ConsumerWidget {
                         scrollDirection: Axis.horizontal,
                         itemCount: featuredProducts.length,
                         itemBuilder: (context, index) {
-                          return _buildFeaturedProductCard(featuredProducts[index], localizationService);
+                          return _buildFeaturedProductCard(featuredProducts[index], localizationService, context);
                         },
                       ),
                     ),
@@ -253,7 +254,7 @@ class _MarketTab extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
                       child: Column(
                         children: recentProducts.take(3).map((product) => 
-                          _buildProductCard(product, localizationService)
+                          _buildProductCard(product, localizationService, context)
                         ).toList(),
                       ),
                     ),
@@ -318,71 +319,80 @@ class _MarketTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildFeaturedProductCard(Product product, dynamic localizationService) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+  Widget _buildFeaturedProductCard(Product product, dynamic localizationService, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(product: product),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppTheme.borderRadius12),
-                topRight: Radius.circular(AppTheme.borderRadius12),
+        );
+      },
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppTheme.borderRadius12),
+                  topRight: Radius.circular(AppTheme.borderRadius12),
+                ),
+                image: product.imageUrl != null ? DecorationImage(
+                  image: NetworkImage(product.imageUrl!),
+                  fit: BoxFit.cover,
+                ) : null,
               ),
-              image: product.imageUrl != null ? DecorationImage(
-                image: NetworkImage(product.imageUrl!),
-                fit: BoxFit.cover,
+              child: product.imageUrl == null ? Center(
+                child: Icon(
+                  _getProductIconByName(product.name),
+                  size: 40,
+                  color: AppTheme.primaryColor,
+                ),
               ) : null,
             ),
-            child: product.imageUrl == null ? Center(
-              child: Icon(
-                _getProductIconByName(product.name),
-                size: 40,
-                color: AppTheme.primaryColor,
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'RWF ${product.price.toStringAsFixed(0)}',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ) : null,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  style: AppTheme.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimaryColor,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'RWF ${product.price.toStringAsFixed(0)}',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -436,42 +446,50 @@ class _MarketTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildProductCard(Product product, dynamic localizationService) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+  Widget _buildProductCard(Product product, dynamic localizationService, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(product: product),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppTheme.borderRadius12),
-                bottomLeft: Radius.circular(AppTheme.borderRadius12),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppTheme.borderRadius12),
+                  bottomLeft: Radius.circular(AppTheme.borderRadius12),
+                ),
+                image: product.imageUrl != null ? DecorationImage(
+                  image: NetworkImage(product.imageUrl!),
+                  fit: BoxFit.cover,
+                ) : null,
               ),
-              image: product.imageUrl != null ? DecorationImage(
-                image: NetworkImage(product.imageUrl!),
-                fit: BoxFit.cover,
+              child: product.imageUrl == null ? Icon(
+                _getProductIconByName(product.name),
+                size: 32,
+                color: AppTheme.primaryColor,
               ) : null,
             ),
-            child: product.imageUrl == null ? Icon(
-              _getProductIconByName(product.name),
-              size: 32,
-              color: AppTheme.primaryColor,
-            ) : null,
-          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -534,12 +552,6 @@ class _MarketTab extends ConsumerWidget {
       ),
     );
   }
-
-
-
-
-
-
 
   IconData _getProductIconByName(String productName) {
     final name = productName.toLowerCase();

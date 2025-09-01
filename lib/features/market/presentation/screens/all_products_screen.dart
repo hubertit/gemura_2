@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
+import 'product_details_screen.dart';
 
 class AllProductsScreen extends ConsumerWidget {
   const AllProductsScreen({super.key});
+
+  String _formatNumber(double number) {
+    String numStr = number.toStringAsFixed(0);
+    final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return numStr.replaceAllMapped(reg, (Match match) => '${match[1]},');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,7 +117,11 @@ class AllProductsScreen extends ConsumerWidget {
   Widget _buildProductCard(Product product, dynamic localizationService) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to product details
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(product: product),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -176,7 +186,7 @@ class AllProductsScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'RWF ${NumberFormat('#,##0').format(product.price)}',
+                          'RWF ${_formatNumber(product.price)}',
                           style: AppTheme.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppTheme.primaryColor,
