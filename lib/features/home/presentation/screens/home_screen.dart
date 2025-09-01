@@ -38,7 +38,7 @@ import '../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../shared/widgets/account_type_badge.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 import '../../../market/presentation/screens/all_products_screen.dart';
-import '../../../market/presentation/screens/recent_products_screen.dart';
+
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
 
@@ -298,8 +298,11 @@ class _MarketTab extends ConsumerWidget {
   }
 
   Widget _buildSectionTitle(String title, dynamic localizationService, BuildContext context) {
+    // Only show "see all" button for featured products
+    final showSeeAllButton = title == localizationService.translate('featuredProducts');
+    
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: showSeeAllButton ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
       children: [
         Text(
           title,
@@ -308,31 +311,23 @@ class _MarketTab extends ConsumerWidget {
             color: AppTheme.textPrimaryColor,
           ),
         ),
-        TextButton(
-          onPressed: () {
-            if (title == localizationService.translate('featuredProducts')) {
+        if (showSeeAllButton)
+          TextButton(
+            onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const AllProductsScreen(),
                 ),
               );
-            } else if (title == localizationService.translate('recentListings')) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const RecentProductsScreen(),
-                ),
-              );
-            }
-            // TODO: Add navigation for other sections
-          },
-          child: Text(
-            localizationService.translate('seeAll'),
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.primaryColor,
-              fontWeight: FontWeight.w500,
+            },
+            child: Text(
+              localizationService.translate('seeAll'),
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-        ),
       ],
     );
   }
