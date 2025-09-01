@@ -36,6 +36,11 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../shared/widgets/error_boundary.dart';
 import '../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../shared/widgets/account_type_badge.dart';
+import '../../../market/presentation/providers/products_provider.dart';
+import '../../../market/presentation/screens/all_products_screen.dart';
+import '../../../market/presentation/screens/recent_products_screen.dart';
+import '../../../market/domain/models/product.dart';
+import '../../../market/domain/models/category.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -158,20 +163,40 @@ class _MarketTab extends ConsumerWidget {
                   vertical: 8,
                   horizontal: AppTheme.spacing16,
                 ),
-                child: _buildSectionTitle(localizationService.translate('featuredProducts'), localizationService),
+                child: _buildSectionTitle(localizationService.translate('featuredProducts'), localizationService, context),
               ),
             ),
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Placeholder count
-                  itemBuilder: (context, index) {
-                    return _buildFeaturedProductCard(index, localizationService);
-                  },
-                ),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final featuredProductsAsync = ref.watch(featuredProductsProvider);
+                  return featuredProductsAsync.when(
+                    data: (featuredProducts) => SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: featuredProducts.length,
+                        itemBuilder: (context, index) {
+                          return _buildFeaturedProductCard(featuredProducts[index], localizationService);
+                        },
+                      ),
+                    ),
+                    loading: () => const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stack) => SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text(
+                          'Error loading featured products',
+                          style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -182,21 +207,41 @@ class _MarketTab extends ConsumerWidget {
                   vertical: 8,
                   horizontal: AppTheme.spacing16,
                 ),
-                child: _buildSectionTitle(localizationService.translate('categories'), localizationService),
+                child: _buildSectionTitle(localizationService.translate('categories'), localizationService, context),
               ),
             ),
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _getMarketCategories().length,
-                  itemBuilder: (context, index) {
-                    final category = _getMarketCategories()[index];
-                    return _buildCategoryCard(category, localizationService);
-                  },
-                ),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final categoriesAsync = ref.watch(categoriesProvider);
+                  return categoriesAsync.when(
+                    data: (categories) => SizedBox(
+                      height: 100,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          return _buildCategoryCard(category, localizationService);
+                        },
+                      ),
+                    ),
+                    loading: () => const SizedBox(
+                      height: 100,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stack) => SizedBox(
+                      height: 100,
+                      child: Center(
+                        child: Text(
+                          'Error loading categories',
+                          style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -207,43 +252,41 @@ class _MarketTab extends ConsumerWidget {
                   vertical: 8,
                   horizontal: AppTheme.spacing16,
                 ),
-                child: _buildSectionTitle(localizationService.translate('recentListings'), localizationService),
+                child: _buildSectionTitle(localizationService.translate('recentListings'), localizationService, context),
               ),
             ),
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                child: Column(
-                  children: List.generate(3, (index) => 
-                    _buildProductCard(index, localizationService)
-                  ),
-                ),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final recentProductsAsync = ref.watch(recentProductsProvider);
+                  return recentProductsAsync.when(
+                    data: (recentProducts) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                      child: Column(
+                        children: recentProducts.take(3).map((product) => 
+                          _buildProductCard(product, localizationService)
+                        ).toList(),
+                      ),
+                    ),
+                    loading: () => const Padding(
+                      padding: EdgeInsets.all(AppTheme.spacing16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stack) => Padding(
+                      padding: const EdgeInsets.all(AppTheme.spacing16),
+                      child: Center(
+                        child: Text(
+                          'Error loading recent products',
+                          style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
 
-            // Top Sellers Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: AppTheme.spacing16,
-                ),
-                child: _buildSectionTitle(localizationService.translate('topSellers'), localizationService),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 120,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 4, // Placeholder count
-                  itemBuilder: (context, index) {
-                    return _buildSellerCard(index, localizationService);
-                  },
-                ),
-              ),
-            ),
+
 
             const SliverToBoxAdapter(
               child: SizedBox(height: 100), // Bottom padding
@@ -254,7 +297,7 @@ class _MarketTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title, dynamic localizationService) {
+  Widget _buildSectionTitle(String title, dynamic localizationService, BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -265,26 +308,36 @@ class _MarketTab extends ConsumerWidget {
             color: AppTheme.textPrimaryColor,
           ),
         ),
-                  TextButton(
-            onPressed: () {
-              // TODO: Navigate to see all
-            },
-            child: Text(
-              localizationService.translate('seeAll'),
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.primaryColor,
-                fontWeight: FontWeight.w500,
-              ),
+        TextButton(
+          onPressed: () {
+            if (title == localizationService.translate('featuredProducts')) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AllProductsScreen(),
+                ),
+              );
+            } else if (title == localizationService.translate('recentListings')) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const RecentProductsScreen(),
+                ),
+              );
+            }
+            // TODO: Add navigation for other sections
+          },
+          child: Text(
+            localizationService.translate('seeAll'),
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.w500,
             ),
           ),
+        ),
       ],
     );
   }
 
-  Widget _buildFeaturedProductCard(int index, dynamic localizationService) {
-    final productNames = ['Fresh Milk', 'Cheese', 'Yogurt', 'Butter', 'Cream'];
-    final prices = ['2,500', '5,000', '1,200', '3,800', '1,500'];
-    
+  Widget _buildFeaturedProductCard(Product product, dynamic localizationService) {
     return Container(
       width: 160,
       margin: const EdgeInsets.only(right: AppTheme.spacing16),
@@ -310,14 +363,18 @@ class _MarketTab extends ConsumerWidget {
                 topLeft: Radius.circular(AppTheme.borderRadius12),
                 topRight: Radius.circular(AppTheme.borderRadius12),
               ),
+              image: product.imageUrl != null ? DecorationImage(
+                image: NetworkImage(product.imageUrl!),
+                fit: BoxFit.cover,
+              ) : null,
             ),
-            child: Center(
+            child: product.imageUrl == null ? Center(
               child: Icon(
-                _getProductIcon(index),
+                _getProductIconByName(product.name),
                 size: 40,
                 color: AppTheme.primaryColor,
               ),
-            ),
+            ) : null,
           ),
           Padding(
             padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -325,7 +382,7 @@ class _MarketTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  productNames[index],
+                  product.name,
                   style: AppTheme.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimaryColor,
@@ -335,7 +392,7 @@ class _MarketTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Frw ${prices[index]}',
+                  'RWF ${product.price.toStringAsFixed(0)}',
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w600,
@@ -349,7 +406,7 @@ class _MarketTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category, dynamic localizationService) {
+  Widget _buildCategoryCard(Category category, dynamic localizationService) {
     return GestureDetector(
       onTap: () {
         // TODO: Navigate to category
@@ -379,14 +436,14 @@ class _MarketTab extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
               ),
               child: Icon(
-                category['icon'],
+                _getCategoryIcon(category.name),
                 color: AppTheme.primaryColor,
                 size: 24,
               ),
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
-              category['name'],
+              category.name,
               style: AppTheme.bodySmall,
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -398,11 +455,7 @@ class _MarketTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildProductCard(int index, dynamic localizationService) {
-    final productNames = ['Organic Milk 5L', 'Fresh Cheese 1kg', 'Natural Yogurt 500ml'];
-    final prices = ['12,500', '8,000', '2,500'];
-    final sellers = ['MCC Gicumbi', 'Dairy Farm Ltd', 'Fresh Milk Co'];
-    
+  Widget _buildProductCard(Product product, dynamic localizationService) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
       decoration: BoxDecoration(
@@ -427,12 +480,16 @@ class _MarketTab extends ConsumerWidget {
                 topLeft: Radius.circular(AppTheme.borderRadius12),
                 bottomLeft: Radius.circular(AppTheme.borderRadius12),
               ),
+              image: product.imageUrl != null ? DecorationImage(
+                image: NetworkImage(product.imageUrl!),
+                fit: BoxFit.cover,
+              ) : null,
             ),
-            child: Icon(
-              _getProductIcon(index),
+            child: product.imageUrl == null ? Icon(
+              _getProductIconByName(product.name),
               size: 32,
               color: AppTheme.primaryColor,
-            ),
+            ) : null,
           ),
           Expanded(
             child: Padding(
@@ -441,7 +498,7 @@ class _MarketTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    productNames[index],
+                    product.name,
                     style: AppTheme.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimaryColor,
@@ -451,7 +508,7 @@ class _MarketTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    sellers[index],
+                    product.seller.name,
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),
@@ -463,7 +520,7 @@ class _MarketTab extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Frw ${prices[index]}',
+                        'RWF ${product.price.toStringAsFixed(0)}',
                         style: AppTheme.bodyMedium.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -497,97 +554,40 @@ class _MarketTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSellerCard(int index, dynamic localizationService) {
-    final sellerNames = ['MCC Gicumbi', 'Dairy Farm Ltd', 'Fresh Milk Co', 'Organic Dairy'];
-    final ratings = ['4.8', '4.9', '4.7', '4.6'];
-    
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Icon(
-                Icons.store,
-                color: AppTheme.primaryColor,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              sellerNames[index],
-              style: AppTheme.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimaryColor,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.star,
-                  size: 14,
-                  color: Colors.amber,
-                ),
-                const SizedBox(width: 2),
-                Text(
-                  ratings[index],
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+
+
+
+
+
+
+  IconData _getProductIconByName(String productName) {
+    final name = productName.toLowerCase();
+    if (name.contains('milk')) return Icons.local_drink;
+    if (name.contains('cheese')) return Icons.restaurant;
+    if (name.contains('yogurt')) return Icons.icecream;
+    if (name.contains('butter')) return Icons.cake;
+    if (name.contains('cream')) return Icons.water_drop;
+    if (name.contains('powder')) return Icons.inventory_2;
+    if (name.contains('ice cream')) return Icons.icecream;
+    if (name.contains('condensed')) return Icons.local_drink;
+    return Icons.inventory_2; // Default icon
   }
 
-  List<Map<String, dynamic>> _getMarketCategories() {
-    return [
-      {'name': 'Milk', 'icon': Icons.local_drink},
-      {'name': 'Cheese', 'icon': Icons.restaurant},
-      {'name': 'Yogurt', 'icon': Icons.icecream},
-      {'name': 'Butter', 'icon': Icons.cake},
-      {'name': 'Cream', 'icon': Icons.water_drop},
-      {'name': 'Other', 'icon': Icons.more_horiz},
-    ];
-  }
-
-  IconData _getProductIcon(int index) {
-    final icons = [
-      Icons.local_drink,
-      Icons.restaurant,
-      Icons.icecream,
-      Icons.cake,
-      Icons.water_drop,
-    ];
-    return icons[index % icons.length];
+  IconData _getCategoryIcon(String categoryName) {
+    final name = categoryName.toLowerCase();
+    if (name.contains('dairy')) return Icons.local_drink;
+    if (name.contains('milk')) return Icons.local_drink;
+    if (name.contains('cheese')) return Icons.restaurant;
+    if (name.contains('yogurt')) return Icons.icecream;
+    if (name.contains('butter')) return Icons.cake;
+    if (name.contains('cream')) return Icons.water_drop;
+    if (name.contains('beverages')) return Icons.local_cafe;
+    if (name.contains('snacks')) return Icons.fastfood;
+    if (name.contains('grains')) return Icons.grain;
+    if (name.contains('vegetables')) return Icons.eco;
+    if (name.contains('fruits')) return Icons.apple;
+    if (name.contains('meat')) return Icons.set_meal;
+    return Icons.category; // Default icon
   }
 }
 
