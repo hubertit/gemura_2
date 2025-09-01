@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 
 class AllProductsScreen extends ConsumerWidget {
   const AllProductsScreen({super.key});
@@ -49,7 +50,7 @@ class AllProductsScreen extends ConsumerWidget {
         data: (products) => products.isEmpty
             ? _buildEmptyState(localizationService)
             : _buildProductsGrid(products, localizationService),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => SkeletonLoaders.productsGridSkeleton(count: 8),
         error: (error, stack) => Center(
           child: Text(
             'Error loading products: $error',

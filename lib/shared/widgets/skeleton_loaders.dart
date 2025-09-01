@@ -935,9 +935,9 @@ class SkeletonLoaders {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Wallet Cards Skeleton
+            // Wallet Cards Skeleton - Matches actual wallet card structure
             SizedBox(
-              height: 200,
+              height: 180, // Matches actual wallet card height
               child: PageView.builder(
                 itemCount: 3,
                 controller: PageController(viewportFraction: 0.92),
@@ -981,7 +981,7 @@ class SkeletonLoaders {
                                   height: 16,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                 ),
                                 Container(
@@ -1000,16 +1000,16 @@ class SkeletonLoaders {
                               height: 24,
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
                             const SizedBox(height: AppTheme.spacing8),
                             Container(
-                              width: 100,
+                              width: 60,
                               height: 16,
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(6),
                               ),
                             ),
                             const Spacer(),
@@ -1017,19 +1017,19 @@ class SkeletonLoaders {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  width: 60,
+                                  width: 80,
                                   height: 12,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                 ),
                                 Container(
-                                  width: 40,
-                                  height: 12,
+                                  width: 60,
+                                  height: 16,
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                                   ),
                                 ),
                               ],
@@ -1044,13 +1044,13 @@ class SkeletonLoaders {
             ),
             const SizedBox(height: AppTheme.spacing4),
             
-            // Quick Actions Skeleton
+            // Quick Actions Skeleton - Matches actual quick actions structure
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: AppTheme.primaryColor.withOpacity(0.06), // Matches actual background
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
                 ),
                 child: Row(
@@ -1092,14 +1092,15 @@ class SkeletonLoaders {
             ),
             const SizedBox(height: AppTheme.spacing8),
             
-            // Metrics Skeleton
+            // Overview Metrics Skeleton - Matches actual overview structure
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Container(
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: AppTheme.surfaceColor, // Matches actual surface color
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1110,7 +1111,7 @@ class SkeletonLoaders {
                           width: 20,
                           height: 20,
                           decoration: BoxDecoration(
-                            color: Colors.grey[400],
+                            color: AppTheme.primaryColor, // Matches actual icon color
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1371,8 +1372,9 @@ class SkeletonLoaders {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: AppTheme.surfaceColor, // Matches actual surface color
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                 ),
                 child: Container(
                   height: 162,
@@ -1399,15 +1401,16 @@ class SkeletonLoaders {
             ),
             const SizedBox(height: AppTheme.spacing8),
             
-            // Transaction Items Skeleton
+            // Transaction Items Skeleton - Matches actual transaction structure
             ...List.generate(3, (index) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Container(
                 margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
                 padding: const EdgeInsets.all(AppTheme.spacing16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: AppTheme.surfaceColor, // Matches actual surface color
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                 ),
                 child: Row(
                   children: [
@@ -1471,6 +1474,448 @@ class SkeletonLoaders {
               ),
             )),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Product Card Skeleton for Grid Layout
+  static Widget productCardSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Product Image Skeleton
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppTheme.borderRadius12),
+                  ),
+                ),
+              ),
+            ),
+            
+            // Product Info Skeleton
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name Skeleton
+                    Container(
+                      width: double.infinity,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    // Seller Name Skeleton
+                    Container(
+                      width: 80,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const Spacer(),
+                    // Price and Status Row Skeleton
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        Container(
+                          width: 70,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Product List Item Skeleton for List Layout
+  static Widget productListItemSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Product Image Skeleton
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing16),
+            // Product Info Skeleton
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Name Skeleton
+                  Container(
+                    width: double.infinity,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  // Seller Name Skeleton
+                  Container(
+                    width: 120,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing8),
+                  // Price and Status Row Skeleton
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      Container(
+                        width: 70,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Products Grid Skeleton
+  static Widget productsGridSkeleton({int count = 6}) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: AppTheme.spacing16,
+        mainAxisSpacing: AppTheme.spacing16,
+      ),
+      itemCount: count,
+      itemBuilder: (context, index) => productCardSkeleton(),
+    );
+  }
+
+  // Products List Skeleton
+  static Widget productsListSkeleton({int count = 5}) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      itemCount: count,
+      itemBuilder: (context, index) => productListItemSkeleton(),
+    );
+  }
+
+  // Category Card Skeleton
+  static Widget categoryCardSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        width: 80,
+        margin: const EdgeInsets.only(right: AppTheme.spacing16),
+        child: Column(
+          children: [
+            // Category Icon Skeleton
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            // Category Name Skeleton
+            Container(
+              width: 60,
+              height: 12,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Categories Horizontal List Skeleton
+  static Widget categoriesListSkeleton() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+        scrollDirection: Axis.horizontal,
+        itemCount: 6,
+        itemBuilder: (context, index) => categoryCardSkeleton(),
+      ),
+    );
+  }
+
+  // Recent Products Home Skeleton
+  static Widget recentProductsHomeSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      child: Column(
+        children: List.generate(3, (index) => Container(
+          margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Product Image Skeleton
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing16),
+              // Product Info Skeleton
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name Skeleton
+                    Container(
+                      width: double.infinity,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    // Seller/Description Skeleton
+                    Container(
+                      width: 120,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    // Price Skeleton
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        Container(
+                          width: 60,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )),
+      ),
+    );
+  }
+
+  // Featured Products Home Skeleton
+  static Widget featuredProductsHomeSkeleton() {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+        scrollDirection: Axis.horizontal,
+        itemCount: 4,
+        itemBuilder: (context, index) => Container(
+          width: 160,
+          margin: const EdgeInsets.only(right: AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image Skeleton
+              Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppTheme.borderRadius12),
+                    topRight: Radius.circular(AppTheme.borderRadius12),
+                  ),
+                ),
+              ),
+              // Product Info Skeleton
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name Skeleton
+                    Container(
+                      width: double.infinity,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    // Seller/Description Skeleton
+                    Container(
+                      width: 80,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spacing8),
+                    // Price and Status Row Skeleton
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        Container(
+                          width: 50,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

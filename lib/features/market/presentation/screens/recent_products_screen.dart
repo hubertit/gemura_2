@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 
 class RecentProductsScreen extends ConsumerWidget {
   const RecentProductsScreen({super.key});
@@ -49,7 +50,7 @@ class RecentProductsScreen extends ConsumerWidget {
         data: (recentProducts) => recentProducts.isEmpty
             ? _buildEmptyState(localizationService)
             : _buildRecentProductsList(recentProducts, localizationService),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => SkeletonLoaders.productsListSkeleton(count: 6),
         error: (error, stack) => Center(
           child: Text(
             'Error loading recent products: $error',

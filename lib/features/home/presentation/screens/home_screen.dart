@@ -182,10 +182,7 @@ class _MarketTab extends ConsumerWidget {
                         },
                       ),
                     ),
-                    loading: () => const SizedBox(
-                      height: 200,
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
+                    loading: () => SkeletonLoaders.featuredProductsHomeSkeleton(),
                     error: (error, stack) => SizedBox(
                       height: 200,
                       child: Center(
@@ -227,10 +224,7 @@ class _MarketTab extends ConsumerWidget {
                         },
                       ),
                     ),
-                    loading: () => const SizedBox(
-                      height: 100,
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
+                    loading: () => SkeletonLoaders.categoriesListSkeleton(),
                     error: (error, stack) => SizedBox(
                       height: 100,
                       child: Center(
@@ -268,10 +262,7 @@ class _MarketTab extends ConsumerWidget {
                         ).toList(),
                       ),
                     ),
-                    loading: () => const Padding(
-                      padding: EdgeInsets.all(AppTheme.spacing16),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
+                    loading: () => SkeletonLoaders.recentProductsHomeSkeleton(),
                     error: (error, stack) => Padding(
                       padding: const EdgeInsets.all(AppTheme.spacing16),
                       child: Center(
