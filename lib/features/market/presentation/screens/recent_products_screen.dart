@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
@@ -197,7 +198,7 @@ class RecentProductsScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'RWF ${product.price.toStringAsFixed(0)}',
+                        NumberFormatter.formatRWF(product.price),
                         style: AppTheme.titleMedium.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppTheme.primaryColor,

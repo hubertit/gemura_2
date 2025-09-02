@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/number_formatter.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
@@ -10,11 +11,7 @@ import 'product_details_screen.dart';
 class AllProductsScreen extends ConsumerWidget {
   const AllProductsScreen({super.key});
 
-  String _formatNumber(double number) {
-    String numStr = number.toStringAsFixed(0);
-    final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
-    return numStr.replaceAllMapped(reg, (Match match) => '${match[1]},');
-  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,12 +106,12 @@ class AllProductsScreen extends ConsumerWidget {
       ),
       itemCount: products.length,
       itemBuilder: (context, index) {
-        return _buildProductCard(products[index], localizationService);
+        return _buildProductCard(context, products[index], localizationService);
       },
     );
   }
 
-  Widget _buildProductCard(Product product, dynamic localizationService) {
+  Widget _buildProductCard(BuildContext context, Product product, dynamic localizationService) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
@@ -186,7 +183,7 @@ class AllProductsScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'RWF ${_formatNumber(product.price)}',
+                          NumberFormatter.formatRWF(product.price),
                           style: AppTheme.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppTheme.primaryColor,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/number_formatter.dart';
 
 import '../../domain/models/product.dart';
 
@@ -133,7 +134,7 @@ class ProductDetailsScreen extends ConsumerWidget {
         Row(
           children: [
             Text(
-              '${product.price.toStringAsFixed(0)} ${product.currency}',
+              NumberFormatter.formatCurrency(product.price, product.currency),
               style: AppTheme.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppTheme.primaryColor,

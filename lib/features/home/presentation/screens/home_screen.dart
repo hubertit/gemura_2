@@ -9,6 +9,7 @@ import 'help_support_screen.dart';
 import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../core/utils/number_formatter.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
@@ -139,7 +140,12 @@ class _MarketTab extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement market search
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchScreen(),
+                ),
+              );
             },
           ),
 
@@ -382,7 +388,7 @@ class _MarketTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'RWF ${product.price.toStringAsFixed(0)}',
+                    NumberFormatter.formatRWF(product.price),
                     style: AppTheme.bodySmall.copyWith(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.w600,
@@ -519,7 +525,7 @@ class _MarketTab extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'RWF ${product.price.toStringAsFixed(0)}',
+                        NumberFormatter.formatRWF(product.price),
                         style: AppTheme.bodyMedium.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -550,7 +556,7 @@ class _MarketTab extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 
   IconData _getProductIconByName(String productName) {
