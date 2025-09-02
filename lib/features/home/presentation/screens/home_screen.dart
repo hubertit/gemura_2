@@ -40,6 +40,7 @@ import '../../../../shared/widgets/account_type_badge.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 import '../../../market/presentation/screens/all_products_screen.dart';
 import '../../../market/presentation/screens/product_details_screen.dart';
+import '../../../market/presentation/screens/search_screen.dart';
 
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
@@ -143,7 +144,7 @@ class _MarketTab extends ConsumerWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SearchScreen(),
+                  builder: (context) => const MarketSearchScreen(),
                 ),
               );
             },

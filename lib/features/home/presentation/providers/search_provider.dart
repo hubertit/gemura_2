@@ -58,6 +58,6 @@ class SearchState {
   }
 }
 
-final searchProvider = StateNotifierProvider<SearchNotifier, SearchState>((ref) {
+final transactionSearchProvider = StateNotifierProvider<SearchNotifier, SearchState>((ref) {
   return SearchNotifier();
 }); 

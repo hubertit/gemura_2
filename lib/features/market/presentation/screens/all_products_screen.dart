@@ -7,6 +7,7 @@ import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 import 'product_details_screen.dart';
+import 'search_screen.dart';
 
 class AllProductsScreen extends ConsumerWidget {
   const AllProductsScreen({super.key});
@@ -39,7 +40,12 @@ class AllProductsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MarketSearchScreen(),
+                ),
+              );
             },
           ),
           IconButton(

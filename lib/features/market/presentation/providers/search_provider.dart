@@ -118,8 +118,8 @@ class SearchResult {
       perPage: json['per_page'] as int? ?? 20,
       currentPage: json['current_page'] as int? ?? 1,
       totalPages: json['total_pages'] as int? ?? 1,
-      hasNextPage: json['has_next_page'] as bool? ?? false,
-      hasPreviousPage: json['has_previous_page'] as bool? ?? false,
+      hasNextPage: json['has_next'] as bool? ?? false,
+      hasPreviousPage: json['has_prev'] as bool? ?? false,
       filters: filters,
     );
   }
@@ -207,7 +207,7 @@ class SearchNotifier extends StateNotifier<AsyncValue<SearchResult?>> {
   }
 }
 
-final searchProvider = StateNotifierProvider<SearchNotifier, AsyncValue<SearchResult?>>((ref) {
+final marketSearchProvider = StateNotifierProvider<SearchNotifier, AsyncValue<SearchResult?>>((ref) {
   final httpClient = ref.watch(httpClientProvider);
   return SearchNotifier(httpClient);
 });

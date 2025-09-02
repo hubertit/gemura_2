@@ -6,6 +6,7 @@ import '../../../../core/providers/localization_provider.dart';
 import '../providers/products_provider.dart';
 import '../../domain/models/product.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
+import 'search_screen.dart';
 
 class RecentProductsScreen extends ConsumerWidget {
   const RecentProductsScreen({super.key});
@@ -36,7 +37,12 @@ class RecentProductsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MarketSearchScreen(),
+                ),
+              );
             },
           ),
           IconButton(

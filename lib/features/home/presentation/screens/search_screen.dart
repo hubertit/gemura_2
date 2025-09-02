@@ -105,24 +105,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   void _onSearchChanged() {
     final query = _searchController.text;
-    ref.read(searchProvider.notifier).setSearchQuery(query);
+    ref.read(transactionSearchProvider.notifier).setSearchQuery(query);
     
     if (query.isNotEmpty) {
-      final results = ref.read(searchProvider.notifier).searchTransactions(mockTransactions, query);
-      ref.read(searchProvider.notifier).setSearchResults(results);
+      final results = ref.read(transactionSearchProvider.notifier).searchTransactions(mockTransactions, query);
+      ref.read(transactionSearchProvider.notifier).setSearchResults(results);
     } else {
-      ref.read(searchProvider.notifier).setSearchResults([]);
+              ref.read(transactionSearchProvider.notifier).setSearchResults([]);
     }
   }
 
   void _clearSearch() {
     _searchController.clear();
-    ref.read(searchProvider.notifier).clearSearch();
+    ref.read(transactionSearchProvider.notifier).clearSearch();
   }
 
   @override
   Widget build(BuildContext context) {
-    final searchState = ref.watch(searchProvider);
+    final searchState = ref.watch(transactionSearchProvider);
     final hasQuery = searchState.query.isNotEmpty;
     final hasResults = searchState.results.isNotEmpty;
 
