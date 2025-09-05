@@ -92,6 +92,125 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     );
   }
 
+  void _makeCallToSeller() {
+    if (widget.seller.phone != null && widget.seller.phone!.isNotEmpty) {
+      // Show call options dialog
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppTheme.surfaceColor,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppTheme.borderRadius16),
+          ),
+        ),
+        builder: (context) => Container(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondaryColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              Text(
+                'Call ${widget.seller.name}',
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppTheme.textPrimaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                widget.seller.phone!,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: AppTheme.thinBorderColor,
+                          width: AppTheme.thinBorderWidth,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.textPrimaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacing12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Here you would implement the actual call functionality
+                        // For now, we'll just show a success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Calling ${widget.seller.name}...'),
+                            backgroundColor: AppTheme.primaryColor,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.phone, size: 18),
+                          const SizedBox(width: AppTheme.spacing4),
+                          Text(
+                            'Call',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // Show error if no phone number
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No phone number available for ${widget.seller.name}'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizationService = ref.watch(localizationServiceProvider);
@@ -299,14 +418,14 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                       color: _isFollowing ? AppTheme.thinBorderColor : AppTheme.primaryColor,
                       width: AppTheme.thinBorderWidth,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                     ),
                   ),
                   child: Text(
                     _isFollowing ? 'Following' : 'Follow',
-                    style: AppTheme.bodyMedium.copyWith(
+                    style: AppTheme.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
                       color: _isFollowing ? AppTheme.textPrimaryColor : Colors.white,
                     ),
@@ -324,17 +443,53 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                       color: AppTheme.thinBorderColor,
                       width: AppTheme.thinBorderWidth,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                     ),
                   ),
                   child: Text(
                     'Message',
-                    style: AppTheme.bodyMedium.copyWith(
+                    style: AppTheme.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimaryColor,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    _makeCallToSeller();
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: AppTheme.thinBorderColor,
+                      width: AppTheme.thinBorderWidth,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.phone,
+                        size: 16,
+                        color: AppTheme.textPrimaryColor,
+                      ),
+                      const SizedBox(width: AppTheme.spacing4),
+                      Text(
+                        'Call',
+                        style: AppTheme.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

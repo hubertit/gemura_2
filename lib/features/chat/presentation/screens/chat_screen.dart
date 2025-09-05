@@ -167,13 +167,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      '${widget.chatRoom.members.length} members',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: 11,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -329,7 +322,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           const SizedBox(height: AppTheme.spacing4),
           Text(
-            'Send a message to start chatting with\nyour group members.',
+            'Send a message to start chatting.',
             textAlign: TextAlign.center,
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
