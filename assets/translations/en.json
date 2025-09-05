@@ -248,5 +248,7 @@
   "customersAdded": "Customers Added",
   "suppliersAdded": "Suppliers Added",
   "failedToLoadReport": "Failed to load report",
-  "retry": "Retry"
+  "retry": "Retry",
+  "products": "Products",
+  "reviews": "Reviews"
 }

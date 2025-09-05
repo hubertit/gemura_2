@@ -248,5 +248,7 @@
   "customersAdded": "Abakiriya Bongeyeho",
   "suppliersAdded": "Abagemura Bongeyeho",
   "failedToLoadReport": "Kugenzura raporo byanze",
-  "retry": "Ongera ugerageze"
+  "retry": "Ongera ugerageze",
+  "products": "Ibicuruzwa",
+  "reviews": "Ibyemezo"
 }

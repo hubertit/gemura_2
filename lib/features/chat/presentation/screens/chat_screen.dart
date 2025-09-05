@@ -182,74 +182,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           backgroundColor: AppTheme.surfaceColor,
           elevation: 0,
           iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.info_outline),
-              onPressed: _navigateToWalletDetails,
-            ),
-          ],
         ),
         body: Column(
           children: [
-            // Wallet Info Card
-            Container(
-              margin: const EdgeInsets.all(AppTheme.spacing12),
-              padding: const EdgeInsets.all(AppTheme.spacing12),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                border: Border.all(color: AppTheme.thinBorderColor.withOpacity(0.3)),
-              ),
-              child: InkWell(
-                onTap: () => _navigateToWalletDetails(),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppTheme.spacing8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                      ),
-                      child: const Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: AppTheme.primaryColor,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacing12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.chatRoom.wallet.name,
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.textPrimaryColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: AppTheme.spacing2),
-                          Text(
-                            'Balance: ${NumberFormat.currency(symbol: 'Frw ').format(widget.chatRoom.wallet.balance)}',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.textSecondaryColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: AppTheme.textSecondaryColor,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
             // Messages
             Expanded(
@@ -365,14 +300,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _navigateToWalletDetails() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WalletDetailsScreen(wallet: widget.chatRoom.wallet),
-      ),
-    );
-  }
 
   Widget _buildEmptyState() {
     return Center(

@@ -5,6 +5,9 @@ import '../../../../core/providers/localization_provider.dart';
 import '../../domain/models/product.dart';
 import '../providers/products_provider.dart';
 import 'product_details_screen.dart';
+import '../../../chat/presentation/screens/chat_screen.dart';
+import '../../../chat/domain/models/chat_room.dart';
+import '../../../../shared/models/wallet.dart';
 
 class SellerProfileScreen extends ConsumerStatefulWidget {
   final TopSeller seller;
@@ -36,6 +39,57 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _openChatWithSeller() {
+    // Create a simple chat room for the seller without wallet integration
+    final chatRoom = ChatRoom(
+      id: 'SELLER-${widget.seller.id}',
+      name: widget.seller.name,
+      description: 'Chat with ${widget.seller.name}',
+      walletId: '', // No wallet integration
+      wallet: Wallet(
+        id: '',
+        name: '',
+        balance: 0,
+        currency: 'RWF',
+        type: 'personal',
+        status: 'active',
+        createdAt: DateTime.now(),
+        owners: [],
+        isDefault: false,
+        description: '',
+      ),
+      members: [
+        ChatMember(
+          id: 'USER-CURRENT',
+          name: 'You',
+          email: 'user@example.com',
+          role: 'member',
+          joinedAt: DateTime.now(),
+          isOnline: true,
+        ),
+        ChatMember(
+          id: widget.seller.id.toString(),
+          name: widget.seller.name,
+          email: widget.seller.email ?? '${widget.seller.code}@seller.com',
+          avatar: widget.seller.imageUrl,
+          role: 'owner',
+          joinedAt: DateTime.now(),
+          isOnline: true,
+        ),
+      ],
+      createdAt: DateTime.now(),
+      isActive: true,
+      groupAvatar: widget.seller.imageUrl,
+    );
+
+    // Navigate to the existing chat screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(chatRoom: chatRoom),
+      ),
+    );
   }
 
   @override
@@ -263,7 +317,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
-                    // TODO: Implement message functionality
+                    _openChatWithSeller();
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
@@ -335,103 +389,410 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               height: 1.4,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing8),
-          Row(
-            children: [
-              Icon(
-                Icons.location_on,
-                size: 16,
-                color: AppTheme.textSecondaryColor,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                widget.seller.location,
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing16),
-              Icon(
-                Icons.calendar_today,
-                size: 16,
-                color: AppTheme.textSecondaryColor,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Joined ${widget.seller.joinDate}',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 
   Widget _buildProductsTab() {
-    return Consumer(
-      builder: (context, ref, child) {
-        final productsAsync = ref.watch(productsProvider);
-        return productsAsync.when(
-          data: (products) {
-            // Filter products by seller
-            final sellerProducts = products.where((p) => p.sellerId == widget.seller.id).toList();
-            
-            if (sellerProducts.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.inventory_2_outlined,
-                      size: 64,
-                      color: AppTheme.textSecondaryColor,
-                    ),
-                    const SizedBox(height: AppTheme.spacing16),
-                    Text(
-                      'No products available',
-                      style: AppTheme.titleMedium.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spacing8),
-                    Text(
-                      'This seller hasn\'t added any products yet',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return GridView.builder(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: AppTheme.spacing12,
-                mainAxisSpacing: AppTheme.spacing12,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: sellerProducts.length,
-              itemBuilder: (context, index) {
-                return _buildProductCard(sellerProducts[index]);
-              },
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Text(
-              'Error loading products',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+    // Create static products for this seller
+    final sellerProducts = _getStaticProductsForSeller();
+    
+    if (sellerProducts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inventory_2_outlined,
+              size: 64,
+              color: AppTheme.textSecondaryColor,
             ),
-          ),
-        );
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'No products available',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              'This seller hasn\'t added any products yet',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppTheme.spacing12,
+        mainAxisSpacing: AppTheme.spacing12,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: sellerProducts.length,
+      itemBuilder: (context, index) {
+        return _buildProductCard(sellerProducts[index]);
       },
     );
+  }
+
+  List<Product> _getStaticProductsForSeller() {
+    // Create static products based on the seller
+    final sellerId = widget.seller.id;
+    final sellerName = widget.seller.name;
+    final now = DateTime.now();
+    
+    // Different products for different sellers
+    switch (sellerId) {
+      case 1: // Kigali Dairy Farm
+        return [
+          Product(
+            id: 1001,
+            code: 'KDF-MILK-001',
+            name: 'Fresh Cow Milk',
+            description: 'Fresh, pure cow milk delivered daily from our farm',
+            price: 1200.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 50,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 10,
+            createdAt: now.subtract(const Duration(days: 5)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Milk'],
+            categoryIds: [1, 2],
+          ),
+          Product(
+            id: 1002,
+            code: 'KDF-YOG-001',
+            name: 'Natural Yogurt',
+            description: 'Creamy natural yogurt made from fresh milk',
+            price: 800.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 30,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 5,
+            createdAt: now.subtract(const Duration(days: 3)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Yogurt'],
+            categoryIds: [1, 3],
+          ),
+          Product(
+            id: 1003,
+            code: 'KDF-CHZ-001',
+            name: 'Farm Cheese',
+            description: 'Traditional farm-made cheese, aged to perfection',
+            price: 2500.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 15,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 3,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(hours: 6)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Cheese'],
+            categoryIds: [1, 4],
+          ),
+        ];
+      case 2: // Butare Dairy Cooperative
+        return [
+          Product(
+            id: 2001,
+            code: 'BDC-MILK-001',
+            name: 'Premium Milk',
+            description: 'High-quality milk from cooperative farms',
+            price: 1100.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 40,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 8,
+            createdAt: now.subtract(const Duration(days: 4)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Milk'],
+            categoryIds: [1, 2],
+          ),
+          Product(
+            id: 2002,
+            code: 'BDC-YOG-001',
+            name: 'Strawberry Yogurt',
+            description: 'Delicious strawberry-flavored yogurt',
+            price: 900.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 25,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 5,
+            createdAt: now.subtract(const Duration(days: 2)),
+            updatedAt: now.subtract(const Duration(hours: 12)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Yogurt'],
+            categoryIds: [1, 3],
+          ),
+        ];
+      case 3: // Gisenyi Fresh Dairy
+        return [
+          Product(
+            id: 3001,
+            code: 'GFD-MILK-001',
+            name: 'Organic Milk',
+            description: '100% organic milk from grass-fed cows',
+            price: 1500.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 35,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 6,
+            createdAt: now.subtract(const Duration(days: 6)),
+            updatedAt: now.subtract(const Duration(days: 1)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Milk', 'Organic'],
+            categoryIds: [1, 2, 5],
+          ),
+          Product(
+            id: 3002,
+            code: 'GFD-YOG-001',
+            name: 'Vanilla Yogurt',
+            description: 'Smooth vanilla yogurt with natural flavoring',
+            price: 850.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 20,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 4,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(hours: 8)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Yogurt'],
+            categoryIds: [1, 3],
+          ),
+          Product(
+            id: 3003,
+            code: 'GFD-BTR-001',
+            name: 'Butter',
+            description: 'Fresh farm butter, perfect for cooking',
+            price: 1800.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 12,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 3,
+            createdAt: now.subtract(const Duration(days: 3)),
+            updatedAt: now.subtract(const Duration(hours: 4)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Butter'],
+            categoryIds: [1, 6],
+          ),
+        ];
+      case 4: // Musanze Dairy Center
+        return [
+          Product(
+            id: 4001,
+            code: 'MDC-MILK-001',
+            name: 'Whole Milk',
+            description: 'Rich whole milk with natural cream',
+            price: 1300.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 45,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 7,
+            createdAt: now.subtract(const Duration(days: 2)),
+            updatedAt: now.subtract(const Duration(hours: 6)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Milk'],
+            categoryIds: [1, 2],
+          ),
+          Product(
+            id: 4002,
+            code: 'MDC-YOG-001',
+            name: 'Mango Yogurt',
+            description: 'Tropical mango yogurt, refreshing and sweet',
+            price: 950.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 18,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 4,
+            createdAt: now.subtract(const Duration(days: 1)),
+            updatedAt: now.subtract(const Duration(hours: 2)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Yogurt'],
+            categoryIds: [1, 3],
+          ),
+        ];
+      case 5: // Nyagatare Farm Fresh
+        return [
+          Product(
+            id: 5001,
+            code: 'NFF-MILK-001',
+            name: 'Fresh Milk',
+            description: 'Daily fresh milk from our local farm',
+            price: 1000.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 60,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 12,
+            createdAt: now.subtract(const Duration(days: 3)),
+            updatedAt: now.subtract(const Duration(hours: 3)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Milk'],
+            categoryIds: [1, 2],
+          ),
+          Product(
+            id: 5002,
+            code: 'NFF-YOG-001',
+            name: 'Plain Yogurt',
+            description: 'Simple, natural yogurt without additives',
+            price: 750.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 35,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 6,
+            createdAt: now.subtract(const Duration(days: 2)),
+            updatedAt: now.subtract(const Duration(hours: 1)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Yogurt'],
+            categoryIds: [1, 3],
+          ),
+          Product(
+            id: 5003,
+            code: 'NFF-CRM-001',
+            name: 'Cream',
+            description: 'Rich dairy cream for desserts and cooking',
+            price: 1600.0,
+            currency: 'RWF',
+            imageUrl: null,
+            isAvailable: true,
+            stockQuantity: 8,
+            minOrderQuantity: 1,
+            maxOrderQuantity: 2,
+            createdAt: now.subtract(const Duration(days: 4)),
+            updatedAt: now.subtract(const Duration(hours: 5)),
+            sellerId: sellerId,
+            seller: Seller(
+              id: sellerId,
+              code: widget.seller.code,
+              name: sellerName,
+              phone: widget.seller.phone,
+              email: widget.seller.email,
+            ),
+            categories: ['Dairy', 'Cream'],
+            categoryIds: [1, 7],
+          ),
+        ];
+      default:
+        return [];
+    }
   }
 
   Widget _buildProductCard(Product product) {
