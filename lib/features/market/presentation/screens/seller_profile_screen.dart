@@ -254,6 +254,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                     _isFollowing ? 'Following' : 'Follow',
                     style: AppTheme.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: _isFollowing ? AppTheme.textPrimaryColor : Colors.white,
                     ),
                   ),
                 ),
@@ -329,7 +330,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             'Premium dairy products from ${widget.seller.location}. '
             'We specialize in fresh, high-quality dairy products '
             'delivered directly from our farm to your doorstep.',
-            style: AppTheme.bodyMedium.copyWith(
+            style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textPrimaryColor,
               height: 1.4,
             ),
