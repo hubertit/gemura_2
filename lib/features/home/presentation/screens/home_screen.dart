@@ -41,6 +41,7 @@ import '../../../market/presentation/providers/products_provider.dart';
 import '../../../market/presentation/screens/all_products_screen.dart';
 import '../../../market/presentation/screens/product_details_screen.dart';
 import '../../../market/presentation/screens/search_screen.dart';
+import '../../../market/presentation/screens/seller_profile_screen.dart';
 
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
@@ -280,7 +281,46 @@ class _MarketTab extends ConsumerWidget {
               ),
             ),
 
-
+            // Top Sellers Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: AppTheme.spacing16,
+                ),
+                child: _buildSectionTitle(localizationService.translate('topSellers'), localizationService, context),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final topSellersAsync = ref.watch(topSellersProvider);
+                  return topSellersAsync.when(
+                    data: (topSellers) => SizedBox(
+                      height: 180,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: topSellers.length,
+                        itemBuilder: (context, index) {
+                          return _buildTopSellerCard(topSellers[index], localizationService, context);
+                        },
+                      ),
+                    ),
+                    loading: () => SkeletonLoaders.featuredProductsHomeSkeleton(),
+                    error: (error, stack) => SizedBox(
+                      height: 180,
+                      child: Center(
+                        child: Text(
+                          'Error loading top sellers',
+                          style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
 
             const SliverToBoxAdapter(
               child: SizedBox(height: 100), // Bottom padding
@@ -394,6 +434,131 @@ class _MarketTab extends ConsumerWidget {
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopSellerCard(TopSeller seller, dynamic localizationService, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => SellerProfileScreen(seller: seller),
+          ),
+        );
+      },
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Seller Avatar and Verification Badge
+            Container(
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppTheme.borderRadius12),
+                  topRight: Radius.circular(AppTheme.borderRadius12),
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: CircleAvatar(
+                      radius: 25,
+                      backgroundColor: AppTheme.primaryColor,
+                      child: Text(
+                        seller.name.substring(0, 1).toUpperCase(),
+                        style: AppTheme.titleMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (seller.isVerified)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.verified,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Seller Info
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    seller.name,
+                    style: AppTheme.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimaryColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    seller.location,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                      fontSize: 10,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  // Rating
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        size: 10,
+                        color: Colors.amber,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        seller.rating.toString(),
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

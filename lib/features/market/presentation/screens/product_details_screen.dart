@@ -4,8 +4,10 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/number_formatter.dart';
 
 import '../../domain/models/product.dart';
+import '../widgets/quantity_selector.dart';
+import 'order_form_screen.dart';
 
-class ProductDetailsScreen extends ConsumerWidget {
+class ProductDetailsScreen extends ConsumerStatefulWidget {
   final Product product;
 
   const ProductDetailsScreen({
@@ -14,7 +16,20 @@ class ProductDetailsScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+}
+
+class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
+  int _selectedQuantity = 1;
+
+  void _onQuantityChanged(int quantity) {
+    setState(() {
+      _selectedQuantity = quantity;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -23,7 +38,7 @@ class ProductDetailsScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          product.name,
+          widget.product.name,
           style: AppTheme.titleMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
@@ -33,20 +48,6 @@ class ProductDetailsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              // TODO: Implement share functionality
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.favorite_border),
-            onPressed: () {
-              // TODO: Implement favorite functionality
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -77,13 +78,15 @@ class ProductDetailsScreen extends ConsumerWidget {
                   const SizedBox(height: AppTheme.spacing16),
                   
                   // Description
-                  if (product.description != null) ...[
+                  if (widget.product.description != null) ...[
                     _buildDescriptionSection(),
                     const SizedBox(height: AppTheme.spacing16),
                   ],
                   
-                  // Product Specifications
-                  _buildSpecificationsSection(),
+
+                  
+                  // Quantity Selector
+                  _buildQuantitySelector(),
                   
                   const SizedBox(height: AppTheme.spacing24),
                   
@@ -104,12 +107,12 @@ class ProductDetailsScreen extends ConsumerWidget {
       height: 300,
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        image: product.imageUrl != null ? DecorationImage(
-          image: NetworkImage(product.imageUrl!),
+        image: widget.product.imageUrl != null ? DecorationImage(
+          image: NetworkImage(widget.product.imageUrl!),
           fit: BoxFit.cover,
         ) : null,
       ),
-      child: product.imageUrl == null ? Center(
+      child: widget.product.imageUrl == null ? Center(
         child: Icon(
           Icons.inventory_2_outlined,
           size: 80,
@@ -124,7 +127,7 @@ class ProductDetailsScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          product.name,
+          widget.product.name,
           style: AppTheme.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimaryColor,
@@ -134,7 +137,7 @@ class ProductDetailsScreen extends ConsumerWidget {
         Row(
           children: [
             Text(
-              NumberFormatter.formatCurrency(product.price, product.currency),
+              NumberFormatter.formatCurrency(widget.product.price, widget.product.currency),
               style: AppTheme.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppTheme.primaryColor,
@@ -147,21 +150,21 @@ class ProductDetailsScreen extends ConsumerWidget {
                 vertical: AppTheme.spacing8,
               ),
               decoration: BoxDecoration(
-                color: product.isAvailable 
+                color: widget.product.isAvailable 
                     ? AppTheme.successColor.withOpacity(0.1)
                     : AppTheme.errorColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                 border: Border.all(
-                  color: product.isAvailable 
+                  color: widget.product.isAvailable 
                       ? AppTheme.successColor
                       : AppTheme.errorColor,
                   width: 1,
                 ),
               ),
               child: Text(
-                product.isAvailable ? 'Available' : 'Unavailable',
+                widget.product.isAvailable ? 'Available' : 'Unavailable',
                 style: AppTheme.bodySmall.copyWith(
-                  color: product.isAvailable 
+                  color: widget.product.isAvailable 
                       ? AppTheme.successColor
                       : AppTheme.errorColor,
                   fontWeight: FontWeight.w600,
@@ -211,22 +214,22 @@ class ProductDetailsScreen extends ConsumerWidget {
                     color: AppTheme.textSecondaryColor,
                   ),
                 ),
-                Text(
-                  product.seller.name,
-                  style: AppTheme.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimaryColor,
-                  ),
-                ),
-                if (product.seller.phone != null) ...[
-                  const SizedBox(height: AppTheme.spacing4),
-                  Text(
-                    product.seller.phone!,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: AppTheme.textSecondaryColor,
+                          Text(
+            widget.product.seller.name,
+            style: AppTheme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimaryColor,
+            ),
+          ),
+                                  if (widget.product.seller.phone != null) ...[
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      widget.product.seller.phone!,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
               ],
             ),
           ),
@@ -256,19 +259,19 @@ class ProductDetailsScreen extends ConsumerWidget {
         Wrap(
           spacing: AppTheme.spacing8,
           runSpacing: AppTheme.spacing8,
-          children: product.categories.map((category) => Container(
+                      children: widget.product.categories.map((category) => Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppTheme.spacing12,
               vertical: AppTheme.spacing8,
             ),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor,
               borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
             ),
             child: Text(
               category,
               style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.primaryColor,
+                color: Colors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -291,7 +294,7 @@ class ProductDetailsScreen extends ConsumerWidget {
         ),
         const SizedBox(height: AppTheme.spacing8),
         Text(
-          product.description!,
+          widget.product.description!,
           style: AppTheme.bodyMedium.copyWith(
             color: AppTheme.textSecondaryColor,
             height: 1.5,
@@ -301,119 +304,53 @@ class ProductDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSpecificationsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Product Details',
-          style: AppTheme.titleMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing12),
-        Container(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceColor,
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-            border: Border.all(
-              color: AppTheme.borderColor,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              _buildSpecificationRow('Product Code', product.code),
-              _buildSpecificationRow('Stock Quantity', '${product.stockQuantity} units'),
-              _buildSpecificationRow('Min Order', '${product.minOrderQuantity} unit'),
-              _buildSpecificationRow('Max Order', '${product.maxOrderQuantity} units'),
-              _buildSpecificationRow('Created', _formatDate(product.createdAt)),
-              _buildSpecificationRow('Last Updated', _formatDate(product.updatedAt)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildSpecificationRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              value,
-              style: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textPrimaryColor,
-              ),
-            ),
-          ),
-        ],
-      ),
+
+  Widget _buildQuantitySelector() {
+    return QuantitySelector(
+      initialQuantity: _selectedQuantity,
+      minQuantity: widget.product.minOrderQuantity,
+      maxQuantity: widget.product.maxOrderQuantity,
+      stockQuantity: widget.product.stockQuantity,
+      onQuantityChanged: _onQuantityChanged,
     );
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: product.isAvailable ? () {
-              // TODO: Implement add to cart functionality
-            } : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-              ),
-            ),
-            child: Text(
-              'Add to Cart',
-              style: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: widget.product.isAvailable ? () {
+          _navigateToOrderForm();
+        } : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.primaryColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
           ),
         ),
-        const SizedBox(width: AppTheme.spacing16),
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () {
-              // TODO: Implement buy now functionality
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.primaryColor,
-              side: BorderSide(color: AppTheme.primaryColor),
-              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-              ),
-            ),
-            child: Text(
-              'Buy Now',
-              style: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        child: Text(
+          'Order Now',
+          style: AppTheme.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+            color: Colors.white,
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  void _navigateToOrderForm() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => OrderFormScreen(
+          product: widget.product,
+          quantity: _selectedQuantity,
+        ),
+      ),
     );
   }
 

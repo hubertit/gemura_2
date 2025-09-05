@@ -84,6 +84,12 @@ class AppTheme {
     fontWeight: FontWeight.w600,
     color: textPrimaryColor,
   );
+  static const TextStyle titleSmall = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: textPrimaryColor,
+  );
   static const TextStyle bodySmall = TextStyle(
     fontFamily: 'Inter',
     fontSize: 14,

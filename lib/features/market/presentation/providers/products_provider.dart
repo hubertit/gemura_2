@@ -102,6 +102,154 @@ final recentProductsProvider = FutureProvider<List<Product>>((ref) async {
   }
 });
 
+// Top Seller model for displaying top performing sellers
+class TopSeller {
+  final int id;
+  final String code;
+  final String name;
+  final String? phone;
+  final String? email;
+  final String? imageUrl;
+  final double rating;
+  final int totalSales;
+  final int totalProducts;
+  final String location;
+  final bool isVerified;
+  final String joinDate;
+
+  TopSeller({
+    required this.id,
+    required this.code,
+    required this.name,
+    this.phone,
+    this.email,
+    this.imageUrl,
+    required this.rating,
+    required this.totalSales,
+    required this.totalProducts,
+    required this.location,
+    required this.isVerified,
+    required this.joinDate,
+  });
+
+  factory TopSeller.fromJson(Map<String, dynamic> json) {
+    return TopSeller(
+      id: json['id'] as int,
+      code: json['code'] as String,
+      name: json['name'] as String,
+      phone: json['phone'] as String?,
+      email: json['email'] as String?,
+      imageUrl: json['image_url'] as String?,
+      rating: (json['rating'] as num).toDouble(),
+      totalSales: json['total_sales'] as int,
+      totalProducts: json['total_products'] as int,
+      location: json['location'] as String,
+      isVerified: json['is_verified'] as bool,
+      joinDate: json['join_date'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'image_url': imageUrl,
+      'rating': rating,
+      'total_sales': totalSales,
+      'total_products': totalProducts,
+      'location': location,
+      'is_verified': isVerified,
+      'join_date': joinDate,
+    };
+  }
+}
+
+// Top Sellers Provider - static top performing sellers
+final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
+  // Simulate API delay
+  await Future.delayed(const Duration(milliseconds: 500));
+  
+  // Static top sellers data
+  final topSellers = [
+    TopSeller(
+      id: 1,
+      code: 'KDF001',
+      name: 'Kigali Dairy Farm',
+      phone: '+250788123456',
+      email: 'info@kigalifarm.rw',
+      imageUrl: null,
+      rating: 4.8,
+      totalSales: 1250,
+      totalProducts: 15,
+      location: 'Kigali, Rwanda',
+      isVerified: true,
+      joinDate: '2023-01-15',
+    ),
+    TopSeller(
+      id: 2,
+      code: 'HDC002',
+      name: 'Healthy Dairy Co.',
+      phone: '+250788234567',
+      email: 'contact@healthydairy.rw',
+      imageUrl: null,
+      rating: 4.9,
+      totalSales: 980,
+      totalProducts: 12,
+      location: 'Musanze, Rwanda',
+      isVerified: true,
+      joinDate: '2023-03-20',
+    ),
+    TopSeller(
+      id: 3,
+      code: 'MCF003',
+      name: 'Mountain Cheese Farm',
+      phone: '+250788345678',
+      email: 'orders@mountaincheese.rw',
+      imageUrl: null,
+      rating: 4.7,
+      totalSales: 750,
+      totalProducts: 8,
+      location: 'Rubavu, Rwanda',
+      isVerified: true,
+      joinDate: '2023-02-10',
+    ),
+    TopSeller(
+      id: 4,
+      code: 'GDP004',
+      name: 'Golden Dairy Products',
+      phone: '+250788456789',
+      email: 'sales@goldendairy.rw',
+      imageUrl: null,
+      rating: 4.6,
+      totalSales: 650,
+      totalProducts: 10,
+      location: 'Huye, Rwanda',
+      isVerified: true,
+      joinDate: '2023-04-05',
+    ),
+    TopSeller(
+      id: 5,
+      code: 'CD005',
+      name: 'Creamy Delights',
+      phone: '+250788567890',
+      email: 'info@creamy.rw',
+      imageUrl: null,
+      rating: 4.8,
+      totalSales: 420,
+      totalProducts: 6,
+      location: 'Nyagatare, Rwanda',
+      isVerified: false,
+      joinDate: '2023-05-12',
+    ),
+  ];
+  
+  print('✅ Static top sellers loaded successfully: ${topSellers.length} sellers');
+  return topSellers;
+});
+
 // Categories Provider - fetches all categories from API
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   try {
