@@ -73,6 +73,7 @@ dependencies:
   openai_dart: ^0.4.5 # Added for OpenAI API
   flutter_dotenv: ^5.1.0 # Added for environment variables
   json_annotation: ^4.8.1 # Added for JSON serialization
+  geolocator: ^10.1.0 # Added for location services
 
 
 dev_dependencies:

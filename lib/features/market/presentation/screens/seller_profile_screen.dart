@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../../core/utils/distance_utils.dart';
 import '../../domain/models/product.dart';
 import '../providers/products_provider.dart';
 import 'product_details_screen.dart';
@@ -25,6 +27,8 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isFollowing = false;
+  String? _distanceFromUser;
+  bool _isLoadingDistance = false;
   int _followerCount = 0;
 
   @override
@@ -33,6 +37,59 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     _tabController = TabController(length: 3, vsync: this);
     // Simulate initial follower count
     _followerCount = widget.seller.totalSales ~/ 10; // Rough estimate
+    _calculateDistance();
+  }
+
+  Future<void> _calculateDistance() async {
+    setState(() {
+      _isLoadingDistance = true;
+    });
+
+    try {
+      final currentLocation = await LocationService.instance.getCurrentLocation();
+      if (currentLocation != null) {
+        // For now, we'll use mock coordinates since the seller model doesn't have GPS coordinates
+        // In a real app, you would get these from the seller's profile
+        final mockSellerCoords = _getMockCoordinatesForLocation(widget.seller.location);
+        
+        if (mockSellerCoords != null) {
+          final distance = DistanceUtils.calculateDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            mockSellerCoords['lat']!,
+            mockSellerCoords['lng']!,
+          );
+          
+          setState(() {
+            _distanceFromUser = DistanceUtils.formatDistance(distance);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error calculating distance: $e');
+    } finally {
+      setState(() {
+        _isLoadingDistance = false;
+      });
+    }
+  }
+
+  Map<String, double>? _getMockCoordinatesForLocation(String location) {
+    // Mock coordinates for different locations in Rwanda
+    final locationCoordinates = {
+      'Kigali, Rwanda': {'lat': -1.9403, 'lng': 30.0644},
+      'Nyarugenge, Kigali': {'lat': -1.9441, 'lng': 30.0619},
+      'Kacyiru, Kigali': {'lat': -1.9441, 'lng': 30.0619},
+      'Kimisagara, Kigali': {'lat': -1.9441, 'lng': 30.0619},
+      'Nyamirambo, Kigali': {'lat': -1.9441, 'lng': 30.0619},
+      'Rwamagana, Eastern Province': {'lat': -1.9486, 'lng': 30.4347},
+      'Musanze, Northern Province': {'lat': -1.4998, 'lng': 29.6344},
+      'Huye, Southern Province': {'lat': -2.5967, 'lng': 29.7374},
+      'Rubavu, Western Province': {'lat': -1.6931, 'lng': 29.2606},
+      'Gicumbi, Northern Province': {'lat': -1.4998, 'lng': 29.6344},
+    };
+    
+    return locationCoordinates[location];
   }
 
   @override
@@ -1130,7 +1187,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             [
               _buildInfoRow('Phone', widget.seller.phone ?? 'Not provided'),
               _buildInfoRow('Email', widget.seller.email ?? 'Not provided'),
-              _buildInfoRow('Location', widget.seller.location),
+              _buildLocationRow(),
             ],
           ),
           const SizedBox(height: AppTheme.spacing16),
@@ -1209,6 +1266,71 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                 color: AppTheme.textPrimaryColor,
                 fontWeight: FontWeight.w500,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationRow() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              'Location',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.seller.location,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textPrimaryColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (_isLoadingDistance)
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                    ),
+                  )
+                else if (_distanceFromUser != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 12,
+                          color: AppTheme.primaryColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$_distanceFromUser away',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
