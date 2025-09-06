@@ -335,7 +335,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
-                          'EXPERT',
+                          'AI EXPERT',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
