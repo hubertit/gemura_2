@@ -151,16 +151,16 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
   String _getRandomContent(int index) {
     final contents = [
-      'Beautiful day in Kigali! 🌞 #Kigali #Rwanda',
-      'Just finished a great workout 💪 #Fitness #Health',
-      'Amazing sunset from my balcony 🌅 #Sunset #Nature',
-      'Coffee time with friends ☕ #Coffee #Friends',
-      'Working on a new project 🚀 #Work #Innovation',
-      'Weekend vibes! 🎉 #Weekend #Fun',
-      'Learning something new every day 📚 #Learning #Growth',
-      'Grateful for today 🙏 #Gratitude #Blessed',
-      'Exploring new places 🗺️ #Travel #Adventure',
-      'Family time is the best time 👨‍👩‍👧‍👦 #Family #Love',
+      'Morning milking session with my beautiful cows 🐄 #DairyFarming #MorningMilking',
+      'New calves born today! Welcome to the farm little ones 🐮 #NewCalves #FarmLife',
+      'Fresh grass feeding time for the herd 🌱 #GrassFeeding #HealthyCows',
+      'Veterinary check-up day - all cows are healthy! 🩺 #VetCheck #HealthyHerd',
+      'Building a new barn for the growing herd 🏗️ #BarnConstruction #FarmExpansion',
+      'Harvesting hay for winter feed 🌾 #HayHarvest #WinterPreparation',
+      'Teaching my children about dairy farming 👨‍👩‍👧‍👦 #FamilyFarm #NextGeneration',
+      'Record milk production this month! 📈 #MilkProduction #FarmSuccess',
+      'Organic farming practices for better milk quality 🌿 #OrganicFarming #QualityMilk',
+      'Community dairy farming workshop today 📚 #DairyEducation #CommunityLearning',
     ];
     return contents[index % contents.length];
   }
@@ -184,27 +184,32 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
   List<String> _getRandomHashtags(int index) {
     final hashtags = [
-      ['#Kigali', '#Rwanda'],
-      ['#Fitness', '#Health'],
-      ['#Sunset', '#Nature'],
-      ['#Coffee', '#Friends'],
-      ['#Work', '#Innovation'],
-      ['#Weekend', '#Fun'],
-      ['#Learning', '#Growth'],
-      ['#Gratitude', '#Blessed'],
-      ['#Travel', '#Adventure'],
-      ['#Family', '#Love'],
+      ['#DairyFarming', '#MorningMilking'],
+      ['#NewCalves', '#FarmLife'],
+      ['#GrassFeeding', '#HealthyCows'],
+      ['#VetCheck', '#HealthyHerd'],
+      ['#BarnConstruction', '#FarmExpansion'],
+      ['#HayHarvest', '#WinterPreparation'],
+      ['#FamilyFarm', '#NextGeneration'],
+      ['#MilkProduction', '#FarmSuccess'],
+      ['#OrganicFarming', '#QualityMilk'],
+      ['#DairyEducation', '#CommunityLearning'],
     ];
     return hashtags[index % hashtags.length];
   }
 
   String _getRandomLocation(int index) {
     final locations = [
-      'Kigali, Rwanda',
-      'Nyarugenge, Kigali',
-      'Kacyiru, Kigali',
-      'Kimisagara, Kigali',
-      'Nyamirambo, Kigali',
+      'Kigali Dairy Farm, Rwanda',
+      'Nyarugenge Cattle Ranch, Kigali',
+      'Kacyiru Dairy Cooperative, Kigali',
+      'Kimisagara Farm, Kigali',
+      'Nyamirambo Livestock Farm, Kigali',
+      'Rwamagana Dairy Farm, Eastern Province',
+      'Musanze Cattle Farm, Northern Province',
+      'Huye Dairy Cooperative, Southern Province',
+      'Rubavu Livestock Farm, Western Province',
+      'Gicumbi Dairy Farm, Northern Province',
     ];
     return locations[index % locations.length];
   }
