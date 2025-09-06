@@ -519,14 +519,14 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
 
   Widget _buildTopicBadges() {
     final topics = [
-      {'id': 'milk_collection', 'label': 'Milk Collection', 'icon': Icons.local_drink},
-      {'id': 'suppliers', 'label': 'Suppliers', 'icon': Icons.business},
-      {'id': 'customers', 'label': 'Customers', 'icon': Icons.people},
-      {'id': 'pricing', 'label': 'Pricing', 'icon': Icons.attach_money},
-      {'id': 'supplements', 'label': 'Supplements', 'icon': Icons.medication},
-      {'id': 'veterinary', 'label': 'Veterinary', 'icon': Icons.pets},
-      {'id': 'farming_tips', 'label': 'Farming Tips', 'icon': Icons.agriculture},
-      {'id': 'equipment', 'label': 'Equipment', 'icon': Icons.build},
+      {'id': 'cattle_health', 'label': 'Cattle Health', 'icon': Icons.pets},
+      {'id': 'disease_treatment', 'label': 'Disease Treatment', 'icon': Icons.medical_services},
+      {'id': 'breeding', 'label': 'Breeding', 'icon': Icons.favorite},
+      {'id': 'nutrition', 'label': 'Nutrition', 'icon': Icons.grass},
+      {'id': 'pasture_management', 'label': 'Pasture Management', 'icon': Icons.landscape},
+      {'id': 'vaccination', 'label': 'Vaccination', 'icon': Icons.vaccines},
+      {'id': 'farming_techniques', 'label': 'Farming Techniques', 'icon': Icons.agriculture},
+      {'id': 'seasonal_care', 'label': 'Seasonal Care', 'icon': Icons.wb_sunny},
     ];
 
     return Container(
@@ -610,14 +610,14 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
 
     // Generate topic-specific message
     final topicMessages = {
-      'milk_collection': 'I can help you with milk collection best practices, timing, storage, and quality control. What specific aspect of milk collection would you like to know about? 🥛',
-      'suppliers': 'I can assist you with finding reliable suppliers, comparing prices, managing supplier relationships, and negotiating deals. What supplier information do you need? 🏢',
-      'customers': 'I can help you with customer management, finding new customers, maintaining relationships, and understanding market demand. What customer-related question do you have? 👥',
-      'pricing': 'I can provide insights on milk pricing, market trends, cost analysis, and pricing strategies. What pricing information are you looking for? 💰',
-      'supplements': 'I can advise on cattle supplements, nutrition, feed optimization, and health supplements. What supplement questions do you have? 💊',
-      'veterinary': 'I can help with veterinary care, health monitoring, disease prevention, and treatment options for your cattle. What veterinary advice do you need? 🐄',
-      'farming_tips': 'I can share dairy farming tips, best practices, seasonal advice, and productivity improvements. What farming tip would you like? 🌾',
-      'equipment': 'I can help with dairy equipment selection, maintenance, troubleshooting, and upgrades. What equipment question do you have? 🔧',
+      'cattle_health': 'I can help you with cattle health monitoring, wellness checks, early disease detection, and maintaining healthy livestock. What health concerns do you have about your cattle? 🐄',
+      'disease_treatment': 'I can assist you with disease treatment protocols, medication administration, recovery care, and when to call a veterinarian. What disease treatment do you need help with? 🩺',
+      'breeding': 'I can guide you on cattle breeding techniques, genetic selection, breeding timing, pregnancy care, and calving management. What breeding questions do you have? 💕',
+      'nutrition': 'I can advise on cattle nutrition, feed formulation, mineral supplements, grazing management, and dietary requirements for different life stages. What nutrition advice do you need? 🌱',
+      'pasture_management': 'I can help with pasture rotation, grass management, soil health, fencing, and sustainable grazing practices. What pasture management questions do you have? 🌾',
+      'vaccination': 'I can provide guidance on vaccination schedules, disease prevention, immunization protocols, and biosecurity measures. What vaccination information do you need? 💉',
+      'farming_techniques': 'I can share modern farming techniques, sustainable practices, productivity improvements, and innovative farming methods. What farming technique would you like to learn about? 🚜',
+      'seasonal_care': 'I can help with seasonal cattle care, weather adaptation, shelter management, and year-round farming practices. What seasonal care advice do you need? ☀️',
     };
 
     final message = topicMessages[topicId] ?? 'How can I help you with this topic?';
