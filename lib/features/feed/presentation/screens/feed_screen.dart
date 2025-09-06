@@ -61,9 +61,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.send_outlined),
+            icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Navigate to messages
+              // TODO: Navigate to create post screen
             },
           ),
         ],
@@ -98,13 +98,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     ),
                 ],
               ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Navigate to create post screen
-        },
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -273,15 +266,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             },
             child: const Icon(
               Icons.chat_bubble_outline,
-              color: AppTheme.textPrimaryColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: AppTheme.spacing16),
-          GestureDetector(
-            onTap: () => ref.read(feedProvider.notifier).sharePost(post.id),
-            child: const Icon(
-              Icons.send_outlined,
               color: AppTheme.textPrimaryColor,
               size: 24,
             ),
