@@ -4,8 +4,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/number_formatter.dart';
 
 import '../../domain/models/product.dart';
-import '../widgets/quantity_selector.dart';
-import 'order_form_screen.dart';
 
 class ProductDetailsScreen extends ConsumerStatefulWidget {
   final Product product;
@@ -20,13 +18,6 @@ class ProductDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
-  int _selectedQuantity = 1;
-
-  void _onQuantityChanged(int quantity) {
-    setState(() {
-      _selectedQuantity = quantity;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,16 +73,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     _buildDescriptionSection(),
                     const SizedBox(height: AppTheme.spacing16),
                   ],
-                  
-
-                  
-                  // Quantity Selector
-                  _buildQuantitySelector(),
-                  
-                  const SizedBox(height: AppTheme.spacing24),
-                  
-                  // Action Buttons
-                  _buildActionButtons(),
                 ],
               ),
             ),
@@ -306,55 +287,4 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
 
 
-  Widget _buildQuantitySelector() {
-    return QuantitySelector(
-      initialQuantity: _selectedQuantity,
-      minQuantity: widget.product.minOrderQuantity,
-      maxQuantity: widget.product.maxOrderQuantity,
-      stockQuantity: widget.product.stockQuantity,
-      onQuantityChanged: _onQuantityChanged,
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: widget.product.isAvailable ? () {
-          _navigateToOrderForm();
-        } : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryColor,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-          ),
-        ),
-        child: Text(
-          'Order Now',
-          style: AppTheme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToOrderForm() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => OrderFormScreen(
-          product: widget.product,
-          quantity: _selectedQuantity,
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
 }
