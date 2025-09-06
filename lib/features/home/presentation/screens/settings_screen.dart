@@ -4,6 +4,7 @@ import 'edit_profile_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/providers/localization_provider.dart';
 import '../../../settings/presentation/screens/language_selection_screen.dart';
+import '../../../invite/presentation/screens/invite_people_screen.dart';
 
 final notificationsEnabledProvider = StateProvider<bool>((ref) => true);
 
@@ -54,6 +55,26 @@ class SettingsScreen extends ConsumerWidget {
                   },
                 ),
               ],
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ListTile(
+              leading: Icon(Icons.person_add, color: AppTheme.primaryColor),
+              title: Text('Invite People', style: AppTheme.bodyMedium),
+              subtitle: Text('Share Gemura with friends and earn rewards', style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const InvitePeopleScreen(),
+                  ),
+                );
+              },
             ),
           ),
           Container(

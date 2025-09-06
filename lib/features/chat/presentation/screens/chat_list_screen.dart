@@ -8,6 +8,7 @@ import '../../domain/models/chat_room.dart';
 import 'chat_screen.dart';
 import 'create_list_screen.dart';
 import 'bot_chat_screen.dart';
+import '../../../invite/presentation/screens/invite_people_screen.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -612,10 +613,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
   void _inviteFriends() {
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invite friends functionality coming soon!'),
-        backgroundColor: AppTheme.snackbarInfoColor,
+    // Navigate to the new invite people screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const InvitePeopleScreen(),
       ),
     );
   }
