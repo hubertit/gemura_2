@@ -8,8 +8,6 @@ class Product {
   final String? imageUrl;
   final bool isAvailable;
   final int stockQuantity;
-  final int minOrderQuantity;
-  final int maxOrderQuantity;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int sellerId;
@@ -27,8 +25,6 @@ class Product {
     this.imageUrl,
     required this.isAvailable,
     required this.stockQuantity,
-    required this.minOrderQuantity,
-    required this.maxOrderQuantity,
     required this.createdAt,
     required this.updatedAt,
     required this.sellerId,
@@ -49,8 +45,6 @@ class Product {
       imageUrl: json['image_url'] as String?,
       isAvailable: json['is_available'] as bool,
       stockQuantity: json['stock_quantity'] as int,
-      minOrderQuantity: json['min_order_quantity'] as int,
-      maxOrderQuantity: json['max_order_quantity'] as int,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       sellerId: json['seller_id'] as int? ?? seller.id, // Use seller.id if seller_id is missing
@@ -71,8 +65,6 @@ class Product {
       'image_url': imageUrl,
       'is_available': isAvailable,
       'stock_quantity': stockQuantity,
-      'min_order_quantity': minOrderQuantity,
-      'max_order_quantity': maxOrderQuantity,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'seller_id': sellerId,
