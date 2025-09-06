@@ -2,49 +2,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/post.dart';
 
 class FeedState {
-  final List<Post> nearMePosts;
-  final List<Post> followingPosts;
+  final List<Post> posts;
   final bool isLoading;
   final String? error;
-  final bool hasMoreNearMePosts;
-  final bool hasMoreFollowingPosts;
-  final String currentFeedType;
+  final bool hasMorePosts;
 
   const FeedState({
-    this.nearMePosts = const [],
-    this.followingPosts = const [],
+    this.posts = const [],
     this.isLoading = false,
     this.error,
-    this.hasMoreNearMePosts = true,
-    this.hasMoreFollowingPosts = true,
-    this.currentFeedType = 'near_me',
+    this.hasMorePosts = true,
   });
 
-  List<Post> get posts {
-    return currentFeedType == 'near_me' ? nearMePosts : followingPosts;
-  }
-
-  bool get hasMorePosts {
-    return currentFeedType == 'near_me' ? hasMoreNearMePosts : hasMoreFollowingPosts;
-  }
-
   FeedState copyWith({
-    List<Post>? nearMePosts,
-    List<Post>? followingPosts,
+    List<Post>? posts,
     bool? isLoading,
     String? error,
-    bool? hasMoreNearMePosts,
-    bool? hasMoreFollowingPosts,
-    String? currentFeedType,
+    bool? hasMorePosts,
   }) {
     return FeedState(
-      nearMePosts: nearMePosts ?? this.nearMePosts,
-      followingPosts: followingPosts ?? this.followingPosts,
+      posts: posts ?? this.posts,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
-      hasMoreNearMePosts: hasMoreNearMePosts ?? this.hasMoreNearMePosts,
-      hasMoreFollowingPosts: hasMoreFollowingPosts ?? this.hasMoreFollowingPosts,
-      currentFeedType: currentFeedType ?? this.currentFeedType,
+      hasMorePosts: hasMorePosts ?? this.hasMorePosts,
     );
   }
 }
@@ -62,32 +42,23 @@ class FeedNotifier extends StateNotifier<FeedState> {
       if (mounted) {
         state = state.copyWith(
           isLoading: false,
-          nearMePosts: _generateMockPosts('near_me'),
-          followingPosts: _generateMockPosts('following'),
+          posts: _generateMockPosts(),
         );
       }
     });
   }
 
-  Future<void> refreshFeed([String? feedType]) async {
-    final currentFeedType = feedType ?? state.currentFeedType;
-    state = state.copyWith(isLoading: true, error: null, currentFeedType: currentFeedType);
+  Future<void> refreshFeed() async {
+    state = state.copyWith(isLoading: true, error: null);
     
     // Simulate refresh
     await Future.delayed(const Duration(seconds: 1));
     
     if (mounted) {
-      if (currentFeedType == 'near_me') {
-        state = state.copyWith(
-          isLoading: false,
-          nearMePosts: _generateMockPosts('near_me'),
-        );
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          followingPosts: _generateMockPosts('following'),
-        );
-      }
+      state = state.copyWith(
+        isLoading: false,
+        posts: _generateMockPosts(),
+      );
     }
   }
 
@@ -100,105 +71,61 @@ class FeedNotifier extends StateNotifier<FeedState> {
     await Future.delayed(const Duration(seconds: 1));
     
     if (mounted) {
-      final newPosts = _generateMockPosts(state.currentFeedType);
-      if (state.currentFeedType == 'near_me') {
-        state = state.copyWith(
-          isLoading: false,
-          nearMePosts: [...state.nearMePosts, ...newPosts],
-          hasMoreNearMePosts: state.nearMePosts.length < 50,
-        );
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          followingPosts: [...state.followingPosts, ...newPosts],
-          hasMoreFollowingPosts: state.followingPosts.length < 50,
-        );
-      }
+      final newPosts = _generateMockPosts();
+      state = state.copyWith(
+        isLoading: false,
+        posts: [...state.posts, ...newPosts],
+        hasMorePosts: state.posts.length < 50, // Limit to 50 posts
+      );
     }
   }
 
   void likePost(String postId) {
-    if (state.currentFeedType == 'near_me') {
-      final updatedPosts = state.nearMePosts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(
-            isLiked: !post.isLiked,
-            likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
-          );
-        }
-        return post;
-      }).toList();
-      
-      state = state.copyWith(nearMePosts: updatedPosts);
-    } else {
-      final updatedPosts = state.followingPosts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(
-            isLiked: !post.isLiked,
-            likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
-          );
-        }
-        return post;
-      }).toList();
-      
-      state = state.copyWith(followingPosts: updatedPosts);
-    }
+    final updatedPosts = state.posts.map((post) {
+      if (post.id == postId) {
+        return post.copyWith(
+          isLiked: !post.isLiked,
+          likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
+        );
+      }
+      return post;
+    }).toList();
+    
+    state = state.copyWith(posts: updatedPosts);
   }
 
   void sharePost(String postId) {
-    if (state.currentFeedType == 'near_me') {
-      final updatedPosts = state.nearMePosts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(sharesCount: post.sharesCount + 1);
-        }
-        return post;
-      }).toList();
-      
-      state = state.copyWith(nearMePosts: updatedPosts);
-    } else {
-      final updatedPosts = state.followingPosts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(sharesCount: post.sharesCount + 1);
-        }
-        return post;
-      }).toList();
-      
-      state = state.copyWith(followingPosts: updatedPosts);
-    }
+    final updatedPosts = state.posts.map((post) {
+      if (post.id == postId) {
+        return post.copyWith(sharesCount: post.sharesCount + 1);
+      }
+      return post;
+    }).toList();
+    
+    state = state.copyWith(posts: updatedPosts);
   }
 
   void addComment(String postId, String content) {
-    if (state.currentFeedType == 'near_me') {
-      final updatedPosts = state.nearMePosts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(commentsCount: post.commentsCount + 1);
-        }
-        return post;
-      }).toList();
-      
-      state = state.copyWith(nearMePosts: updatedPosts);
-    } else {
-      final updatedPosts = state.followingPosts.map((post) {
-        if (post.id == postId) {
-          return post.copyWith(commentsCount: post.commentsCount + 1);
-        }
-        return post;
-      }).toList();
-      
-      state = state.copyWith(followingPosts: updatedPosts);
-    }
+    final updatedPosts = state.posts.map((post) {
+      if (post.id == postId) {
+        return post.copyWith(commentsCount: post.commentsCount + 1);
+      }
+      return post;
+    }).toList();
+    
+    state = state.copyWith(posts: updatedPosts);
   }
 
 
-  List<Post> _generateMockPosts(String feedType) {
+  List<Post> _generateMockPosts() {
     final now = DateTime.now();
     return List.generate(10, (index) {
       return Post(
-        id: '${feedType}_post_${DateTime.now().millisecondsSinceEpoch}_$index',
+        id: 'post_${DateTime.now().millisecondsSinceEpoch}_$index',
         userId: 'user_$index',
         userName: _getRandomName(index),
         userAvatar: 'https://picsum.photos/100/100?random=$index',
-        content: _getRandomContent(index, feedType),
+        content: _getRandomContent(index),
         imageUrls: _getRandomImages(index),
         createdAt: now.subtract(Duration(hours: index)),
         updatedAt: now.subtract(Duration(hours: index)),
@@ -222,36 +149,20 @@ class FeedNotifier extends StateNotifier<FeedState> {
     return names[index % names.length];
   }
 
-  String _getRandomContent(int index, String feedType) {
-    if (feedType == 'near_me') {
-      final nearMeContents = [
-        'Local dairy farm in your area - morning milking session 🐄 #LocalFarm #NearMe',
-        'Neighbor\'s new calves born today! 🐮 #LocalNews #CommunityFarm',
-        'Fresh grass feeding at nearby farm 🌱 #LocalFarming #Community',
-        'Vet check-up at local dairy cooperative 🩺 #LocalVet #CommunityHealth',
-        'New barn construction in the neighborhood 🏗️ #LocalConstruction #FarmExpansion',
-        'Hay harvest season in our area 🌾 #LocalHarvest #SeasonalWork',
-        'Local farming family teaching next generation 👨‍👩‍👧‍👦 #LocalFamily #Community',
-        'Record milk production at nearby farm 📈 #LocalSuccess #CommunityPride',
-        'Organic farming practices in our region 🌿 #LocalOrganic #Community',
-        'Local dairy farming workshop this weekend 📚 #LocalEducation #Community',
-      ];
-      return nearMeContents[index % nearMeContents.length];
-    } else {
-      final followingContents = [
-        'Following: Morning milking session with my beautiful cows 🐄 #DairyFarming #Following',
-        'Following: New calves born today! Welcome to the farm little ones 🐮 #NewCalves #Following',
-        'Following: Fresh grass feeding time for the herd 🌱 #GrassFeeding #Following',
-        'Following: Veterinary check-up day - all cows are healthy! 🩺 #VetCheck #Following',
-        'Following: Building a new barn for the growing herd 🏗️ #BarnConstruction #Following',
-        'Following: Harvesting hay for winter feed 🌾 #HayHarvest #Following',
-        'Following: Teaching my children about dairy farming 👨‍👩‍👧‍👦 #FamilyFarm #Following',
-        'Following: Record milk production this month! 📈 #MilkProduction #Following',
-        'Following: Organic farming practices for better milk quality 🌿 #OrganicFarming #Following',
-        'Following: Community dairy farming workshop today 📚 #DairyEducation #Following',
-      ];
-      return followingContents[index % followingContents.length];
-    }
+  String _getRandomContent(int index) {
+    final contents = [
+      'Morning milking session with my beautiful cows 🐄 #DairyFarming #MorningMilking',
+      'New calves born today! Welcome to the farm little ones 🐮 #NewCalves #FarmLife',
+      'Fresh grass feeding time for the herd 🌱 #GrassFeeding #HealthyCows',
+      'Veterinary check-up day - all cows are healthy! 🩺 #VetCheck #HealthyHerd',
+      'Building a new barn for the growing herd 🏗️ #BarnConstruction #FarmExpansion',
+      'Harvesting hay for winter feed 🌾 #HayHarvest #WinterPreparation',
+      'Teaching my children about dairy farming 👨‍👩‍👧‍👦 #FamilyFarm #NextGeneration',
+      'Record milk production this month! 📈 #MilkProduction #FarmSuccess',
+      'Organic farming practices for better milk quality 🌿 #OrganicFarming #QualityMilk',
+      'Community dairy farming workshop today 📚 #DairyEducation #CommunityLearning',
+    ];
+    return contents[index % contents.length];
   }
 
   List<String> _getRandomImages(int index) {

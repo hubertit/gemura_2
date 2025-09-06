@@ -13,21 +13,18 @@ class FeedScreen extends ConsumerStatefulWidget {
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProviderStateMixin {
+class _FeedScreenState extends ConsumerState<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
-  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -70,79 +67,46 @@ class _FeedScreenState extends ConsumerState<FeedScreen> with SingleTickerProvid
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Tab Bar
-          Container(
-            color: AppTheme.surfaceColor,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: AppTheme.primaryColor,
-              labelColor: AppTheme.primaryColor,
-              unselectedLabelColor: AppTheme.textSecondaryColor,
-              labelStyle: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedLabelStyle: AppTheme.bodyMedium,
-              tabs: const [
-                Tab(text: 'Near Me'),
-                Tab(text: 'Following'),
-              ],
-            ),
-          ),
-          
-          // Tab Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Near Me Tab
-                _buildFeedTab('near_me'),
-                // Following Tab
-                _buildFeedTab('following'),
-              ],
-            ),
-          ),
-        ],
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(feedProvider.notifier).refreshFeed(),
+        child: Consumer(
+          builder: (context, ref, child) {
+            final feedState = ref.watch(feedProvider);
+            
+            return feedState.isLoading && feedState.posts.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      // Posts Section
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            if (index < feedState.posts.length) {
+                              return _buildPostCard(feedState.posts[index]);
+                            }
+                            return null;
+                          },
+                          childCount: feedState.posts.length,
+                        ),
+                      ),
+                      
+                      // Loading indicator for pagination
+                      if (feedState.isLoading && feedState.posts.isNotEmpty)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.all(AppTheme.spacing16),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ),
+                    ],
+                  );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildFeedTab(String feedType) {
-    final feedState = ref.watch(feedProvider);
-    
-    return RefreshIndicator(
-      onRefresh: () => ref.read(feedProvider.notifier).refreshFeed(feedType),
-      child: feedState.isLoading && feedState.posts.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                // Posts Section
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if (index < feedState.posts.length) {
-                        return _buildPostCard(feedState.posts[index]);
-                      }
-                      return null;
-                    },
-                    childCount: feedState.posts.length,
-                  ),
-                ),
-                
-                // Loading indicator for pagination
-                if (feedState.isLoading && feedState.posts.isNotEmpty)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppTheme.spacing16),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
 
   Widget _buildPostCard(Post post) {
     return Container(
