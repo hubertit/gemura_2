@@ -42,7 +42,7 @@ import '../../../market/presentation/providers/products_provider.dart';
 import '../../../market/presentation/screens/all_products_screen.dart';
 import '../../../market/presentation/screens/product_details_screen.dart';
 import '../../../market/presentation/screens/search_screen.dart';
-import '../../../market/presentation/screens/seller_profile_screen.dart';
+import '../../../market/presentation/screens/user_profile_screen.dart';
 
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
@@ -450,7 +450,7 @@ class _MarketTab extends ConsumerWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => SellerProfileScreen(seller: seller),
+            builder: (context) => UserProfileScreen(user: seller),
           ),
         );
       },

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/models/comment.dart';
 import '../../domain/models/post.dart';
-import '../../../market/presentation/screens/seller_profile_screen.dart';
+import '../../../market/presentation/screens/user_profile_screen.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 
 class CommentsScreen extends ConsumerStatefulWidget {
@@ -397,7 +397,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => SellerProfileScreen(seller: seller),
+        builder: (context) => UserProfileScreen(user: seller),
       ),
     );
   }

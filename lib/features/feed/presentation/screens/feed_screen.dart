@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/feed_provider.dart';
 import '../../domain/models/post.dart';
-import '../../../market/presentation/screens/seller_profile_screen.dart';
+import '../../../market/presentation/screens/user_profile_screen.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 import 'comments_screen.dart';
 
@@ -401,7 +401,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => SellerProfileScreen(seller: seller),
+        builder: (context) => UserProfileScreen(user: seller),
       ),
     );
   }

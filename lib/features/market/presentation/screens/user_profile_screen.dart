@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
-import '../../../../core/services/location_service.dart';
-import '../../../../core/utils/distance_utils.dart';
 import '../../domain/models/product.dart';
 import '../providers/products_provider.dart';
 import 'product_details_screen.dart';
@@ -11,19 +9,19 @@ import '../../../chat/presentation/screens/chat_screen.dart';
 import '../../../chat/domain/models/chat_room.dart';
 import '../../../../shared/models/wallet.dart';
 
-class SellerProfileScreen extends ConsumerStatefulWidget {
-  final TopSeller seller;
+class UserProfileScreen extends ConsumerStatefulWidget {
+  final TopSeller user;
 
-  const SellerProfileScreen({
+  const UserProfileScreen({
     super.key,
-    required this.seller,
+    required this.user,
   });
 
   @override
-  ConsumerState<SellerProfileScreen> createState() => _SellerProfileScreenState();
+  ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
+class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isFollowing = false;
@@ -36,7 +34,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     // Simulate initial follower count
-    _followerCount = widget.seller.totalSales ~/ 10; // Rough estimate
+    _followerCount = widget.user.totalSales ~/ 10; // Rough estimate
     _calculateDistance();
   }
 
@@ -45,52 +43,16 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
       _isLoadingDistance = true;
     });
 
-    try {
-      // Check if location permission is available
-      final hasPermission = await LocationService.instance.hasLocationPermission();
-      if (!hasPermission) {
-        print('Location permission not granted');
-        setState(() {
-          _distanceFromUser = 'Location permission needed';
-        });
-        return;
-      }
+    // Simulate loading delay
+    await Future.delayed(const Duration(milliseconds: 500));
 
-      final currentLocation = await LocationService.instance.getCurrentLocation();
-      if (currentLocation != null) {
-        print('Current location: ${currentLocation.latitude}, ${currentLocation.longitude}');
-        
-        // For now, we'll use mock coordinates since the seller model doesn't have GPS coordinates
-        // In a real app, you would get these from the seller's profile
-        final mockSellerCoords = _getMockCoordinatesForLocation(widget.seller.location);
-        
-        if (mockSellerCoords != null) {
-          print('Seller location: ${widget.seller.location} -> ${mockSellerCoords}');
-          
-          final distance = DistanceUtils.calculateDistance(
-            currentLocation.latitude,
-            currentLocation.longitude,
-            mockSellerCoords['lat']!,
-            mockSellerCoords['lng']!,
-          );
-          
-          print('Calculated distance: $distance km');
-          
-          setState(() {
-            _distanceFromUser = DistanceUtils.formatDistance(distance);
-          });
-        } else {
-          print('No coordinates found for location: ${widget.seller.location}');
-          setState(() {
-            _distanceFromUser = 'Location not found';
-          });
-        }
-      } else {
-        print('Could not get current location');
-        setState(() {
-          _distanceFromUser = 'Location unavailable';
-        });
-      }
+    try {
+      // Use static mock data for distance calculation
+      final staticDistance = _getStaticDistanceForLocation(widget.user.location);
+      
+      setState(() {
+        _distanceFromUser = staticDistance;
+      });
     } catch (e) {
       print('Error calculating distance: $e');
       setState(() {
@@ -103,23 +65,24 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     }
   }
 
-  Map<String, double>? _getMockCoordinatesForLocation(String location) {
-    // Mock coordinates for different locations in Rwanda
-    final locationCoordinates = {
-      'Kigali, Rwanda': {'lat': -1.9403, 'lng': 30.0644},
-      'Nyarugenge, Kigali': {'lat': -1.9441, 'lng': 30.0619},
-      'Kacyiru, Kigali': {'lat': -1.9441, 'lng': 30.0619},
-      'Kimisagara, Kigali': {'lat': -1.9441, 'lng': 30.0619},
-      'Nyamirambo, Kigali': {'lat': -1.9441, 'lng': 30.0619},
-      'Rwamagana, Eastern Province': {'lat': -1.9486, 'lng': 30.4347},
-      'Musanze, Northern Province': {'lat': -1.4998, 'lng': 29.6344},
-      'Huye, Southern Province': {'lat': -2.5967, 'lng': 29.7374},
-      'Rubavu, Western Province': {'lat': -1.6931, 'lng': 29.2606},
-      'Gicumbi, Northern Province': {'lat': -1.4998, 'lng': 29.6344},
+  String _getStaticDistanceForLocation(String location) {
+    // Static distance data for different locations in Rwanda
+    final staticDistances = {
+      'Kigali, Rwanda': '1.2km',
+      'Nyarugenge, Kigali': '0.8km',
+      'Kacyiru, Kigali': '2.1km',
+      'Kimisagara, Kigali': '1.5km',
+      'Nyamirambo, Kigali': '3.2km',
+      'Rwamagana, Eastern Province': '45.3km',
+      'Musanze, Northern Province': '78.9km',
+      'Huye, Southern Province': '125.6km',
+      'Rubavu, Western Province': '89.4km',
+      'Gicumbi, Northern Province': '67.8km',
     };
     
-    return locationCoordinates[location];
+    return staticDistances[location] ?? 'Distance unknown';
   }
+
 
   @override
   void dispose() {
@@ -127,12 +90,12 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     super.dispose();
   }
 
-  void _openChatWithSeller() {
+  void _openChatWithUser() {
     // Create a simple chat room for the seller without wallet integration
     final chatRoom = ChatRoom(
-      id: 'SELLER-${widget.seller.id}',
-      name: widget.seller.name,
-      description: 'Chat with ${widget.seller.name}',
+      id: 'USER-${widget.user.id}',
+      name: widget.user.name,
+      description: 'Chat with ${widget.user.name}',
       walletId: '', // No wallet integration
       wallet: Wallet(
         id: '',
@@ -156,10 +119,10 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           isOnline: true,
         ),
         ChatMember(
-          id: widget.seller.id.toString(),
-          name: widget.seller.name,
-          email: widget.seller.email ?? '${widget.seller.code}@seller.com',
-          avatar: widget.seller.imageUrl,
+          id: widget.user.id.toString(),
+          name: widget.user.name,
+          email: widget.user.email ?? '${widget.user.code}@user.com',
+          avatar: widget.user.imageUrl,
           role: 'owner',
           joinedAt: DateTime.now(),
           isOnline: true,
@@ -167,7 +130,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
       ],
       createdAt: DateTime.now(),
       isActive: true,
-      groupAvatar: widget.seller.imageUrl,
+      groupAvatar: widget.user.imageUrl,
     );
 
     // Navigate to the existing chat screen
@@ -178,8 +141,8 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     );
   }
 
-  void _makeCallToSeller() {
-    if (widget.seller.phone != null && widget.seller.phone!.isNotEmpty) {
+  void _makeCallToUser() {
+    if (widget.user.phone != null && widget.user.phone!.isNotEmpty) {
       // Show call options dialog
       showModalBottomSheet(
         context: context,
@@ -204,7 +167,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               ),
               const SizedBox(height: AppTheme.spacing16),
               Text(
-                'Call ${widget.seller.name}',
+                'Call ${widget.user.name}',
                 style: AppTheme.titleMedium.copyWith(
                   color: AppTheme.textPrimaryColor,
                   fontWeight: FontWeight.w600,
@@ -212,7 +175,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               ),
               const SizedBox(height: AppTheme.spacing8),
               Text(
-                widget.seller.phone!,
+                widget.user.phone!,
                 style: AppTheme.bodyMedium.copyWith(
                   color: AppTheme.textSecondaryColor,
                 ),
@@ -251,7 +214,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         // For now, we'll just show a success message
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Calling ${widget.seller.name}...'),
+                            content: Text('Calling ${widget.user.name}...'),
                             backgroundColor: AppTheme.primaryColor,
                           ),
                         );
@@ -290,7 +253,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
       // Show error if no phone number
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No phone number available for ${widget.seller.name}'),
+          content: Text('No phone number available for ${widget.user.name}'),
           backgroundColor: AppTheme.errorColor,
         ),
       );
@@ -311,7 +274,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          widget.seller.name,
+          widget.user.name,
           style: AppTheme.titleMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
@@ -386,14 +349,14 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                 radius: 50,
                 backgroundColor: AppTheme.primaryColor,
                 child: Text(
-                  widget.seller.name.substring(0, 1).toUpperCase(),
+                  widget.user.name.substring(0, 1).toUpperCase(),
                   style: AppTheme.titleLarge.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              if (widget.seller.isVerified)
+              if (widget.user.isVerified)
                 Positioned(
                   bottom: 0,
                   right: 0,
@@ -420,7 +383,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.seller.name,
+                  widget.user.name,
                   style: AppTheme.titleLarge.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimaryColor,
@@ -428,7 +391,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  widget.seller.location,
+                  widget.user.location,
                   style: AppTheme.bodyMedium.copyWith(
                     color: AppTheme.textSecondaryColor,
                   ),
@@ -444,7 +407,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      widget.seller.rating.toString(),
+                      widget.user.rating.toString(),
                       style: AppTheme.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimaryColor,
@@ -452,7 +415,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '(${widget.seller.totalProducts} products)',
+                      '(${widget.user.totalProducts} products)',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -476,7 +439,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem('Products', widget.seller.totalProducts.toString()),
+              _buildStatItem('Products', widget.user.totalProducts.toString()),
               _buildStatItem('Followers', _followerCount.toString()),
               _buildStatItem('Following', '${_followerCount ~/ 2}'),
             ],
@@ -522,7 +485,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
-                    _openChatWithSeller();
+                    _openChatWithUser();
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
@@ -547,7 +510,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
-                    _makeCallToSeller();
+                    _makeCallToUser();
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
@@ -614,7 +577,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'About ${widget.seller.name}',
+            'About ${widget.user.name}',
             style: AppTheme.titleSmall.copyWith(
               fontWeight: FontWeight.w600,
               color: AppTheme.textPrimaryColor,
@@ -622,7 +585,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           ),
           const SizedBox(height: AppTheme.spacing8),
           Text(
-            'Premium dairy products from ${widget.seller.location}. '
+            'Premium dairy products from ${widget.user.location}. '
             'We specialize in fresh, high-quality dairy products '
             'delivered directly from our farm to your doorstep.',
             style: AppTheme.bodySmall.copyWith(
@@ -636,10 +599,10 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
   }
 
   Widget _buildProductsTab() {
-    // Create static products for this seller
-    final sellerProducts = _getStaticProductsForSeller();
+    // Create static products for this user
+    final userProducts = _getStaticProductsForUser();
     
-    if (sellerProducts.isEmpty) {
+    if (userProducts.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -658,7 +621,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             ),
             const SizedBox(height: AppTheme.spacing8),
             Text(
-              'This seller hasn\'t added any products yet',
+              'This user hasn\'t added any products yet',
               style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.textSecondaryColor,
               ),
@@ -676,21 +639,21 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
         mainAxisSpacing: AppTheme.spacing12,
         childAspectRatio: 0.8,
       ),
-      itemCount: sellerProducts.length,
+      itemCount: userProducts.length,
       itemBuilder: (context, index) {
-        return _buildProductCard(sellerProducts[index]);
+        return _buildProductCard(userProducts[index]);
       },
     );
   }
 
-  List<Product> _getStaticProductsForSeller() {
-    // Create static products based on the seller
-    final sellerId = widget.seller.id;
-    final sellerName = widget.seller.name;
+  List<Product> _getStaticProductsForUser() {
+    // Create static products based on the user
+    final userId = widget.user.id;
+    final userName = widget.user.name;
     final now = DateTime.now();
     
-    // Different products for different sellers
-    switch (sellerId) {
+    // Different products for different users
+    switch (userId) {
       case 1: // Kigali Dairy Farm
         return [
           Product(
@@ -705,13 +668,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 50,
             createdAt: now.subtract(const Duration(days: 5)),
             updatedAt: now.subtract(const Duration(days: 1)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Milk'],
             categoryIds: [1, 2],
@@ -728,13 +691,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 30,
             createdAt: now.subtract(const Duration(days: 3)),
             updatedAt: now.subtract(const Duration(days: 1)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Yogurt'],
             categoryIds: [1, 3],
@@ -751,13 +714,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 15,
             createdAt: now.subtract(const Duration(days: 1)),
             updatedAt: now.subtract(const Duration(hours: 6)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Cheese'],
             categoryIds: [1, 4],
@@ -777,13 +740,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 40,
             createdAt: now.subtract(const Duration(days: 4)),
             updatedAt: now.subtract(const Duration(days: 1)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Milk'],
             categoryIds: [1, 2],
@@ -800,13 +763,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 25,
             createdAt: now.subtract(const Duration(days: 2)),
             updatedAt: now.subtract(const Duration(hours: 12)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Yogurt'],
             categoryIds: [1, 3],
@@ -826,13 +789,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 35,
             createdAt: now.subtract(const Duration(days: 6)),
             updatedAt: now.subtract(const Duration(days: 1)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Milk', 'Organic'],
             categoryIds: [1, 2, 5],
@@ -849,13 +812,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 20,
             createdAt: now.subtract(const Duration(days: 1)),
             updatedAt: now.subtract(const Duration(hours: 8)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Yogurt'],
             categoryIds: [1, 3],
@@ -872,13 +835,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 12,
             createdAt: now.subtract(const Duration(days: 3)),
             updatedAt: now.subtract(const Duration(hours: 4)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Butter'],
             categoryIds: [1, 6],
@@ -898,13 +861,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 45,
             createdAt: now.subtract(const Duration(days: 2)),
             updatedAt: now.subtract(const Duration(hours: 6)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Milk'],
             categoryIds: [1, 2],
@@ -921,13 +884,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 18,
             createdAt: now.subtract(const Duration(days: 1)),
             updatedAt: now.subtract(const Duration(hours: 2)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Yogurt'],
             categoryIds: [1, 3],
@@ -947,13 +910,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 60,
             createdAt: now.subtract(const Duration(days: 3)),
             updatedAt: now.subtract(const Duration(hours: 3)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Milk'],
             categoryIds: [1, 2],
@@ -970,13 +933,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 35,
             createdAt: now.subtract(const Duration(days: 2)),
             updatedAt: now.subtract(const Duration(hours: 1)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Yogurt'],
             categoryIds: [1, 3],
@@ -993,13 +956,13 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             stockQuantity: 8,
             createdAt: now.subtract(const Duration(days: 4)),
             updatedAt: now.subtract(const Duration(hours: 5)),
-            sellerId: sellerId,
+            sellerId: userId,
             seller: Seller(
-              id: sellerId,
-              code: widget.seller.code,
-              name: sellerName,
-              phone: widget.seller.phone,
-              email: widget.seller.email,
+              id: userId,
+              code: widget.user.code,
+              name: userName,
+              phone: widget.user.phone,
+              email: widget.user.email,
             ),
             categories: ['Dairy', 'Cream'],
             categoryIds: [1, 7],
@@ -1214,8 +1177,8 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           _buildInfoCard(
             'Contact Information',
             [
-              _buildInfoRow('Phone', widget.seller.phone ?? 'Not provided'),
-              _buildInfoRow('Email', widget.seller.email ?? 'Not provided'),
+              _buildInfoRow('Phone', widget.user.phone ?? 'Not provided'),
+              _buildInfoRow('Email', widget.user.email ?? 'Not provided'),
               _buildLocationRow(),
             ],
           ),
@@ -1223,18 +1186,18 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
           _buildInfoCard(
             'Business Information',
             [
-              _buildInfoRow('Seller Code', widget.seller.code),
-              _buildInfoRow('Join Date', widget.seller.joinDate),
-              _buildInfoRow('Verification', widget.seller.isVerified ? 'Verified' : 'Not Verified'),
+              _buildInfoRow('User Code', widget.user.code),
+              _buildInfoRow('Join Date', widget.user.joinDate),
+              _buildInfoRow('Verification', widget.user.isVerified ? 'Verified' : 'Not Verified'),
             ],
           ),
           const SizedBox(height: AppTheme.spacing16),
           _buildInfoCard(
             'Performance',
             [
-              _buildInfoRow('Rating', '${widget.seller.rating}/5.0'),
-              _buildInfoRow('Total Products', widget.seller.totalProducts.toString()),
-              _buildInfoRow('Total Sales', widget.seller.totalSales.toString()),
+              _buildInfoRow('Rating', '${widget.user.rating}/5.0'),
+              _buildInfoRow('Total Products', widget.user.totalProducts.toString()),
+              _buildInfoRow('Total Sales', widget.user.totalSales.toString()),
             ],
           ),
         ],
@@ -1322,7 +1285,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.seller.location,
+                  widget.user.location,
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.textPrimaryColor,
                     fontWeight: FontWeight.w500,
@@ -1345,23 +1308,20 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         Icon(
                           Icons.location_on,
                           size: 12,
-                          color: _distanceFromUser!.contains('permission') || 
-                                 _distanceFromUser!.contains('unavailable') || 
-                                 _distanceFromUser!.contains('not found')
+                          color: _distanceFromUser!.contains('unknown') || 
+                                 _distanceFromUser!.contains('unavailable')
                               ? AppTheme.textSecondaryColor
                               : AppTheme.primaryColor,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _distanceFromUser!.contains('permission') || 
-                          _distanceFromUser!.contains('unavailable') || 
-                          _distanceFromUser!.contains('not found')
+                          _distanceFromUser!.contains('unknown') || 
+                          _distanceFromUser!.contains('unavailable')
                               ? _distanceFromUser!
                               : '$_distanceFromUser away',
                           style: AppTheme.bodySmall.copyWith(
-                            color: _distanceFromUser!.contains('permission') || 
-                                   _distanceFromUser!.contains('unavailable') || 
-                                   _distanceFromUser!.contains('not found')
+                            color: _distanceFromUser!.contains('unknown') || 
+                                   _distanceFromUser!.contains('unavailable')
                                 ? AppTheme.textSecondaryColor
                                 : AppTheme.primaryColor,
                             fontSize: 11,
@@ -1394,7 +1354,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             ListTile(
               leading: const Icon(Icons.report),
               title: Text(
-                'Report Seller',
+                'Report User',
                 style: AppTheme.bodyMedium.copyWith(
                   color: AppTheme.errorColor,
                 ),
@@ -1420,7 +1380,7 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             ListTile(
               leading: const Icon(Icons.block),
               title: Text(
-                'Block Seller',
+                'Block User',
                 style: AppTheme.bodyMedium.copyWith(
                   color: AppTheme.errorColor,
                 ),
