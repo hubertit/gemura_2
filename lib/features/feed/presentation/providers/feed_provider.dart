@@ -166,18 +166,20 @@ class FeedNotifier extends StateNotifier<FeedState> {
   }
 
   List<String> _getRandomImages(int index) {
+    const placeholderImage = 'https://res.cloudinary.com/dhwqnur8s/image/upload/v1757181255/gemuraplaceholder_kvwd9w.png';
+    
     if (index % 3 == 0) {
-      return ['https://picsum.photos/400/400?random=$index'];
+      return [placeholderImage];
     } else if (index % 3 == 1) {
       return [
-        'https://picsum.photos/400/400?random=$index',
-        'https://picsum.photos/400/400?random=${index + 1}',
+        placeholderImage,
+        placeholderImage,
       ];
     } else {
       return [
-        'https://picsum.photos/400/400?random=$index',
-        'https://picsum.photos/400/400?random=${index + 1}',
-        'https://picsum.photos/400/400?random=${index + 2}',
+        placeholderImage,
+        placeholderImage,
+        placeholderImage,
       ];
     }
   }
