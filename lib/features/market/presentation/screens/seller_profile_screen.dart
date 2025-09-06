@@ -46,13 +46,27 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
     });
 
     try {
+      // Check if location permission is available
+      final hasPermission = await LocationService.instance.hasLocationPermission();
+      if (!hasPermission) {
+        print('Location permission not granted');
+        setState(() {
+          _distanceFromUser = 'Location permission needed';
+        });
+        return;
+      }
+
       final currentLocation = await LocationService.instance.getCurrentLocation();
       if (currentLocation != null) {
+        print('Current location: ${currentLocation.latitude}, ${currentLocation.longitude}');
+        
         // For now, we'll use mock coordinates since the seller model doesn't have GPS coordinates
         // In a real app, you would get these from the seller's profile
         final mockSellerCoords = _getMockCoordinatesForLocation(widget.seller.location);
         
         if (mockSellerCoords != null) {
+          print('Seller location: ${widget.seller.location} -> ${mockSellerCoords}');
+          
           final distance = DistanceUtils.calculateDistance(
             currentLocation.latitude,
             currentLocation.longitude,
@@ -60,13 +74,28 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
             mockSellerCoords['lng']!,
           );
           
+          print('Calculated distance: $distance km');
+          
           setState(() {
             _distanceFromUser = DistanceUtils.formatDistance(distance);
           });
+        } else {
+          print('No coordinates found for location: ${widget.seller.location}');
+          setState(() {
+            _distanceFromUser = 'Location not found';
+          });
         }
+      } else {
+        print('Could not get current location');
+        setState(() {
+          _distanceFromUser = 'Location unavailable';
+        });
       }
     } catch (e) {
       print('Error calculating distance: $e');
+      setState(() {
+        _distanceFromUser = 'Distance unavailable';
+      });
     } finally {
       setState(() {
         _isLoadingDistance = false;
@@ -1316,13 +1345,25 @@ class _SellerProfileScreenState extends ConsumerState<SellerProfileScreen>
                         Icon(
                           Icons.location_on,
                           size: 12,
-                          color: AppTheme.primaryColor,
+                          color: _distanceFromUser!.contains('permission') || 
+                                 _distanceFromUser!.contains('unavailable') || 
+                                 _distanceFromUser!.contains('not found')
+                              ? AppTheme.textSecondaryColor
+                              : AppTheme.primaryColor,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '$_distanceFromUser away',
+                          _distanceFromUser!.contains('permission') || 
+                          _distanceFromUser!.contains('unavailable') || 
+                          _distanceFromUser!.contains('not found')
+                              ? _distanceFromUser!
+                              : '$_distanceFromUser away',
                           style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.primaryColor,
+                            color: _distanceFromUser!.contains('permission') || 
+                                   _distanceFromUser!.contains('unavailable') || 
+                                   _distanceFromUser!.contains('not found')
+                                ? AppTheme.textSecondaryColor
+                                : AppTheme.primaryColor,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
