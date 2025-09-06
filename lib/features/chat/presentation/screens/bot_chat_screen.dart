@@ -83,6 +83,7 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
   bool _isAttaching = false;
   late AnimationController _typingController;
   late Animation<double> _dot1, _dot2, _dot3;
+  String? _selectedTopic;
 
   @override
   void initState() {
@@ -388,6 +389,9 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         ),
         body: Column(
           children: [
+            // Topic Badges
+            _buildTopicBadges(),
+            
             // Messages
             Expanded(
               child: GestureDetector(
@@ -511,6 +515,126 @@ class _BotChatScreenState extends ConsumerState<BotChatScreen> with SingleTicker
         ),
       ),
     );
+  }
+
+  Widget _buildTopicBadges() {
+    final topics = [
+      {'id': 'milk_collection', 'label': 'Milk Collection', 'icon': Icons.local_drink},
+      {'id': 'suppliers', 'label': 'Suppliers', 'icon': Icons.business},
+      {'id': 'customers', 'label': 'Customers', 'icon': Icons.people},
+      {'id': 'pricing', 'label': 'Pricing', 'icon': Icons.attach_money},
+      {'id': 'supplements', 'label': 'Supplements', 'icon': Icons.medication},
+      {'id': 'veterinary', 'label': 'Veterinary', 'icon': Icons.pets},
+      {'id': 'farming_tips', 'label': 'Farming Tips', 'icon': Icons.agriculture},
+      {'id': 'equipment', 'label': 'Equipment', 'icon': Icons.build},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing12,
+        vertical: AppTheme.spacing8,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceColor,
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.borderColor,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: topics.map((topic) {
+            final isSelected = _selectedTopic == topic['id'];
+            return Container(
+              margin: const EdgeInsets.only(right: AppTheme.spacing8),
+              child: GestureDetector(
+                onTap: () => _onTopicSelected(topic['id'] as String),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing12,
+                    vertical: AppTheme.spacing8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? AppTheme.primaryColor 
+                        : AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+                    border: Border.all(
+                      color: isSelected 
+                          ? AppTheme.primaryColor 
+                          : AppTheme.primaryColor.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        topic['icon'] as IconData,
+                        size: 16,
+                        color: isSelected 
+                            ? Colors.white 
+                            : AppTheme.primaryColor,
+                      ),
+                      const SizedBox(width: AppTheme.spacing4),
+                      Text(
+                        topic['label'] as String,
+                        style: AppTheme.bodySmall.copyWith(
+                          color: isSelected 
+                              ? Colors.white 
+                              : AppTheme.primaryColor,
+                          fontWeight: isSelected 
+                              ? FontWeight.w600 
+                              : FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _onTopicSelected(String topicId) {
+    setState(() {
+      _selectedTopic = topicId;
+    });
+
+    // Generate topic-specific message
+    final topicMessages = {
+      'milk_collection': 'I can help you with milk collection best practices, timing, storage, and quality control. What specific aspect of milk collection would you like to know about? 🥛',
+      'suppliers': 'I can assist you with finding reliable suppliers, comparing prices, managing supplier relationships, and negotiating deals. What supplier information do you need? 🏢',
+      'customers': 'I can help you with customer management, finding new customers, maintaining relationships, and understanding market demand. What customer-related question do you have? 👥',
+      'pricing': 'I can provide insights on milk pricing, market trends, cost analysis, and pricing strategies. What pricing information are you looking for? 💰',
+      'supplements': 'I can advise on cattle supplements, nutrition, feed optimization, and health supplements. What supplement questions do you have? 💊',
+      'veterinary': 'I can help with veterinary care, health monitoring, disease prevention, and treatment options for your cattle. What veterinary advice do you need? 🐄',
+      'farming_tips': 'I can share dairy farming tips, best practices, seasonal advice, and productivity improvements. What farming tip would you like? 🌾',
+      'equipment': 'I can help with dairy equipment selection, maintenance, troubleshooting, and upgrades. What equipment question do you have? 🔧',
+    };
+
+    final message = topicMessages[topicId] ?? 'How can I help you with this topic?';
+    
+    // Add the topic-specific message as a bot message
+    _messages.add(
+      BotMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        text: message,
+        isUser: false,
+        timestamp: DateTime.now(),
+        messageType: BotMessageType.text,
+      ),
+    );
+
+    _saveConversation();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Widget _buildEmptyState() {
