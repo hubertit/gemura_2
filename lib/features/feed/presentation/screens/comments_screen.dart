@@ -402,9 +402,10 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
       imageUrl: comment.userAvatar,
       totalProducts: 0,
       totalSales: 0,
+      totalReviews: 0,
       rating: 4.5,
       isVerified: comment.isVerified,
-      location: 'Kigali, Rwanda',
+      location: '-1.9441,30.0619', // Kigali coordinates
       joinDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
     );
 

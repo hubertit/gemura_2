@@ -113,6 +113,7 @@ class TopSeller {
   final double rating;
   final int totalSales;
   final int totalProducts;
+  final int totalReviews;
   final String location;
   final bool isVerified;
   final String joinDate;
@@ -127,6 +128,7 @@ class TopSeller {
     required this.rating,
     required this.totalSales,
     required this.totalProducts,
+    required this.totalReviews,
     required this.location,
     required this.isVerified,
     required this.joinDate,
@@ -143,6 +145,7 @@ class TopSeller {
       rating: (json['rating'] as num).toDouble(),
       totalSales: json['total_sales'] as int,
       totalProducts: json['total_products'] as int,
+      totalReviews: json['total_reviews'] as int,
       location: json['location'] as String,
       isVerified: json['is_verified'] as bool,
       joinDate: json['join_date'] as String,
@@ -160,6 +163,7 @@ class TopSeller {
       'rating': rating,
       'total_sales': totalSales,
       'total_products': totalProducts,
+      'total_reviews': totalReviews,
       'location': location,
       'is_verified': isVerified,
       'join_date': joinDate,
@@ -184,7 +188,8 @@ final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
       rating: 4.8,
       totalSales: 1250,
       totalProducts: 15,
-      location: 'Kigali, Rwanda',
+      totalReviews: 89,
+      location: '-1.9441,30.0619', // Kigali coordinates
       isVerified: true,
       joinDate: '2023-01-15',
     ),
@@ -198,7 +203,8 @@ final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
       rating: 4.9,
       totalSales: 980,
       totalProducts: 12,
-      location: 'Musanze, Rwanda',
+      totalReviews: 67,
+      location: '-1.4998,29.6344', // Musanze coordinates
       isVerified: true,
       joinDate: '2023-03-20',
     ),
@@ -212,7 +218,8 @@ final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
       rating: 4.7,
       totalSales: 750,
       totalProducts: 8,
-      location: 'Rubavu, Rwanda',
+      totalReviews: 45,
+      location: '-1.6936,29.2356', // Rubavu coordinates
       isVerified: true,
       joinDate: '2023-02-10',
     ),
@@ -226,7 +233,8 @@ final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
       rating: 4.6,
       totalSales: 650,
       totalProducts: 10,
-      location: 'Huye, Rwanda',
+      totalReviews: 52,
+      location: '-2.6031,29.7439', // Huye coordinates
       isVerified: true,
       joinDate: '2023-04-05',
     ),
@@ -240,7 +248,8 @@ final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
       rating: 4.8,
       totalSales: 420,
       totalProducts: 6,
-      location: 'Nyagatare, Rwanda',
+      totalReviews: 28,
+      location: '-1.3048,30.3285', // Nyagatare coordinates
       isVerified: false,
       joinDate: '2023-05-12',
     ),

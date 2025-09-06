@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
+import '../../../../core/services/location_service.dart';
 import '../../domain/models/product.dart';
 import '../providers/products_provider.dart';
 import 'product_details_screen.dart';
@@ -43,28 +44,51 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       _isLoadingDistance = true;
     });
 
-    // Simulate loading delay
-    await Future.delayed(const Duration(milliseconds: 500));
-
     try {
-      // Use static mock data for distance calculation
-      print('Calculating distance for location: ${widget.user.location}');
-      final staticDistance = _getStaticDistanceForLocation(widget.user.location);
-      print('Calculated distance: $staticDistance');
+      // Try to get real distance using location service
+      final locationService = LocationService.instance;
+      final realDistance = await locationService.getDistanceFromCurrentLocation(
+        widget.user.location, // Assuming location contains coordinates
+      );
       
-      setState(() {
-        _distanceFromUser = staticDistance;
-      });
+      if (realDistance != null) {
+        setState(() {
+          _distanceFromUser = realDistance;
+        });
+      } else {
+        // Fallback to static distance if real location is not available
+        final locationName = _getLocationName(widget.user.location);
+        final staticDistance = _getStaticDistanceForLocation(locationName);
+        setState(() {
+          _distanceFromUser = staticDistance;
+        });
+      }
     } catch (e) {
       print('Error calculating distance: $e');
+      // Fallback to static distance on error
+      final locationName = _getLocationName(widget.user.location);
+      final staticDistance = _getStaticDistanceForLocation(locationName);
       setState(() {
-        _distanceFromUser = 'Distance unavailable';
+        _distanceFromUser = staticDistance;
       });
     } finally {
       setState(() {
         _isLoadingDistance = false;
       });
     }
+  }
+
+  String _getLocationName(String coordinates) {
+    // Map coordinates to location names
+    final locationMap = {
+      '-1.9441,30.0619': 'Kigali, Rwanda',
+      '-1.4998,29.6344': 'Musanze, Rwanda',
+      '-1.6936,29.2356': 'Rubavu, Rwanda',
+      '-2.6031,29.7439': 'Huye, Rwanda',
+      '-1.3048,30.3285': 'Nyagatare, Rwanda',
+    };
+    
+    return locationMap[coordinates] ?? coordinates;
   }
 
   String _getStaticDistanceForLocation(String location) {
@@ -413,11 +437,36 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  widget.user.location,
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      _getLocationName(widget.user.location),
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                    if (_distanceFromUser != null) ...[
+                      Text(
+                        ' (in $_distanceFromUser)',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ] else if (_isLoadingDistance) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 8),
                 // Rating
@@ -438,7 +487,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '(${widget.user.totalProducts} products)',
+                      '(${widget.user.totalReviews} reviews)',
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),

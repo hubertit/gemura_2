@@ -396,9 +396,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       imageUrl: post.userAvatar,
       totalProducts: 0,
       totalSales: 0,
+      totalReviews: 0,
       rating: 4.5,
       isVerified: post.isVerified,
-      location: 'Kigali, Rwanda',
+      location: '-1.9441,30.0619', // Kigali coordinates
       joinDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
     );
 
