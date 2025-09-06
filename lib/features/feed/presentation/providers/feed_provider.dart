@@ -1,17 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/post.dart';
-import '../../domain/models/story.dart';
 
 class FeedState {
   final List<Post> posts;
-  final List<Story> stories;
   final bool isLoading;
   final String? error;
   final bool hasMorePosts;
 
   const FeedState({
     this.posts = const [],
-    this.stories = const [],
     this.isLoading = false,
     this.error,
     this.hasMorePosts = true,
@@ -19,14 +16,12 @@ class FeedState {
 
   FeedState copyWith({
     List<Post>? posts,
-    List<Story>? stories,
     bool? isLoading,
     String? error,
     bool? hasMorePosts,
   }) {
     return FeedState(
       posts: posts ?? this.posts,
-      stories: stories ?? this.stories,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
       hasMorePosts: hasMorePosts ?? this.hasMorePosts,
@@ -48,7 +43,6 @@ class FeedNotifier extends StateNotifier<FeedState> {
         state = state.copyWith(
           isLoading: false,
           posts: _generateMockPosts(),
-          stories: _generateMockStories(),
         );
       }
     });
@@ -64,7 +58,6 @@ class FeedNotifier extends StateNotifier<FeedState> {
       state = state.copyWith(
         isLoading: false,
         posts: _generateMockPosts(),
-        stories: _generateMockStories(),
       );
     }
   }
@@ -123,16 +116,6 @@ class FeedNotifier extends StateNotifier<FeedState> {
     state = state.copyWith(posts: updatedPosts);
   }
 
-  void markStoryAsViewed(String storyId) {
-    final updatedStories = state.stories.map((story) {
-      if (story.id == storyId) {
-        return story.copyWith(isViewed: true);
-      }
-      return story;
-    }).toList();
-    
-    state = state.copyWith(stories: updatedStories);
-  }
 
   List<Post> _generateMockPosts() {
     final now = DateTime.now();
@@ -157,22 +140,6 @@ class FeedNotifier extends StateNotifier<FeedState> {
     });
   }
 
-  List<Story> _generateMockStories() {
-    final now = DateTime.now();
-    return List.generate(8, (index) {
-      return Story(
-        id: 'story_${DateTime.now().millisecondsSinceEpoch}_$index',
-        userId: 'user_$index',
-        userName: _getRandomName(index),
-        userAvatar: 'https://picsum.photos/100/100?random=$index',
-        imageUrl: 'https://picsum.photos/400/600?random=$index',
-        createdAt: now.subtract(Duration(hours: index)),
-        expiresAt: now.add(Duration(hours: 24 - index)),
-        isViewed: index % 3 == 0,
-        isVerified: index % 4 == 0,
-      );
-    });
-  }
 
   String _getRandomName(int index) {
     final names = [

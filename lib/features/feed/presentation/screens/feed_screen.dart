@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/feed_provider.dart';
 import '../../domain/models/post.dart';
-import '../../domain/models/story.dart';
 import '../../../market/presentation/screens/seller_profile_screen.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 
@@ -76,11 +75,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             : CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Stories Section
-                  SliverToBoxAdapter(
-                    child: _buildStoriesSection(feedState.stories),
-                  ),
-                  
                   // Posts Section
                   SliverList(
                     delegate: SliverChildBuilderDelegate(
@@ -115,109 +109,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _buildStoriesSection(List<Story> stories) {
-    return Container(
-      height: 100,
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing8),
-        itemCount: stories.length + 1, // +1 for "Add Story" button
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildAddStoryButton();
-          }
-          final story = stories[index - 1];
-          return _buildStoryItem(story);
-        },
-      ),
-    );
-  }
-
-  Widget _buildAddStoryButton() {
-    return Container(
-      width: 70,
-      margin: const EdgeInsets.only(right: AppTheme.spacing8),
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTheme.borderColor,
-                width: 2,
-              ),
-              color: AppTheme.surfaceColor,
-            ),
-            child: const Icon(
-              Icons.add,
-              color: AppTheme.textPrimaryColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing4),
-          Text(
-            'Your Story',
-            style: AppTheme.bodySmall.copyWith(
-              color: AppTheme.textSecondaryColor,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStoryItem(Story story) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to story viewer
-        ref.read(feedProvider.notifier).markStoryAsViewed(story.id);
-      },
-      child: Container(
-        width: 70,
-        margin: const EdgeInsets.only(right: AppTheme.spacing8),
-        child: Column(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: story.isViewed ? AppTheme.borderColor : AppTheme.primaryColor,
-                  width: 2,
-                ),
-              ),
-              child: CircleAvatar(
-                radius: 28,
-                backgroundImage: story.userAvatar != null
-                    ? NetworkImage(story.userAvatar!)
-                    : null,
-                child: story.userAvatar == null
-                    ? const Icon(Icons.person, color: AppTheme.textSecondaryColor)
-                    : null,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              story.userName,
-              style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildPostCard(Post post) {
     return Container(
