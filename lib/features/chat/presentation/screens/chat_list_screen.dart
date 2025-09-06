@@ -33,69 +33,77 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         centerTitle: true,
-        // Temporarily hidden actions
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.search),
-        //     onPressed: () {
-        //       // TODO: Implement search functionality
-        //     },
-        //   ),
-        //   IconButton(
-        //     icon: const Icon(Icons.more_vert),
-        //     onPressed: _showNewChatOptions,
-        //   ),
-        // ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: Implement search functionality
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: _showNewChatOptions,
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Temporarily hidden - Chat Categories
-          // Container(
-          //   margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
-          //   child: SingleChildScrollView(
-          //     scrollDirection: Axis.horizontal,
-          //     child: Row(
-          //       children: [
-          //         _buildCategoryChip('All', _selectedCategory == 'All'),
-          //         const SizedBox(width: AppTheme.spacing8),
-          //         _buildCategoryChip('Dairy', _selectedCategory == 'Dairy'),
-          //         const SizedBox(width: AppTheme.spacing8),
-          //         _buildCategoryChip('Milk', _selectedCategory == 'Milk'),
-          //         const SizedBox(width: AppTheme.spacing8),
-          //         _buildCategoryChip('Cattle', _selectedCategory == 'Cattle'),
-          //         const SizedBox(width: AppTheme.spacing8),
-          //         _buildCategoryChip('Training', _selectedCategory == 'Training'),
-          //         const SizedBox(width: AppTheme.spacing8),
-          //         // Plus Button (now scrolls with others)
-          //         IconButton(
-          //           icon: Icon(
-          //             Icons.add,
-          //             color: AppTheme.primaryColor,
-          //             size: 24,
-          //           ),
-          //           onPressed: () {
-          //             Navigator.of(context).push(
-          //               MaterialPageRoute(
-          //                 builder: (context) => const CreateListScreen(),
-          //               ),
-          //             );
-          //           },
-          //           padding: EdgeInsets.zero,
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          
-          // Chat List - Temporarily showing only Karake bot
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
-              itemCount: 1, // Only Karake bot
-              itemBuilder: (context, index) {
-                return _buildBotChatTile(context);
-              },
+          // Chat Categories
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12, vertical: AppTheme.spacing8),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildCategoryChip('All', _selectedCategory == 'All'),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('Dairy', _selectedCategory == 'Dairy'),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('Milk', _selectedCategory == 'Milk'),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('Cattle', _selectedCategory == 'Cattle'),
+                  const SizedBox(width: AppTheme.spacing8),
+                  _buildCategoryChip('Training', _selectedCategory == 'Training'),
+                  const SizedBox(width: AppTheme.spacing8),
+                  // Plus Button (now scrolls with others)
+                  IconButton(
+                    icon: Icon(
+                      Icons.add,
+                      color: AppTheme.primaryColor,
+                      size: 24,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const CreateListScreen(),
+                        ),
+                      );
+                    },
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
             ),
+          ),
+          
+          // Chat List
+          Expanded(
+            child: chats.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing12),
+                    itemCount: chats.length + 1, // All chats + Karake bot
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        // Show Karake bot first
+                        return _buildBotChatTile(context);
+                      } else {
+                        // Show regular chat rooms
+                        final chat = chats[index - 1];
+                        return _buildChatTile(context, ref, chat);
+                      }
+                    },
+                  ),
           ),
         ],
       ),

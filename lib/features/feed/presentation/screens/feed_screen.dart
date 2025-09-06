@@ -5,6 +5,7 @@ import '../providers/feed_provider.dart';
 import '../../domain/models/post.dart';
 import '../../../market/presentation/screens/seller_profile_screen.dart';
 import '../../../market/presentation/providers/products_provider.dart';
+import 'comments_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -267,7 +268,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           const SizedBox(width: AppTheme.spacing16),
           GestureDetector(
             onTap: () {
-              // TODO: Navigate to comments
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CommentsScreen(post: post),
+                ),
+              );
             },
             child: const Icon(
               Icons.chat_bubble_outline,
@@ -303,7 +308,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             const SizedBox(height: AppTheme.spacing4),
             GestureDetector(
               onTap: () {
-                // TODO: Navigate to comments
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => CommentsScreen(post: post),
+                  ),
+                );
               },
               child: Text(
                 'View all ${post.commentsCount} comments',
