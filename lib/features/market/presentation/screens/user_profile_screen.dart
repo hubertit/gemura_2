@@ -48,7 +48,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
     try {
       // Use static mock data for distance calculation
+      print('Calculating distance for location: ${widget.user.location}');
       final staticDistance = _getStaticDistanceForLocation(widget.user.location);
+      print('Calculated distance: $staticDistance');
       
       setState(() {
         _distanceFromUser = staticDistance;
@@ -80,7 +82,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       'Gicumbi, Northern Province': '67.8km',
     };
     
-    return staticDistances[location] ?? 'Distance unknown';
+    // Check for exact match first
+    if (staticDistances.containsKey(location)) {
+      return staticDistances[location]!;
+    }
+    
+    // Check for partial matches (e.g., if location contains "Kigali")
+    if (location.toLowerCase().contains('kigali')) {
+      return '2.5km';
+    } else if (location.toLowerCase().contains('rwamagana')) {
+      return '45.3km';
+    } else if (location.toLowerCase().contains('musanze')) {
+      return '78.9km';
+    } else if (location.toLowerCase().contains('huye')) {
+      return '125.6km';
+    } else if (location.toLowerCase().contains('rubavu')) {
+      return '89.4km';
+    } else if (location.toLowerCase().contains('gicumbi')) {
+      return '67.8km';
+    }
+    
+    // Default distance for any other location
+    return '6.0km';
   }
 
 
