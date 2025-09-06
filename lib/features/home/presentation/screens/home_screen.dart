@@ -12,6 +12,7 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
+import '../../../feed/presentation/screens/feed_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../../core/providers/localization_provider.dart';
@@ -56,7 +57,7 @@ class HomeScreen extends ConsumerWidget {
     
     final tabs = [
       const _DashboardTab(), // Index 0: Home
-      const _MarketTab(), // Index 1: Market
+      const FeedScreen(), // Index 1: Feed
       const WalletsScreen(), // Index 2: Ikofi
       const ChatListScreen(), // Index 3: Chat
       const ProfileTab(), // Index 4: Profile
@@ -87,9 +88,9 @@ class HomeScreen extends ConsumerWidget {
             label: localizationService.translate('home'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.store_outlined),
-            selectedIcon: const Icon(Icons.store),
-            label: localizationService.translate('market'),
+            icon: const Icon(Icons.dynamic_feed_outlined),
+            selectedIcon: const Icon(Icons.dynamic_feed),
+            label: 'Feed',
           ),
           NavigationDestination(
             icon: const Icon(Icons.account_balance_wallet_outlined),
