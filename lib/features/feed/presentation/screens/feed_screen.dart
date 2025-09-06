@@ -161,12 +161,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             onTap: () => _navigateToUserProfile(post),
             child: CircleAvatar(
               radius: 16,
-              backgroundImage: post.userAvatar != null
-                  ? NetworkImage(post.userAvatar!)
-                  : null,
-              child: post.userAvatar == null
-                  ? const Icon(Icons.person, size: 16, color: AppTheme.textSecondaryColor)
-                  : null,
+              backgroundColor: AppTheme.primaryColor,
+              child: Text(
+                post.userName.isNotEmpty ? post.userName[0].toUpperCase() : 'U',
+                style: AppTheme.bodySmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: AppTheme.spacing8),

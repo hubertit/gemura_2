@@ -124,7 +124,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
         id: 'post_${DateTime.now().millisecondsSinceEpoch}_$index',
         userId: 'user_$index',
         userName: _getRandomName(index),
-        userAvatar: 'https://picsum.photos/100/100?random=$index',
+        userAvatar: null, // Will use letter avatar instead
         content: _getRandomContent(index),
         imageUrls: _getRandomImages(index),
         createdAt: now.subtract(Duration(hours: index)),

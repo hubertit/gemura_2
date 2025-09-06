@@ -130,12 +130,15 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: widget.post.userAvatar != null
-                ? NetworkImage(widget.post.userAvatar!)
-                : null,
-            child: widget.post.userAvatar == null
-                ? const Icon(Icons.person, color: AppTheme.textSecondaryColor)
-                : null,
+            backgroundColor: AppTheme.primaryColor,
+            child: Text(
+              widget.post.userName.isNotEmpty ? widget.post.userName[0].toUpperCase() : 'U',
+              style: AppTheme.bodySmall.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ),
           const SizedBox(width: AppTheme.spacing12),
           Expanded(
@@ -217,12 +220,15 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
             onTap: () => _navigateToUserProfile(comment),
             child: CircleAvatar(
               radius: 16,
-              backgroundImage: comment.userAvatar != null
-                  ? NetworkImage(comment.userAvatar!)
-                  : null,
-              child: comment.userAvatar == null
-                  ? const Icon(Icons.person, size: 16, color: AppTheme.textSecondaryColor)
-                  : null,
+              backgroundColor: AppTheme.primaryColor,
+              child: Text(
+                comment.userName.isNotEmpty ? comment.userName[0].toUpperCase() : 'U',
+                style: AppTheme.bodySmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: AppTheme.spacing12),
@@ -323,8 +329,15 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundImage: const NetworkImage('https://picsum.photos/100/100?random=999'),
-            child: null,
+            backgroundColor: AppTheme.primaryColor,
+            child: Text(
+              'M', // Current user's first letter
+              style: AppTheme.bodySmall.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ),
           const SizedBox(width: AppTheme.spacing12),
           Expanded(
