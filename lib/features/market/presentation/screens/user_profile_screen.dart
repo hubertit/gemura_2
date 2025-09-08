@@ -708,7 +708,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               child: _buildPerformanceCard(
                 title: 'Total Sales',
                 value: '${widget.user.totalSales}',
-                subtitle: 'Products sold',
+                subtitle: 'Liters sold',
                 icon: Icons.shopping_cart,
                 color: Colors.green,
               ),
@@ -945,12 +945,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           ),
           child: Column(
             children: [
-              _buildMonthlyItem('January', 120, 85, 12),
-              _buildMonthlyItem('February', 135, 92, 15),
-              _buildMonthlyItem('March', 98, 78, 8),
-              _buildMonthlyItem('April', 156, 95, 18),
-              _buildMonthlyItem('May', 142, 88, 14),
-              _buildMonthlyItem('June', 168, 96, 22),
+              _buildLineChart(),
+              const SizedBox(height: AppTheme.spacing16),
+              _buildChartLegend(),
             ],
           ),
         ),
@@ -958,74 +955,71 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
-  Widget _buildMonthlyItem(String month, int sales, int collections, int onboarding) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              month,
-              style: AppTheme.bodySmall.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Row(
-              children: [
-                _buildMiniBar(sales, Colors.green, 'Sales'),
-                const SizedBox(width: AppTheme.spacing8),
-                _buildMiniBar(collections, Colors.blue, 'Collections'),
-                const SizedBox(width: AppTheme.spacing8),
-                _buildMiniBar(onboarding, Colors.orange, 'Onboarding'),
-              ],
-            ),
-          ),
-        ],
+  Widget _buildLineChart() {
+    // Show only every 3rd day to reduce saturation (1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31)
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final selectedDays = <int>[];
+    final dayLabels = <String>[];
+    
+    for (int i = 1; i <= daysInMonth; i += 3) {
+      selectedDays.add(i);
+      dayLabels.add('$i');
+    }
+    
+    // Generate sample data for selected days
+    final salesData = selectedDays.map((day) => ((day * 2 + 5) % 20 + 1).toInt()).toList();
+    final collectionsData = selectedDays.map((day) => ((day * 1.5 + 3) % 15 + 1).toInt()).toList();
+    final onboardingData = selectedDays.map((day) => ((day * 0.8 + 2) % 10 + 1).toInt()).toList();
+    
+    final maxValue = 25.0;
+    final chartHeight = 120.0;
+    final chartWidth = 280.0;
+    
+    return Container(
+      height: chartHeight,
+      width: chartWidth,
+      child: CustomPaint(
+        painter: LineChartPainter(
+          salesData: salesData,
+          collectionsData: collectionsData,
+          onboardingData: onboardingData,
+          maxValue: maxValue,
+          months: dayLabels,
+        ),
       ),
     );
   }
 
-  Widget _buildMiniBar(int value, Color color, String label) {
-    final maxValue = 200; // Maximum value for scaling
-    final height = (value / maxValue) * 40.0;
-    
-    return Column(
+  Widget _buildChartLegend() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildLegendItem('Sales', Colors.green),
+        _buildLegendItem('Collections', Colors.blue),
+        _buildLegendItem('Onboarding', Colors.orange),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 20,
-          height: 40,
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(
-            color: AppTheme.borderColor,
-            borderRadius: BorderRadius.circular(2),
-          ),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: 20,
-              height: height,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            color: color,
+            shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(height: AppTheme.spacing4),
-        Text(
-          '$value',
-          style: AppTheme.bodySmall.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        const SizedBox(width: AppTheme.spacing4),
         Text(
           label,
           style: AppTheme.bodySmall.copyWith(
-            fontSize: 8,
             color: AppTheme.textSecondaryColor,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -1829,4 +1823,115 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       ),
     );
   }
+}
+
+class LineChartPainter extends CustomPainter {
+  final List<int> salesData;
+  final List<int> collectionsData;
+  final List<int> onboardingData;
+  final double maxValue;
+  final List<String> months;
+
+  LineChartPainter({
+    required this.salesData,
+    required this.collectionsData,
+    required this.onboardingData,
+    required this.maxValue,
+    required this.months,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final salesPaint = Paint()
+      ..color = Colors.green
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final collectionsPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final onboardingPaint = Paint()
+      ..color = Colors.orange
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final pointPaint = Paint()
+      ..style = PaintingStyle.fill;
+
+    // Draw grid lines
+    final gridPaint = Paint()
+      ..color = AppTheme.borderColor.withOpacity(0.3)
+      ..strokeWidth = 0.5;
+
+    // Horizontal grid lines
+    for (int i = 0; i <= 4; i++) {
+      final y = size.height * 0.1 + (size.height * 0.8 * i / 4);
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        gridPaint,
+      );
+    }
+
+    // Draw data lines
+    _drawLine(canvas, size, salesData, salesPaint, pointPaint, Colors.green);
+    _drawLine(canvas, size, collectionsData, collectionsPaint, pointPaint, Colors.blue);
+    _drawLine(canvas, size, onboardingData, onboardingPaint, pointPaint, Colors.orange);
+
+    // Draw month labels
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+
+    for (int i = 0; i < months.length; i++) {
+      textPainter.text = TextSpan(
+        text: months[i],
+        style: AppTheme.bodySmall.copyWith(
+          color: AppTheme.textSecondaryColor,
+          fontSize: 10,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          (size.width / (months.length - 1)) * i - textPainter.width / 2,
+          size.height - 15,
+        ),
+      );
+    }
+  }
+
+  void _drawLine(Canvas canvas, Size size, List<int> data, Paint linePaint, Paint pointPaint, Color pointColor) {
+    if (data.isEmpty) return;
+
+    final path = Path();
+    final pointRadius = 3.0;
+
+    for (int i = 0; i < data.length; i++) {
+      final x = (size.width / (data.length - 1)) * i;
+      final y = size.height * 0.9 - (data[i] / maxValue) * size.height * 0.8;
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+
+      // Draw data points
+      pointPaint.color = pointColor;
+      canvas.drawCircle(Offset(x, y), pointRadius, pointPaint);
+    }
+
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
