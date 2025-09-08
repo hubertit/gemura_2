@@ -4,7 +4,10 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/layout_widgets.dart';
 import '../../../collection/presentation/screens/record_collection_screen.dart';
+import '../../../collection/presentation/screens/pending_collections_screen.dart';
 import '../../../collection/presentation/providers/collections_provider.dart';
+import '../../../market/presentation/screens/user_profile_screen.dart';
+import '../../../market/presentation/providers/products_provider.dart';
 import '../../presentation/providers/suppliers_provider.dart';
 import '../../../../shared/models/collection.dart';
 import '../../../../shared/models/supplier.dart';
@@ -142,6 +145,17 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
         titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.pending_actions),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const PendingCollectionsScreen(),
+                ),
+              );
+            },
+            tooltip: 'Pending Collections',
+          ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () {
@@ -718,6 +732,32 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
     );
   }
 
+  void _navigateToSupplierProfile(Collection collection) {
+    // Create a TopSeller from collection data
+    final supplier = TopSeller(
+      id: int.tryParse(collection.supplierId) ?? 1,
+      code: collection.supplierId,
+      name: collection.supplierName,
+      email: '${collection.supplierId}@example.com',
+      phone: collection.supplierPhone,
+      imageUrl: null,
+      totalProducts: 0,
+      totalSales: 0,
+      totalReviews: 0,
+      rating: 4.5,
+      isVerified: false,
+      location: '-1.9441,30.0619', // Default Kigali coordinates
+      joinDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+    );
+
+    Navigator.of(context).pop(); // Close bottom sheet
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(user: supplier),
+      ),
+    );
+  }
+
   void _showCollectionDetails(Collection collection) {
     showModalBottomSheet(
       context: context,
@@ -787,7 +827,21 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
             ],
           ),
           details: [
-            DetailRow(label: 'Supplier', value: collection.supplierName),
+            DetailRow(
+              label: 'Supplier', 
+              value: collection.supplierName,
+              customValue: GestureDetector(
+                onTap: () => _navigateToSupplierProfile(collection),
+                child: Text(
+                  collection.supplierName,
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
             DetailRow(label: 'Phone', value: collection.supplierPhone),
             DetailRow(label: 'Quantity', value: '${collection.quantity} L'),
             DetailRow(label: 'Price/Liter', value: '${collection.pricePerLiter} Frw'),

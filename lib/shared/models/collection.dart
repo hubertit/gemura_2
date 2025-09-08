@@ -11,7 +11,7 @@ class Collection {
   final double quantity;
   final double pricePerLiter;
   final double totalValue;
-  final String status; // 'accepted', 'rejected'
+  final String status; // 'pending', 'accepted', 'rejected'
   final String? rejectionReason;
   final String? quality;
   final String? notes;

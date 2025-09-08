@@ -178,6 +178,48 @@ class CollectionsNotifier extends StateNotifier<AsyncValue<List<Collection>>> {
     }
   }
 
+  Future<void> approveCollection({
+    required String collectionId,
+    String? notes,
+  }) async {
+    try {
+      // Approve the collection via API
+      await _collectionsService.approveCollection(
+        collectionId: collectionId,
+        notes: notes,
+      );
+      
+      // Refresh the collections list to get the updated data
+      await loadCollections();
+    } catch (error) {
+      // Don't set the entire state to error if approval fails
+      // Just rethrow the error to be handled by the UI
+      rethrow;
+    }
+  }
+
+  Future<void> rejectCollection({
+    required String collectionId,
+    required String rejectionReason,
+    String? notes,
+  }) async {
+    try {
+      // Reject the collection via API
+      await _collectionsService.rejectCollection(
+        collectionId: collectionId,
+        rejectionReason: rejectionReason,
+        notes: notes,
+      );
+      
+      // Refresh the collections list to get the updated data
+      await loadCollections();
+    } catch (error) {
+      // Don't set the entire state to error if rejection fails
+      // Just rethrow the error to be handled by the UI
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> getCollectionStats() async {
     try {
       return await _collectionsService.getCollectionStats();
@@ -281,6 +323,29 @@ final collectionsBySupplierProvider = Provider.family<List<Collection>, String>(
 final collectionsByStatusProvider = Provider.family<List<Collection>, String>((ref, status) {
   final notifier = ref.watch(collectionsNotifierProvider.notifier);
   return notifier.getCollectionsByStatus(status);
+});
+
+final pendingCollectionsProvider = Provider<List<Collection>>((ref) {
+  // For testing purposes, return static pending collections directly
+  final now = DateTime.now();
+  return [
+    Collection(
+      id: 'pending_001',
+      supplierId: 'SUP001',
+      supplierName: 'Jean Baptiste',
+      supplierPhone: '+250 788 123 456',
+      quantity: 25.5,
+      pricePerLiter: 400.0,
+      totalValue: 10200.0,
+      status: 'pending',
+      rejectionReason: null,
+      quality: null,
+      notes: null,
+      collectionDate: now.subtract(const Duration(hours: 2)),
+      createdAt: now.subtract(const Duration(hours: 2)),
+      updatedAt: now.subtract(const Duration(hours: 2)),
+    ),
+  ];
 });
 
 final searchCollectionsProvider = Provider.family<List<Collection>, String>((ref, query) {

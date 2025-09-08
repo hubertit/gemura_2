@@ -361,9 +361,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 unselectedLabelColor: AppTheme.textSecondaryColor,
                 labelStyle: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600),
                 tabs: [
+                  Tab(text: 'Performance'),
                   Tab(text: localizationService.translate('products')),
                   Tab(text: localizationService.translate('reviews')),
-                  Tab(text: 'About'),
                 ],
               ),
             ),
@@ -373,9 +373,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
+                _buildPerformanceTab(),
                 _buildProductsTab(),
                 _buildReviewsTab(),
-                _buildAboutTab(),
               ],
             ),
           ),
@@ -667,6 +667,368 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPerformanceTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Performance Overview Cards
+          _buildPerformanceOverview(),
+          const SizedBox(height: AppTheme.spacing24),
+          
+          // Performance Charts
+          _buildPerformanceCharts(),
+          const SizedBox(height: AppTheme.spacing24),
+          
+          // Monthly Performance
+          _buildMonthlyPerformance(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerformanceOverview() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Performance Overview',
+          style: AppTheme.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPerformanceCard(
+                title: 'Total Sales',
+                value: '${widget.user.totalSales}',
+                subtitle: 'Products sold',
+                icon: Icons.shopping_cart,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: _buildPerformanceCard(
+                title: 'Collections',
+                value: '${widget.user.totalProducts}',
+                subtitle: 'Milk collected',
+                icon: Icons.local_drink,
+                color: Colors.blue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPerformanceCard(
+                title: 'Onboarding',
+                value: '${widget.user.totalReviews}',
+                subtitle: 'New farmers',
+                icon: Icons.people,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: _buildPerformanceCard(
+                title: 'Rating',
+                value: '${widget.user.rating}',
+                subtitle: 'Average rating',
+                icon: Icons.star,
+                color: Colors.amber,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPerformanceCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacing16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        border: Border.all(
+          color: AppTheme.borderColor,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          Text(
+            value,
+            style: AppTheme.titleLarge.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing4),
+          Text(
+            title,
+            style: AppTheme.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            subtitle,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textSecondaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerformanceCharts() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Performance Trends',
+          style: AppTheme.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        Container(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+            border: Border.all(
+              color: AppTheme.borderColor,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              _buildChartItem(
+                title: 'Selling Performance',
+                percentage: 85,
+                color: Colors.green,
+                description: 'Above average sales performance',
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              _buildChartItem(
+                title: 'Collection Efficiency',
+                percentage: 92,
+                color: Colors.blue,
+                description: 'Excellent milk collection rate',
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              _buildChartItem(
+                title: 'Onboarding Success',
+                percentage: 78,
+                color: Colors.orange,
+                description: 'Good farmer recruitment rate',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChartItem({
+    required String title,
+    required int percentage,
+    required Color color,
+    required String description,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: AppTheme.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '$percentage%',
+              style: AppTheme.bodyMedium.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spacing8),
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: AppTheme.borderColor,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: percentage / 100,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          description,
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textSecondaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonthlyPerformance() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Monthly Performance',
+          style: AppTheme.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        Container(
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+            border: Border.all(
+              color: AppTheme.borderColor,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              _buildMonthlyItem('January', 120, 85, 12),
+              _buildMonthlyItem('February', 135, 92, 15),
+              _buildMonthlyItem('March', 98, 78, 8),
+              _buildMonthlyItem('April', 156, 95, 18),
+              _buildMonthlyItem('May', 142, 88, 14),
+              _buildMonthlyItem('June', 168, 96, 22),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMonthlyItem(String month, int sales, int collections, int onboarding) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              month,
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                _buildMiniBar(sales, Colors.green, 'Sales'),
+                const SizedBox(width: AppTheme.spacing8),
+                _buildMiniBar(collections, Colors.blue, 'Collections'),
+                const SizedBox(width: AppTheme.spacing8),
+                _buildMiniBar(onboarding, Colors.orange, 'Onboarding'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniBar(int value, Color color, String label) {
+    final maxValue = 200; // Maximum value for scaling
+    final height = (value / maxValue) * 40.0;
+    
+    return Column(
+      children: [
+        Container(
+          width: 20,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.borderColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: 20,
+              height: height,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacing4),
+        Text(
+          '$value',
+          style: AppTheme.bodySmall.copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          label,
+          style: AppTheme.bodySmall.copyWith(
+            fontSize: 8,
+            color: AppTheme.textSecondaryColor,
+          ),
+        ),
+      ],
     );
   }
 

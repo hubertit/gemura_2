@@ -41,7 +41,15 @@ class CollectionsService {
             // Fallback: try to get collections from data
             collectionsData = data['data'] ?? [];
           }
-          return collectionsData.map((json) => Collection.fromApiResponse(json)).toList();
+          
+          // Convert API data to collections
+          final apiCollections = collectionsData.map((json) => Collection.fromApiResponse(json)).toList();
+          
+          // Add static pending collections for testing
+          final staticPendingCollections = _getStaticPendingCollections();
+          
+          // Combine API collections with static pending collections
+          return [...apiCollections, ...staticPendingCollections];
         } else {
           throw Exception(data['message'] ?? 'Failed to get collections');
         }
@@ -72,6 +80,29 @@ class CollectionsService {
     } catch (e) {
       throw Exception('Unexpected error: $e');
     }
+  }
+
+  /// Get static pending collections for testing
+  List<Collection> _getStaticPendingCollections() {
+    final now = DateTime.now();
+    return [
+      Collection(
+        id: 'pending_001',
+        supplierId: 'SUP001',
+        supplierName: 'Jean Baptiste',
+        supplierPhone: '+250 788 123 456',
+        quantity: 25.5,
+        pricePerLiter: 400.0,
+        totalValue: 10200.0,
+        status: 'pending',
+        rejectionReason: null,
+        quality: null,
+        notes: null,
+        collectionDate: now.subtract(const Duration(hours: 2)),
+        createdAt: now.subtract(const Duration(hours: 2)),
+        updatedAt: now.subtract(const Duration(hours: 2)),
+      ),
+    ];
   }
 
   /// Get filtered collections for the authenticated user
@@ -408,6 +439,124 @@ class CollectionsService {
         errorMessage = 'Authentication failed. Please login again.';
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Collection not found.';
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.receiveTimeout ||
+                 e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage += backendMsg ?? 'Please try again.';
+      }
+      
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  /// Approve a pending collection
+  Future<void> approveCollection({
+    required String collectionId,
+    String? notes,
+  }) async {
+    try {
+      final token = SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      final response = await _dio.post(
+        '/collections/approve',
+        data: {
+          'token': token,
+          'collection_id': collectionId,
+          'notes': notes,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 200 && data['status'] == 'success') {
+          return;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to approve collection');
+        }
+      } else {
+        throw Exception('Failed to approve collection: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to approve collection. ';
+      
+      if (e.response?.statusCode == 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Collection not found.';
+      } else if (e.response?.statusCode == 400) {
+        errorMessage = 'Invalid request. Collection may not be in pending status.';
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.receiveTimeout ||
+                 e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage += backendMsg ?? 'Please try again.';
+      }
+      
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  /// Reject a pending collection
+  Future<void> rejectCollection({
+    required String collectionId,
+    required String rejectionReason,
+    String? notes,
+  }) async {
+    try {
+      final token = SecureStorageService.getAuthToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      final response = await _dio.post(
+        '/collections/reject',
+        data: {
+          'token': token,
+          'collection_id': collectionId,
+          'rejection_reason': rejectionReason,
+          'notes': notes,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 200 && data['status'] == 'success') {
+          return;
+        } else {
+          throw Exception(data['message'] ?? 'Failed to reject collection');
+        }
+      } else {
+        throw Exception('Failed to reject collection: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to reject collection. ';
+      
+      if (e.response?.statusCode == 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Collection not found.';
+      } else if (e.response?.statusCode == 400) {
+        errorMessage = 'Invalid request. Collection may not be in pending status.';
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||

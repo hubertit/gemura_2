@@ -6,6 +6,8 @@ import '../../../../shared/widgets/layout_widgets.dart';
 
 import '../../../sales/presentation/screens/record_sale_screen.dart';
 import '../../../sales/presentation/providers/sales_provider.dart';
+import '../../../market/presentation/screens/user_profile_screen.dart';
+import '../../../market/presentation/providers/products_provider.dart';
 import '../../../../shared/models/sale.dart';
 import '../../../../core/providers/localization_provider.dart';
 
@@ -847,6 +849,58 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
     );
   }
 
+  void _navigateToCustomerProfile(Sale sale) {
+    // Create a TopSeller from customer data
+    final customer = TopSeller(
+      id: int.tryParse(sale.customerAccount?.code ?? '1') ?? 1,
+      code: sale.customerAccount?.code ?? 'CUST001',
+      name: sale.customerAccount?.name ?? 'Unknown Customer',
+      email: '${sale.customerAccount?.code ?? 'customer'}@example.com',
+      phone: '+250700000000', // Default phone since SaleAccount doesn't have phone
+      imageUrl: null,
+      totalProducts: 0,
+      totalSales: 0,
+      totalReviews: 0,
+      rating: 4.5,
+      isVerified: false,
+      location: '-1.9441,30.0619', // Default Kigali coordinates
+      joinDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+    );
+
+    Navigator.of(context).pop(); // Close bottom sheet
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(user: customer),
+      ),
+    );
+  }
+
+  void _navigateToSupplierProfile(Sale sale) {
+    // Create a TopSeller from supplier data
+    final supplier = TopSeller(
+      id: int.tryParse(sale.supplierAccount?.code ?? '1') ?? 1,
+      code: sale.supplierAccount?.code ?? 'SUP001',
+      name: sale.supplierAccount?.name ?? 'Unknown Supplier',
+      email: '${sale.supplierAccount?.code ?? 'supplier'}@example.com',
+      phone: '+250700000000', // Default phone since SaleAccount doesn't have phone
+      imageUrl: null,
+      totalProducts: 0,
+      totalSales: 0,
+      totalReviews: 0,
+      rating: 4.5,
+      isVerified: false,
+      location: '-1.9441,30.0619', // Default Kigali coordinates
+      joinDate: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
+    );
+
+    Navigator.of(context).pop(); // Close bottom sheet
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(user: supplier),
+      ),
+    );
+  }
+
   void _showMilkDetails(Sale sale) {
     showModalBottomSheet(
       context: context,
@@ -897,8 +951,21 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
             ],
           ),
           details: [
-            DetailRow(label: 'Customer', value: sale.customerAccount?.name ?? 'Unknown'),
-            DetailRow(label: 'Supplier', value: sale.supplierAccount?.name ?? 'Unknown'),
+            DetailRow(
+              label: 'Customer', 
+              value: sale.customerAccount?.name ?? 'Unknown',
+              customValue: GestureDetector(
+                onTap: () => _navigateToCustomerProfile(sale),
+                child: Text(
+                  sale.customerAccount?.name ?? 'Unknown',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
             DetailRow(label: 'Quantity', value: '${sale.quantityAsDouble} L'),
             DetailRow(label: 'Price/Liter', value: '${sale.unitPriceAsDouble} Frw'),
             DetailRow(label: 'Total Value', value: '${NumberFormat('#,###').format(sale.totalAmountAsDouble)} Frw'),
