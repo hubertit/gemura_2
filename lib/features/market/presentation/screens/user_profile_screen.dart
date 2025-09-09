@@ -678,15 +678,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Performance Overview Cards
-          _buildPerformanceOverview(),
+          // _buildPerformanceOverview(),
+          // const SizedBox(height: AppTheme.spacing24),
+          
+          // Monthly Performance
+          _buildMonthlyPerformance(),
           const SizedBox(height: AppTheme.spacing24),
           
           // Performance Charts
           _buildPerformanceCharts(),
-          const SizedBox(height: AppTheme.spacing24),
-          
-          // Monthly Performance
-          _buildMonthlyPerformance(),
         ],
       ),
     );
@@ -927,12 +927,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Performance',
-          style: AppTheme.titleMedium.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         const SizedBox(height: AppTheme.spacing16),
         Container(
           padding: const EdgeInsets.all(AppTheme.spacing16),
