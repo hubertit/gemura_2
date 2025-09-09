@@ -29,6 +29,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   String? _distanceFromUser;
   bool _isLoadingDistance = false;
   int _followerCount = 0;
+  String _chartPeriod = 'Day'; // 'Day', 'Week', 'Month'
 
   @override
   void initState() {
@@ -927,7 +928,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Monthly Performance',
+          'Performance',
           style: AppTheme.titleMedium.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -948,6 +949,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               _buildLineChart(),
               const SizedBox(height: AppTheme.spacing16),
               _buildChartLegend(),
+              const SizedBox(height: AppTheme.spacing16),
+              _buildPeriodSelector(),
             ],
           ),
         ),
@@ -955,24 +958,90 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     );
   }
 
+  Widget _buildPeriodSelector() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: ['Day', 'Week', 'Month'].map((period) {
+          final isSelected = _chartPeriod == period;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _chartPeriod = period;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  period,
+                  textAlign: TextAlign.center,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: isSelected ? Colors.white : AppTheme.primaryColor,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildLineChart() {
-    // Show only every 3rd day to reduce saturation (1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31)
     final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final selectedDays = <int>[];
-    final dayLabels = <String>[];
-    
-    for (int i = 1; i <= daysInMonth; i += 3) {
-      selectedDays.add(i);
-      dayLabels.add('$i');
+    List<String> labels;
+    List<int> salesData;
+    List<int> collectionsData;
+    List<int> onboardingData;
+    double maxValue;
+
+    switch (_chartPeriod) {
+      case 'Day':
+        // Show hours of the day (6 AM to 10 PM) with AM/PM format, every 2 hours
+        labels = ['6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'];
+        salesData = [8, 12, 15, 18, 14, 16, 20, 12, 6];
+        collectionsData = [5, 8, 10, 12, 9, 11, 13, 8, 4];
+        onboardingData = [2, 3, 4, 5, 3, 4, 5, 3, 1];
+        maxValue = 25.0;
+        break;
+      case 'Week':
+        // Show days of the week
+        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        salesData = [12, 15, 8, 18, 14, 22, 16];
+        collectionsData = [8, 10, 6, 12, 9, 15, 11];
+        onboardingData = [3, 4, 2, 5, 3, 6, 4];
+        maxValue = 25.0;
+        break;
+      case 'Month':
+      default:
+        // Show every 3rd day of the month
+        final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+        final selectedDays = <int>[];
+        final dayLabels = <String>[];
+        
+        for (int i = 1; i <= daysInMonth; i += 3) {
+          selectedDays.add(i);
+          dayLabels.add('$i');
+        }
+        
+        labels = dayLabels;
+        salesData = selectedDays.map((day) => ((day * 2 + 5) % 20 + 1).toInt()).toList();
+        collectionsData = selectedDays.map((day) => ((day * 1.5 + 3) % 15 + 1).toInt()).toList();
+        onboardingData = selectedDays.map((day) => ((day * 0.8 + 2) % 10 + 1).toInt()).toList();
+        maxValue = 25.0;
+        break;
     }
     
-    // Generate sample data for selected days
-    final salesData = selectedDays.map((day) => ((day * 2 + 5) % 20 + 1).toInt()).toList();
-    final collectionsData = selectedDays.map((day) => ((day * 1.5 + 3) % 15 + 1).toInt()).toList();
-    final onboardingData = selectedDays.map((day) => ((day * 0.8 + 2) % 10 + 1).toInt()).toList();
-    
-    final maxValue = 25.0;
     final chartHeight = 120.0;
     final chartWidth = 280.0;
     
@@ -985,7 +1054,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           collectionsData: collectionsData,
           onboardingData: onboardingData,
           maxValue: maxValue,
-          months: dayLabels,
+          months: labels,
         ),
       ),
     );
@@ -1842,31 +1911,62 @@ class LineChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
+    // Create smooth paint with better styling
     final salesPaint = Paint()
-      ..color = Colors.green
+      ..color = const Color(0xFF10B981) // Modern green
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final collectionsPaint = Paint()
-      ..color = Colors.blue
+      ..color = const Color(0xFF3B82F6) // Modern blue
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final onboardingPaint = Paint()
-      ..color = Colors.orange
+      ..color = const Color(0xFFF59E0B) // Modern orange
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    final pointPaint = Paint()
-      ..style = PaintingStyle.fill;
+    // Gradient fills for area under curves
+    final salesGradient = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFF10B981).withOpacity(0.3),
+          const Color(0xFF10B981).withOpacity(0.05),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    // Draw grid lines
+    final collectionsGradient = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFF3B82F6).withOpacity(0.3),
+          const Color(0xFF3B82F6).withOpacity(0.05),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final onboardingGradient = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFFF59E0B).withOpacity(0.3),
+          const Color(0xFFF59E0B).withOpacity(0.05),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Draw subtle grid lines
     final gridPaint = Paint()
-      ..color = AppTheme.borderColor.withOpacity(0.3)
+      ..color = AppTheme.borderColor.withOpacity(0.2)
       ..strokeWidth = 0.5;
 
     // Horizontal grid lines
@@ -1879,12 +1979,12 @@ class LineChartPainter extends CustomPainter {
       );
     }
 
-    // Draw data lines
-    _drawLine(canvas, size, salesData, salesPaint, pointPaint, Colors.green);
-    _drawLine(canvas, size, collectionsData, collectionsPaint, pointPaint, Colors.blue);
-    _drawLine(canvas, size, onboardingData, onboardingPaint, pointPaint, Colors.orange);
+    // Draw smooth curved lines with gradients
+    _drawSmoothLine(canvas, size, salesData, salesPaint, salesGradient, const Color(0xFF10B981));
+    _drawSmoothLine(canvas, size, collectionsData, collectionsPaint, collectionsGradient, const Color(0xFF3B82F6));
+    _drawSmoothLine(canvas, size, onboardingData, onboardingPaint, onboardingGradient, const Color(0xFFF59E0B));
 
-    // Draw month labels
+    // Draw month labels with better styling
     final textPainter = TextPainter(
       textDirection: TextDirection.ltr,
     );
@@ -1894,7 +1994,8 @@ class LineChartPainter extends CustomPainter {
         text: months[i],
         style: AppTheme.bodySmall.copyWith(
           color: AppTheme.textSecondaryColor,
-          fontSize: 10,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
         ),
       );
       textPainter.layout();
@@ -1902,34 +2003,86 @@ class LineChartPainter extends CustomPainter {
         canvas,
         Offset(
           (size.width / (months.length - 1)) * i - textPainter.width / 2,
-          size.height - 15,
+          size.height - 12,
         ),
       );
     }
   }
 
-  void _drawLine(Canvas canvas, Size size, List<int> data, Paint linePaint, Paint pointPaint, Color pointColor) {
+  void _drawSmoothLine(Canvas canvas, Size size, List<int> data, Paint linePaint, Paint gradientPaint, Color pointColor) {
     if (data.isEmpty) return;
 
-    final path = Path();
-    final pointRadius = 3.0;
+    final points = <Offset>[];
+    final pointRadius = 1.5;
 
+    // Calculate all points
     for (int i = 0; i < data.length; i++) {
       final x = (size.width / (data.length - 1)) * i;
       final y = size.height * 0.9 - (data[i] / maxValue) * size.height * 0.8;
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-
-      // Draw data points
-      pointPaint.color = pointColor;
-      canvas.drawCircle(Offset(x, y), pointRadius, pointPaint);
+      points.add(Offset(x, y));
     }
 
+    // Create smooth curved path using cubic bezier curves
+    final path = Path();
+    final gradientPath = Path();
+
+    if (points.isNotEmpty) {
+      path.moveTo(points[0].dx, points[0].dy);
+      gradientPath.moveTo(points[0].dx, size.height * 0.9);
+      gradientPath.lineTo(points[0].dx, points[0].dy);
+
+      for (int i = 0; i < points.length - 1; i++) {
+        final currentPoint = points[i];
+        final nextPoint = points[i + 1];
+        
+        // Calculate control points for smooth curves
+        final controlPoint1 = Offset(
+          currentPoint.dx + (nextPoint.dx - currentPoint.dx) / 3,
+          currentPoint.dy,
+        );
+        final controlPoint2 = Offset(
+          nextPoint.dx - (nextPoint.dx - currentPoint.dx) / 3,
+          nextPoint.dy,
+        );
+
+        path.cubicTo(
+          controlPoint1.dx, controlPoint1.dy,
+          controlPoint2.dx, controlPoint2.dy,
+          nextPoint.dx, nextPoint.dy,
+        );
+
+        gradientPath.cubicTo(
+          controlPoint1.dx, controlPoint1.dy,
+          controlPoint2.dx, controlPoint2.dy,
+          nextPoint.dx, nextPoint.dy,
+        );
+      }
+
+      // Complete the gradient path
+      gradientPath.lineTo(points.last.dx, size.height * 0.9);
+      gradientPath.close();
+    }
+
+    // Draw gradient fill first
+    canvas.drawPath(gradientPath, gradientPaint);
+    
+    // Draw the smooth line
     canvas.drawPath(path, linePaint);
+
+    // Draw data points with better styling
+    final pointPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final pointBorderPaint = Paint()
+      ..color = pointColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    for (final point in points) {
+      canvas.drawCircle(point, pointRadius, pointPaint);
+      canvas.drawCircle(point, pointRadius, pointBorderPaint);
+    }
   }
 
   @override
