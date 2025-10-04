@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/post.dart';
+import '../../../core/services/feed_service.dart';
 
 class FeedState {
   final List<Post> posts;
@@ -34,31 +35,69 @@ class FeedNotifier extends StateNotifier<FeedState> {
     _loadInitialData();
   }
 
-  void _loadInitialData() {
-    state = state.copyWith(isLoading: true);
+  Future<void> _loadInitialData() async {
+    state = state.copyWith(isLoading: true, error: null);
     
-    // Simulate loading data
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
+      final response = await FeedService.getPosts(limit: 20, offset: 0);
+      
+      if (mounted) {
+        if (response['code'] == 200) {
+          final postsData = response['data'] as List<dynamic>;
+          final posts = postsData.map((postData) => _mapApiPostToModel(postData)).toList();
+          
+          state = state.copyWith(
+            isLoading: false,
+            posts: posts,
+            hasMorePosts: posts.length >= 20,
+          );
+        } else {
+          state = state.copyWith(
+            isLoading: false,
+            error: response['message'] ?? 'Failed to load posts',
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         state = state.copyWith(
           isLoading: false,
-          posts: _generateMockPosts(),
+          error: 'Failed to load posts: ${e.toString()}',
         );
       }
-    });
+    }
   }
 
   Future<void> refreshFeed() async {
     state = state.copyWith(isLoading: true, error: null);
     
-    // Simulate refresh
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      state = state.copyWith(
-        isLoading: false,
-        posts: _generateMockPosts(),
-      );
+    try {
+      final response = await FeedService.getPosts(limit: 20, offset: 0);
+      
+      if (mounted) {
+        if (response['code'] == 200) {
+          final postsData = response['data'] as List<dynamic>;
+          final posts = postsData.map((postData) => _mapApiPostToModel(postData)).toList();
+          
+          state = state.copyWith(
+            isLoading: false,
+            posts: posts,
+            hasMorePosts: posts.length >= 20,
+          );
+        } else {
+          state = state.copyWith(
+            isLoading: false,
+            error: response['message'] ?? 'Failed to refresh posts',
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to refresh posts: ${e.toString()}',
+        );
+      }
     }
   }
 
@@ -67,31 +106,59 @@ class FeedNotifier extends StateNotifier<FeedState> {
     
     state = state.copyWith(isLoading: true);
     
-    // Simulate loading more posts
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      final newPosts = _generateMockPosts();
-      state = state.copyWith(
-        isLoading: false,
-        posts: [...state.posts, ...newPosts],
-        hasMorePosts: state.posts.length < 50, // Limit to 50 posts
+    try {
+      final response = await FeedService.getPosts(
+        limit: 20, 
+        offset: state.posts.length,
       );
+      
+      if (mounted) {
+        if (response['code'] == 200) {
+          final postsData = response['data'] as List<dynamic>;
+          final newPosts = postsData.map((postData) => _mapApiPostToModel(postData)).toList();
+          
+          state = state.copyWith(
+            isLoading: false,
+            posts: [...state.posts, ...newPosts],
+            hasMorePosts: newPosts.length >= 20,
+          );
+        } else {
+          state = state.copyWith(
+            isLoading: false,
+            error: response['message'] ?? 'Failed to load more posts',
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to load more posts: ${e.toString()}',
+        );
+      }
     }
   }
 
-  void likePost(String postId) {
-    final updatedPosts = state.posts.map((post) {
-      if (post.id == postId) {
-        return post.copyWith(
-          isLiked: !post.isLiked,
-          likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
-        );
+  Future<void> likePost(String postId) async {
+    try {
+      final response = await FeedService.toggleLike(postId: int.parse(postId));
+      
+      if (response['code'] == 200) {
+        final updatedPosts = state.posts.map((post) {
+          if (post.id == postId) {
+            return post.copyWith(
+              isLiked: response['data']['is_liked'] ?? !post.isLiked,
+              likesCount: response['data']['likes_count'] ?? post.likesCount,
+            );
+          }
+          return post;
+        }).toList();
+        
+        state = state.copyWith(posts: updatedPosts);
       }
-      return post;
-    }).toList();
-    
-    state = state.copyWith(posts: updatedPosts);
+    } catch (e) {
+      // Handle error silently or show snackbar
+    }
   }
 
   void sharePost(String postId) {
@@ -116,105 +183,27 @@ class FeedNotifier extends StateNotifier<FeedState> {
     state = state.copyWith(posts: updatedPosts);
   }
 
-
-  List<Post> _generateMockPosts() {
-    final now = DateTime.now();
-    return List.generate(10, (index) {
-      return Post(
-        id: 'post_${DateTime.now().millisecondsSinceEpoch}_$index',
-        userId: 'user_$index',
-        userName: _getRandomName(index),
-        userAvatar: null, // Will use letter avatar instead
-        content: _getRandomContent(index),
-        imageUrls: _getRandomImages(index),
-        createdAt: now.subtract(Duration(hours: index)),
-        updatedAt: now.subtract(Duration(hours: index)),
-        likesCount: (index * 7) % 100 + 10,
-        commentsCount: (index * 3) % 50 + 5,
-        sharesCount: (index * 2) % 20 + 2,
-        isLiked: index % 3 == 0,
-        hashtags: _getRandomHashtags(index),
-        location: index % 4 == 0 ? _getRandomLocation(index) : null,
-        isVerified: index % 5 == 0,
-      );
-    });
+  /// Map API response data to Post model
+  Post _mapApiPostToModel(Map<String, dynamic> postData) {
+    return Post(
+      id: postData['id'].toString(),
+      userId: postData['user_id'].toString(),
+      userName: postData['user_name'] ?? 'Unknown User',
+      userAvatar: postData['user_avatar'],
+      content: postData['content'] ?? '',
+      imageUrls: postData['media_url'] != null ? [postData['media_url']] : [],
+      createdAt: DateTime.tryParse(postData['created_at'] ?? '') ?? DateTime.now(),
+      updatedAt: DateTime.tryParse(postData['updated_at'] ?? '') ?? DateTime.now(),
+      likesCount: int.tryParse(postData['likes_count']?.toString() ?? '0') ?? 0,
+      commentsCount: int.tryParse(postData['comments_count']?.toString() ?? '0') ?? 0,
+      sharesCount: int.tryParse(postData['shares_count']?.toString() ?? '0') ?? 0,
+      isLiked: postData['is_liked'] == true,
+      hashtags: List<String>.from(postData['hashtags'] ?? []),
+      location: postData['location'],
+      isVerified: postData['kyc_status'] == 'verified',
+    );
   }
 
-
-  String _getRandomName(int index) {
-    final names = [
-      'Jean Claude', 'Marie Claire', 'Paul', 'Grace', 'David',
-      'Sarah', 'Peter', 'Ruth', 'John', 'Esther', 'James', 'Hope'
-    ];
-    return names[index % names.length];
-  }
-
-  String _getRandomContent(int index) {
-    final contents = [
-      'Morning milking session with my beautiful cows 🐄 #DairyFarming #MorningMilking',
-      'New calves born today! Welcome to the farm little ones 🐮 #NewCalves #FarmLife',
-      'Fresh grass feeding time for the herd 🌱 #GrassFeeding #HealthyCows',
-      'Veterinary check-up day - all cows are healthy! 🩺 #VetCheck #HealthyHerd',
-      'Building a new barn for the growing herd 🏗️ #BarnConstruction #FarmExpansion',
-      'Harvesting hay for winter feed 🌾 #HayHarvest #WinterPreparation',
-      'Teaching my children about dairy farming 👨‍👩‍👧‍👦 #FamilyFarm #NextGeneration',
-      'Record milk production this month! 📈 #MilkProduction #FarmSuccess',
-      'Organic farming practices for better milk quality 🌿 #OrganicFarming #QualityMilk',
-      'Community dairy farming workshop today 📚 #DairyEducation #CommunityLearning',
-    ];
-    return contents[index % contents.length];
-  }
-
-  List<String> _getRandomImages(int index) {
-    const placeholderImage = 'https://res.cloudinary.com/dhwqnur8s/image/upload/v1757181255/gemuraplaceholder_kvwd9w.png';
-    
-    if (index % 3 == 0) {
-      return [placeholderImage];
-    } else if (index % 3 == 1) {
-      return [
-        placeholderImage,
-        placeholderImage,
-      ];
-    } else {
-      return [
-        placeholderImage,
-        placeholderImage,
-        placeholderImage,
-      ];
-    }
-  }
-
-  List<String> _getRandomHashtags(int index) {
-    final hashtags = [
-      ['#DairyFarming', '#MorningMilking'],
-      ['#NewCalves', '#FarmLife'],
-      ['#GrassFeeding', '#HealthyCows'],
-      ['#VetCheck', '#HealthyHerd'],
-      ['#BarnConstruction', '#FarmExpansion'],
-      ['#HayHarvest', '#WinterPreparation'],
-      ['#FamilyFarm', '#NextGeneration'],
-      ['#MilkProduction', '#FarmSuccess'],
-      ['#OrganicFarming', '#QualityMilk'],
-      ['#DairyEducation', '#CommunityLearning'],
-    ];
-    return hashtags[index % hashtags.length];
-  }
-
-  String _getRandomLocation(int index) {
-    final locations = [
-      'Kigali Dairy Farm, Rwanda',
-      'Nyarugenge Cattle Ranch, Kigali',
-      'Kacyiru Dairy Cooperative, Kigali',
-      'Kimisagara Farm, Kigali',
-      'Nyamirambo Livestock Farm, Kigali',
-      'Rwamagana Dairy Farm, Eastern Province',
-      'Musanze Cattle Farm, Northern Province',
-      'Huye Dairy Cooperative, Southern Province',
-      'Rubavu Livestock Farm, Western Province',
-      'Gicumbi Dairy Farm, Northern Province',
-    ];
-    return locations[index % locations.length];
-  }
 }
 
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
