@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/feed_service.dart';
 import '../../domain/models/comment.dart';
 import '../../domain/models/post.dart';
 import '../../../market/presentation/screens/user_profile_screen.dart';
@@ -22,6 +23,8 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
   final TextEditingController _commentController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Comment> _comments = [];
+  bool _isLoading = false;
+  String? _error;
 
   @override
   void initState() {
@@ -36,37 +39,84 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
     super.dispose();
   }
 
-  void _loadComments() {
-    // Generate mock comments
-    _comments = _generateMockComments();
-  }
-
-  void _submitComment() {
-    if (_commentController.text.trim().isEmpty) return;
-
-    final newComment = Comment(
-      id: 'comment_${DateTime.now().millisecondsSinceEpoch}',
-      postId: widget.post.id,
-      userId: 'current_user',
-      userName: 'You',
-      userAvatar: 'https://picsum.photos/100/100?random=999',
-      content: _commentController.text.trim(),
-      createdAt: DateTime.now(),
-      isVerified: false,
-    );
-
+  Future<void> _loadComments() async {
     setState(() {
-      _comments.insert(0, newComment);
+      _isLoading = true;
+      _error = null;
     });
 
+    try {
+      final response = await FeedService.getComments(
+        postId: int.parse(widget.post.id),
+        limit: 50,
+        offset: 0,
+      );
+
+      if (response['code'] == 200) {
+        final commentsData = response['data'] as List<dynamic>;
+        final comments = commentsData.map((commentData) => _mapApiCommentToModel(commentData)).toList();
+        
+        setState(() {
+          _comments = comments;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = response['message'] ?? 'Failed to load comments';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load comments: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _submitComment() async {
+    if (_commentController.text.trim().isEmpty) return;
+
+    final content = _commentController.text.trim();
     _commentController.clear();
-    
-    // Scroll to top to show new comment
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+
+    try {
+      final response = await FeedService.createComment(
+        postId: int.parse(widget.post.id),
+        content: content,
+      );
+
+      if (response['code'] == 201) {
+        // Reload comments to get the new one
+        await _loadComments();
+        
+        // Scroll to top to show new comment
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      } else {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Failed to post comment'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to post comment: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -95,16 +145,20 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
           
           // Comments List
           Expanded(
-            child: _comments.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(AppTheme.spacing16),
-                    itemCount: _comments.length,
-                    itemBuilder: (context, index) {
-                      return _buildCommentCard(_comments[index]);
-                    },
-                  ),
+            child: _isLoading
+                ? _buildLoadingState()
+                : _error != null
+                    ? _buildErrorState()
+                    : _comments.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(AppTheme.spacing16),
+                            itemCount: _comments.length,
+                            itemBuilder: (context, index) {
+                              return _buildCommentCard(_comments[index]);
+                            },
+                          ),
           ),
           
           // Comment Input
@@ -175,6 +229,47 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
                   ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: AppTheme.textSecondaryColor,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Text(
+            'Failed to load comments',
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textSecondaryColor,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Text(
+            _error ?? 'Unknown error',
+            style: AppTheme.bodyMedium.copyWith(
+              color: AppTheme.textSecondaryColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          ElevatedButton(
+            onPressed: _loadComments,
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -416,16 +511,26 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
     );
   }
 
-  void _likeComment(Comment comment) {
-    setState(() {
-      final index = _comments.indexWhere((c) => c.id == comment.id);
-      if (index != -1) {
-        _comments[index] = comment.copyWith(
-          isLiked: !comment.isLiked,
-          likesCount: comment.isLiked ? comment.likesCount - 1 : comment.likesCount + 1,
-        );
+  Future<void> _likeComment(Comment comment) async {
+    try {
+      final response = await FeedService.toggleCommentLike(
+        commentId: int.parse(comment.id),
+      );
+
+      if (response['code'] == 200) {
+        setState(() {
+          final index = _comments.indexWhere((c) => c.id == comment.id);
+          if (index != -1) {
+            _comments[index] = comment.copyWith(
+              isLiked: response['data']['is_liked'] ?? !comment.isLiked,
+              likesCount: response['data']['likes_count'] ?? comment.likesCount,
+            );
+          }
+        });
       }
-    });
+    } catch (e) {
+      // Handle error silently or show snackbar
+    }
   }
 
   void _replyToComment(Comment comment) {
@@ -450,57 +555,20 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
     }
   }
 
-  List<Comment> _generateMockComments() {
-    final now = DateTime.now();
-    return [
-      Comment(
-        id: 'comment_1',
-        postId: widget.post.id,
-        userId: 'user_1',
-        userName: 'Marie Claire',
-        userAvatar: 'https://picsum.photos/100/100?random=1',
-        content: 'Amazing work! Your cows look so healthy and well-cared for. 🐄',
-        createdAt: now.subtract(const Duration(hours: 2)),
-        likesCount: 5,
-        isLiked: false,
-        isVerified: true,
-      ),
-      Comment(
-        id: 'comment_2',
-        postId: widget.post.id,
-        userId: 'user_2',
-        userName: 'Jean Claude',
-        userAvatar: 'https://picsum.photos/100/100?random=2',
-        content: 'What breed are these cows? They look like excellent milk producers!',
-        createdAt: now.subtract(const Duration(hours: 4)),
-        likesCount: 3,
-        isLiked: true,
-        isVerified: false,
-      ),
-      Comment(
-        id: 'comment_3',
-        postId: widget.post.id,
-        userId: 'user_3',
-        userName: 'Grace',
-        userAvatar: 'https://picsum.photos/100/100?random=3',
-        content: 'Great to see young farmers learning the trade! 👨‍👩‍👧‍👦',
-        createdAt: now.subtract(const Duration(hours: 6)),
-        likesCount: 8,
-        isLiked: false,
-        isVerified: true,
-      ),
-      Comment(
-        id: 'comment_4',
-        postId: widget.post.id,
-        userId: 'user_4',
-        userName: 'Paul',
-        userAvatar: 'https://picsum.photos/100/100?random=4',
-        content: 'Do you have any tips for new dairy farmers? I\'m just starting out.',
-        createdAt: now.subtract(const Duration(hours: 8)),
-        likesCount: 2,
-        isLiked: false,
-        isVerified: false,
-      ),
-    ];
+  /// Map API response data to Comment model
+  Comment _mapApiCommentToModel(Map<String, dynamic> commentData) {
+    return Comment(
+      id: commentData['id'].toString(),
+      postId: commentData['post_id'].toString(),
+      userId: commentData['user_id'].toString(),
+      userName: commentData['user_name'] ?? 'Unknown User',
+      userAvatar: commentData['user_avatar'],
+      content: commentData['content'] ?? '',
+      createdAt: DateTime.tryParse(commentData['created_at'] ?? '') ?? DateTime.now(),
+      likesCount: int.tryParse(commentData['likes_count']?.toString() ?? '0') ?? 0,
+      isLiked: commentData['is_liked'] == true,
+      isVerified: commentData['kyc_status'] == 'verified',
+      parentCommentId: commentData['parent_comment_id']?.toString(),
+    );
   }
 }
