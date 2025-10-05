@@ -142,6 +142,33 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
     }
   }
 
+  Future<void> _likePost(Post post) async {
+    try {
+      final response = await FeedService.toggleLike(postId: int.parse(post.id));
+      
+      if (response['code'] == 200) {
+        setState(() {
+          final index = _bookmarks.indexWhere((p) => p.id == post.id);
+          if (index != -1) {
+            _bookmarks[index] = post.copyWith(
+              isLiked: response['data']['is_liked'] ?? !post.isLiked,
+              likesCount: response['data']['likes_count'] ?? post.likesCount,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to like post: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -432,7 +459,7 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => ref.read(feedProvider.notifier).likePost(post.id),
+            onTap: () => _likePost(post),
             child: Icon(
               post.isLiked ? Icons.favorite : Icons.favorite_border,
               color: post.isLiked ? Colors.red : AppTheme.textPrimaryColor,
