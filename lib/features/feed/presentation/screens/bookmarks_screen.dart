@@ -578,21 +578,4 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
     );
   }
 
-  String _getTimeAgo(DateTime dateTime) {
-    final Duration diff = DateTime.now().difference(dateTime);
-
-    if (diff.inDays > 30) {
-      return '${(diff.inDays / 30).round()} months ago';
-    } else if (diff.inDays > 7) {
-      return '${(diff.inDays / 7).round()} weeks ago';
-    } else if (diff.inDays > 0) {
-      return '${diff.inDays} days ago';
-    } else if (diff.inHours > 0) {
-      return '${diff.inHours} hours ago';
-    } else if (diff.inMinutes > 0) {
-      return '${diff.inMinutes} minutes ago';
-    } else {
-      return 'Just now';
-    }
-  }
 }
