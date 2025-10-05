@@ -81,7 +81,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Navigate to create post screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const CreatePostScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -118,20 +122,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     ],
                   );
           },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const CreatePostScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppTheme.primaryColor,
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
         ),
       ),
     );

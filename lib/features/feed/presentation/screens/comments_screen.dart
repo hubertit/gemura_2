@@ -184,15 +184,19 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppTheme.primaryColor,
-            child: Text(
-              widget.post.userName.isNotEmpty ? widget.post.userName[0].toUpperCase() : 'U',
-              style: AppTheme.bodySmall.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+            backgroundImage: widget.post.userAvatar != null
+                ? NetworkImage(widget.post.userAvatar!)
+                : null,
+            child: widget.post.userAvatar == null
+                ? Text(
+                    widget.post.userName.isNotEmpty ? widget.post.userName[0].toUpperCase() : 'U',
+                    style: AppTheme.titleMedium.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: AppTheme.spacing12),
           Expanded(
@@ -315,15 +319,19 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
             onTap: () => _navigateToUserProfile(comment),
             child: CircleAvatar(
               radius: 16,
-              backgroundColor: AppTheme.primaryColor,
-              child: Text(
-                comment.userName.isNotEmpty ? comment.userName[0].toUpperCase() : 'U',
-                style: AppTheme.bodySmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              backgroundImage: comment.userAvatar != null
+                  ? NetworkImage(comment.userAvatar!)
+                  : null,
+              child: comment.userAvatar == null
+                  ? Text(
+                      comment.userName.isNotEmpty ? comment.userName[0].toUpperCase() : 'U',
+                      style: AppTheme.titleSmall.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : null,
             ),
           ),
           const SizedBox(width: AppTheme.spacing12),
@@ -424,13 +432,12 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: AppTheme.primaryColor,
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
             child: Text(
               'M', // Current user's first letter
-              style: AppTheme.bodySmall.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+              style: AppTheme.titleSmall.copyWith(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

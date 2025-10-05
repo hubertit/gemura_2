@@ -20,7 +20,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final ImagePicker _imagePicker = ImagePicker();
   
   File? _selectedImage;
-  List<String> _hashtags = [];
+  final List<String> _hashtags = [];
   bool _isLoading = false;
 
   @override
@@ -34,27 +34,37 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-        title: const Text(
+        backgroundColor: AppTheme.surfaceColor,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
           'Create Post',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+          style: AppTheme.titleLarge.copyWith(
+            color: AppTheme.primaryColor,
+            fontWeight: FontWeight.w800,
           ),
         ),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _publishPost,
-            child: Text(
-              'Publish',
-              style: TextStyle(
-                color: _isLoading ? Colors.grey : Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: AppTheme.primaryColor,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Publish',
+                    style: AppTheme.bodyLarge.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -109,10 +119,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
           ),
         ),
         const SizedBox(width: AppTheme.spacing12),
-        const Text(
+        Text(
           'Your Post',
-          style: TextStyle(
-            fontSize: 16,
+          style: AppTheme.titleMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
           ),
@@ -125,10 +134,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'What\'s on your mind?',
-          style: TextStyle(
-            fontSize: 18,
+          style: AppTheme.titleMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
           ),
@@ -149,8 +157,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(AppTheme.spacing16),
             ),
-            style: const TextStyle(
-              fontSize: 16,
+            style: AppTheme.bodyMedium.copyWith(
               color: AppTheme.textPrimaryColor,
             ),
           ),
@@ -284,8 +291,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(AppTheme.spacing16),
             ),
-            style: const TextStyle(
-              fontSize: 16,
+            style: AppTheme.bodyMedium.copyWith(
               color: AppTheme.textPrimaryColor,
             ),
             onSubmitted: _addHashtag,
@@ -307,7 +313,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacing12,
-        vertical: AppTheme.spacing6,
+        vertical: 6,
       ),
       decoration: BoxDecoration(
         color: AppTheme.primaryColor.withOpacity(0.1),
@@ -371,8 +377,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 size: 20,
               ),
             ),
-            style: const TextStyle(
-              fontSize: 16,
+            style: AppTheme.bodyMedium.copyWith(
               color: AppTheme.textPrimaryColor,
             ),
           ),
@@ -386,7 +391,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       width: double.infinity,
       child: PrimaryButton(
         onPressed: _isLoading ? null : _publishPost,
-        text: _isLoading ? 'Publishing...' : 'Publish Post',
+        label: _isLoading ? 'Publishing...' : 'Publish Post',
         isLoading: _isLoading,
       ),
     );
@@ -469,15 +474,13 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         'location': _locationController.text.trim().isNotEmpty 
             ? _locationController.text.trim() 
             : null,
-        'media_url': _selectedImage != null 
-            ? _selectedImage!.path // For now, we'll use local path
-            : null,
+        'media_url': _selectedImage?.path, // For now, we'll use local path
       };
 
       // Call the API to create post
       final response = await FeedService.createPost(
-        content: postData['content']!,
-        mediaUrl: postData['media_url'],
+        content: postData['content'] as String,
+        mediaUrl: postData['media_url'] as String?,
         hashtags: postData['hashtags'] as List<String>,
         location: postData['location'] as String?,
       );
