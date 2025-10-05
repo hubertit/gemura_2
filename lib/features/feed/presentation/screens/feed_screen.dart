@@ -176,16 +176,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           GestureDetector(
             onTap: () => _navigateToUserProfile(post),
             child: CircleAvatar(
-              radius: 16,
-              backgroundColor: AppTheme.primaryColor,
-              child: Text(
-                post.userName.isNotEmpty ? post.userName[0].toUpperCase() : 'U',
-                style: AppTheme.bodySmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
+              radius: 20,
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              backgroundImage: post.userAvatar != null
+                  ? NetworkImage(post.userAvatar!)
+                  : null,
+              child: post.userAvatar == null
+                  ? Text(
+                      post.userName.isNotEmpty ? post.userName[0].toUpperCase() : 'U',
+                      style: AppTheme.titleMedium.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : null,
             ),
           ),
           const SizedBox(width: AppTheme.spacing8),

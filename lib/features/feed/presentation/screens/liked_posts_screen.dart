@@ -338,11 +338,18 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
         children: [
           CircleAvatar(
             radius: 20,
+            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
             backgroundImage: post.userAvatar != null
                 ? NetworkImage(post.userAvatar!)
                 : null,
             child: post.userAvatar == null
-                ? const Icon(Icons.person, color: Colors.white)
+                ? Text(
+                    post.userName.isNotEmpty ? post.userName[0].toUpperCase() : 'U',
+                    style: AppTheme.titleMedium.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
                 : null,
           ),
           const SizedBox(width: AppTheme.spacing12),
