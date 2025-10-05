@@ -6,6 +6,7 @@ import '../../domain/models/post.dart';
 import '../../../market/presentation/screens/user_profile_screen.dart';
 import '../providers/feed_provider.dart';
 import 'comments_screen.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 
 class LikedPostsScreen extends ConsumerStatefulWidget {
   const LikedPostsScreen({super.key});
@@ -265,11 +266,8 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
                           
                           // Loading indicator for pagination
                           if (_isLoading && _likedPosts.isNotEmpty)
-                            const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.all(AppTheme.spacing16),
-                                child: Center(child: CircularProgressIndicator()),
-                              ),
+                            SliverToBoxAdapter(
+                              child: SkeletonLoaders.feedPostsSkeleton(count: 3),
                             ),
                         ],
                       ),
@@ -278,9 +276,7 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return SkeletonLoaders.feedPostsSkeleton(count: 5);
   }
 
   Widget _buildErrorState() {

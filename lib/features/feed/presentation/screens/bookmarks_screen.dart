@@ -5,6 +5,7 @@ import '../../../../core/services/feed_service.dart';
 import '../../domain/models/post.dart';
 import '../providers/feed_provider.dart';
 import 'comments_screen.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 
 class BookmarksScreen extends ConsumerStatefulWidget {
   const BookmarksScreen({super.key});
@@ -226,11 +227,8 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
                           
                           // Loading indicator for pagination
                           if (_isLoading && _bookmarks.isNotEmpty)
-                            const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.all(AppTheme.spacing16),
-                                child: Center(child: CircularProgressIndicator()),
-                              ),
+                            SliverToBoxAdapter(
+                              child: SkeletonLoaders.feedPostsSkeleton(count: 3),
                             ),
                         ],
                       ),
@@ -239,9 +237,7 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return SkeletonLoaders.feedPostsSkeleton(count: 5);
   }
 
   Widget _buildErrorState() {
@@ -518,12 +514,7 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
   }
 
   Widget _buildLoadingIndicator() {
-    return const Padding(
-      padding: EdgeInsets.all(AppTheme.spacing16),
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return SkeletonLoaders.feedPostsSkeleton(count: 3);
   }
 
   String _getTimeAgo(DateTime dateTime) {

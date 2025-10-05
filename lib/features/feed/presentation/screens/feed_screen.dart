@@ -8,6 +8,7 @@ import '../../../market/presentation/providers/products_provider.dart';
 import 'comments_screen.dart';
 import 'bookmarks_screen.dart';
 import 'liked_posts_screen.dart';
+import '../../../../shared/widgets/skeleton_loaders.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -91,7 +92,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             final feedState = ref.watch(feedProvider);
             
             return feedState.isLoading && feedState.posts.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? SkeletonLoaders.feedPostsSkeleton(count: 5)
                 : CustomScrollView(
                     controller: _scrollController,
                     slivers: [
@@ -110,11 +111,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       
                       // Loading indicator for pagination
                       if (feedState.isLoading && feedState.posts.isNotEmpty)
-                        const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(AppTheme.spacing16),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
+                        SliverToBoxAdapter(
+                          child: SkeletonLoaders.feedPostsSkeleton(count: 3),
                         ),
                     ],
                   );
