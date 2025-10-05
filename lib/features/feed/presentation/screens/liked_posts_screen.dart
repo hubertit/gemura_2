@@ -440,12 +440,6 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Show post options (edit, delete, report)
-            },
-          ),
         ],
       ),
     );
