@@ -452,9 +452,22 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-        image: DecorationImage(
-          image: NetworkImage(post.imageUrls.first),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+        child: Image.network(
+          post.imageUrls.first,
           fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppTheme.borderColor,
+              child: const Icon(
+                Icons.image_not_supported,
+                color: AppTheme.textSecondaryColor,
+                size: 48,
+              ),
+            );
+          },
         ),
       ),
     );
