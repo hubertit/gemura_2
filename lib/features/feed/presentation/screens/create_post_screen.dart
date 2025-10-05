@@ -5,6 +5,7 @@ import 'dart:io';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/feed_service.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../providers/feed_provider.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
@@ -487,6 +488,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
       if (mounted) {
         if (response['code'] == 201) {
+          // Refresh feed to show the new post
+          ref.read(feedProvider.notifier).refreshFeed();
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Post published successfully!'),

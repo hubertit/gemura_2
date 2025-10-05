@@ -497,6 +497,9 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
 
       if (mounted) {
         if (response['code'] == 200) {
+          // Refresh feed to show the updated post
+          ref.read(feedProvider.notifier).refreshFeed();
+          
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Post updated successfully!'),

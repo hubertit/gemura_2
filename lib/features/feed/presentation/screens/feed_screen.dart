@@ -210,12 +210,29 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        backgroundColor: Colors.white,
+        title: Text(
+          'Delete Post',
+          style: AppTheme.titleMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete this post? This action cannot be undone.',
+          style: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -223,7 +240,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               _deletePost(post);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(
+              'Delete',
+              style: AppTheme.bodyMedium.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
