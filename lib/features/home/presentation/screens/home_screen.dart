@@ -3621,9 +3621,9 @@ class _AnimatedReferralIconState extends State<_AnimatedReferralIcon>
   void initState() {
     super.initState();
     
-    // Create animation controller with a longer duration for subtlety
+    // Create animation controller with faster duration for more dynamic effect
     _controller = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
     
@@ -3660,14 +3660,14 @@ class _AnimatedReferralIconState extends State<_AnimatedReferralIcon>
 
   void _startAnimation() {
     _controller.forward().then((_) {
-      _controller.reverse().then((_) {
-        // Wait 2 seconds before repeating
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            _startAnimation();
-          }
+        _controller.reverse().then((_) {
+          // Wait 1 second before repeating for faster cycles
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              _startAnimation();
+            }
+          });
         });
-      });
     });
   }
 
