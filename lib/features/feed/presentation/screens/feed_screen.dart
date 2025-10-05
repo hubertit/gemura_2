@@ -284,10 +284,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             ),
           ),
           const Spacer(),
-          const Icon(
-            Icons.bookmark_border,
-            color: AppTheme.textPrimaryColor,
-            size: 24,
+          GestureDetector(
+            onTap: () => ref.read(feedProvider.notifier).bookmarkPost(post.id),
+            child: Icon(
+              post.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: post.isBookmarked ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
+              size: 24,
+            ),
           ),
         ],
       ),

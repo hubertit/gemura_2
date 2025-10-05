@@ -183,6 +183,28 @@ class FeedNotifier extends StateNotifier<FeedState> {
     state = state.copyWith(posts: updatedPosts);
   }
 
+  Future<void> bookmarkPost(String postId) async {
+    try {
+      final response = await FeedService.toggleBookmark(postId: int.parse(postId));
+      
+      if (response['code'] == 200) {
+        final updatedPosts = state.posts.map((post) {
+          if (post.id == postId) {
+            return post.copyWith(
+              isBookmarked: response['data']['is_bookmarked'] ?? !post.isBookmarked,
+              bookmarksCount: response['data']['bookmarks_count'] ?? post.bookmarksCount,
+            );
+          }
+          return post;
+        }).toList();
+        
+        state = state.copyWith(posts: updatedPosts);
+      }
+    } catch (e) {
+      // Handle error silently or show snackbar
+    }
+  }
+
   /// Map API response data to Post model
   Post _mapApiPostToModel(Map<String, dynamic> postData) {
     return Post(
@@ -197,7 +219,9 @@ class FeedNotifier extends StateNotifier<FeedState> {
       likesCount: int.tryParse(postData['likes_count']?.toString() ?? '0') ?? 0,
       commentsCount: int.tryParse(postData['comments_count']?.toString() ?? '0') ?? 0,
       sharesCount: int.tryParse(postData['shares_count']?.toString() ?? '0') ?? 0,
+      bookmarksCount: int.tryParse(postData['bookmarks_count']?.toString() ?? '0') ?? 0,
       isLiked: postData['is_liked'] == true,
+      isBookmarked: postData['is_bookmarked'] == true,
       hashtags: List<String>.from(postData['hashtags'] ?? []),
       location: postData['location'],
       isVerified: postData['kyc_status'] == 'verified',
