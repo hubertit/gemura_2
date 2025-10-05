@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/feed_service.dart';
 import '../../domain/models/post.dart';
-import 'feed_screen.dart';
+import '../providers/feed_provider.dart';
+import 'comments_screen.dart';
 
 class BookmarksScreen extends ConsumerStatefulWidget {
   const BookmarksScreen({super.key});
@@ -255,11 +256,15 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
   }
 
   Widget _buildBookmarkCard(Post post) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radius12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        border: Border.all(
+          color: AppTheme.borderColor,
+          width: AppTheme.thinBorderWidth,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +378,7 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
       width: double.infinity,
       height: 200,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTheme.radius8),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         image: DecorationImage(
           image: NetworkImage(post.imageUrls.first),
           fit: BoxFit.cover,
