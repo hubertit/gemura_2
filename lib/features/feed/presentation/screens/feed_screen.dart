@@ -9,7 +9,10 @@ import 'comments_screen.dart';
 import 'bookmarks_screen.dart';
 import 'liked_posts_screen.dart';
 import 'create_post_screen.dart';
+import 'edit_post_screen.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/services/feed_service.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -171,6 +174,102 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
+  /// Get current user ID from auth provider
+  String _getCurrentUserId() {
+    final authState = ref.read(authProvider);
+    return authState.when(
+      data: (user) => user?.id ?? '',
+      loading: () => '',
+      error: (_, __) => '',
+    );
+  }
+
+  /// Handle post menu actions
+  void _handlePostMenuAction(String action, Post post) {
+    switch (action) {
+      case 'edit':
+        _navigateToEditPost(post);
+        break;
+      case 'delete':
+        _showDeleteConfirmation(post);
+        break;
+    }
+  }
+
+  /// Navigate to edit post screen
+  void _navigateToEditPost(Post post) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditPostScreen(post: post),
+      ),
+    );
+  }
+
+  /// Show delete confirmation dialog
+  void _showDeleteConfirmation(Post post) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deletePost(post);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Delete post
+  Future<void> _deletePost(Post post) async {
+    try {
+      // Call API
+      final response = await FeedService.deletePost(postId: int.parse(post.id));
+      
+      if (response['code'] == 200) {
+        // Refresh feed to remove deleted post
+        ref.read(feedProvider.notifier).refreshFeed();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Post deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${response['message'] ?? 'Failed to delete post'}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting post: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildPostHeader(Post post) {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -219,6 +318,37 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
             ),
           ),
+          // 3 dots menu for post owner
+          if (post.userId == _getCurrentUserId()) // Only show for post owner
+            PopupMenuButton<String>(
+              onSelected: (value) => _handlePostMenuAction(value, post),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 20),
+                      SizedBox(width: 8),
+                      Text('Edit Post'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 20, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete Post', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
+              child: const Icon(
+                Icons.more_vert,
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
         ],
       ),
     );
