@@ -900,6 +900,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           ),
         ),
         actions: [
+          _AnimatedReferralIcon(),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
@@ -908,7 +909,6 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
               );
             },
           ),
-          _AnimatedReferralIcon(),
           Consumer(
             builder: (context, ref, child) {
               final userInfo = ref.watch(userAccountsProvider);
