@@ -208,16 +208,31 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
                 ? _buildErrorState()
                 : _bookmarks.isEmpty
                     ? _buildEmptyState()
-                    : ListView.builder(
+                    : CustomScrollView(
                         controller: _scrollController,
-                        padding: const EdgeInsets.all(AppTheme.spacing16),
-                        itemCount: _bookmarks.length + (_isLoading ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _bookmarks.length) {
-                            return _buildLoadingIndicator();
-                          }
-                          return _buildBookmarkCard(_bookmarks[index]);
-                        },
+                        slivers: [
+                          // Posts Section
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                if (index < _bookmarks.length) {
+                                  return _buildBookmarkCard(_bookmarks[index]);
+                                }
+                                return null;
+                              },
+                              childCount: _bookmarks.length,
+                            ),
+                          ),
+                          
+                          // Loading indicator for pagination
+                          if (_isLoading && _bookmarks.isNotEmpty)
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.all(AppTheme.spacing16),
+                                child: Center(child: CircularProgressIndicator()),
+                              ),
+                            ),
+                        ],
                       ),
       ),
     );

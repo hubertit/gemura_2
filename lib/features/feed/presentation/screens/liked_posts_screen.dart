@@ -247,20 +247,31 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
                 ? _buildErrorState()
                 : _likedPosts.isEmpty
                     ? _buildEmptyState()
-                    : ListView.builder(
+                    : CustomScrollView(
                         controller: _scrollController,
-                        padding: const EdgeInsets.all(AppTheme.spacing16),
-                        itemCount: _likedPosts.length + (_hasMoreLikedPosts ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _likedPosts.length) {
-                            return const Padding(
-                              padding: EdgeInsets.all(AppTheme.spacing16),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          final post = _likedPosts[index];
-                          return _buildLikedPostCard(post);
-                        },
+                        slivers: [
+                          // Posts Section
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                if (index < _likedPosts.length) {
+                                  return _buildLikedPostCard(_likedPosts[index]);
+                                }
+                                return null;
+                              },
+                              childCount: _likedPosts.length,
+                            ),
+                          ),
+                          
+                          // Loading indicator for pagination
+                          if (_isLoading && _likedPosts.isNotEmpty)
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.all(AppTheme.spacing16),
+                                child: Center(child: CircularProgressIndicator()),
+                              ),
+                            ),
+                        ],
                       ),
       ),
     );
