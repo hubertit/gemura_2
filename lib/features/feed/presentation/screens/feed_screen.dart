@@ -8,6 +8,7 @@ import '../../../market/presentation/providers/products_provider.dart';
 import 'comments_screen.dart';
 import 'bookmarks_screen.dart';
 import 'liked_posts_screen.dart';
+import 'create_post_screen.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -117,6 +118,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     ],
                   );
           },
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CreatePostScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppTheme.primaryColor,
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
         ),
       ),
     );
