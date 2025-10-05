@@ -8,6 +8,7 @@ import '../../../market/presentation/providers/products_provider.dart';
 import 'comments_screen.dart';
 import 'bookmarks_screen.dart';
 import 'liked_posts_screen.dart';
+import '../../../admin/presentation/screens/auto_poster_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -76,11 +77,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              // TODO: Navigate to create post screen
+          GestureDetector(
+            onLongPress: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AutoPosterScreen(),
+                ),
+              );
             },
+            child: IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                // TODO: Navigate to create post screen
+              },
+            ),
           ),
         ],
       ),
