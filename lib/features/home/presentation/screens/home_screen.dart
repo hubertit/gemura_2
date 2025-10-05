@@ -908,16 +908,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.card_giftcard),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ReferralScreen(),
-                ),
-              );
-            },
-          ),
+          _AnimatedReferralIcon(),
           Consumer(
             builder: (context, ref, child) {
               final userInfo = ref.watch(userAccountsProvider);
@@ -3610,6 +3601,94 @@ class _TopUpSheetState extends State<_TopUpSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedReferralIcon extends StatefulWidget {
+  @override
+  _AnimatedReferralIconState createState() => _AnimatedReferralIconState();
+}
+
+class _AnimatedReferralIconState extends State<_AnimatedReferralIcon>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Create animation controller with a longer duration for subtlety
+    _controller = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    
+    // Create gentle rotation animation (subtle 15 degrees)
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.26, // ~15 degrees in radians
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Create gentle scale animation (subtle 1.1x scale)
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Start the animation and repeat it
+    _startAnimation();
+  }
+
+  void _startAnimation() {
+    _controller.forward().then((_) {
+      _controller.reverse().then((_) {
+        // Wait 2 seconds before repeating
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            _startAnimation();
+          }
+        });
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotationAnimation.value,
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: IconButton(
+              icon: const Icon(Icons.card_giftcard),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ReferralScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 } 
