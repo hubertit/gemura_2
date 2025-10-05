@@ -3615,6 +3615,7 @@ class _AnimatedReferralIconState extends State<_AnimatedReferralIcon>
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<Color?> _colorAnimation;
 
   @override
   void initState() {
@@ -3639,6 +3640,15 @@ class _AnimatedReferralIconState extends State<_AnimatedReferralIcon>
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Create gentle color animation (subtle color shift)
+    _colorAnimation = ColorTween(
+      begin: AppTheme.primaryColor,
+      end: AppTheme.primaryColor.withOpacity(0.7),
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
@@ -3677,7 +3687,10 @@ class _AnimatedReferralIconState extends State<_AnimatedReferralIcon>
           child: Transform.scale(
             scale: _scaleAnimation.value,
             child: IconButton(
-              icon: const Icon(Icons.card_giftcard),
+              icon: Icon(
+                Icons.card_giftcard,
+                color: _colorAnimation.value,
+              ),
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
