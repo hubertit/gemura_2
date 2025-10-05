@@ -7,6 +7,7 @@ import '../../../market/presentation/screens/user_profile_screen.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 import 'comments_screen.dart';
 import 'bookmarks_screen.dart';
+import 'liked_posts_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -68,7 +69,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           IconButton(
             icon: const Icon(Icons.favorite_border),
             onPressed: () {
-              // TODO: Navigate to activity/notifications
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const LikedPostsScreen(),
+                ),
+              );
             },
           ),
           IconButton(

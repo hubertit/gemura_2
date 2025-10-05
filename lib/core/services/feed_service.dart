@@ -104,6 +104,35 @@ class FeedService {
     }
   }
 
+  /// Get user's liked posts
+  static Future<Map<String, dynamic>> getLikedPosts({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      final response = await _dio.post(
+        '/feed/likes.php',
+        data: {
+          'token': token,
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+
+      return response.data;
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('Error getting liked posts: ${e.message}');
+      }
+      rethrow;
+    }
+  }
+
   /// Create a new post
   static Future<Map<String, dynamic>> createPost({
     required String content,
