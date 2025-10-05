@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/post.dart';
-import '../../../core/services/feed_service.dart';
+import '../../../../core/services/feed_service.dart';
 
 class FeedState {
   final List<Post> posts;

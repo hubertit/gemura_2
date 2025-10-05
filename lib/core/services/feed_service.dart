@@ -1,15 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
-import '../utils/secure_storage_service.dart';
+import 'secure_storage_service.dart';
 
 class FeedService {
   static final Dio _dio = AppConfig.dioInstance();
-  static final SecureStorageService _storage = SecureStorageService();
 
   /// Get authentication token
   static Future<String?> _getToken() async {
-    return await _storage.getToken();
+    return SecureStorageService.getAuthToken();
   }
 
   /// Get all feed posts
