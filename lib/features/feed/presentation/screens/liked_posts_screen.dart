@@ -580,20 +580,27 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
   }
 
   String _getTimeAgo(DateTime dateTime) {
-    final Duration diff = DateTime.now().difference(dateTime);
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
 
-    if (diff.inDays > 30) {
-      return '${(diff.inDays / 30).round()} months ago';
-    } else if (diff.inDays > 7) {
-      return '${(diff.inDays / 7).round()} weeks ago';
-    } else if (diff.inDays > 0) {
-      return '${diff.inDays} days ago';
-    } else if (diff.inHours > 0) {
-      return '${diff.inHours} hours ago';
-    } else if (diff.inMinutes > 0) {
-      return '${diff.inMinutes} minutes ago';
+    // Instagram-style time formatting
+    if (difference.inDays >= 365) {
+      final years = (difference.inDays / 365).floor();
+      return years == 1 ? '1y' : '${years}y';
+    } else if (difference.inDays >= 30) {
+      final months = (difference.inDays / 30).floor();
+      return months == 1 ? '1mo' : '${months}mo';
+    } else if (difference.inDays >= 7) {
+      final weeks = (difference.inDays / 7).floor();
+      return weeks == 1 ? '1w' : '${weeks}w';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m';
     } else {
-      return 'Just now';
+      return 'now';
     }
   }
 

@@ -437,7 +437,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
-    if (difference.inDays > 0) {
+    // Instagram-style time formatting
+    if (difference.inDays >= 365) {
+      final years = (difference.inDays / 365).floor();
+      return years == 1 ? '1y' : '${years}y';
+    } else if (difference.inDays >= 30) {
+      final months = (difference.inDays / 30).floor();
+      return months == 1 ? '1mo' : '${months}mo';
+    } else if (difference.inDays >= 7) {
+      final weeks = (difference.inDays / 7).floor();
+      return weeks == 1 ? '1w' : '${weeks}w';
+    } else if (difference.inDays > 0) {
       return '${difference.inDays}d';
     } else if (difference.inHours > 0) {
       return '${difference.inHours}h';
