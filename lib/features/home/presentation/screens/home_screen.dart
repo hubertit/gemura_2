@@ -46,6 +46,7 @@ import '../../../market/presentation/screens/user_profile_screen.dart';
 
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
+import '../../../referrals/presentation/screens/referral_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -904,6 +905,16 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SearchScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.card_giftcard),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ReferralScreen(),
+                ),
               );
             },
           ),
