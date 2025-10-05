@@ -101,14 +101,16 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
   }
 
   Future<void> _unlikePost(Post post) async {
+    // Optimistic update - remove from UI immediately
+    setState(() {
+      _likedPosts.removeWhere((p) => p.id == post.id);
+    });
+
+    // Call API in background
     try {
       final response = await FeedService.toggleLike(postId: int.parse(post.id));
 
       if (response['code'] == 200) {
-        setState(() {
-          _likedPosts.removeWhere((p) => p.id == post.id);
-        });
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -117,8 +119,18 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
             ),
           );
         }
+      } else {
+        // Revert optimistic update on API failure
+        setState(() {
+          _likedPosts.add(post);
+        });
       }
     } catch (e) {
+      // Revert optimistic update on error
+      setState(() {
+        _likedPosts.add(post);
+      });
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -131,16 +143,32 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
   }
 
   Future<void> _bookmarkPost(Post post) async {
+    // Optimistic update - change UI immediately
+    final isCurrentlyBookmarked = post.isBookmarked;
+    final currentBookmarksCount = post.bookmarksCount;
+    
+    setState(() {
+      final index = _likedPosts.indexWhere((p) => p.id == post.id);
+      if (index != -1) {
+        _likedPosts[index] = post.copyWith(
+          isBookmarked: !isCurrentlyBookmarked,
+          bookmarksCount: isCurrentlyBookmarked ? currentBookmarksCount - 1 : currentBookmarksCount + 1,
+        );
+      }
+    });
+
+    // Call API in background
     try {
       final response = await FeedService.toggleBookmark(postId: int.parse(post.id));
 
       if (response['code'] == 200) {
+        // Update with actual server response
         setState(() {
           final index = _likedPosts.indexWhere((p) => p.id == post.id);
           if (index != -1) {
             _likedPosts[index] = post.copyWith(
-              isBookmarked: response['data']['is_bookmarked'] ?? !post.isBookmarked,
-              bookmarksCount: response['data']['bookmarks_count'] ?? post.bookmarksCount,
+              isBookmarked: response['data']['is_bookmarked'] ?? !isCurrentlyBookmarked,
+              bookmarksCount: response['data']['bookmarks_count'] ?? (isCurrentlyBookmarked ? currentBookmarksCount - 1 : currentBookmarksCount + 1),
             );
           }
         });
@@ -157,8 +185,30 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
             ),
           );
         }
+      } else {
+        // Revert optimistic update on API failure
+        setState(() {
+          final index = _likedPosts.indexWhere((p) => p.id == post.id);
+          if (index != -1) {
+            _likedPosts[index] = post.copyWith(
+              isBookmarked: isCurrentlyBookmarked,
+              bookmarksCount: currentBookmarksCount,
+            );
+          }
+        });
       }
     } catch (e) {
+      // Revert optimistic update on error
+      setState(() {
+        final index = _likedPosts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _likedPosts[index] = post.copyWith(
+            isBookmarked: isCurrentlyBookmarked,
+            bookmarksCount: currentBookmarksCount,
+          );
+        }
+      });
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -290,12 +340,13 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
   Widget _buildLikedPostCard(Post post) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(
-          color: AppTheme.borderColor,
-          width: AppTheme.thinBorderWidth,
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.borderColor,
+            width: 0.5,
+          ),
         ),
       ),
       child: Column(
@@ -303,29 +354,23 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
         children: [
           // Post Header
           _buildPostHeader(post),
-
-          // Post Content
-          if (post.content != null && post.content!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing16,
-                vertical: AppTheme.spacing8,
-              ),
-              child: Text(
-                post.content!,
-                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimaryColor),
-              ),
-            ),
-
-          // Post Media
+          
+          // Post Image(s)
           if (post.imageUrls.isNotEmpty)
             _buildPostMedia(post),
-
+          
+          // Post Actions (Like, Comment, Share)
+          _buildPostActions(post),
+          
           // Post Stats
           _buildPostStats(post),
-
-          // Post Actions
-          _buildPostActions(post),
+          
+          // Post Caption
+          if (post.content != null && post.content!.isNotEmpty)
+            _buildPostCaption(post),
+          
+          // Time Posted
+          _buildTimePosted(post),
         ],
       ),
     );
@@ -483,6 +528,35 @@ class _LikedPostsScreenState extends ConsumerState<LikedPostsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPostCaption(Post post) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing8,
+      ),
+      child: Text(
+        post.content!,
+        style: AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimaryColor),
+      ),
+    );
+  }
+
+  Widget _buildTimePosted(Post post) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppTheme.spacing16,
+        right: AppTheme.spacing16,
+        bottom: AppTheme.spacing12,
+      ),
+      child: Text(
+        _getTimeAgo(post.createdAt),
+        style: AppTheme.bodySmall.copyWith(
+          color: AppTheme.textSecondaryColor,
+        ),
       ),
     );
   }

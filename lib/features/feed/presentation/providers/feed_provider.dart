@@ -140,24 +140,68 @@ class FeedNotifier extends StateNotifier<FeedState> {
   }
 
   Future<void> likePost(String postId) async {
+    // Optimistic update - change UI immediately
+    final currentPost = state.posts.firstWhere((post) => post.id == postId);
+    final isCurrentlyLiked = currentPost.isLiked;
+    final currentLikesCount = currentPost.likesCount;
+    
+    // Update UI immediately
+    final optimisticPosts = state.posts.map((post) {
+      if (post.id == postId) {
+        return post.copyWith(
+          isLiked: !isCurrentlyLiked,
+          likesCount: isCurrentlyLiked ? currentLikesCount - 1 : currentLikesCount + 1,
+        );
+      }
+      return post;
+    }).toList();
+    
+    state = state.copyWith(posts: optimisticPosts);
+    
+    // Call API in background
     try {
       final response = await FeedService.toggleLike(postId: int.parse(postId));
       
       if (response['code'] == 200) {
+        // Update with actual server response
         final updatedPosts = state.posts.map((post) {
           if (post.id == postId) {
             return post.copyWith(
-              isLiked: response['data']['is_liked'] ?? !post.isLiked,
-              likesCount: response['data']['likes_count'] ?? post.likesCount,
+              isLiked: response['data']['is_liked'] ?? !isCurrentlyLiked,
+              likesCount: response['data']['likes_count'] ?? (isCurrentlyLiked ? currentLikesCount - 1 : currentLikesCount + 1),
             );
           }
           return post;
         }).toList();
         
         state = state.copyWith(posts: updatedPosts);
+      } else {
+        // Revert optimistic update on API failure
+        final revertedPosts = state.posts.map((post) {
+          if (post.id == postId) {
+            return post.copyWith(
+              isLiked: isCurrentlyLiked,
+              likesCount: currentLikesCount,
+            );
+          }
+          return post;
+        }).toList();
+        
+        state = state.copyWith(posts: revertedPosts);
       }
     } catch (e) {
-      // Handle error silently or show snackbar
+      // Revert optimistic update on error
+      final revertedPosts = state.posts.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+            isLiked: isCurrentlyLiked,
+            likesCount: currentLikesCount,
+          );
+        }
+        return post;
+      }).toList();
+      
+      state = state.copyWith(posts: revertedPosts);
     }
   }
 
@@ -184,24 +228,68 @@ class FeedNotifier extends StateNotifier<FeedState> {
   }
 
   Future<void> bookmarkPost(String postId) async {
+    // Optimistic update - change UI immediately
+    final currentPost = state.posts.firstWhere((post) => post.id == postId);
+    final isCurrentlyBookmarked = currentPost.isBookmarked;
+    final currentBookmarksCount = currentPost.bookmarksCount;
+    
+    // Update UI immediately
+    final optimisticPosts = state.posts.map((post) {
+      if (post.id == postId) {
+        return post.copyWith(
+          isBookmarked: !isCurrentlyBookmarked,
+          bookmarksCount: isCurrentlyBookmarked ? currentBookmarksCount - 1 : currentBookmarksCount + 1,
+        );
+      }
+      return post;
+    }).toList();
+    
+    state = state.copyWith(posts: optimisticPosts);
+    
+    // Call API in background
     try {
       final response = await FeedService.toggleBookmark(postId: int.parse(postId));
       
       if (response['code'] == 200) {
+        // Update with actual server response
         final updatedPosts = state.posts.map((post) {
           if (post.id == postId) {
             return post.copyWith(
-              isBookmarked: response['data']['is_bookmarked'] ?? !post.isBookmarked,
-              bookmarksCount: response['data']['bookmarks_count'] ?? post.bookmarksCount,
+              isBookmarked: response['data']['is_bookmarked'] ?? !isCurrentlyBookmarked,
+              bookmarksCount: response['data']['bookmarks_count'] ?? (isCurrentlyBookmarked ? currentBookmarksCount - 1 : currentBookmarksCount + 1),
             );
           }
           return post;
         }).toList();
         
         state = state.copyWith(posts: updatedPosts);
+      } else {
+        // Revert optimistic update on API failure
+        final revertedPosts = state.posts.map((post) {
+          if (post.id == postId) {
+            return post.copyWith(
+              isBookmarked: isCurrentlyBookmarked,
+              bookmarksCount: currentBookmarksCount,
+            );
+          }
+          return post;
+        }).toList();
+        
+        state = state.copyWith(posts: revertedPosts);
       }
     } catch (e) {
-      // Handle error silently or show snackbar
+      // Revert optimistic update on error
+      final revertedPosts = state.posts.map((post) {
+        if (post.id == postId) {
+          return post.copyWith(
+            isBookmarked: isCurrentlyBookmarked,
+            bookmarksCount: currentBookmarksCount,
+          );
+        }
+        return post;
+      }).toList();
+      
+      state = state.copyWith(posts: revertedPosts);
     }
   }
 

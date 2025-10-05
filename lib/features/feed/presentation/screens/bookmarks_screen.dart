@@ -113,14 +113,16 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
   }
 
   Future<void> _removeBookmark(Post post) async {
+    // Optimistic update - remove from UI immediately
+    setState(() {
+      _bookmarks.removeWhere((p) => p.id == post.id);
+    });
+    
+    // Call API in background
     try {
       final response = await FeedService.toggleBookmark(postId: int.parse(post.id));
       
       if (response['code'] == 200) {
-        setState(() {
-          _bookmarks.removeWhere((p) => p.id == post.id);
-        });
-        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -129,16 +131,26 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
             ),
           );
         }
+      } else {
+        // Revert optimistic update on API failure
+        setState(() {
+          _bookmarks.add(post);
+        });
       }
     } catch (e) {
+      // Revert optimistic update on error
+      setState(() {
+        _bookmarks.add(post);
+      });
+      
       if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to remove bookmark: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove bookmark: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -285,12 +297,13 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
   Widget _buildBookmarkCard(Post post) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-        border: Border.all(
-          color: AppTheme.borderColor,
-          width: AppTheme.thinBorderWidth,
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.borderColor,
+            width: 0.5,
+          ),
         ),
       ),
       child: Column(
@@ -299,25 +312,22 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
           // Post Header
           _buildPostHeader(post),
           
-          // Post Content
-          if (post.content != null && post.content!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              child: Text(
-                post.content!,
-                style: AppTheme.bodyMedium,
-              ),
-            ),
-          
-          // Post Media
+          // Post Image(s)
           if (post.imageUrls.isNotEmpty)
             _buildPostMedia(post),
+          
+          // Post Actions (Like, Comment, Share)
+          _buildPostActions(post),
           
           // Post Stats
           _buildPostStats(post),
           
-          // Post Actions
-          _buildPostActions(post),
+          // Post Caption
+          if (post.content != null && post.content!.isNotEmpty)
+            _buildPostCaption(post),
+          
+          // Time Posted
+          _buildTimePosted(post),
         ],
       ),
     );
@@ -537,5 +547,52 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
       location: postData['location'],
       isVerified: postData['kyc_status'] == 'verified',
     );
+  }
+
+  Widget _buildPostCaption(Post post) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spacing16,
+        vertical: AppTheme.spacing8,
+      ),
+      child: Text(
+        post.content!,
+        style: AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimaryColor),
+      ),
+    );
+  }
+
+  Widget _buildTimePosted(Post post) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppTheme.spacing16,
+        right: AppTheme.spacing16,
+        bottom: AppTheme.spacing12,
+      ),
+      child: Text(
+        _getTimeAgo(post.createdAt),
+        style: AppTheme.bodySmall.copyWith(
+          color: AppTheme.textSecondaryColor,
+        ),
+      ),
+    );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final Duration diff = DateTime.now().difference(dateTime);
+
+    if (diff.inDays > 30) {
+      return '${(diff.inDays / 30).round()} months ago';
+    } else if (diff.inDays > 7) {
+      return '${(diff.inDays / 7).round()} weeks ago';
+    } else if (diff.inDays > 0) {
+      return '${diff.inDays} days ago';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours} hours ago';
+    } else if (diff.inMinutes > 0) {
+      return '${diff.inMinutes} minutes ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
