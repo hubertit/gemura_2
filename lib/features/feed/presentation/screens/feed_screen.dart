@@ -214,12 +214,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // TODO: Show post options
-            },
-          ),
         ],
       ),
     );
