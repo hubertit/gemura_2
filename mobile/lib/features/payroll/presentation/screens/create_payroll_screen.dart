@@ -186,12 +186,17 @@ class _CreatePayrollScreenState extends State<CreatePayrollScreen> {
                              500.0; // Default price
 
         // Calculate gross amount (sum of quantities * price per liter)
+        // Use price from collection if available, otherwise use supplier price
         double grossAmount = 0.0;
         int collectionCount = 0;
         for (final collection in supplierCollections) {
           final quantity = (collection['quantity'] as num?)?.toDouble() ?? 0.0;
           if (quantity > 0) {
-            grossAmount += quantity * pricePerLiter;
+            // Use price from collection if available, otherwise use supplier price
+            final collectionPrice = (collection['price_per_liter'] as num?)?.toDouble() ??
+                                   (collection['unit_price'] as num?)?.toDouble() ??
+                                   pricePerLiter;
+            grossAmount += quantity * collectionPrice;
             collectionCount++;
           }
         }
