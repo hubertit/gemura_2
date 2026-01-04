@@ -17,52 +17,44 @@ class ModuleCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: module.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
               ),
               child: Icon(
                 module.icon,
                 color: module.color,
-                size: 28,
+                size: 20,
               ),
             ),
-            const SizedBox(height: AppTheme.spacing12),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               module.name,
-              style: AppTheme.titleSmall.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              module.description,
               style: AppTheme.bodySmall.copyWith(
-                color: AppTheme.textSecondaryColor,
-                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ],

@@ -27,7 +27,7 @@ class ModulesService {
       // Collections Module
       AppModule(
         id: 'collections',
-        name: 'Collections',
+        name: 'Collect',
         description: 'Manage milk collections from suppliers',
         icon: Icons.local_shipping,
         color: AppTheme.primaryColor,
@@ -77,7 +77,7 @@ class ModulesService {
       // Sales Module
       AppModule(
         id: 'sales',
-        name: 'Sales',
+        name: 'Sell',
         description: 'Manage milk sales to customers',
         icon: Icons.point_of_sale,
         color: AppTheme.successColor,
@@ -188,7 +188,7 @@ class ModulesService {
       // Wallets Module
       AppModule(
         id: 'wallets',
-        name: 'Wallets',
+        name: 'Wallet',
         description: 'Manage your wallets and transactions',
         icon: Icons.account_balance_wallet,
         color: AppTheme.warningColor,
@@ -274,7 +274,7 @@ class ModulesService {
       // Account Access Module
       AppModule(
         id: 'account_access',
-        name: 'Account Access',
+        name: 'Access',
         description: 'Manage employee access and permissions',
         icon: Icons.people,
         color: AppTheme.primaryColor,

@@ -2156,10 +2156,10 @@ class _ModulesGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: AppTheme.spacing12,
-        mainAxisSpacing: AppTheme.spacing12,
-        childAspectRatio: 0.85,
+        crossAxisCount: 3,
+        crossAxisSpacing: AppTheme.spacing8,
+        mainAxisSpacing: AppTheme.spacing8,
+        childAspectRatio: 0.9,
       ),
       itemCount: primaryModules.length,
       itemBuilder: (context, index) {
