@@ -69,25 +69,71 @@ class _CreatePayrollScreenState extends State<CreatePayrollScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      // Simulate payroll calculation based on milk sales
-      // In real app, this would fetch from API
+      // Get actual suppliers and collections from local storage
       final suppliers = LocalDataService.getSuppliers();
       final collections = LocalDataService.getCollections();
       
+      if (suppliers.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(message: 'No suppliers found. Please add suppliers first.'),
+        );
+        setState(() => _isProcessing = false);
+        return;
+      }
+
+      if (collections.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(message: 'No collections found. Please record collections first.'),
+        );
+        setState(() => _isProcessing = false);
+        return;
+      }
+      
       // Filter collections within period
       final periodCollections = collections.where((c) {
-        final collectionDate = c['collection_at'] != null
-            ? DateTime.parse(c['collection_at'])
-            : DateTime.parse(c['created_at']);
-        return collectionDate.isAfter(_periodStart!.subtract(const Duration(days: 1))) &&
-               collectionDate.isBefore(_periodEnd!.add(const Duration(days: 1)));
+        try {
+          final collectionDate = c['collection_at'] != null
+              ? DateTime.parse(c['collection_at'])
+              : (c['created_at'] != null
+                  ? DateTime.parse(c['created_at'])
+                  : DateTime.now());
+          return collectionDate.isAfter(_periodStart!.subtract(const Duration(days: 1))) &&
+                 collectionDate.isBefore(_periodEnd!.add(const Duration(days: 1)));
+        } catch (e) {
+          return false;
+        }
       }).toList();
 
-      // Group by supplier and calculate payments
+      if (periodCollections.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(message: 'No collections found in the selected period.'),
+        );
+        setState(() => _isProcessing = false);
+        return;
+      }
+
+      // Group by supplier account code and calculate payments
       final Map<String, List<Map<String, dynamic>>> supplierCollections = {};
       for (final collection in periodCollections) {
-        final supplierId = collection['supplier_account_id'] ?? collection['supplier_id'] ?? 'unknown';
-        supplierCollections.putIfAbsent(supplierId, () => []).add(collection);
+        // Try multiple possible field names for supplier identifier
+        final supplierCode = collection['supplier_account_code'] ?? 
+                             collection['supplierAccountCode'] ??
+                             collection['supplier_code'] ??
+                             collection['supplier_account_id'] ??
+                             collection['supplier_id'];
+        
+        if (supplierCode != null) {
+          final code = supplierCode.toString();
+          supplierCollections.putIfAbsent(code, () => []).add(collection);
+        }
+      }
+
+      if (supplierCollections.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(message: 'No supplier information found in collections.'),
+        );
+        setState(() => _isProcessing = false);
+        return;
       }
 
       // Generate payslips
@@ -95,21 +141,63 @@ class _CreatePayrollScreenState extends State<CreatePayrollScreen> {
       double totalAmount = 0.0;
 
       for (final entry in supplierCollections.entries) {
-        final supplierId = entry.key;
+        final supplierCode = entry.key;
         final supplierCollections = entry.value;
         
-        // Find supplier name
-        final supplier = suppliers.firstWhere(
-          (s) => (s['id'] ?? s['account_id'] ?? '').toString() == supplierId,
-          orElse: () => {'name': 'Supplier $supplierId', 'code': supplierId},
-        );
+        // Find supplier by account code or id
+        Map<String, dynamic>? supplier;
+        try {
+          supplier = suppliers.firstWhere(
+            (s) {
+              final sCode = s['account_code'] ?? s['accountCode'] ?? s['code'] ?? s['id'] ?? '';
+              final sId = s['id'] ?? '';
+              return sCode.toString() == supplierCode || sId.toString() == supplierCode;
+            },
+            orElse: () => <String, dynamic>{},
+          );
+        } catch (e) {
+          supplier = null;
+        }
+
+        if (supplier == null || supplier.isEmpty) {
+          // Try to find by any matching field
+          supplier = suppliers.firstWhere(
+            (s) => (s['account_code'] ?? s['accountCode'] ?? s['code'] ?? s['id'] ?? '').toString().contains(supplierCode) ||
+                   (s['name'] ?? '').toString().contains(supplierCode),
+            orElse: () => <String, dynamic>{},
+          );
+        }
+
+        // Get supplier details with fallbacks
+        final supplierName = supplier?['name'] ?? 
+                            supplier?['account_name'] ??
+                            supplier?['accountName'] ??
+                            'Supplier $supplierCode';
+        final supplierDisplayCode = supplier?['code'] ?? 
+                                   supplier?['account_code'] ??
+                                   supplier?['accountCode'] ??
+                                   supplierCode;
+        
+        // Get price per liter from supplier or use default
+        final pricePerLiter = (supplier?['price_per_liter'] as num?)?.toDouble() ??
+                             (supplier?['pricePerLiter'] as num?)?.toDouble() ??
+                             (supplier?['selling_price_per_liter'] as num?)?.toDouble() ??
+                             (supplier?['sellingPricePerLiter'] as num?)?.toDouble() ??
+                             500.0; // Default price
 
         // Calculate gross amount (sum of quantities * price per liter)
         double grossAmount = 0.0;
+        int collectionCount = 0;
         for (final collection in supplierCollections) {
           final quantity = (collection['quantity'] as num?)?.toDouble() ?? 0.0;
-          final pricePerLiter = (supplier['price_per_liter'] as num?)?.toDouble() ?? 500.0;
-          grossAmount += quantity * pricePerLiter;
+          if (quantity > 0) {
+            grossAmount += quantity * pricePerLiter;
+            collectionCount++;
+          }
+        }
+
+        if (grossAmount == 0) {
+          continue; // Skip suppliers with no valid collections
         }
 
         // Calculate deductions (simplified - 5% fee)
