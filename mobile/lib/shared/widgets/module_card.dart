@@ -29,35 +29,20 @@ class ModuleCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: module.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-              ),
-              child: Icon(
-                module.icon,
-                color: module.color,
-                size: 20,
-              ),
+        child: Center(
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: module.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
             ),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(
-              module.name,
-              style: AppTheme.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Icon(
+              module.icon,
+              color: module.color,
+              size: 24,
             ),
-          ],
+          ),
         ),
       ),
     );
