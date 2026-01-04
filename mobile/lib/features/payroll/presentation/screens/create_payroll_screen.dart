@@ -486,11 +486,94 @@ class _CreatePayrollScreenState extends ConsumerState<CreatePayrollScreen> {
                 ),
               ),
               const SizedBox(height: AppTheme.spacing24),
-              // Generate Button
-              PrimaryButton(
-                label: 'Generate Payroll',
-                onPressed: _isProcessing ? null : _generatePayroll,
-                isLoading: _isProcessing,
+              // Generate Button or Add Supplier
+              Consumer(
+                builder: (context, ref, child) {
+                  final suppliersAsync = ref.watch(suppliersNotifierProvider);
+                  return suppliersAsync.when(
+                    data: (suppliers) {
+                      if (suppliers.isEmpty) {
+                        return Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(AppTheme.spacing16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.warningColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                                border: Border.all(color: AppTheme.warningColor.withOpacity(0.3)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: AppTheme.warningColor,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(height: AppTheme.spacing8),
+                                  Text(
+                                    'No suppliers found',
+                                    style: AppTheme.titleSmall.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppTheme.spacing4),
+                                  Text(
+                                    'Add suppliers to generate payroll',
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing16),
+                            PrimaryButton(
+                              label: 'Add Supplier',
+                              onPressed: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const AddSupplierScreen(),
+                                  ),
+                                );
+                                // Refresh suppliers after returning
+                                if (mounted) {
+                                  ref.invalidate(suppliersNotifierProvider);
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      }
+                      return PrimaryButton(
+                        label: _isProcessing ? 'Generating...' : 'Generate Payroll',
+                        onPressed: _isProcessing ? null : _generatePayroll,
+                        isLoading: _isProcessing,
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) => Column(
+                      children: [
+                        Text('Error loading suppliers: $error'),
+                        const SizedBox(height: AppTheme.spacing16),
+                        PrimaryButton(
+                          label: 'Add Supplier',
+                          onPressed: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const AddSupplierScreen(),
+                              ),
+                            );
+                            // Refresh suppliers after returning
+                            if (mounted) {
+                              ref.invalidate(suppliersNotifierProvider);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
           ),
