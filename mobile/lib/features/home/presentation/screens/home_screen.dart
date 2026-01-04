@@ -2149,8 +2149,8 @@ class _ModulesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final modules = ModulesService.getModules(context);
     
-    // Get primary modules (first 6) for home screen
-    final primaryModules = modules.take(6).toList();
+    // Get primary modules (first 9) for home screen - 3x3 grid
+    final primaryModules = modules.take(9).toList();
 
     return GridView.builder(
       shrinkWrap: true,
