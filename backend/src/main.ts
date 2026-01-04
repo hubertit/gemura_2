@@ -46,10 +46,9 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) {
-        if (process.env.NODE_ENV === 'development') {
-          return callback(null, true);
-        }
-        return callback(new Error('Origin is required in production'));
+        // Allow requests without an Origin header (e.g. curl, server-to-server, health checks).
+        // Browsers always send Origin for CORS requests; enforcing Origin here can break non-browser clients.
+        return callback(null, true);
       }
 
       if (allowedOrigins.includes(origin)) {
