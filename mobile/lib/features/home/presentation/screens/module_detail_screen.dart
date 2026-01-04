@@ -16,9 +16,10 @@ class ModuleDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(module.name),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
+        iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
+        titleTextStyle: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimaryColor),
       ),
       body: CustomScrollView(
         slivers: [
