@@ -98,8 +98,8 @@ All endpoints are prefixed with `/api`:
 ## API Documentation
 
 Swagger documentation available at:
-- Development: `http://localhost:3003/api/docs`
-- Production: `http://159.198.65.38:3003/api/docs`
+- Development: `http://localhost:3004/api/docs`
+- Production: `http://159.198.65.38:3004/api/docs`
 
 ## Database Schema
 

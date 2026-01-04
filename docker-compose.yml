@@ -10,13 +10,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: ${PORT:-3003}
+      PORT: ${PORT:-3004}
       # Connect to existing devslab Postgres on host (same as ResolveIt)
       DATABASE_URL: postgresql://${POSTGRES_USER:-devslab}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PORT:-5433}/${POSTGRES_DB:-gemura_db}?schema=public
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3004,http://localhost:3001}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3005,http://159.198.65.38:3005,http://localhost:3001}
     ports:
-      # Use port 3003 for backend API (3000-3002 are in use on server)
-      - "${BACKEND_PORT:-3003}:3003"
+      # Use port 3004 for backend API (3000-3003 are in use on server)
+      - "${BACKEND_PORT:-3004}:3004"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -31,6 +31,24 @@ services:
         npx prisma migrate deploy &&
         node dist/main.js
       "
+
+  # Frontend Web App (Next.js) - To be added
+  # frontend:
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile
+  #   container_name: gemura-frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     NODE_ENV: production
+  #     PORT: 3005
+  #     NEXT_PUBLIC_API_BASE: http://159.198.65.38:3004/api
+  #   ports:
+  #     - "${FRONTEND_PORT:-3005}:3005"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - gemura-network
 
 networks:
   gemura-network:
