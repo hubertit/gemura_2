@@ -18,7 +18,8 @@ async function bootstrap() {
         directives: {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
+          // Swagger UI bundles rely on eval in some builds; allow unsafe-eval so /api/docs doesn't render blank.
+          scriptSrc: ["'self'", "'unsafe-eval'"],
           imgSrc: ["'self'", "data:", "https:"],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
