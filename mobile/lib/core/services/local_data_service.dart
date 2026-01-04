@@ -238,6 +238,78 @@ class LocalDataService {
     await prefs.setString('local_posts', json.encode(posts));
   }
 
+  // ===== PAYROLL DATA =====
+  
+  /// Save a payroll run locally
+  static Future<void> savePayrollRun(Map<String, dynamic> payrollRun) async {
+    final runs = getPayrollRuns();
+    runs.add({
+      ...payrollRun,
+      'id': payrollRun['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      'created_at': payrollRun['created_at'] ?? DateTime.now().toIso8601String(),
+    });
+    await prefs.setString('local_payroll_runs', json.encode(runs));
+  }
+
+  /// Get all payroll runs
+  static List<Map<String, dynamic>> getPayrollRuns() {
+    final runsJson = prefs.getString('local_payroll_runs');
+    if (runsJson != null) {
+      final List<dynamic> decoded = json.decode(runsJson);
+      return decoded.cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  /// Update a payroll run
+  static Future<void> updatePayrollRun(String id, Map<String, dynamic> updates) async {
+    final runs = getPayrollRuns();
+    final index = runs.indexWhere((r) => r['id'] == id);
+    if (index != -1) {
+      runs[index] = {
+        ...runs[index],
+        ...updates,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      await prefs.setString('local_payroll_runs', json.encode(runs));
+    }
+  }
+
+  /// Delete a payroll run
+  static Future<void> deletePayrollRun(String id) async {
+    final runs = getPayrollRuns();
+    runs.removeWhere((r) => r['id'] == id);
+    await prefs.setString('local_payroll_runs', json.encode(runs));
+  }
+
+  /// Get payroll totals
+  static Map<String, dynamic> getPayrollTotals() {
+    final runs = getPayrollRuns();
+    double totalAmount = 0.0;
+    int totalRuns = runs.length;
+    int totalSuppliers = 0;
+    Set<String> supplierIds = {};
+
+    for (final run in runs) {
+      totalAmount += (run['total_amount'] as num?)?.toDouble() ?? 0.0;
+      final payslips = run['payslips'] as List<dynamic>? ?? [];
+      for (final payslip in payslips) {
+        final supplierId = payslip['supplier_account_id'] as String?;
+        if (supplierId != null) {
+          supplierIds.add(supplierId);
+        }
+      }
+    }
+
+    totalSuppliers = supplierIds.length;
+
+    return {
+      'total_runs': totalRuns,
+      'total_amount': totalAmount,
+      'total_suppliers': totalSuppliers,
+    };
+  }
+
   // ===== CLEAR ALL DATA =====
   
   /// Clear all local data (for testing/reset)
@@ -247,6 +319,7 @@ class LocalDataService {
     await prefs.remove('local_suppliers');
     await prefs.remove('local_customers');
     await prefs.remove('local_posts');
+    await prefs.remove('local_payroll_runs');
   }
 }
 

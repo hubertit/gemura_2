@@ -18,6 +18,9 @@ import '../../features/home/presentation/screens/settings_screen.dart';
 import '../../features/home/presentation/screens/help_support_screen.dart';
 import '../../features/home/presentation/screens/about_screen.dart';
 import '../../features/home/presentation/screens/edit_profile_screen.dart';
+import '../../features/payroll/presentation/screens/create_payroll_screen.dart';
+import '../../features/payroll/presentation/screens/payroll_history_screen.dart';
+import '../../features/payroll/presentation/screens/payroll_reports_screen.dart';
 import '../../core/theme/app_theme.dart';
 
 class ModulesService {
@@ -277,7 +280,7 @@ class ModulesService {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(), // Placeholder
+                  builder: (context) => const CreatePayrollScreen(),
                 ),
               );
             },
@@ -290,7 +293,7 @@ class ModulesService {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(), // Placeholder
+                  builder: (context) => const PayrollHistoryScreen(),
                 ),
               );
             },
@@ -303,7 +306,7 @@ class ModulesService {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(), // Placeholder
+                  builder: (context) => const PayrollReportsScreen(),
                 ),
               );
             },
