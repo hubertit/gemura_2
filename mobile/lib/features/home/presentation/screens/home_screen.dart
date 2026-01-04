@@ -47,6 +47,10 @@ import '../../../market/presentation/screens/user_profile_screen.dart';
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
 import '../../../referrals/presentation/screens/referral_screen.dart';
+import '../../../../core/services/modules_service.dart';
+import '../../../../shared/models/module.dart';
+import '../../../../shared/widgets/module_card.dart';
+import 'module_detail_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -1101,79 +1105,27 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                 );
               },
             ),
-            const SizedBox(height: AppTheme.spacing4), // further reduced space between wallet card and quick actions
-            // Quick actions
+            const SizedBox(height: AppTheme.spacing16),
+            // Modules Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                ),
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final localizationService = ref.watch(localizationServiceProvider);
-                    
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.local_shipping,
-                            label: localizationService.translate('collect'),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const CollectedMilkScreen(),
-                                ),
-                              );
-                            },
-                          ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final localizationService = ref.watch(localizationServiceProvider);
+                      return Text(
+                        localizationService.translate('modules') ?? 'Modules',
+                        style: AppTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.point_of_sale,
-                            label: localizationService.translate('sell'),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const SoldMilkScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.person_add,
-                            label: localizationService.translate('supplier'),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const SuppliersListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _QuickActionButton(
-                            icon: Icons.business,
-                            label: localizationService.translate('customer'),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const CustomersListScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing12),
+                  _ModulesGrid(),
+                ],
               ),
             ),
             const SizedBox(height: AppTheme.spacing8),
@@ -2189,32 +2141,47 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  const _QuickActionButton({required this.icon, required this.label, required this.onTap});
+/// Modules Grid Widget
+class _ModulesGrid extends StatelessWidget {
+  const _ModulesGrid();
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing4),
-        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppTheme.primaryColor, size: 28),
-            const SizedBox(height: AppTheme.spacing8),
-            Text(label, style: AppTheme.bodySmall.copyWith(color: AppTheme.primaryColor, fontWeight: FontWeight.w600, fontSize: 12)),
-          ],
-        ),
+    final modules = ModulesService.getModules(context);
+    
+    // Get primary modules (first 6) for home screen
+    final primaryModules = modules.take(6).toList();
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppTheme.spacing12,
+        mainAxisSpacing: AppTheme.spacing12,
+        childAspectRatio: 0.85,
       ),
+      itemCount: primaryModules.length,
+      itemBuilder: (context, index) {
+        final module = primaryModules[index];
+        return ModuleCard(
+          module: module,
+          onTap: () {
+            // If module has a direct route, use it
+            if (module.route != null) {
+              // Handle direct route navigation if needed
+              module.actions.first.onTap();
+            } else {
+              // Navigate to module detail screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ModuleDetailScreen(module: module),
+                ),
+              );
+            }
+          },
+        );
+      },
     );
   }
 }
