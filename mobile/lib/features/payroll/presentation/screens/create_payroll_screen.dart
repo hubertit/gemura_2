@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/local_data_service.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/models/supplier.dart';
 import '../../../suppliers/presentation/screens/add_supplier_screen.dart';
 import '../../../suppliers/presentation/providers/suppliers_provider.dart';
 import '../../domain/models/payroll_run.dart';
