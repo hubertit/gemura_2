@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "flutter.plugins.contactsservice.contactsservice.contacts_service-merged_res-10:/layout/notification_action_tombstone.xml",
+        "source": "flutter.plugins.contactsservice.contactsservice.contacts_service-core-1.6.0-3:/layout/notification_action_tombstone.xml"
+    },
+    {
+        "merged": "flutter.plugins.contactsservice.contactsservice.contacts_service-merged_res-10:/layout/notification_template_icon_group.xml",
+        "source": "flutter.plugins.contactsservice.contactsservice.contacts_service-core-1.6.0-3:/layout/notification_template_icon_group.xml"
+    },
+    {
+        "merged": "flutter.plugins.contactsservice.contactsservice.contacts_service-merged_res-10:/layout/notification_template_part_time.xml",
+        "source": "flutter.plugins.contactsservice.contactsservice.contacts_service-core-1.6.0-3:/layout/notification_template_part_time.xml"
+    },
+    {
+        "merged": "flutter.plugins.contactsservice.contactsservice.contacts_service-merged_res-10:/layout/notification_template_part_chronometer.xml",
+        "source": "flutter.plugins.contactsservice.contactsservice.contacts_service-core-1.6.0-3:/layout/notification_template_part_chronometer.xml"
+    },
+    {
+        "merged": "flutter.plugins.contactsservice.contactsservice.contacts_service-merged_res-10:/layout/notification_action.xml",
+        "source": "flutter.plugins.contactsservice.contactsservice.contacts_service-core-1.6.0-3:/layout/notification_action.xml"
+    },
+    {
+        "merged": "flutter.plugins.contactsservice.contactsservice.contacts_service-merged_res-10:/layout/custom_dialog.xml",
+        "source": "flutter.plugins.contactsservice.contactsservice.contacts_service-core-1.6.0-3:/layout/custom_dialog.xml"
+    }
+]

@@ -1,0 +1,20 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "PROCESSED_RES",
+    "kind": "Directory"
+  },
+  "applicationId": "io.devslab.gemura",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 4,
+      "versionName": "2.0.1",
+      "outputFile": "resources-release.ap_"
+    }
+  ],
+  "elementType": "File"
+}

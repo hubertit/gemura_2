@@ -1,0 +1,12 @@
+com.tekartik.sqflite-jetified-annotation-experimental-1.1.0-0 /Users/macbookpro/.gradle/caches/transforms-3/0414a374b490e24960b713c30d849f4c/transformed/jetified-annotation-experimental-1.1.0/res
+com.tekartik.sqflite-jetified-window-java-1.0.0-beta04-1 /Users/macbookpro/.gradle/caches/transforms-3/520580267e109225764775d53309df61/transformed/jetified-window-java-1.0.0-beta04/res
+com.tekartik.sqflite-jetified-window-1.0.0-beta04-2 /Users/macbookpro/.gradle/caches/transforms-3/bc8065036e98dbd144d6cb34962af013/transformed/jetified-window-1.0.0-beta04/res
+com.tekartik.sqflite-core-1.6.0-3 /Users/macbookpro/.gradle/caches/transforms-3/e9aea77c60eb75ee517b07b64f2b1317/transformed/core-1.6.0/res
+com.tekartik.sqflite-main-4 /Users/macbookpro/.pub-cache/hosted/pub.dev/sqflite-2.3.3+1/android/src/main/res
+com.tekartik.sqflite-release-5 /Users/macbookpro/.pub-cache/hosted/pub.dev/sqflite-2.3.3+1/android/src/release/res
+com.tekartik.sqflite-pngs-6 /Users/macbookpro/projects/flutter/gemura2/build/sqflite/generated/res/pngs/release
+com.tekartik.sqflite-resValues-7 /Users/macbookpro/projects/flutter/gemura2/build/sqflite/generated/res/resValues/release
+com.tekartik.sqflite-rs-8 /Users/macbookpro/projects/flutter/gemura2/build/sqflite/generated/res/rs/release
+com.tekartik.sqflite-mergeReleaseResources-9 /Users/macbookpro/projects/flutter/gemura2/build/sqflite/intermediates/incremental/release/mergeReleaseResources/merged.dir
+com.tekartik.sqflite-mergeReleaseResources-10 /Users/macbookpro/projects/flutter/gemura2/build/sqflite/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+com.tekartik.sqflite-merged_res-11 /Users/macbookpro/projects/flutter/gemura2/build/sqflite/intermediates/merged_res/release

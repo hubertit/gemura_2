@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="/Users/macbookpro/projects/flutter/gemura2/android/app"
+    name=":app"
+    type="APP"
+    maven="android:app:"
+    gradle="7.4.2"
+    buildFolder="/Users/macbookpro/projects/flutter/gemura2/build/app"
+    bootClassPath="/Users/macbookpro/Library/Android/sdk/platforms/android-34/android.jar:/Users/macbookpro/Library/Android/sdk/build-tools/30.0.3/core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

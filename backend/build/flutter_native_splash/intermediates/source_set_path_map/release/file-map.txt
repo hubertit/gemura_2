@@ -1,0 +1,12 @@
+net.jonhanson.flutter_native_splash-jetified-annotation-experimental-1.1.0-0 /Users/macbookpro/.gradle/caches/transforms-3/0414a374b490e24960b713c30d849f4c/transformed/jetified-annotation-experimental-1.1.0/res
+net.jonhanson.flutter_native_splash-jetified-window-java-1.0.0-beta04-1 /Users/macbookpro/.gradle/caches/transforms-3/520580267e109225764775d53309df61/transformed/jetified-window-java-1.0.0-beta04/res
+net.jonhanson.flutter_native_splash-jetified-window-1.0.0-beta04-2 /Users/macbookpro/.gradle/caches/transforms-3/bc8065036e98dbd144d6cb34962af013/transformed/jetified-window-1.0.0-beta04/res
+net.jonhanson.flutter_native_splash-core-1.6.0-3 /Users/macbookpro/.gradle/caches/transforms-3/e9aea77c60eb75ee517b07b64f2b1317/transformed/core-1.6.0/res
+net.jonhanson.flutter_native_splash-main-4 /Users/macbookpro/.pub-cache/hosted/pub.dev/flutter_native_splash-2.4.1/android/src/main/res
+net.jonhanson.flutter_native_splash-release-5 /Users/macbookpro/.pub-cache/hosted/pub.dev/flutter_native_splash-2.4.1/android/src/release/res
+net.jonhanson.flutter_native_splash-pngs-6 /Users/macbookpro/projects/flutter/gemura2/build/flutter_native_splash/generated/res/pngs/release
+net.jonhanson.flutter_native_splash-resValues-7 /Users/macbookpro/projects/flutter/gemura2/build/flutter_native_splash/generated/res/resValues/release
+net.jonhanson.flutter_native_splash-rs-8 /Users/macbookpro/projects/flutter/gemura2/build/flutter_native_splash/generated/res/rs/release
+net.jonhanson.flutter_native_splash-mergeReleaseResources-9 /Users/macbookpro/projects/flutter/gemura2/build/flutter_native_splash/intermediates/incremental/release/mergeReleaseResources/merged.dir
+net.jonhanson.flutter_native_splash-mergeReleaseResources-10 /Users/macbookpro/projects/flutter/gemura2/build/flutter_native_splash/intermediates/incremental/release/mergeReleaseResources/stripped.dir
+net.jonhanson.flutter_native_splash-merged_res-11 /Users/macbookpro/projects/flutter/gemura2/build/flutter_native_splash/intermediates/merged_res/release

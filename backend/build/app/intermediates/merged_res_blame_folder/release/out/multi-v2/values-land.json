@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "io.devslab.gemura.app-mergeReleaseResources-32:/values-land/values-land.xml",
+            "map": [
+                {
+                    "source": "/Users/macbookpro/.gradle/caches/transforms-3/e6002bdbdcb4994883cf7f5717d2cb6e/transformed/appcompat-1.3.0/res/values-land/values-land.xml",
+                    "from": {
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,125,196",
+                        "endColumns": "69,70,67",
+                        "endOffsets": "120,191,259"
+                    }
+                }
+            ]
+        }
+    ]
+}
