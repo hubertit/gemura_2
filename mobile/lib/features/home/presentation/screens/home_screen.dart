@@ -2159,7 +2159,7 @@ class _ModulesGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: AppTheme.spacing8,
         mainAxisSpacing: AppTheme.spacing8,
-        childAspectRatio: 0.85,
+        childAspectRatio: 1.0,
       ),
       itemCount: primaryModules.length,
       itemBuilder: (context, index) {

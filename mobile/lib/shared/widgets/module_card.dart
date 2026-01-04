@@ -17,7 +17,7 @@ class ModuleCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing12),
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8, horizontal: AppTheme.spacing8),
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
@@ -34,8 +34,8 @@ class ModuleCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: module.color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
@@ -43,18 +43,18 @@ class ModuleCard extends StatelessWidget {
               child: Icon(
                 module.icon,
                 color: module.color,
-                size: 22,
+                size: 18,
               ),
             ),
-            const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: AppTheme.spacing4),
             Text(
               module.name,
               style: AppTheme.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 11,
+                fontSize: 10,
               ),
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ],
