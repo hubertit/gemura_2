@@ -15,6 +15,9 @@ void main() async {
   // Initialize secure storage
   await SecureStorageService.initialize();
   
+  // Initialize local data service
+  await LocalDataService.initialize();
+  
   runApp(const ProviderScope(child: MyApp()));
 }
 
