@@ -1109,24 +1109,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
             // Modules Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final localizationService = ref.watch(localizationServiceProvider);
-                      return Text(
-                        localizationService.translate('modules') ?? 'Modules',
-                        style: AppTheme.titleMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppTheme.spacing12),
-                  _ModulesGrid(),
-                ],
-              ),
+              child: _ModulesGrid(),
             ),
             const SizedBox(height: AppTheme.spacing8),
             // Milk Business Metrics
