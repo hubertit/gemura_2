@@ -10,13 +10,13 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: ${PORT:-3100}
+      PORT: ${PORT:-3002}
       # Connect to existing devslab Postgres on host (same as ResolveIt)
       DATABASE_URL: postgresql://${POSTGRES_USER:-devslab}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PORT:-5433}/${POSTGRES_DB:-gemura_db}?schema=public
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3101,http://localhost:3001}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3003,http://localhost:3001}
     ports:
-      # Use port 3100 for backend API (different from ResolveIt's 3000)
-      - "${BACKEND_PORT:-3100}:3100"
+      # Use port 3002 for backend API (ResolveIt uses 3000-3001)
+      - "${BACKEND_PORT:-3002}:3002"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

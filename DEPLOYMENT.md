@@ -77,14 +77,22 @@ docker-compose exec backend npx prisma migrate dev --name migration_name
 
 ## Port Configuration
 
-- **Backend API**: `http://localhost:3100`
-- **API Docs (Swagger)**: `http://localhost:3100/api/docs`
+- **Backend API**: `http://localhost:3002`
+- **API Docs (Swagger)**: `http://localhost:3002/api/docs`
+- **Frontend (future)**: `http://localhost:3003`
 - **PostgreSQL**: `localhost:5433` (shared with ResolveIt)
+
+**Port Allocation:**
+- `3000`: ResolveIt Backend
+- `3001`: ResolveIt Frontend
+- `3002`: Gemura Backend API
+- `3003`: Gemura Frontend (future)
+- `3004-3010`: Reserved for Gemura services
 
 ## Health Check
 
 ```bash
-curl http://localhost:3100/health
+curl http://localhost:3002/health
 ```
 
 ## API Endpoints
@@ -115,11 +123,12 @@ If the backend can't connect to Postgres:
 
 ### Port Conflicts
 
-If port 3100 is already in use:
+If port 3002 is already in use:
 
-1. Change `BACKEND_PORT` in `.env`
+1. Change `BACKEND_PORT` in `.env` (use 3004-3010 range)
 2. Update `docker-compose.yml` port mapping
-3. Restart: `docker-compose up -d`
+3. Update `PORT` environment variable in docker-compose.yml
+4. Restart: `docker-compose up -d`
 
 ### Migration Errors
 

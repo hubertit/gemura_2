@@ -78,7 +78,7 @@ async function bootstrap() {
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, config);
     swagger_1.SwaggerModule.setup('api/docs', app, document);
-    const port = process.env.PORT || 3100;
+    const port = process.env.PORT || 3002;
     await app.listen(port);
     console.log(`🚀 Gemura API running on http://localhost:${port}`);
     console.log(`📚 API Docs: http://localhost:${port}/api/docs`);

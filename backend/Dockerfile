@@ -46,11 +46,11 @@ RUN chown -R nestjs:nodejs /app
 
 USER nestjs
 
-EXPOSE 3100
+EXPOSE 3002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3100/api', (r) => {process.exit(r.statusCode === 200 || r.statusCode === 404 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:3002/api', (r) => {process.exit(r.statusCode === 200 || r.statusCode === 404 ? 0 : 1)})"
 
 CMD ["node", "dist/main.js"]
 

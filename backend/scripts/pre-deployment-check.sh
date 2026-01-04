@@ -84,7 +84,7 @@ fi
 echo "=========================================="
 echo "Pre-Deployment Checklist:"
 echo "=========================================="
-echo "[ ] Ports 3100 and 3101 are available"
+echo "[ ] Ports 3002-3010 are available (3002 for backend, 3003 for frontend)"
 echo "[ ] Database connection works"
 echo "[ ] Database 'gemura_db' exists (or can be created)"
 echo "[ ] Docker and Docker Compose are installed"

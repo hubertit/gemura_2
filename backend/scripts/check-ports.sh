@@ -52,11 +52,18 @@ check_port() {
     fi
 }
 
-# Check Gemura ports
-echo "Checking Gemura Backend Ports:"
-echo "----------------------------"
-check_port 3100 "Gemura Backend API"
-check_port 3101 "Gemura Frontend (future)"
+# Check Gemura ports (3002-3010 range)
+echo "Checking Gemura Ports (3002-3010):"
+echo "-----------------------------------"
+check_port 3002 "Gemura Backend API"
+check_port 3003 "Gemura Frontend (future)"
+check_port 3004 "Gemura Service (reserved)"
+check_port 3005 "Gemura Service (reserved)"
+check_port 3006 "Gemura Service (reserved)"
+check_port 3007 "Gemura Service (reserved)"
+check_port 3008 "Gemura Service (reserved)"
+check_port 3009 "Gemura Service (reserved)"
+check_port 3010 "Gemura Service (reserved)"
 echo ""
 
 # Check ResolveIt ports (should be in use)
@@ -98,8 +105,16 @@ echo ""
 echo "=========================================="
 echo "Summary:"
 echo "=========================================="
-echo "If port 3100 is available, Gemura backend can be deployed."
-echo "If port 3101 is available, Gemura frontend can be deployed."
+echo "If port 3002 is available, Gemura backend can be deployed."
+echo "If port 3003 is available, Gemura frontend can be deployed."
+echo "Ports 3004-3010 are reserved for future services."
+echo ""
+echo "Port allocation:"
+echo "  - 3000: ResolveIt Backend"
+echo "  - 3001: ResolveIt Frontend"
+echo "  - 3002: Gemura Backend API"
+echo "  - 3003: Gemura Frontend (future)"
+echo "  - 3004-3010: Reserved for Gemura services"
 echo ""
 echo "To use different ports, update:"
 echo "  - docker-compose.yml (BACKEND_PORT, FRONTEND_PORT)"
