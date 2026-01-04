@@ -3,6 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { AccountsModule } from './modules/accounts/accounts.module';
+import { SuppliersModule } from './modules/suppliers/suppliers.module';
+import { CollectionsModule } from './modules/collections/collections.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -19,8 +22,10 @@ import { AppController } from './app.controller';
     ]),
     PrismaModule,
     AuthModule,
+    AccountsModule,
+    SuppliersModule,
+    CollectionsModule,
     // TODO: Add modules as they are implemented
-    // AccountsModule,
     // SuppliersModule,
     // CollectionsModule,
     // SalesModule,
