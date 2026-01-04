@@ -72,49 +72,23 @@ class ModulesService {
             },
           ),
           ModuleAction(
-            id: 'add_supplier',
-            name: 'Add Supplier',
-            description: 'Add a new supplier',
-            icon: Icons.person_add,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SuppliersListScreen(),
-                ),
-              );
-            },
-          ),
-          ModuleAction(
             id: 'view_suppliers',
-            name: 'View Suppliers',
+            name: 'Suppliers',
             description: 'View all suppliers',
-            icon: Icons.list,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SuppliersListScreen(),
-                ),
-              );
-            },
-          ),
-          ModuleAction(
-            id: 'add_customer',
-            name: 'Add Customer',
-            description: 'Add a new customer',
             icon: Icons.person_add,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const AddCustomerScreen(),
+                  builder: (context) => const SuppliersListScreen(),
                 ),
               );
             },
           ),
           ModuleAction(
             id: 'view_customers',
-            name: 'View Customers',
+            name: 'Customers',
             description: 'View all customers',
-            icon: Icons.list,
+            icon: Icons.business,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
