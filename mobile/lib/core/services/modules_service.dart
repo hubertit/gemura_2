@@ -24,10 +24,10 @@ class ModulesService {
   /// Get all available modules
   static List<AppModule> getModules(BuildContext context) {
     return [
-      // Milk Collection Module
+      // Milk Collection Module (Collections)
       AppModule(
         id: 'milk_collection',
-        name: 'Milk Collection',
+        name: 'Collections',
         description: 'Record and manage milk collections from suppliers',
         icon: Icons.local_shipping,
         color: AppTheme.primaryColor,

@@ -2132,8 +2132,12 @@ class _ModulesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final modules = ModulesService.getModules(context);
     
-    // Get primary modules (first 9) for home screen - 3x3 grid
-    final primaryModules = modules.take(9).toList();
+    // Get quick action modules: Collections, Accounting, Payroll
+    final quickActionModules = modules.where((module) => 
+      module.id == 'milk_collection' || 
+      module.id == 'accounting' || 
+      module.id == 'payroll'
+    ).toList();
 
     return GridView.builder(
       shrinkWrap: true,
@@ -2144,9 +2148,9 @@ class _ModulesGrid extends StatelessWidget {
         mainAxisSpacing: AppTheme.spacing8,
         childAspectRatio: 1.3,
       ),
-      itemCount: primaryModules.length,
+      itemCount: quickActionModules.length,
       itemBuilder: (context, index) {
-        final module = primaryModules[index];
+        final module = quickActionModules[index];
         return ModuleCard(
           module: module,
           onTap: () {
