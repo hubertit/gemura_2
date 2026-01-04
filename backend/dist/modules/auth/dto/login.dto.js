@@ -17,20 +17,34 @@ class LoginDto {
 exports.LoginDto = LoginDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Email or phone number',
-        example: 'user@example.com or 250788123456',
+        description: 'User identifier - can be email address or phone number',
+        example: 'user@example.com',
+        examples: {
+            email: {
+                value: 'user@example.com',
+                description: 'Login with email address',
+            },
+            phone: {
+                value: '250788123456',
+                description: 'Login with phone number (Rwandan format)',
+            },
+        },
+        required: true,
     }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Identifier is required' }),
+    (0, class_validator_1.IsString)({ message: 'Identifier must be a string' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "identifier", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'User password',
-        example: 'password123',
+        example: 'SecurePassword123!',
+        minLength: 6,
+        required: true,
     }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Password is required' }),
+    (0, class_validator_1.IsString)({ message: 'Password must be a string' }),
+    (0, class_validator_1.MinLength)(6, { message: 'Password must be at least 6 characters' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
 //# sourceMappingURL=login.dto.js.map

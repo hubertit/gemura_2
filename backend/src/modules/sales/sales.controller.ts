@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Body, UseGuards, Query, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
@@ -16,26 +16,187 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post('sales')
-  @ApiOperation({ summary: 'Get sales list with filters' })
-  @ApiResponse({ status: 200, description: 'Sales fetched successfully' })
+  @ApiOperation({
+    summary: 'Get sales list with filters',
+    description: 'Retrieve sales/milk collections for the authenticated user\'s default account. Supports filtering by customer, status, date range, quantity, and price.',
+  })
+  @ApiBody({
+    type: GetSalesDto,
+    description: 'Optional filters for sales query',
+    examples: {
+      allSales: {
+        summary: 'Get all sales',
+        value: {
+          filters: {},
+        },
+      },
+      filteredSales: {
+        summary: 'Get filtered sales',
+        value: {
+          filters: {
+            status: 'completed',
+            date_from: '2025-01-01',
+            date_to: '2025-01-31',
+            quantity_min: 50,
+            price_min: 350,
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sales fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Sales fetched successfully.',
+      data: [
+        {
+          id: 'sale-uuid',
+          quantity: 120.5,
+          unit_price: 390.0,
+          total_amount: 46995.0,
+          status: 'completed',
+          sale_at: '2025-01-04T10:00:00Z',
+          supplier_account: {
+            code: 'A_ABC123',
+            name: 'Supplier Name',
+            type: 'tenant',
+            status: 'active',
+          },
+          customer_account: {
+            code: 'A_XYZ789',
+            name: 'Customer Name',
+            type: 'tenant',
+            status: 'active',
+          },
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+  })
+  @ApiBadRequestResponse({
+    description: 'No default account found',
+  })
   async getSales(@CurrentUser() user: User, @Body() getSalesDto: GetSalesDto) {
     return this.salesService.getSales(user, getSalesDto.filters);
   }
 
   @Put('update')
-  @ApiOperation({ summary: 'Update a sale' })
-  @ApiResponse({ status: 200, description: 'Sale updated successfully' })
-  @ApiResponse({ status: 404, description: 'Sale not found' })
+  @ApiOperation({
+    summary: 'Update a sale',
+    description: 'Update sale details including quantity, status, customer, notes, or date. Only sales belonging to the user\'s default account can be updated.',
+  })
+  @ApiBody({
+    type: UpdateSaleDto,
+    description: 'Sale update data',
+    examples: {
+      updateStatus: {
+        summary: 'Update sale status',
+        value: {
+          sale_id: 'sale-uuid',
+          status: 'completed',
+        },
+      },
+      updateQuantity: {
+        summary: 'Update quantity and notes',
+        value: {
+          sale_id: 'sale-uuid',
+          quantity: 150.0,
+          notes: 'Updated quantity after verification',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sale updated successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Sale updated successfully.',
+      data: {
+        id: 'sale-uuid',
+        quantity: 150.0,
+        unit_price: 390.0,
+        status: 'completed',
+        sale_at: '2025-01-04T10:00:00Z',
+        notes: 'Updated quantity',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - no fields to update or missing sale_id',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No fields to update.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+  })
+  @ApiNotFoundResponse({
+    description: 'Sale not found or not owned by user',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Sale not found or not owned by this supplier.',
+    },
+  })
   async updateSale(@CurrentUser() user: User, @Body() updateDto: UpdateSaleDto) {
     return this.salesService.updateSale(user, updateDto.sale_id, updateDto);
   }
 
   @Post('cancel')
-  @ApiOperation({ summary: 'Cancel a sale' })
-  @ApiResponse({ status: 200, description: 'Sale cancelled successfully' })
-  @ApiResponse({ status: 404, description: 'Sale not found' })
+  @ApiOperation({
+    summary: 'Cancel a sale',
+    description: 'Cancel a sale by setting its status to "cancelled". Only sales belonging to the user\'s default account can be cancelled.',
+  })
+  @ApiBody({
+    type: CancelSaleDto,
+    description: 'Sale ID to cancel',
+    examples: {
+      cancelSale: {
+        summary: 'Cancel sale',
+        value: {
+          sale_id: 'sale-uuid',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sale cancelled successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Sale cancelled successfully.',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - missing sale_id',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Missing token or sale_id.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+  })
+  @ApiNotFoundResponse({
+    description: 'Sale not found or not authorized',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Sale not found or not authorized.',
+    },
+  })
   async cancelSale(@CurrentUser() user: User, @Body() cancelDto: CancelSaleDto) {
     return this.salesService.cancelSale(user, cancelDto);
   }
 }
-

@@ -33,8 +33,47 @@ let ProfileController = class ProfileController {
 exports.ProfileController = ProfileController;
 __decorate([
     (0, common_1.Get)('get'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user profile' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Profile retrieved successfully' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get user profile',
+        description: 'Retrieve the authenticated user\'s profile information including personal details, accounts, and profile completion percentage.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Profile retrieved successfully',
+        example: {
+            code: 200,
+            status: 'success',
+            message: 'Profile retrieved successfully',
+            data: {
+                user: {
+                    id: 'uuid-here',
+                    name: 'John Doe',
+                    email: 'user@example.com',
+                    phone: '250788123456',
+                    account_type: 'mcc',
+                    status: 'active',
+                    token: 'auth-token-here',
+                },
+                account: {
+                    id: 'account-uuid',
+                    code: 'ACC001',
+                    name: 'Main Account',
+                    type: 'tenant',
+                },
+                accounts: [],
+                total_accounts: 1,
+                profile_completion: 75,
+            },
+        },
+    }),
+    (0, swagger_1.ApiUnauthorizedResponse)({
+        description: 'Invalid or missing authentication token',
+        example: {
+            code: 403,
+            status: 'error',
+            message: 'Unauthorized. Invalid token.',
+        },
+    }),
     __param(0, (0, user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -42,8 +81,77 @@ __decorate([
 ], ProfileController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Put)('update'),
-    (0, swagger_1.ApiOperation)({ summary: 'Update user profile' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Profile updated successfully' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update user profile',
+        description: 'Update user profile information including personal details and KYC information. Uploading KYC photos automatically sets KYC status to pending.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: update_profile_dto_1.UpdateProfileDto,
+        description: 'Profile update data (all fields optional except name and phone)',
+        examples: {
+            basicUpdate: {
+                summary: 'Update basic information',
+                value: {
+                    name: 'John Doe Updated',
+                    phone: '250788123456',
+                    email: 'newemail@example.com',
+                },
+            },
+            kycUpdate: {
+                summary: 'Update with KYC information',
+                value: {
+                    name: 'John Doe',
+                    phone: '250788123456',
+                    province: 'Kigali',
+                    district: 'Nyarugenge',
+                    sector: 'Nyamirambo',
+                    id_number: '1199887766554433',
+                    id_front_photo_url: 'https://example.com/id-front.jpg',
+                    id_back_photo_url: 'https://example.com/id-back.jpg',
+                    selfie_photo_url: 'https://example.com/selfie.jpg',
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Profile updated successfully',
+        example: {
+            code: 200,
+            status: 'success',
+            message: 'Profile retrieved successfully',
+            data: {
+                user: {
+                    id: 'uuid-here',
+                    name: 'John Doe Updated',
+                    email: 'newemail@example.com',
+                    phone: '250788123456',
+                    account_type: 'mcc',
+                    status: 'active',
+                    token: 'auth-token-here',
+                },
+                accounts: [],
+                total_accounts: 1,
+                profile_completion: 85,
+            },
+        },
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Invalid request - missing required fields',
+        example: {
+            code: 400,
+            status: 'error',
+            message: 'Name and phone are required.',
+        },
+    }),
+    (0, swagger_1.ApiUnauthorizedResponse)({
+        description: 'Invalid or missing authentication token',
+        example: {
+            code: 403,
+            status: 'error',
+            message: 'Unauthorized. Invalid token.',
+        },
+    }),
     __param(0, (0, user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

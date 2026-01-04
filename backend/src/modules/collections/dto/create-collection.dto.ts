@@ -2,29 +2,51 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateCollectionDto {
-  @ApiProperty({ description: 'Supplier account code', example: 'A_ABC123' })
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({
+    description: 'Supplier account code (from supplier creation)',
+    example: 'A_ABC123',
+    required: true,
+  })
+  @IsNotEmpty({ message: 'Supplier account code is required' })
+  @IsString({ message: 'Supplier account code must be a string' })
   supplier_account_code: string;
 
-  @ApiProperty({ description: 'Quantity in liters', example: 120.5 })
-  @IsNotEmpty()
-  @IsNumber()
+  @ApiProperty({
+    description: 'Quantity of milk collected in liters',
+    example: 120.5,
+    minimum: 0.01,
+    required: true,
+  })
+  @IsNotEmpty({ message: 'Quantity is required' })
+  @IsNumber({}, { message: 'Quantity must be a number' })
   quantity: number;
 
-  @ApiProperty({ description: 'Collection status', example: 'pending' })
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({
+    description: 'Collection status',
+    example: 'pending',
+    enum: ['pending', 'completed', 'cancelled'],
+    required: true,
+  })
+  @IsNotEmpty({ message: 'Status is required' })
+  @IsString({ message: 'Status must be a string' })
   status: string;
 
-  @ApiProperty({ description: 'Collection date/time', example: '2025-01-04 10:00:00' })
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({
+    description: 'Collection date and time in format: YYYY-MM-DD HH:mm:ss',
+    example: '2025-01-04 10:00:00',
+    required: true,
+  })
+  @IsNotEmpty({ message: 'Collection date/time is required' })
+  @IsString({ message: 'Collection date/time must be a string' })
   collection_at: string;
 
-  @ApiProperty({ description: 'Notes (optional)', required: false })
+  @ApiProperty({
+    description: 'Additional notes about the collection (optional)',
+    example: 'Morning collection, good quality milk',
+    required: false,
+  })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Notes must be a string' })
   notes?: string;
 }
 

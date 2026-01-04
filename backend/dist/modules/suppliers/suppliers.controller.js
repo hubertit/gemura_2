@@ -30,9 +30,82 @@ let SuppliersController = class SuppliersController {
 exports.SuppliersController = SuppliersController;
 __decorate([
     (0, common_1.Post)('create'),
-    (0, swagger_1.ApiOperation)({ summary: 'Create or update supplier' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Supplier created/updated successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create or update supplier',
+        description: 'Create a new supplier relationship or update an existing one. If supplier exists (by phone/email/nid), updates the relationship. Otherwise, creates new user, account, and wallet.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: create_supplier_dto_1.CreateSupplierDto,
+        description: 'Supplier information',
+        examples: {
+            createSupplier: {
+                summary: 'Create new supplier',
+                value: {
+                    name: 'John Doe',
+                    phone: '250788123456',
+                    price_per_liter: 390.0,
+                    email: 'supplier@example.com',
+                    nid: '1199887766554433',
+                    address: 'Kigali, Rwanda',
+                },
+            },
+            minimalSupplier: {
+                summary: 'Create supplier with minimal info',
+                value: {
+                    name: 'Jane Smith',
+                    phone: '250788654321',
+                    price_per_liter: 400.0,
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Supplier created/updated successfully',
+        example: {
+            code: 200,
+            status: 'success',
+            message: 'Supplier created/updated successfully.',
+            data: {
+                supplier: {
+                    account_id: 'account-uuid',
+                    account_code: 'A_ABC123',
+                    name: 'John Doe',
+                    phone: '250788123456',
+                    price_per_liter: 390.0,
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Invalid request - missing required fields or no default account',
+        examples: {
+            missingFields: {
+                summary: 'Missing required fields',
+                value: {
+                    code: 400,
+                    status: 'error',
+                    message: 'Missing required fields.',
+                },
+            },
+            noDefaultAccount: {
+                summary: 'No default account',
+                value: {
+                    code: 400,
+                    status: 'error',
+                    message: 'No valid default account found. Please set a default account.',
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiUnauthorizedResponse)({
+        description: 'Invalid or missing authentication token',
+        example: {
+            code: 401,
+            status: 'error',
+            message: 'Unauthorized. Invalid token.',
+        },
+    }),
     __param(0, (0, user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),

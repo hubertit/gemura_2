@@ -32,15 +32,75 @@ exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'User login' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Login successful',
-        type: auth_response_dto_1.AuthResponseDto,
+    (0, swagger_1.ApiOperation)({
+        summary: 'User login',
+        description: 'Authenticate user with email/phone and password. Returns user data, accounts, and authentication token.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: login_dto_1.LoginDto,
+        description: 'User credentials',
+        examples: {
+            emailLogin: {
+                summary: 'Login with email',
+                value: {
+                    identifier: 'user@example.com',
+                    password: 'SecurePassword123!',
+                },
+            },
+            phoneLogin: {
+                summary: 'Login with phone',
+                value: {
+                    identifier: '250788123456',
+                    password: 'SecurePassword123!',
+                },
+            },
+        },
     }),
     (0, swagger_1.ApiResponse)({
-        status: 401,
+        status: 200,
+        description: 'Login successful. Returns user data, accounts, and authentication token.',
+        type: auth_response_dto_1.AuthResponseDto,
+        example: {
+            code: 200,
+            status: 'success',
+            message: 'Login successful.',
+            data: {
+                user: {
+                    id: 'uuid-here',
+                    name: 'John Doe',
+                    email: 'user@example.com',
+                    phone: '250788123456',
+                    account_type: 'mcc',
+                    status: 'active',
+                    token: 'auth-token-here',
+                },
+                account: {
+                    id: 'account-uuid',
+                    code: 'ACC001',
+                    name: 'Main Account',
+                    type: 'tenant',
+                },
+                accounts: [],
+                total_accounts: 1,
+                profile_completion: 75,
+            },
+        },
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Invalid request - missing or invalid fields',
+        example: {
+            code: 400,
+            status: 'error',
+            message: 'Email/phone and password are required.',
+        },
+    }),
+    (0, swagger_1.ApiUnauthorizedResponse)({
         description: 'Invalid credentials',
+        example: {
+            code: 401,
+            status: 'error',
+            message: 'Invalid credentials.',
+        },
     }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),

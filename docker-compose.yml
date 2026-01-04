@@ -22,13 +22,14 @@ services:
     networks:
       - gemura-network
     volumes:
-      # Mount prisma schema for migrations
+      # Mount prisma schema for migrations (read-only)
       - ./backend/prisma:/app/prisma:ro
     command: >
       sh -c "
-        echo 'Waiting for database...' &&
+        echo 'Waiting for database connection...' &&
         sleep 5 &&
         npx prisma migrate deploy &&
+        echo 'Starting Gemura API...' &&
         node dist/main.js
       "
 
