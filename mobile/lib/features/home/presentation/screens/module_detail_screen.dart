@@ -23,52 +23,6 @@ class ModuleDetailScreen extends ConsumerWidget {
       ),
       body: CustomScrollView(
         slivers: [
-          // Module Header
-          SliverToBoxAdapter(
-            child: Container(
-              color: module.color.withOpacity(0.1),
-              padding: const EdgeInsets.all(AppTheme.spacing24),
-              child: Row(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: module.color,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
-                    ),
-                    child: Icon(
-                      module.icon,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: AppTheme.spacing16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          module.name,
-                          style: AppTheme.titleLarge.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: AppTheme.spacing4),
-                        Text(
-                          module.description,
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.textSecondaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           // Actions Section
           SliverPadding(
             padding: const EdgeInsets.all(AppTheme.spacing16),
