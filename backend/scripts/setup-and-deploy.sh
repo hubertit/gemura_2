@@ -23,14 +23,14 @@ cd "$PROJECT_ROOT"
 
 # Check if .env exists
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}Creating .env from .env.example...${NC}"
-    if [ -f .env.example ]; then
-        cp .env.example .env
+    echo -e "${YELLOW}Creating .env from env.example...${NC}"
+    if [ -f env.example ]; then
+        cp env.example .env
         echo -e "${YELLOW}⚠ Please edit .env and set POSTGRES_PASSWORD${NC}"
         echo "Press Enter after editing .env..."
         read
     else
-        echo -e "${RED}✗ .env.example not found${NC}"
+        echo -e "${RED}✗ env.example not found${NC}"
         exit 1
     fi
 fi

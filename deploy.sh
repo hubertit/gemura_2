@@ -18,14 +18,15 @@ NC='\033[0m'
 
 # Check if .env exists
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}⚠ .env file not found. Creating from .env.example...${NC}"
-    if [ -f .env.example ]; then
-        cp .env.example .env
+    echo -e "${YELLOW}⚠ .env file not found.${NC}"
+    if [ -f env.example ]; then
+        echo -e "${YELLOW}Creating .env from env.example...${NC}"
+        cp env.example .env
         echo -e "${YELLOW}⚠ Please edit .env and set POSTGRES_PASSWORD${NC}"
         echo "Press Enter to continue after editing .env..."
         read
     else
-        echo -e "${RED}✗ .env.example not found. Please create .env manually.${NC}"
+        echo -e "${RED}✗ env.example not found. Please create .env manually.${NC}"
         exit 1
     fi
 fi
