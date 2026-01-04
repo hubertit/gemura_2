@@ -185,6 +185,106 @@ class ModulesService {
         ],
       ),
 
+      // Accounting Module
+      AppModule(
+        id: 'accounting',
+        name: 'Accounting',
+        description: 'Manage financial records',
+        icon: Icons.account_balance,
+        color: AppTheme.infoColor,
+        actions: [
+          ModuleAction(
+            id: 'chart_of_accounts',
+            name: 'Chart of Accounts',
+            description: 'Manage your chart of accounts',
+            icon: Icons.account_tree,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(), // Placeholder
+                ),
+              );
+            },
+          ),
+          ModuleAction(
+            id: 'journal_entries',
+            name: 'Journal Entries',
+            description: 'Record and view journal entries',
+            icon: Icons.book,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(), // Placeholder
+                ),
+              );
+            },
+          ),
+          ModuleAction(
+            id: 'financial_reports',
+            name: 'Financial Reports',
+            description: 'Generate financial reports',
+            icon: Icons.bar_chart,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(), // Placeholder
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+
+      // Payroll Module
+      AppModule(
+        id: 'payroll',
+        name: 'Payroll',
+        description: 'Manage supplier payroll',
+        icon: Icons.payment,
+        color: AppTheme.warningColor,
+        actions: [
+          ModuleAction(
+            id: 'create_payroll',
+            name: 'Create Payroll',
+            description: 'Generate new payroll run',
+            icon: Icons.add_card,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(), // Placeholder
+                ),
+              );
+            },
+          ),
+          ModuleAction(
+            id: 'payroll_history',
+            name: 'Payroll History',
+            description: 'View past payroll runs',
+            icon: Icons.history,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(), // Placeholder
+                ),
+              );
+            },
+          ),
+          ModuleAction(
+            id: 'payroll_reports',
+            name: 'Payroll Reports',
+            description: 'Generate payroll reports',
+            icon: Icons.receipt_long,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(), // Placeholder
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+
       // Wallets Module
       AppModule(
         id: 'wallets',
