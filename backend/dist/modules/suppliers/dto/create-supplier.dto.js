@@ -16,39 +16,65 @@ class CreateSupplierDto {
 }
 exports.CreateSupplierDto = CreateSupplierDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Supplier name', example: 'John Doe' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Full name of the supplier',
+        example: 'John Doe',
+        required: true,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Supplier name is required' }),
+    (0, class_validator_1.IsString)({ message: 'Supplier name must be a string' }),
     __metadata("design:type", String)
 ], CreateSupplierDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Supplier phone number', example: '250788123456' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Supplier phone number in Rwandan format (250XXXXXXXXX)',
+        example: '250788123456',
+        pattern: '^250[0-9]{9}$',
+        required: true,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Phone number is required' }),
+    (0, class_validator_1.IsString)({ message: 'Phone number must be a string' }),
     __metadata("design:type", String)
 ], CreateSupplierDto.prototype, "phone", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Price per liter', example: 390.0 }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Price per liter of milk in RWF',
+        example: 390.0,
+        minimum: 0,
+        required: true,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Price per liter is required' }),
+    (0, class_validator_1.IsNumber)({}, { message: 'Price per liter must be a number' }),
     __metadata("design:type", Number)
 ], CreateSupplierDto.prototype, "price_per_liter", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Supplier email (optional)', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Supplier email address (optional)',
+        example: 'supplier@example.com',
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsString)({ message: 'Email must be a string' }),
     __metadata("design:type", String)
 ], CreateSupplierDto.prototype, "email", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'National ID (optional)', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'National ID number (optional)',
+        example: '1199887766554433',
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsString)({ message: 'National ID must be a string' }),
     __metadata("design:type", String)
 ], CreateSupplierDto.prototype, "nid", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Address (optional)', required: false }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Physical address (optional)',
+        example: 'Kigali, Rwanda',
+        required: false,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsString)({ message: 'Address must be a string' }),
     __metadata("design:type", String)
 ], CreateSupplierDto.prototype, "address", void 0);
 //# sourceMappingURL=create-supplier.dto.js.map

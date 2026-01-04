@@ -17,11 +17,13 @@ class SwitchAccountDto {
 exports.SwitchAccountDto = SwitchAccountDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Account ID to switch to',
-        example: 'uuid-here',
+        description: 'UUID of the account to set as default',
+        example: '550e8400-e29b-41d4-a716-446655440000',
+        format: 'uuid',
+        required: true,
     }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)({ message: 'Account ID is required' }),
+    (0, class_validator_1.IsString)({ message: 'Account ID must be a string (UUID)' }),
     __metadata("design:type", String)
 ], SwitchAccountDto.prototype, "account_id", void 0);
 //# sourceMappingURL=switch-account.dto.js.map
