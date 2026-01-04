@@ -109,7 +109,6 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    - .env
     - assets/animations/
     - assets/pdfs/
     - assets/translations/
