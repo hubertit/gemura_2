@@ -1,7 +1,11 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { Controller, Post, Body, HttpCode, HttpStatus, Req, Get, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiConflictResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { VerifyTokenDto } from './dto/verify-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
 @ApiTags('Authentication')
@@ -89,6 +93,156 @@ export class AuthController {
     const userAgent = request.headers['user-agent'];
 
     return this.authService.login(loginDto, ipAddress, userAgent);
+  }
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'User registration',
+    description: 'Register a new user with account and wallet. Creates user, account, and default wallet.',
+  })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Registration successful',
+    example: {
+      code: 201,
+      status: 'success',
+      message: 'Registration successful.',
+      data: {
+        user: {
+          code: 'U_ABC123',
+          name: 'John Doe',
+          email: 'user@example.com',
+          phone: '250788123456',
+          account_type: 'mcc',
+          status: 'active',
+          token: 'token_1234567890_abcdef',
+        },
+        account: {
+          code: 'A_XYZ789',
+          name: 'My Business Account',
+          type: 'tenant',
+          status: 'active',
+        },
+        wallet: {
+          code: 'W_DEF456',
+          type: 'regular',
+          is_joint: false,
+          is_default: true,
+          balance: 0,
+          currency: 'RWF',
+          status: 'active',
+        },
+        sms_sent: false,
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Invalid request' })
+  @ApiConflictResponse({ description: 'Phone number already registered' })
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
+
+  @Post('verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify authentication token',
+    description: 'Verify if a token is valid and returns user information.',
+  })
+  @ApiBody({ type: VerifyTokenDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Token is valid',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Token is valid.',
+      data: {
+        code: 'U_ABC123',
+        name: 'John Doe',
+        email: 'user@example.com',
+        phone: '250788123456',
+        status: 'active',
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Token is required' })
+  @ApiUnauthorizedResponse({ description: 'Token is invalid or expired' })
+  async verifyToken(@Body() verifyTokenDto: VerifyTokenDto) {
+    return this.authService.verifyToken(verifyTokenDto);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request password reset',
+    description: 'Request a password reset code. Code is sent via SMS/email.',
+  })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset code sent successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Reset code sent successfully.',
+      data: {
+        user_id: 1,
+        sms_sent: true,
+        email_sent: false,
+        contact_info: {
+          phone: '250788123456',
+          email: 'user@example.com',
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Phone or email is required' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset password with code',
+    description: 'Reset user password using the reset code received via SMS/email.',
+  })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Password has been reset successfully.',
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Invalid request' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired reset code' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Get('token')
+  @ApiOperation({
+    summary: 'Validate token (legacy compatibility)',
+    description: 'Legacy endpoint for token validation. Accepts token in query or body.',
+  })
+  @ApiResponse({ status: 200, description: 'Token validation endpoint' })
+  async validateToken(@Req() request: any) {
+    const token = request.query.token || request.body?.token;
+    if (!token) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Token is required.',
+      });
+    }
+    return this.authService.verifyToken({ token });
   }
 }
 
