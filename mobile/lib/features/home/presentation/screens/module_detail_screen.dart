@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/models/module.dart';
-import '../../../../core/providers/localization_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ModuleDetailScreen extends ConsumerWidget {
