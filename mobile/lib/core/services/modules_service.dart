@@ -4,6 +4,7 @@ import '../../features/collection/presentation/screens/record_collection_screen.
 import '../../features/collection/presentation/screens/pending_collections_screen.dart';
 import '../../features/suppliers/presentation/screens/collected_milk_screen.dart';
 import '../../features/suppliers/presentation/screens/suppliers_list_screen.dart';
+import '../../features/suppliers/presentation/screens/add_supplier_screen.dart';
 import '../../features/customers/presentation/screens/customers_list_screen.dart';
 import '../../features/customers/presentation/screens/sold_milk_screen.dart';
 import '../../features/customers/presentation/screens/add_customer_screen.dart';
@@ -75,10 +76,23 @@ class ModulesService {
             },
           ),
           ModuleAction(
+            id: 'add_supplier',
+            name: 'Add Supplier',
+            description: 'Add a new supplier',
+            icon: Icons.person_add,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddSupplierScreen(),
+                ),
+              );
+            },
+          ),
+          ModuleAction(
             id: 'view_suppliers',
             name: 'Suppliers',
             description: 'View all suppliers',
-            icon: Icons.person_add,
+            icon: Icons.people,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
