@@ -11,15 +11,15 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${PORT:-3004}
-      # Connect to ResolveIt's Postgres container on the same server/network
-      # ResolveIt postgres service uses container_name: resolveit-postgres and listens on 5432 inside the network.
-      DATABASE_URL: postgresql://${POSTGRES_USER:-devslab}:${POSTGRES_PASSWORD}@resolveit-postgres:5432/${POSTGRES_DB:-gemura_db}?schema=public
+      # Connect to the shared Postgres container on the same server (devslab-postgres)
+      # This is the same container ResolveIt uses, on the same Docker network (devslab-network).
+      DATABASE_URL: postgresql://${POSTGRES_USER:-devslab}:${POSTGRES_PASSWORD}@devslab-postgres:5432/${POSTGRES_DB:-gemura_db}?schema=public
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3005,http://159.198.65.38:3005,http://localhost:3001}
     ports:
       # Use port 3004 for backend API (3000-3003 are in use on server)
       - "${BACKEND_PORT:-3004}:3004"
     networks:
-      - resolveit-network
+      - devslab-network
     volumes:
       # Mount prisma schema for migrations (read-only)
       - ./backend/prisma:/app/prisma:ro
@@ -52,6 +52,6 @@ services:
   #     - gemura-network
 
 networks:
-  resolveit-network:
+  devslab-network:
     external: true
 
