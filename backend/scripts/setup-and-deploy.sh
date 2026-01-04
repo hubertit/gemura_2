@@ -115,7 +115,7 @@ else
 fi
 
 # Check health
-HEALTH_URL="http://localhost:${BACKEND_PORT:-3004}/health"
+HEALTH_URL="http://localhost:${BACKEND_PORT:-3004}/api/health"
 echo "Testing health endpoint..."
 for i in {1..10}; do
     if curl -f -s "$HEALTH_URL" > /dev/null 2>&1; then
@@ -164,7 +164,7 @@ echo ""
 echo "🌐 Access Points:"
 echo "  Backend API: http://159.198.65.38:${BACKEND_PORT:-3004}"
 echo "  API Docs: http://159.198.65.38:${BACKEND_PORT:-3004}/api/docs"
-echo "  Health: http://159.198.65.38:${BACKEND_PORT:-3004}/health"
+echo "  Health: http://159.198.65.38:${BACKEND_PORT:-3004}/api/health"
 echo ""
 echo "📋 Useful Commands:"
 echo "  View logs: docker-compose logs -f backend"

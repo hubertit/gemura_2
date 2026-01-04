@@ -96,9 +96,9 @@ if ping -c 1 -W 2 "$SERVER" > /dev/null 2>&1; then
     
     # Test port 3004
     echo "Testing port 3004..."
-    if curl -s --connect-timeout 3 "http://$SERVER:3004/health" > /dev/null 2>&1; then
+    if curl -s --connect-timeout 3 "http://$SERVER:3004/api/health" > /dev/null 2>&1; then
         echo -e "${YELLOW}⚠ Service already running on port 3004${NC}"
-        curl -s "http://$SERVER:3004/health" | head -3
+        curl -s "http://$SERVER:3004/api/health" | head -3
     else
         echo -e "${GREEN}✓ Port 3004 is available for deployment${NC}"
     fi

@@ -24,7 +24,7 @@ BASE_URL="http://$SERVER:$PORT"
 # Test 1: Health Endpoint
 echo "Test 1: Health Endpoint"
 echo "----------------------"
-HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/health" 2>/dev/null || echo -e "\n000")
+HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/health" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$HEALTH_RESPONSE" | tail -1)
 BODY=$(echo "$HEALTH_RESPONSE" | sed '$d')
 
@@ -111,7 +111,7 @@ echo ""
 # Test 6: CORS Headers
 echo "Test 6: CORS Configuration"
 echo "------------------------"
-CORS_HEADERS=$(curl -s -I -H "Origin: http://159.198.65.38:3005" "$BASE_URL/health" 2>/dev/null | grep -i "access-control" || echo "")
+CORS_HEADERS=$(curl -s -I -H "Origin: http://159.198.65.38:3005" "$BASE_URL/api/health" 2>/dev/null | grep -i "access-control" || echo "")
 
 if [ -n "$CORS_HEADERS" ]; then
     echo -e "${GREEN}✓ CORS headers present${NC}"
@@ -131,7 +131,7 @@ echo ""
 echo "🌐 Access Points:"
 echo "  API: $BASE_URL"
 echo "  Docs: $BASE_URL/api/docs"
-echo "  Health: $BASE_URL/health"
+echo "  Health: $BASE_URL/api/health"
 echo ""
 echo "📋 Next Steps:"
 echo "  1. Test login with real credentials"

@@ -92,7 +92,7 @@ else
 fi
 
 # Check health endpoint
-HEALTH_URL="http://localhost:${BACKEND_PORT:-3004}/health"
+HEALTH_URL="http://localhost:${BACKEND_PORT:-3004}/api/health"
 echo "Testing health endpoint: $HEALTH_URL"
 if curl -f -s "$HEALTH_URL" > /dev/null; then
     echo -e "${GREEN}✓ Health endpoint is responding${NC}"
@@ -108,7 +108,7 @@ echo "=========================================="
 echo ""
 echo "Backend API: http://159.198.65.38:${BACKEND_PORT:-3004}"
 echo "API Docs: http://159.198.65.38:${BACKEND_PORT:-3004}/api/docs"
-echo "Health: http://159.198.65.38:${BACKEND_PORT:-3004}/health"
+echo "Health: http://159.198.65.38:${BACKEND_PORT:-3004}/api/health"
 echo ""
 echo "View logs: docker-compose logs -f backend"
 echo "Stop: docker-compose down"
