@@ -27,8 +27,11 @@ services:
     command: >
       sh -c "
         echo 'Waiting for database connection...' &&
-        sleep 5 &&
-        npx prisma migrate deploy &&
+        sleep 10 &&
+        echo 'Running Prisma migrations...' &&
+        npx prisma migrate deploy || echo 'Migration failed or already applied' &&
+        echo 'Generating Prisma Client...' &&
+        npx prisma generate &&
         echo 'Starting Gemura API...' &&
         node dist/main.js
       "
