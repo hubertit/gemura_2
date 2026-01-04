@@ -11,7 +11,9 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci
+# Use legacy-peer-deps to avoid peer dependency resolution failures on production builds
+# (matches ResolveIt deployment behavior)
+RUN npm ci --legacy-peer-deps
 
 # Generate Prisma Client
 RUN npx prisma generate
