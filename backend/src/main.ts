@@ -12,14 +12,17 @@ async function bootstrap() {
   expressApp.set('trust proxy', true);
 
   // Security - Helmet configuration
-  app.use(
+  // Disable CSP for Swagger docs path to avoid asset loading issues
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/docs')) {
+      return next();
+    }
     helmet({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          // Swagger UI bundles rely on eval in some builds; allow unsafe-eval so /api/docs doesn't render blank.
-          scriptSrc: ["'self'", "'unsafe-eval'"],
+          scriptSrc: ["'self'"],
           imgSrc: ["'self'", "data:", "https:"],
           connectSrc: ["'self'"],
           fontSrc: ["'self'"],
@@ -34,8 +37,8 @@ async function bootstrap() {
         includeSubDomains: true,
         preload: true,
       },
-    }),
-  );
+    })(req, res, next);
+  });
 
   // CORS configuration
   const allowedOrigins = process.env.CORS_ORIGIN
