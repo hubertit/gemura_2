@@ -74,9 +74,42 @@ class _CreatePayrollScreenState extends State<CreatePayrollScreen> {
       final collections = LocalDataService.getCollections();
       
       if (suppliers.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          AppTheme.errorSnackBar(message: 'No suppliers found. Please add suppliers first.'),
-        );
+        if (mounted) {
+          final shouldAddSupplier = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('No Suppliers Found'),
+              content: const Text('You need to add suppliers before generating payroll. Would you like to add a supplier now?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Add Supplier'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldAddSupplier == true) {
+            // Navigate to add supplier screen
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const AddSupplierScreen(),
+              ),
+            );
+            
+            // Refresh suppliers after returning
+            if (mounted) {
+              ref.invalidate(suppliersNotifierProvider);
+              // Try again after adding supplier
+              await Future.delayed(const Duration(milliseconds: 500));
+              _generatePayroll();
+            }
+          }
+        }
         setState(() => _isProcessing = false);
         return;
       }
