@@ -11,6 +11,13 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const throttler_1 = require("@nestjs/throttler");
 const prisma_module_1 = require("./prisma/prisma.module");
+const auth_module_1 = require("./modules/auth/auth.module");
+const accounts_module_1 = require("./modules/accounts/accounts.module");
+const suppliers_module_1 = require("./modules/suppliers/suppliers.module");
+const collections_module_1 = require("./modules/collections/collections.module");
+const sales_module_1 = require("./modules/sales/sales.module");
+const wallets_module_1 = require("./modules/wallets/wallets.module");
+const profile_module_1 = require("./modules/profile/profile.module");
 const app_controller_1 = require("./app.controller");
 let AppModule = class AppModule {
 };
@@ -29,6 +36,13 @@ exports.AppModule = AppModule = __decorate([
                 },
             ]),
             prisma_module_1.PrismaModule,
+            auth_module_1.AuthModule,
+            accounts_module_1.AccountsModule,
+            suppliers_module_1.SuppliersModule,
+            collections_module_1.CollectionsModule,
+            sales_module_1.SalesModule,
+            wallets_module_1.WalletsModule,
+            profile_module_1.ProfileModule,
         ],
     })
 ], AppModule);

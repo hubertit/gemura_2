@@ -1,0 +1,1 @@
+{"version":3,"file":"switch-account.dto.js","sourceRoot":"","sources":["../../../../src/modules/accounts/dto/switch-account.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,6CAA8C;AAC9C,qDAAuD;AAEvD,MAAa,gBAAgB;CAQ5B;AARD,4CAQC;AADC;IANC,IAAA,qBAAW,EAAC;QACX,WAAW,EAAE,yBAAyB;QACtC,OAAO,EAAE,WAAW;KACrB,CAAC;IACD,IAAA,4BAAU,GAAE;IACZ,IAAA,0BAAQ,GAAE;;oDACQ"}

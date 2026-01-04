@@ -6,6 +6,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
 import { CollectionsModule } from './modules/collections/collections.module';
+import { SalesModule } from './modules/sales/sales.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
+import { ProfileModule } from './modules/profile/profile.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -25,6 +28,9 @@ import { AppController } from './app.controller';
     AccountsModule,
     SuppliersModule,
     CollectionsModule,
+    SalesModule,
+    WalletsModule,
+    ProfileModule,
     // TODO: Add modules as they are implemented
     // SuppliersModule,
     // CollectionsModule,

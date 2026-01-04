@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Backend API (NestJS)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gemura-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3100}
+      # Connect to existing devslab Postgres on host (same as ResolveIt)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-devslab}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PORT:-5433}/${POSTGRES_DB:-gemura_db}?schema=public
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3101,http://localhost:3001}
+    ports:
+      # Use port 3100 for backend API (different from ResolveIt's 3000)
+      - "${BACKEND_PORT:-3100}:3100"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - gemura-network
+    volumes:
+      # Mount prisma schema for migrations
+      - ./backend/prisma:/app/prisma:ro
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        npx prisma migrate deploy &&
+        node dist/main.js
+      "
+
+networks:
+  gemura-network:
+    driver: bridge
+
