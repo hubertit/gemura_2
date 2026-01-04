@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/local_data_service.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../suppliers/presentation/screens/add_supplier_screen.dart';
+import '../../../suppliers/presentation/providers/suppliers_provider.dart';
 import '../../domain/models/payroll_run.dart';
 
-class CreatePayrollScreen extends StatefulWidget {
+class CreatePayrollScreen extends ConsumerStatefulWidget {
   const CreatePayrollScreen({super.key});
 
   @override
-  State<CreatePayrollScreen> createState() => _CreatePayrollScreenState();
+  ConsumerState<CreatePayrollScreen> createState() => _CreatePayrollScreenState();
 }
 
-class _CreatePayrollScreenState extends State<CreatePayrollScreen> {
+class _CreatePayrollScreenState extends ConsumerState<CreatePayrollScreen> {
   final _formKey = GlobalKey<FormState>();
   DateTime? _periodStart;
   DateTime? _periodEnd;
