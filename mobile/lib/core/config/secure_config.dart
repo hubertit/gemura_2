@@ -1,5 +1,3 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 class SecureConfig {
   static String? _openaiApiKey;
   static String? _claudeApiKey;
@@ -8,75 +6,55 @@ class SecureConfig {
   static String? _apiBaseUrl;
   static bool _initialized = false;
 
-  /// Initialize environment variables
+  /// Initialize configuration (no longer uses .env)
   static Future<void> initialize() async {
-    try {
-      await dotenv.load(fileName: ".env");
-      _initialized = true;
-      // print('Environment variables loaded successfully');
-    } catch (e) {
-      // print('Warning: .env file not found, using fallback API keys');
-      // Continue with fallback keys
-    }
+    // Configuration is now hardcoded or set via other means
+    // No .env file loading
+    _initialized = true;
   }
 
-  /// Get OpenAI API key from environment or fallback
+  /// Get OpenAI API key (from hardcoded config)
   static String get openaiApiKey {
     if (_openaiApiKey != null) return _openaiApiKey!;
     
-    if (_initialized) {
-      _openaiApiKey = dotenv.env['OPENAI_API_KEY'];
-    }
-    
-    _openaiApiKey ??= 'YOUR_OPENAI_API_KEY_HERE';
+    // Use hardcoded value from AppConfig instead of .env
+    _openaiApiKey = 'YOUR_OPENAI_API_KEY_HERE';
     return _openaiApiKey!;
   }
 
-  /// Get Claude API key from environment or fallback
+  /// Get Claude API key (from hardcoded config)
   static String get claudeApiKey {
     if (_claudeApiKey != null) return _claudeApiKey!;
     
-    if (_initialized) {
-      _claudeApiKey = dotenv.env['CLAUDE_API_KEY'];
-    }
-    
-    _claudeApiKey ??= 'YOUR_CLAUDE_API_KEY_HERE';
+    // Use hardcoded value from AppConfig instead of .env
+    _claudeApiKey = 'YOUR_CLAUDE_API_KEY_HERE';
     return _claudeApiKey!;
   }
 
-  /// Get Google Vision API key from environment or fallback
+  /// Get Google Vision API key (from hardcoded config)
   static String get googleVisionApiKey {
     if (_googleVisionApiKey != null) return _googleVisionApiKey!;
     
-    if (_initialized) {
-      _googleVisionApiKey = dotenv.env['GOOGLE_VISION_API_KEY'];
-    }
-    
-    _googleVisionApiKey ??= 'YOUR_GOOGLE_VISION_API_KEY';
+    // Use hardcoded value from AppConfig instead of .env
+    _googleVisionApiKey = 'YOUR_GOOGLE_VISION_API_KEY';
     return _googleVisionApiKey!;
   }
 
-  /// Get Your API key from environment or fallback
+  /// Get Your API key (from hardcoded config)
   static String get yourApiKey {
     if (_yourApiKey != null) return _yourApiKey!;
     
-    if (_initialized) {
-      _yourApiKey = dotenv.env['YOUR_API_KEY'];
-    }
-    
-    _yourApiKey ??= 'YOUR_API_KEY_HERE';
+    // Use hardcoded value from AppConfig instead of .env
+    _yourApiKey = 'YOUR_API_KEY_HERE';
     return _yourApiKey!;
   }
 
-  /// Get API Base URL from environment or fallback
+  /// Get API Base URL (from hardcoded config)
   static String get apiBaseUrl {
     if (_apiBaseUrl != null) return _apiBaseUrl!;
     
-    if (_initialized) {
-      _apiBaseUrl = dotenv.env['API_BASE_URL'];
-    }
-    
-    _apiBaseUrl ??= 'https://api.gemura.rw/v2';
+    // Use hardcoded value from AppConfig instead of .env
+    _apiBaseUrl = 'https://api.gemura.rw/v2';
     return _apiBaseUrl!;
   }
 
