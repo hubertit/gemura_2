@@ -21,6 +21,7 @@ class _CreatePayrollScreenState extends ConsumerState<CreatePayrollScreen> {
   DateTime? _periodEnd;
   int _paymentTermsDays = 15;
   bool _isProcessing = false;
+  Set<String> _selectedSupplierIds = {}; // Track selected suppliers
 
   final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
 
@@ -183,7 +184,7 @@ class _CreatePayrollScreenState extends ConsumerState<CreatePayrollScreen> {
         // Find supplier by account code or id
         Map<String, dynamic>? supplier;
         try {
-          supplier = suppliers.firstWhere(
+          supplier = suppliersToProcess.firstWhere(
             (s) {
               final sCode = s['account_code'] ?? s['accountCode'] ?? s['code'] ?? s['id'] ?? '';
               final sId = s['id'] ?? '';
@@ -485,8 +486,8 @@ class _CreatePayrollScreenState extends ConsumerState<CreatePayrollScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppTheme.spacing24),
-              // Generate Button or Add Supplier
+              const SizedBox(height: AppTheme.spacing16),
+              // Supplier Selection
               Consumer(
                 builder: (context, ref, child) {
                   final suppliersAsync = ref.watch(suppliersNotifierProvider);
