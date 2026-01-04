@@ -177,32 +177,56 @@ class _CreatePayrollScreenState extends ConsumerState<CreatePayrollScreen> {
       final List<Map<String, dynamic>> payslips = [];
       double totalAmount = 0.0;
 
+      // Get API suppliers for matching
+      final apiSuppliers = ref.read(suppliersNotifierProvider).value ?? [];
+      
       for (final entry in supplierCollections.entries) {
         final supplierCode = entry.key;
         final supplierCollections = entry.value;
         
-        // Find supplier by account code or id
+        // Check if this supplier is selected (if any are selected)
+        if (!_selectedSupplierIds.isEmpty && !_selectedSupplierIds.contains(supplierCode)) {
+          continue; // Skip suppliers not selected
+        }
+        
+        // Find supplier from API first
+        Supplier? apiSupplier;
+        try {
+          apiSupplier = apiSuppliers.firstWhere(
+            (s) => s.accountCode == supplierCode,
+          );
+        } catch (e) {
+          apiSupplier = null;
+        }
+        
+        // Find supplier from local storage
         Map<String, dynamic>? supplier;
         try {
-          supplier = suppliersToProcess.firstWhere(
+          supplier = suppliers.firstWhere(
             (s) {
               final sCode = s['account_code'] ?? s['accountCode'] ?? s['code'] ?? s['id'] ?? '';
-              final sId = s['id'] ?? '';
-              return sCode.toString() == supplierCode || sId.toString() == supplierCode;
+              return sCode.toString() == supplierCode;
             },
             orElse: () => <String, dynamic>{},
           );
         } catch (e) {
           supplier = null;
         }
-
+        
+        // Use API supplier data if local supplier not found
+        if ((supplier == null || supplier.isEmpty) && apiSupplier != null) {
+          supplier = {
+            'name': apiSupplier.name,
+            'account_name': apiSupplier.accountName,
+            'code': apiSupplier.accountCode,
+            'account_code': apiSupplier.accountCode,
+            'price_per_liter': apiSupplier.pricePerLiter,
+            'pricePerLiter': apiSupplier.pricePerLiter,
+          };
+        }
+        
         if (supplier == null || supplier.isEmpty) {
-          // Try to find by any matching field
-          supplier = suppliers.firstWhere(
-            (s) => (s['account_code'] ?? s['accountCode'] ?? s['code'] ?? s['id'] ?? '').toString().contains(supplierCode) ||
-                   (s['name'] ?? '').toString().contains(supplierCode),
-            orElse: () => <String, dynamic>{},
-          );
+          continue; // Skip if supplier not found
         }
 
         // Get supplier details with fallbacks
