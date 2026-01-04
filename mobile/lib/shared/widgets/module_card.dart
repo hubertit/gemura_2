@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+rimport 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../models/module.dart';
 
@@ -17,7 +17,7 @@ class ModuleCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing8, horizontal: AppTheme.spacing8),
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4, horizontal: AppTheme.spacing8),
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
@@ -34,8 +34,8 @@ class ModuleCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 color: module.color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
@@ -43,15 +43,15 @@ class ModuleCard extends StatelessWidget {
               child: Icon(
                 module.icon,
                 color: module.color,
-                size: 18,
+                size: 16,
               ),
             ),
-            const SizedBox(height: AppTheme.spacing4),
+            const SizedBox(height: AppTheme.spacing2),
             Text(
               module.name,
               style: AppTheme.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 10,
+                fontSize: 9,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
