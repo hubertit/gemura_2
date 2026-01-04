@@ -26,7 +26,7 @@ echo "Test 1: Health Endpoint"
 echo "----------------------"
 HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/health" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$HEALTH_RESPONSE" | tail -1)
-BODY=$(echo "$HEALTH_RESPONSE" | head -n -1)
+BODY=$(echo "$HEALTH_RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" = "200" ]; then
     echo -e "${GREEN}✓ Health endpoint responding (HTTP $HTTP_CODE)${NC}"
@@ -45,6 +45,7 @@ echo "Test 2: API Root"
 echo "---------------"
 API_RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$API_RESPONSE" | tail -1)
+API_BODY=$(echo "$API_RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "404" ]; then
     echo -e "${GREEN}✓ API root accessible (HTTP $HTTP_CODE)${NC}"
@@ -58,6 +59,7 @@ echo "Test 3: Swagger Documentation"
 echo "---------------------------"
 SWAGGER_RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/docs" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$SWAGGER_RESPONSE" | tail -1)
+SWAGGER_BODY=$(echo "$SWAGGER_RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" = "200" ]; then
     echo -e "${GREEN}✓ Swagger docs accessible (HTTP $HTTP_CODE)${NC}"
@@ -74,11 +76,12 @@ echo "Test 4: Swagger JSON API"
 echo "----------------------"
 SWAGGER_JSON=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/docs-json" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$SWAGGER_JSON" | tail -1)
+SWAGGER_JSON_BODY=$(echo "$SWAGGER_JSON" | sed '$d')
 
 if [ "$HTTP_CODE" = "200" ]; then
     echo -e "${GREEN}✓ Swagger JSON accessible (HTTP $HTTP_CODE)${NC}"
     # Count endpoints
-    ENDPOINT_COUNT=$(echo "$SWAGGER_JSON" | head -n -1 | grep -o '"/api/[^"]*"' | sort -u | wc -l | tr -d ' ')
+    ENDPOINT_COUNT=$(echo "$SWAGGER_JSON_BODY" | grep -o '"/api/[^"]*"' | sort -u | wc -l | tr -d ' ')
     echo "  Found $ENDPOINT_COUNT API endpoints"
 else
     echo -e "${YELLOW}⚠ Swagger JSON not accessible (HTTP $HTTP_CODE)${NC}"
@@ -93,11 +96,11 @@ LOGIN_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" \
     -w "\n%{http_code}" \
     "$BASE_URL/api/auth/login" 2>/dev/null || echo -e "\n000")
 HTTP_CODE=$(echo "$LOGIN_RESPONSE" | tail -1)
-BODY=$(echo "$LOGIN_RESPONSE" | head -n -1)
+LOGIN_BODY=$(echo "$LOGIN_RESPONSE" | sed '$d')
 
 if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "400" ]; then
     echo -e "${GREEN}✓ Login endpoint responding correctly (HTTP $HTTP_CODE)${NC}"
-    if echo "$BODY" | grep -q "code"; then
+    if echo "$LOGIN_BODY" | grep -q "code"; then
         echo -e "${GREEN}✓ Response format matches API structure${NC}"
     fi
 else

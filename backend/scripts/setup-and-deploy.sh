@@ -142,6 +142,20 @@ else
     docker-compose exec -T backend npx prisma migrate status || true
 fi
 
+# Run post-deployment tests
+echo ""
+echo "Step 6: Running post-deployment tests..."
+echo "---------------------------------------"
+if [ -f scripts/test-deployment-remote.sh ]; then
+    cd "$PROJECT_ROOT"
+    ./backend/scripts/test-deployment-remote.sh localhost ${BACKEND_PORT:-3004} || {
+        echo -e "${YELLOW}⚠ Some tests failed, but deployment may still be successful${NC}"
+        echo "Check logs: docker-compose logs backend"
+    }
+else
+    echo -e "${YELLOW}⚠ Test script not found, skipping automated tests${NC}"
+fi
+
 echo ""
 echo "=========================================="
 echo -e "${GREEN}Deployment Complete!${NC}"
