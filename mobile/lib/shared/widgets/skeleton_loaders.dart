@@ -393,58 +393,41 @@ class SkeletonLoaders {
         ),
         body: Column(
           children: [
-            // Quick actions skeleton - Modules grid
+            // Quick actions skeleton
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: AppTheme.spacing8,
-                  mainAxisSpacing: AppTheme.spacing8,
-                  childAspectRatio: 1.3,
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
                 ),
-                itemCount: 9,
-                itemBuilder: (context, index) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4, horizontal: AppTheme.spacing8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(4, (index) => Expanded(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 32,
-                          height: 32,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        const SizedBox(height: AppTheme.spacing2),
+                        const SizedBox(height: AppTheme.spacing8),
                         Container(
-                          width: 50,
-                          height: 9,
+                          width: 40,
+                          height: 12,
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.grey[400],
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                       ],
                     ),
-                  );
-                },
+                  )),
+                ),
               ),
             ),
             // Wallet cards skeleton
@@ -692,58 +675,41 @@ class SkeletonLoaders {
                 ),
               ),
               const SizedBox(height: AppTheme.spacing4),
-              // Quick actions skeleton - Modules grid
+              // Quick actions skeleton
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: AppTheme.spacing8,
-                    mainAxisSpacing: AppTheme.spacing8,
-                    childAspectRatio: 1.3,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing16, horizontal: AppTheme.spacing8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
                   ),
-                  itemCount: 9,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing4, horizontal: AppTheme.spacing8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(4, (index) => Expanded(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 32,
-                            height: 32,
+                            width: 28,
+                            height: 28,
                             decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                              color: Colors.grey[400],
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          const SizedBox(height: AppTheme.spacing2),
+                          const SizedBox(height: AppTheme.spacing8),
                           Container(
-                            width: 50,
-                            height: 9,
+                            width: 40,
+                            height: 12,
                             decoration: BoxDecoration(
-                              color: Colors.grey[300],
+                              color: Colors.grey[400],
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                         ],
                       ),
-                    );
-                  },
+                    )),
+                  ),
                 ),
               ),
               const SizedBox(height: AppTheme.spacing24),
