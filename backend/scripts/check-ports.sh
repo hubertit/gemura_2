@@ -52,18 +52,28 @@ check_port() {
     fi
 }
 
-# Check Gemura ports (3002-3010 range)
-echo "Checking Gemura Ports (3002-3010):"
-echo "-----------------------------------"
-check_port 3002 "Gemura Backend API"
-check_port 3003 "Gemura Frontend (future)"
-check_port 3004 "Gemura Service (reserved)"
-check_port 3005 "Gemura Service (reserved)"
-check_port 3006 "Gemura Service (reserved)"
-check_port 3007 "Gemura Service (reserved)"
-check_port 3008 "Gemura Service (reserved)"
-check_port 3009 "Gemura Service (reserved)"
-check_port 3010 "Gemura Service (reserved)"
+# Check all ports from 3000 to 3010
+echo "Checking Ports 3000-3010:"
+echo "------------------------"
+for port in {3000..3010}; do
+    case $port in
+        3000)
+            check_port $port "ResolveIt Backend (expected in use)"
+            ;;
+        3001)
+            check_port $port "ResolveIt Frontend (expected in use)"
+            ;;
+        3002)
+            check_port $port "Gemura Backend API (should be available)"
+            ;;
+        3003)
+            check_port $port "Gemura Frontend (should be available)"
+            ;;
+        *)
+            check_port $port "Available for Gemura services"
+            ;;
+    esac
+done
 echo ""
 
 # Check ResolveIt ports (should be in use)
@@ -101,23 +111,38 @@ else
 fi
 echo ""
 
-# Summary
+# Summary with availability status
 echo "=========================================="
-echo "Summary:"
+echo "Port Availability Summary (3000-3010):"
 echo "=========================================="
-echo "If port 3002 is available, Gemura backend can be deployed."
-echo "If port 3003 is available, Gemura frontend can be deployed."
-echo "Ports 3004-3010 are reserved for future services."
 echo ""
-echo "Port allocation:"
-echo "  - 3000: ResolveIt Backend"
-echo "  - 3001: ResolveIt Frontend"
-echo "  - 3002: Gemura Backend API"
-echo "  - 3003: Gemura Frontend (future)"
-echo "  - 3004-3010: Reserved for Gemura services"
+echo "Port Status:"
+AVAILABLE_PORTS=()
+IN_USE_PORTS=()
+
+for port in {3000..3010}; do
+    if check_port $port "Port $port" &>/dev/null; then
+        AVAILABLE_PORTS+=($port)
+    else
+        IN_USE_PORTS+=($port)
+    fi
+done
+
 echo ""
-echo "To use different ports, update:"
-echo "  - docker-compose.yml (BACKEND_PORT, FRONTEND_PORT)"
-echo "  - .env file (PORT, BACKEND_PORT, FRONTEND_PORT)"
+echo "Available Ports: ${AVAILABLE_PORTS[*]}"
+echo "Ports In Use: ${IN_USE_PORTS[*]}"
+echo ""
+echo "Recommended Allocation:"
+echo "  - 3000: ResolveIt Backend (expected in use)"
+echo "  - 3001: ResolveIt Frontend (expected in use)"
+echo "  - 3002: Gemura Backend API (should be available)"
+echo "  - 3003: Gemura Frontend (should be available)"
+echo "  - 3004-3010: Available for Gemura additional services"
+echo ""
+if [[ " ${AVAILABLE_PORTS[@]} " =~ " 3002 " ]]; then
+    echo -e "${GREEN}✓ Port 3002 is available - Gemura backend can be deployed${NC}"
+else
+    echo -e "${RED}✗ Port 3002 is in use - Choose alternative port from available list${NC}"
+fi
 echo ""
 
