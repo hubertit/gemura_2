@@ -138,6 +138,7 @@ class _ActionCard extends StatelessWidget {
               action.name,
               style: AppTheme.titleSmall.copyWith(
                 fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -150,7 +151,7 @@ class _ActionCard extends StatelessWidget {
                 action.description,
                 style: AppTheme.bodySmall.copyWith(
                   color: AppTheme.textSecondaryColor,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
