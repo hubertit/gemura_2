@@ -214,10 +214,10 @@ class _CreatePayrollScreenState extends State<CreatePayrollScreen> {
         final netAmount = grossAmount - totalDeductions;
 
         payslips.add({
-          'id': '${DateTime.now().millisecondsSinceEpoch}_$supplierId',
-          'supplier_account_id': supplierId,
-          'supplier_name': supplier['name'] ?? 'Unknown Supplier',
-          'supplier_code': supplier['code'] ?? supplierId,
+          'id': '${DateTime.now().millisecondsSinceEpoch}_$supplierCode',
+          'supplier_account_id': supplierCode,
+          'supplier_name': supplierName,
+          'supplier_code': supplierDisplayCode,
           'gross_amount': grossAmount,
           'net_amount': netAmount,
           'total_deductions': totalDeductions,
