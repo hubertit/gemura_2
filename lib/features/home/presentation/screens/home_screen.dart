@@ -12,7 +12,6 @@ import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/utils/number_formatter.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
-import '../widgets/financial_metrics_card.dart';
 import '../../../feed/presentation/screens/feed_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
@@ -1013,108 +1012,95 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Financial Metrics Card (temporarily replacing wallet/ikofi cards)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
-              child: FinancialMetricsCard(
-                sales: 1250000, // TODO: Replace with actual data from API
-                expenses: 450000, // TODO: Replace with actual data from API
-                profit: 800000, // TODO: Replace with actual data from API
-                currency: 'RWF',
-                onTap: () {
-                  // TODO: Navigate to detailed financial report screen
-                },
-              ),
+            // Dynamic Ikofi Cards
+            Consumer(
+              builder: (context, ref, child) {
+                final walletsAsync = ref.watch(walletsNotifierProvider);
+                
+                return walletsAsync.when(
+                  loading: () => SkeletonLoaders.homeTabSkeleton(),
+                  error: (error, stack) => SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, color: AppTheme.textHintColor),
+                          const SizedBox(height: AppTheme.spacing8),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final localizationService = ref.watch(localizationServiceProvider);
+                              return Text(
+                                localizationService.translate('failedToLoadWallets'),
+                                style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  data: (apiWallets) {
+                    // Use API wallets, fallback to mock if empty
+                    final wallets = apiWallets.isNotEmpty ? apiWallets : homeWallets;
+                    
+                    if (wallets.isEmpty) {
+                      return SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.account_balance_wallet_outlined, color: AppTheme.textHintColor),
+                              const SizedBox(height: AppTheme.spacing8),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  final localizationService = ref.watch(localizationServiceProvider);
+                                  return Text(
+                                    localizationService.translate('noWalletsAvailable'),
+                                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return SizedBox(
+                      height: 180, // Increased height to match wallet card natural height
+                      child: PageView.builder(
+                        itemCount: wallets.length,
+                        controller: PageController(viewportFraction: 0.92),
+                        itemBuilder: (context, index) {
+                          final isFirst = index == 0;
+                          final isLast = index == wallets.length - 1;
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              left: isFirst ? 0 : AppTheme.spacing8,
+                              right: isLast ? 0 : AppTheme.spacing8,
+                            ),
+                            child: WalletCard(
+                              wallet: wallets[index], 
+                              showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
+                              onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => TransactionsScreen(wallet: wallets[index]),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-            // Temporarily hidden - Dynamic Ikofi Cards
-            // Consumer(
-            //   builder: (context, ref, child) {
-            //     final walletsAsync = ref.watch(walletsNotifierProvider);
-            //     
-            //     return walletsAsync.when(
-            //       loading: () => SkeletonLoaders.homeTabSkeleton(),
-            //       error: (error, stack) => SizedBox(
-            //         height: 200,
-            //         child: Center(
-            //           child: Column(
-            //             mainAxisAlignment: MainAxisAlignment.center,
-            //             children: [
-            //               Icon(Icons.error_outline, color: AppTheme.textHintColor),
-            //               const SizedBox(height: AppTheme.spacing8),
-            //               Consumer(
-            //                 builder: (context, ref, child) {
-            //                   final localizationService = ref.watch(localizationServiceProvider);
-            //                   return Text(
-            //                     localizationService.translate('failedToLoadWallets'),
-            //                     style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-            //                   );
-            //                 },
-            //               ),
-            //             ],
-            //           ),
-            //         ),
-            //       ),
-            //       data: (apiWallets) {
-            //         // Use API wallets, fallback to mock if empty
-            //         final wallets = apiWallets.isNotEmpty ? apiWallets : homeWallets;
-            //         
-            //         if (wallets.isEmpty) {
-            //           return SizedBox(
-            //             height: 200,
-            //             child: Center(
-            //               child: Column(
-            //                 mainAxisAlignment: MainAxisAlignment.center,
-            //                 children: [
-            //                   Icon(Icons.account_balance_wallet_outlined, color: AppTheme.textHintColor),
-            //                   const SizedBox(height: AppTheme.spacing8),
-            //                   Consumer(
-            //                     builder: (context, ref, child) {
-            //                       final localizationService = ref.watch(localizationServiceProvider);
-            //                       return Text(
-            //                         localizationService.translate('noWalletsAvailable'),
-            //                         style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-            //                       );
-            //                     },
-            //                   ),
-            //                 ],
-            //               ),
-            //             ),
-            //           );
-            //         }
-            //         
-            //         return SizedBox(
-            //           height: 180, // Increased height to match wallet card natural height
-            //           child: PageView.builder(
-            //             itemCount: wallets.length,
-            //             controller: PageController(viewportFraction: 0.92),
-            //             itemBuilder: (context, index) {
-            //               final isFirst = index == 0;
-            //               final isLast = index == wallets.length - 1;
-            //               return Padding(
-            //                 padding: EdgeInsets.only(
-            //                   left: isFirst ? 0 : AppTheme.spacing8,
-            //                   right: isLast ? 0 : AppTheme.spacing8,
-            //                 ),
-            //                 child: WalletCard(
-            //                   wallet: wallets[index], 
-            //                   showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
-            //                   onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
-            //                   onTap: () {
-            //                     Navigator.of(context).push(
-            //                       MaterialPageRoute(
-            //                         builder: (context) => TransactionsScreen(wallet: wallets[index]),
-            //                       ),
-            //                     );
-            //                   },
-            //                 ),
-            //               );
-            //             },
-            //           ),
-            //         );
-            //       },
-            //     );
-            //   },
-            // ),
             const SizedBox(height: AppTheme.spacing4), // further reduced space between wallet card and quick actions
             // Quick actions
             Padding(
