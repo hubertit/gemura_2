@@ -53,6 +53,32 @@ Main deployment script that:
 - No argument: Auto-detects first available port
 - With port number: Uses the specified port (verifies it's available first)
 
+### `auto-deploy-backend.sh` ⭐ **AUTO-DEPLOY**
+
+**Automatically deploys backend changes to production!**
+
+This script:
+1. Checks if backend files changed in the last commit
+2. Automatically deploys to production if changes detected
+3. Can be run manually or via git hook
+
+**Usage:**
+```bash
+# Check last commit and deploy if backend changed
+./scripts/deployment/auto-deploy-backend.sh
+
+# Force deploy regardless of changes
+./scripts/deployment/auto-deploy-backend.sh --force
+```
+
+**Auto-deployment via Git Hook:**
+The project includes a `post-commit` git hook that automatically deploys backend changes after each commit. The hook:
+- Detects if backend files changed
+- Runs deployment in background (non-blocking)
+- Logs to `/tmp/gemura-auto-deploy.log`
+
+To disable auto-deployment, remove or rename `.git/hooks/post-commit`.
+
 ### `find-available-port.sh`
 
 Internal script that finds the first available port (used by deploy script).
