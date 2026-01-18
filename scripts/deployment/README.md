@@ -77,7 +77,27 @@ The project includes a `post-commit` git hook that automatically deploys backend
 - Runs deployment in background (non-blocking)
 - Logs to `/tmp/gemura-auto-deploy.log`
 
-To disable auto-deployment, remove or rename `.git/hooks/post-commit`.
+**Setup Git Hook:**
+```bash
+# Install the git hook (one-time setup)
+./scripts/deployment/setup-auto-deploy.sh
+```
+
+**How it works:**
+1. After each commit, the hook checks if backend files changed
+2. If backend files changed, it automatically runs `auto-deploy-backend.sh`
+3. Deployment runs in background (doesn't block your terminal)
+4. Check deployment logs: `tail -f /tmp/gemura-auto-deploy.log`
+
+**To disable auto-deployment:**
+```bash
+rm .git/hooks/post-commit
+```
+
+**To re-enable:**
+```bash
+./scripts/deployment/setup-auto-deploy.sh
+```
 
 ### `find-available-port.sh`
 
