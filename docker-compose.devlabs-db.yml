@@ -1,0 +1,38 @@
+version: '3.8'
+
+# DevLabs PostgreSQL Container - Shared database server for multiple projects
+# This is the same container ResolveIt uses
+services:
+  devslab-postgres:
+    image: postgres:15-alpine  # Using 15-alpine as it's already on the server
+    container_name: devslab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-devslab_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devslab_secure_password_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}  # Default database
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - devslab_postgres_data:/var/lib/postgresql/data
+    ports:
+      # Use port 5433 to avoid conflicts with any existing PostgreSQL
+      - "${POSTGRES_PORT:-5433}:5432"
+    networks:
+      - devslab-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-devslab_admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Allow connections from any database
+    command: postgres -c max_connections=200
+
+networks:
+  devslab-network:
+    driver: bridge
+    name: devslab-network
+
+volumes:
+  devslab_postgres_data:
+    driver: local
+

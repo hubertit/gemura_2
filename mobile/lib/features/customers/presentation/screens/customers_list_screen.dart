@@ -510,7 +510,7 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
 
                       try {
                         await ref.read(customersNotifierProvider.notifier).updateCustomerPrice(
-                          relationId: int.parse(customer.relationshipId),
+                          customerAccountCode: customer.accountCode, // Use account code, not relationship ID
                           pricePerLiter: newPrice,
                         );
 
@@ -605,7 +605,7 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
 
                       try {
                         await ref.read(customersNotifierProvider.notifier).deleteCustomer(
-                          relationshipId: int.parse(customer.relationshipId),
+                          customerAccountCode: customer.accountCode, // Use account code, not relationship ID
                         );
 
                         if (mounted) {

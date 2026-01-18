@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import '../../shared/models/user_accounts.dart';
 import 'authenticated_dio_service.dart';
@@ -15,14 +16,12 @@ class UserAccountsService {
         throw Exception('No authentication token available');
       }
 
-      print('🔑 Token: ${token.substring(0, 10)}...');
-      print('🌐 API URL: ${AppConfig.apiBaseUrl}/accounts/get');
+      if (kDebugMode) {
+        print('🌐 API URL: ${AppConfig.apiBaseUrl}/accounts');
+      }
 
-      final response = await AuthenticatedDioService.instance.post(
-        '/accounts/get',
-        data: {
-          'token': token, // API expects token in request body
-        },
+      final response = await AuthenticatedDioService.instance.get(
+        '/accounts',
       );
 
       print('✅ Response: ${response.data}');
@@ -38,7 +37,7 @@ class UserAccountsService {
   }
 
   /// Switch default account
-  Future<SwitchAccountResponse> switchAccount(int accountId) async {
+  Future<SwitchAccountResponse> switchAccount(String accountId) async {
     try {
       final token = SecureStorageService.getAuthToken();
       if (token == null || token.isEmpty) {
@@ -51,8 +50,7 @@ class UserAccountsService {
       final response = await AuthenticatedDioService.instance.post(
         '/accounts/switch',
         data: {
-          'token': token, // API expects token in request body
-          'account_id': accountId,
+          'account_id': accountId, // Backend expects UUID string
         },
       );
 

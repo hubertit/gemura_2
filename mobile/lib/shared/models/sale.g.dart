@@ -8,9 +8,9 @@ part of 'sale.dart';
 
 Sale _$SaleFromJson(Map<String, dynamic> json) => Sale(
       id: json['id'] as String,
-      quantity: json['quantity'] as String,
-      unitPrice: json['unit_price'] as String,
-      totalAmount: json['total_amount'] as String,
+      quantity: Sale._stringFromJson(json['quantity']),
+      unitPrice: Sale._stringFromJson(json['unit_price']),
+      totalAmount: Sale._stringFromJson(json['total_amount']),
       status: json['status'] as String,
       saleAt: json['sale_at'] as String,
       notes: json['notes'] as String?,

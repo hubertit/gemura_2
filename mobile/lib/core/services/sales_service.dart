@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:gemura/core/config/app_config.dart';
 import 'package:gemura/core/services/authenticated_dio_service.dart';
-import 'package:gemura/core/services/secure_storage_service.dart';
 import 'package:gemura/shared/models/sale.dart';
 
 class SalesService {
@@ -13,15 +11,9 @@ class SalesService {
 
   Future<List<Sale>> getSales({Map<String, dynamic>? filters}) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      
       final Map<String, dynamic> requestData = {
-        'token': token,
+        'filters': filters ?? {},
       };
-      
-      if (filters != null && filters.isNotEmpty) {
-        requestData['filters'] = filters;
-      }
       
       final response = await _dio.post(
         '/sales/sales',
@@ -69,12 +61,9 @@ class SalesService {
     String? notes,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      
       final response = await _dio.post(
-        '/sales/sell',
+        '/sales', // NestJS uses POST /sales for creating sales
         data: {
-          'token': token,
           'customer_account_code': customerAccountCode,
           'quantity': quantity,
           'status': status.toLowerCase(),
@@ -110,12 +99,9 @@ class SalesService {
     String? notes,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      
-      final response = await _dio.post(
+      final response = await _dio.put(
         '/sales/update',
         data: {
-          'token': token,
           'sale_id': saleId,
           'customer_account_code': customerAccountCode,
           'quantity': quantity,
@@ -155,12 +141,9 @@ class SalesService {
     required String saleId,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      
       final response = await _dio.post(
         '/sales/cancel',
         data: {
-          'token': token,
           'sale_id': saleId,
         },
       );

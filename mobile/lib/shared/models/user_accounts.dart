@@ -42,7 +42,7 @@ class UserAccountsData {
 @JsonSerializable()
 class UserInfo {
   @JsonKey(name: 'id')
-  final int id;
+  final String id; // Changed to String for UUID support
   @JsonKey(name: 'name')
   final String name;
   @JsonKey(name: 'email')
@@ -50,7 +50,7 @@ class UserInfo {
   @JsonKey(name: 'phone')
   final String phone;
   @JsonKey(name: 'default_account_id')
-  final int? defaultAccountId;
+  final String? defaultAccountId; // Changed to String for UUID support
 
   UserInfo({
     required this.id,
@@ -67,8 +67,8 @@ class UserInfo {
 
 @JsonSerializable()
 class UserAccount {
-  @JsonKey(name: 'account_id', fromJson: _parseInt)
-  final int accountId;
+  @JsonKey(name: 'account_id')
+  final String accountId; // Changed to String for UUID support
   @JsonKey(name: 'account_code')
   final String accountCode;
   @JsonKey(name: 'account_name')
@@ -107,12 +107,6 @@ class UserAccount {
   factory UserAccount.fromJson(Map<String, dynamic> json) =>
       _$UserAccountFromJson(json);
   Map<String, dynamic> toJson() => _$UserAccountToJson(this);
-  
-  static int _parseInt(dynamic value) {
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value) ?? 0;
-    return 0;
-  }
 }
 
 @JsonSerializable()
@@ -176,7 +170,7 @@ class SwitchAccountData {
 
 @JsonSerializable()
 class DefaultAccount {
-  final int id;
+  final String id; // Changed to String for UUID support
   final String code;
   final String name;
   final String type;

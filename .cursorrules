@@ -1,0 +1,37 @@
+# Gemura 2.0 - Project Organization Rules
+
+## Project Structure
+
+- `/backend` - NestJS backend code
+- `/mobile` - Flutter mobile app
+- `/docs` - All documentation (organized by category)
+- `/scripts` - Utility scripts (organized by purpose)
+- `/database` - Database files
+
+## Documentation Standards
+
+- All docs in `/docs` organized by category
+- Each directory has a README.md
+- Use clear headings and structure
+- Include code examples where helpful
+- Update docs when code changes
+
+## Script Organization
+
+- Deployment scripts → `/scripts/deployment`
+- Testing scripts → `/scripts/testing`
+- Migration scripts → `/scripts/migration`
+- Utilities → `/scripts/utils`
+
+## File Naming
+
+- README.md for directory indexes
+- *_GUIDE.md for how-to guides
+- *_STATUS.md for status reports
+- *_RESULTS.md for test results
+
+## Code Organization
+
+- Backend: Feature-based modules in `backend/src/modules/`
+- Mobile: Feature-based modules in `mobile/lib/features/`
+- Shared code in appropriate common/shared directories

@@ -22,12 +22,12 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: userInfo.when(
         data: (user) {
-          final accountId = user.data.user.defaultAccountId;
-          final notificationsAsync = ref.watch(notificationsNotifierProvider(accountId));
+          // Notifications don't use accountId in NestJS backend, pass null
+          final notificationsAsync = ref.watch(notificationsNotifierProvider(null));
           
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(notificationsNotifierProvider(accountId));
+              ref.invalidate(notificationsNotifierProvider(null));
             },
             child: notificationsAsync.when(
               data: (response) {
@@ -79,7 +79,7 @@ class NotificationsScreen extends ConsumerWidget {
                     final notification = notifications[index];
                     return _NotificationCard(
                       notification: notification,
-                      accountId: accountId,
+                      accountId: null, // Notifications don't use accountId in NestJS backend
                     );
                   },
                 );

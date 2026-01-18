@@ -1,0 +1,448 @@
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { User } from '@prisma/client';
+import { CreateCustomerDto } from './dto/create-customer.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
+import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
+
+@Injectable()
+export class CustomersService {
+  constructor(private prisma: PrismaService) {}
+
+  async createCustomer(user: User, createDto: CreateCustomerDto) {
+    const { name, phone, email, nid, address, price_per_liter } = createDto;
+
+    // Check if user has a valid default account
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Normalize phone (remove non-digits)
+    const normalizedPhone = phone.replace(/\D/g, '');
+
+    // Find existing customer by phone, email, or nid
+    const existingCustomer = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { phone: normalizedPhone },
+          ...(email ? [{ email: email.toLowerCase() }] : []),
+          ...(nid ? [{ nid }] : []),
+        ],
+      },
+      include: {
+        user_accounts: {
+          where: { status: 'active' },
+          include: { account: true },
+          take: 1,
+        },
+      },
+    });
+
+    let customerAccountId: string;
+    let customerAccountCode: string;
+    let customerName: string;
+
+    if (existingCustomer && existingCustomer.user_accounts.length > 0) {
+      // Use existing customer account
+      customerAccountId = existingCustomer.user_accounts[0].account_id;
+      customerAccountCode = existingCustomer.user_accounts[0].account.code || '';
+      customerName = existingCustomer.name;
+    } else {
+      // Create new customer (user + account + wallet)
+      const userCode = `U_${randomBytes(3).toString('hex').toUpperCase()}`;
+      const accountCode = `A_${randomBytes(3).toString('hex').toUpperCase()}`;
+      const walletCode = `W_${randomBytes(3).toString('hex').toUpperCase()}`;
+      const token = randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash('default123', 10);
+
+      // Create user
+      const newUser = await this.prisma.user.create({
+        data: {
+          code: userCode,
+          name,
+          phone: normalizedPhone,
+          email: email?.toLowerCase(),
+          nid,
+          address,
+          password_hash: passwordHash,
+          token,
+          status: 'active',
+          account_type: 'customer',
+          created_by: user.id,
+        },
+      });
+
+      // Create account
+      const newAccount = await this.prisma.account.create({
+        data: {
+          code: accountCode,
+          name,
+          type: 'tenant',
+          status: 'active',
+          created_by: user.id,
+        },
+      });
+
+      // Link user to account
+      await this.prisma.userAccount.create({
+        data: {
+          user_id: newUser.id,
+          account_id: newAccount.id,
+          role: 'customer',
+          status: 'active',
+          created_by: user.id,
+        },
+      });
+
+      // Create wallet
+      await this.prisma.wallet.create({
+        data: {
+          code: walletCode,
+          account_id: newAccount.id,
+          type: 'regular',
+          is_default: true,
+          balance: 0,
+          currency: 'RWF',
+          status: 'active',
+          created_by: user.id,
+        },
+      });
+
+      customerAccountId = newAccount.id;
+      customerAccountCode = accountCode;
+      customerName = name;
+    }
+
+    // Create or update supplier-customer relationship
+    const existingRelationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccountId,
+        customer_account_id: customerAccountId,
+      },
+    });
+
+    const finalPricePerLiter = price_per_liter || 0;
+
+    if (existingRelationship) {
+      // Update existing relationship
+      await this.prisma.supplierCustomer.update({
+        where: { id: existingRelationship.id },
+        data: {
+          price_per_liter: finalPricePerLiter,
+          relationship_status: 'active',
+          updated_by: user.id,
+        },
+      });
+    } else {
+      // Create new relationship
+      await this.prisma.supplierCustomer.create({
+        data: {
+          supplier_account_id: supplierAccountId,
+          customer_account_id: customerAccountId,
+          price_per_liter: finalPricePerLiter,
+          relationship_status: 'active',
+          created_by: user.id,
+        },
+      });
+    }
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Customer created/updated successfully.',
+      data: {
+        customer: {
+          account_id: customerAccountId,
+          account_code: customerAccountCode,
+          name: customerName,
+          phone: normalizedPhone,
+          price_per_liter: finalPricePerLiter,
+        },
+      },
+    };
+  }
+
+  async getCustomer(user: User, customerAccountCode: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Get customer account by code
+    const customerAccount = await this.prisma.account.findUnique({
+      where: { code: customerAccountCode },
+      include: {
+        user_accounts: {
+          where: { status: 'active' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                email: true,
+                nid: true,
+                address: true,
+                account_type: true,
+              },
+            },
+          },
+          take: 1,
+        },
+      },
+    });
+
+    if (!customerAccount) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer account not found.',
+      });
+    }
+
+    // Get supplier-customer relationship
+    const relationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccountId,
+        customer_account_id: customerAccount.id,
+      },
+      include: {
+        supplier_account: true,
+        customer_account: true,
+      },
+    });
+
+    const customerUser = customerAccount.user_accounts[0]?.user;
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Customer fetched successfully.',
+      data: {
+        customer: {
+          account_id: customerAccount.id,
+          account_code: customerAccount.code,
+          name: customerAccount.name,
+          type: customerAccount.type,
+          status: customerAccount.status,
+          user: customerUser ? {
+            id: customerUser.id,
+            name: customerUser.name,
+            phone: customerUser.phone,
+            email: customerUser.email,
+            nid: customerUser.nid,
+            address: customerUser.address,
+            account_type: customerUser.account_type,
+          } : null,
+          relationship: relationship ? {
+            price_per_liter: Number(relationship.price_per_liter),
+            average_supply_quantity: Number(relationship.average_supply_quantity),
+            relationship_status: relationship.relationship_status,
+            created_at: relationship.created_at,
+            updated_at: relationship.updated_at,
+          } : null,
+        },
+      },
+    };
+  }
+
+  async updateCustomer(user: User, updateDto: UpdateCustomerDto) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Get customer account by code
+    const customerAccount = await this.prisma.account.findUnique({
+      where: { code: updateDto.customer_account_code },
+      include: {
+        user_accounts: {
+          where: { status: 'active' },
+          include: { user: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!customerAccount) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer account not found.',
+      });
+    }
+
+    // Find existing relationship
+    const relationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccountId,
+        customer_account_id: customerAccount.id,
+      },
+    });
+
+    if (!relationship) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer relationship not found.',
+      });
+    }
+
+    // Update account if name provided
+    if (updateDto.name) {
+      await this.prisma.account.update({
+        where: { id: customerAccount.id },
+        data: {
+          name: updateDto.name,
+          updated_by: user.id,
+        },
+      });
+    }
+
+    // Update user if provided
+    const customerUser = customerAccount.user_accounts[0]?.user;
+    if (customerUser) {
+      const userUpdateData: any = {
+        updated_by: user.id,
+      };
+
+      if (updateDto.phone) {
+        userUpdateData.phone = updateDto.phone.replace(/\D/g, '');
+      }
+      if (updateDto.email) {
+        userUpdateData.email = updateDto.email.toLowerCase();
+      }
+      if (updateDto.nid) {
+        userUpdateData.nid = updateDto.nid;
+      }
+      if (updateDto.address) {
+        userUpdateData.address = updateDto.address;
+      }
+
+      if (Object.keys(userUpdateData).length > 1) {
+        await this.prisma.user.update({
+          where: { id: customerUser.id },
+          data: userUpdateData,
+        });
+      }
+    }
+
+    // Update relationship
+    const relationshipUpdateData: any = {
+      updated_by: user.id,
+    };
+
+    if (updateDto.price_per_liter !== undefined) {
+      relationshipUpdateData.price_per_liter = updateDto.price_per_liter;
+    }
+
+    if (updateDto.relationship_status) {
+      relationshipUpdateData.relationship_status = updateDto.relationship_status as any;
+    }
+
+    if (Object.keys(relationshipUpdateData).length === 1) {
+      // Only updated_by, no actual fields to update
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No fields to update.',
+      });
+    }
+
+    const updatedRelationship = await this.prisma.supplierCustomer.update({
+      where: { id: relationship.id },
+      data: relationshipUpdateData,
+      include: {
+        supplier_account: true,
+        customer_account: true,
+      },
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Customer updated successfully.',
+      data: {
+        customer: {
+          account_code: updatedRelationship.customer_account.code,
+          price_per_liter: Number(updatedRelationship.price_per_liter),
+          relationship_status: updatedRelationship.relationship_status,
+        },
+      },
+    };
+  }
+
+  async deleteCustomer(user: User, customerAccountCode: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Get customer account by code
+    const customerAccount = await this.prisma.account.findUnique({
+      where: { code: customerAccountCode },
+    });
+
+    if (!customerAccount) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer account not found.',
+      });
+    }
+
+    // Find and delete relationship (soft delete by setting status to inactive)
+    const relationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccountId,
+        customer_account_id: customerAccount.id,
+      },
+    });
+
+    if (!relationship) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer relationship not found.',
+      });
+    }
+
+    // Set relationship status to inactive (soft delete)
+    await this.prisma.supplierCustomer.update({
+      where: { id: relationship.id },
+      data: {
+        relationship_status: 'inactive',
+        updated_by: user.id,
+      },
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Customer relationship deleted successfully.',
+    };
+  }
+}
+

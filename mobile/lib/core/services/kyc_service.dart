@@ -41,8 +41,7 @@ class KYCService {
       }
       
       FormData formData = FormData.fromMap({
-        'token': token,
-        'photo_type': photoType,
+        'photoType': photoType,
         'photo': await MultipartFile.fromFile(
           photoFile.path,
           filename: '${photoType}_${DateTime.now().millisecondsSinceEpoch}.$extension',
@@ -53,12 +52,12 @@ class KYCService {
         print('🔧 KYCService: Form data created successfully');
         print('🔧 KYCService: Form data fields: ${formData.fields}');
         print('🔧 KYCService: Form data files: ${formData.files}');
-        print('🔧 KYCService: Making API call to: ${AppConfig.apiBaseUrl}/kyc/upload_photo.php');
+        print('🔧 KYCService: Making API call to: ${AppConfig.apiBaseUrl}/kyc/upload-photo');
       }
 
       // Make API call
       Response response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/kyc/upload_photo.php',
+        '${AppConfig.apiBaseUrl}/kyc/upload-photo',
         data: formData,
         options: Options(
           // Don't manually set Content-Type - let Dio handle it automatically
@@ -89,11 +88,8 @@ class KYCService {
   /// Get KYC status
   static Future<Map<String, dynamic>> getKycStatus(String token) async {
     try {
-      Response response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/profile/update.php',
-        data: {
-          'token': token,
-        },
+      Response response = await _dio.get(
+        '${AppConfig.apiBaseUrl}/profile/get',
         options: Options(
           headers: {
             'Content-Type': 'application/json',

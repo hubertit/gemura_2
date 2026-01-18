@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../shared/models/wallet.dart';
-import '../config/app_config.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class WalletsService {
   static final WalletsService _instance = WalletsService._internal();
@@ -14,16 +12,8 @@ class WalletsService {
   /// Get all wallets for the authenticated user
   Future<List<Wallet>> getWallets() async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
+      final response = await _dio.get(
         '/wallets/get',
-        data: {
-          'token': token,
-        },
       );
 
       if (response.statusCode == 200) {
@@ -71,15 +61,9 @@ class WalletsService {
     List<String>? jointOwners,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
         '/wallets/create',
         data: {
-          'token': token,
           'name': name,
           'type': type,
           'description': description,
@@ -128,15 +112,9 @@ class WalletsService {
   /// Get wallet details by wallet code
   Future<Wallet> getWalletDetails(String walletCode) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
         '/wallets/details',
         data: {
-          'token': token,
           'wallet_code': walletCode,
         },
       );

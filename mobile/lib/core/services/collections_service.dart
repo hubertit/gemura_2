@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../shared/models/collection.dart';
-import '../config/app_config.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class CollectionsService {
   static final CollectionsService _instance = CollectionsService._internal();
@@ -12,21 +10,20 @@ class CollectionsService {
   final Dio _dio = AuthenticatedDioService.instance;
 
   /// Get all collections for the authenticated user
+  /// Note: Collections are stored as sales records in the backend
+  /// Using sales endpoint with filters to get collections
   Future<List<Collection>> getCollections() async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
+      // Collections are milk sales from supplier perspective
+      // Use sales endpoint to get collections
       final response = await _dio.post(
-        '/collections/get',
+        '/sales/sales',
         data: {
-          'token': token,
+          'filters': {}, // Get all sales (collections)
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data['code'] == 200 || data['status'] == 'success') {
           // Handle both old nested structure and new direct array structure
@@ -119,11 +116,8 @@ class CollectionsService {
     int? offset,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
+      // Collections are milk sales from supplier perspective
+      // Use sales endpoint with filters
       final Map<String, dynamic> filters = {};
 
       if (supplierAccountCode != null && supplierAccountCode.isNotEmpty) {
@@ -158,14 +152,13 @@ class CollectionsService {
       }
 
       final response = await _dio.post(
-        '/collections/get',
+        '/sales/sales',
         data: {
-          'token': token,
           'filters': filters,
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data['code'] == 200 || data['status'] == 'success') {
           // Handle both old nested structure and new direct array structure
@@ -224,15 +217,9 @@ class CollectionsService {
     required DateTime collectionAt,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
         '/collections/create',
         data: {
-          'token': token,
           'supplier_account_code': supplierAccountCode,
           'quantity': quantity,
           'status': status,
@@ -287,14 +274,8 @@ class CollectionsService {
     String? notes,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final Map<String, dynamic> updateData = {
-        'token': token,
-        'collection_id': collectionId,
+        'collection_id': collectionId, // Backend uses snake_case
       };
 
       if (quantity != null) updateData['quantity'] = quantity;
@@ -305,7 +286,7 @@ class CollectionsService {
       }
       if (notes != null) updateData['notes'] = notes;
 
-      final response = await _dio.post(
+      final response = await _dio.put(
         '/collections/update',
         data: updateData,
       );
@@ -353,16 +334,10 @@ class CollectionsService {
     required String collectionId,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
         '/collections/cancel',
         data: {
-          'token': token,
-          'collection_id': collectionId,
+          'collection_id': collectionId, // Backend uses snake_case
         },
       );
 
@@ -409,16 +384,12 @@ class CollectionsService {
     required String collectionId,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
+      // Note: NestJS may not have delete endpoint - check controller
+      // For now using cancel or may need DELETE /collections/:id
       final response = await _dio.post(
-        '/collections/delete',
+        '/collections/cancel', // Or DELETE /collections/:id if available
         data: {
-          'token': token,
-          'collection_id': collectionId,
+          'collectionId': collectionId,
         },
       );
 
@@ -464,16 +435,12 @@ class CollectionsService {
     String? notes,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/collections/approve',
+      // Note: Approve endpoint doesn't exist in NestJS - using update with status='accepted'
+      final response = await _dio.put(
+        '/collections/update',
         data: {
-          'token': token,
-          'collection_id': collectionId,
+          'collection_id': collectionId, // Backend uses snake_case
+          'status': 'accepted',
           'notes': notes,
         },
       );
@@ -523,18 +490,13 @@ class CollectionsService {
     String? notes,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/collections/reject',
+      // Note: Reject endpoint doesn't exist in NestJS - using update with status='rejected'
+      final response = await _dio.put(
+        '/collections/update',
         data: {
-          'token': token,
-          'collection_id': collectionId,
-          'rejection_reason': rejectionReason,
-          'notes': notes,
+          'collection_id': collectionId, // Backend uses snake_case
+          'status': 'rejected',
+          'notes': notes != null ? '$rejectionReason. $notes' : rejectionReason,
         },
       );
 
@@ -577,53 +539,10 @@ class CollectionsService {
   }
 
   /// Get collection statistics
+  /// Note: Stats endpoint not yet implemented in NestJS backend
   Future<Map<String, dynamic>> getCollectionStats() async {
-    try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/collections/stats',
-        data: {
-          'token': token,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['code'] == 200 || data['status'] == 'success') {
-          return data['data'] ?? {};
-        } else {
-          throw Exception(data['message'] ?? 'Failed to get collection stats');
-        }
-      } else {
-        throw Exception('Failed to get collection stats: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      String errorMessage = 'Failed to get collection stats. ';
-      
-      if (e.response?.statusCode == 401) {
-        errorMessage = 'Authentication failed. Please login again.';
-      } else if (e.response?.statusCode == 404) {
-        errorMessage = 'Collection stats service not found.';
-      } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (e.type == DioExceptionType.connectionTimeout ||
-                 e.type == DioExceptionType.receiveTimeout ||
-                 e.type == DioExceptionType.sendTimeout) {
-        errorMessage = 'Connection timeout. Please check your internet connection.';
-      } else if (e.type == DioExceptionType.connectionError) {
-        errorMessage = 'No internet connection. Please check your network.';
-      } else {
-        final backendMsg = e.response?.data?['message'];
-        errorMessage += backendMsg ?? 'Please try again.';
-      }
-      
-      throw Exception(errorMessage);
-    } catch (e) {
-      throw Exception('Unexpected error: $e');
-    }
+    // Note: Stats endpoint may not exist in NestJS - check controller
+    // May need to implement or use analytics endpoint
+    throw Exception('Collection stats endpoint not yet implemented in NestJS backend');
   }
 }

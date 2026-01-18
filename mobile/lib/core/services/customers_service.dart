@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../shared/models/customer.dart';
-import '../config/app_config.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class CustomersService {
   static final CustomersService _instance = CustomersService._internal();
@@ -12,37 +10,18 @@ class CustomersService {
   final Dio _dio = AuthenticatedDioService.instance;
 
   /// Get all customers for the authenticated user
+  /// Note: NestJS doesn't have a "get all customers" endpoint
+  /// Using suppliers endpoint pattern - customers are relationships, not a list endpoint
+  /// This returns an empty list - individual customers must be fetched by code
   Future<List<Customer>> getCustomers() async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/customers/get',
-        data: {
-          'token': token,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        // Check if the API response indicates success
-        if (data['code'] == 200 || data['status'] == 'success') {
-          final List<dynamic> customersData = data['data'] ?? [];
-          return customersData.map((json) => Customer.fromApiResponse(json)).toList();
-        } else {
-          final errorMessage = data['message'] ?? 'Failed to get customers';
-          // Check if the message contains success info but is still an error
-          if (errorMessage.toString().toLowerCase().contains('successfully') && data['status'] != 'success') {
-            throw Exception('Customer created but failed to refresh list. Please try again.');
-          }
-          throw Exception(errorMessage);
-        }
-      } else {
-        throw Exception('Failed to get customers: ${response.statusCode}');
-      }
+      // Since NestJS doesn't have GET /customers, we return empty list
+      // Individual customers can be fetched using getCustomerDetails(customerCode)
+      // TODO: Backend should implement GET /customers endpoint OR
+      // Use a different approach like getting from sales relationships
+      print('⚠️ Warning: GET /customers endpoint not available in NestJS backend');
+      print('⚠️ Use getCustomerDetails(customerCode) to fetch individual customers');
+      return [];
     } on DioException catch (e) {
       String errorMessage = 'Failed to get customers. ';
       
@@ -79,15 +58,9 @@ class CustomersService {
     required double pricePerLiter,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/customers/create',
+        '/customers',
         data: {
-          'token': token,
           'name': name,
           'phone': phone,
           'email': email,
@@ -136,19 +109,11 @@ class CustomersService {
   }
 
   /// Get customer details
-  Future<Customer> getCustomerDetails(String customerId) async {
+  Future<Customer> getCustomerDetails(String customerCode) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/customers/details',
-        data: {
-          'token': token,
-          'customer_id': customerId,
-        },
+      // NestJS uses GET /customers/:code
+      final response = await _dio.get(
+        '/customers/$customerCode',
       );
 
       if (response.statusCode == 200) {
@@ -188,21 +153,16 @@ class CustomersService {
   }
 
   /// Update customer price per liter
+  /// Note: customerAccountCode should be the customer account code (string), not relationship ID
   Future<void> updateCustomerPrice({
-    required int relationId,
+    required String customerAccountCode, // Changed from int relationId to String accountCode
     required double pricePerLiter,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
+      final response = await _dio.put(
         '/customers/update',
         data: {
-          'token': token,
-          'relation_id': relationId,
+          'customer_account_code': customerAccountCode,
           'price_per_liter': pricePerLiter,
         },
       );
@@ -246,21 +206,14 @@ class CustomersService {
   }
 
   /// Delete customer relationship
+  /// Note: customerAccountCode should be the customer account code (string), not relationship ID
   Future<void> deleteCustomer({
-    required int relationshipId,
+    required String customerAccountCode, // Changed from int relationshipId to String accountCode
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/customers/delete',
-        data: {
-          'token': token,
-          'relationship_id': relationshipId,
-        },
+      // NestJS uses DELETE /customers/:code
+      final response = await _dio.delete(
+        '/customers/$customerAccountCode',
       );
 
       if (response.statusCode == 200) {

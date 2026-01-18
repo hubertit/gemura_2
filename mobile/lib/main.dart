@@ -4,7 +4,6 @@ import 'features/auth/presentation/screens/splash_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/secure_config.dart';
 import 'core/services/secure_storage_service.dart';
-import 'core/services/local_data_service.dart';
 import 'core/providers/localization_provider.dart';
 
 void main() async {
@@ -15,9 +14,6 @@ void main() async {
   
   // Initialize secure storage
   await SecureStorageService.initialize();
-  
-  // Initialize local data service
-  await LocalDataService.initialize();
   
   runApp(const ProviderScope(child: MyApp()));
 }

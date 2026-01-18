@@ -799,7 +799,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
 
                 try {
                   await ref.read(suppliersNotifierProvider.notifier).updateSupplierPrice(
-                    relationId: int.parse(supplier.relationshipId),
+                    supplierAccountCode: supplier.accountCode, // Use account code, not relationship ID
                     pricePerLiter: newPrice,
                   );
 
@@ -892,7 +892,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
 
                 try {
                   await ref.read(suppliersNotifierProvider.notifier).deleteSupplier(
-                    relationshipId: int.parse(supplier.relationshipId),
+                    supplierAccountCode: supplier.accountCode, // Use account code, not relationship ID
                   );
 
                   if (mounted) {

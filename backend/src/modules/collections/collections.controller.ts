@@ -1,10 +1,12 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Put, Body, UseGuards, Param, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
 import { CollectionsService } from './collections.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { CreateCollectionDto } from './dto/create-collection.dto';
+import { UpdateCollectionDto } from './dto/update-collection.dto';
+import { CancelCollectionDto } from './dto/cancel-collection.dto';
 
 @ApiTags('Collections')
 @Controller('collections')
@@ -101,5 +103,174 @@ export class CollectionsController {
   })
   async createCollection(@CurrentUser() user: User, @Body() createDto: CreateCollectionDto) {
     return this.collectionsService.createCollection(user, createDto);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get collection details',
+    description: 'Retrieve details of a specific milk collection by ID. Only collections belonging to the user\'s default account can be accessed.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Collection ID',
+    example: 'collection-uuid',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Collection fetched successfully.',
+      data: {
+        id: 'collection-uuid',
+        quantity: 120.5,
+        unit_price: 390.0,
+        total_amount: 46995.0,
+        status: 'pending',
+        collection_at: '2025-01-04T10:00:00Z',
+        notes: 'Morning collection',
+        supplier_account: {
+          code: 'A_ABC123',
+          name: 'Supplier Name',
+          type: 'tenant',
+          status: 'active',
+        },
+        customer_account: {
+          code: 'A_XYZ789',
+          name: 'Customer Name',
+          type: 'tenant',
+          status: 'active',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Collection not found or not authorized',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Collection not found or not authorized.',
+    },
+  })
+  async getCollection(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.collectionsService.getCollection(user, id);
+  }
+
+  @Put('update')
+  @ApiOperation({
+    summary: 'Update collection',
+    description: 'Update collection details including quantity, status, date, or notes. Only collections belonging to the user\'s default account can be updated.',
+  })
+  @ApiBody({
+    type: UpdateCollectionDto,
+    description: 'Collection update data',
+    examples: {
+      updateStatus: {
+        summary: 'Update collection status',
+        value: {
+          collection_id: 'collection-uuid',
+          status: 'accepted',
+        },
+      },
+      updateQuantity: {
+        summary: 'Update quantity and notes',
+        value: {
+          collection_id: 'collection-uuid',
+          quantity: 150.0,
+          notes: 'Updated after verification',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection updated successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Collection updated successfully.',
+      data: {
+        id: 'collection-uuid',
+        quantity: 150.0,
+        unit_price: 410.0,
+        total_amount: 61500.0,
+        status: 'accepted',
+        collection_at: '2025-01-04T10:00:00Z',
+        notes: 'Updated after verification',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - no fields to update',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No fields to update.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+  })
+  @ApiNotFoundResponse({
+    description: 'Collection not found or not authorized',
+  })
+  async updateCollection(@CurrentUser() user: User, @Body() updateDto: UpdateCollectionDto) {
+    return this.collectionsService.updateCollection(user, updateDto);
+  }
+
+  @Post('cancel')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Cancel collection',
+    description: 'Cancel a collection by setting its status to "cancelled". Only collections belonging to the user\'s default account can be cancelled.',
+  })
+  @ApiBody({
+    type: CancelCollectionDto,
+    description: 'Collection ID to cancel',
+    examples: {
+      cancelCollection: {
+        summary: 'Cancel collection',
+        value: {
+          collection_id: 'collection-uuid',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection cancelled successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Collection cancelled successfully.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Collection not found or not authorized',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Collection not found or not authorized.',
+    },
+  })
+  async cancelCollection(@CurrentUser() user: User, @Body() cancelDto: CancelCollectionDto) {
+    return this.collectionsService.cancelCollection(user, cancelDto);
   }
 }

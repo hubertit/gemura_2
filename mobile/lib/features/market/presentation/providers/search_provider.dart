@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../../domain/models/product.dart';
 
 // API Base URL
-const String baseUrl = 'https://api.gemura.rw/v2/market';
+const String baseUrl = 'http://159.198.65.38:3004/api/market';
 
 // HTTP Client Provider
 final httpClientProvider = Provider<http.Client>((ref) {
@@ -135,7 +135,7 @@ class SearchNotifier extends StateNotifier<AsyncValue<SearchResult?>> {
     
     try {
       final queryParams = filters.toQueryParameters();
-      final uri = Uri.parse('$baseUrl/products/search.php').replace(queryParameters: queryParams);
+      final uri = Uri.parse('$baseUrl/products/search').replace(queryParameters: queryParams);
       
       final response = await _httpClient.get(uri, headers: {'Content-Type': 'application/json'});
       
@@ -171,7 +171,7 @@ class SearchNotifier extends StateNotifier<AsyncValue<SearchResult?>> {
       );
 
       final queryParams = nextFilters.toQueryParameters();
-      final uri = Uri.parse('$baseUrl/products/search.php').replace(queryParameters: queryParams);
+      final uri = Uri.parse('$baseUrl/products/search').replace(queryParameters: queryParams);
       
       final response = await _httpClient.get(uri, headers: {'Content-Type': 'application/json'});
       

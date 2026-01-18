@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiUnauthorizedResponse, ApiForbiddenResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { AccountsService } from './accounts.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -78,6 +78,7 @@ export class AccountsController {
   }
 
   @Post('switch')
+  @HttpCode(200)
   @ApiOperation({
     summary: 'Switch default account',
     description: 'Change the user\'s default account. The default account is used for operations when no specific account is specified.',

@@ -91,13 +91,13 @@ class CustomersNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
   }
 
   Future<void> updateCustomerPrice({
-    required int relationId,
+    required String customerAccountCode, // Changed to accept account code
     required double pricePerLiter,
   }) async {
     try {
       // Update the customer price via API
       await _customersService.updateCustomerPrice(
-        relationId: relationId,
+        customerAccountCode: customerAccountCode,
         pricePerLiter: pricePerLiter,
       );
       
@@ -111,12 +111,12 @@ class CustomersNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
   }
 
   Future<void> deleteCustomer({
-    required int relationshipId,
+    required String customerAccountCode, // Changed to accept account code
   }) async {
     try {
       // Delete the customer via API
       await _customersService.deleteCustomer(
-        relationshipId: relationshipId,
+        customerAccountCode: customerAccountCode,
       );
       
       // Refresh the customers list to get the updated data

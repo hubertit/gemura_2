@@ -91,13 +91,13 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
   }
 
   Future<void> updateSupplierPrice({
-    required int relationId,
+    required String supplierAccountCode, // Changed to accept account code
     required double pricePerLiter,
   }) async {
     try {
       // Update the supplier price via API
       await _suppliersService.updateSupplierPrice(
-        relationId: relationId,
+        supplierAccountCode: supplierAccountCode,
         pricePerLiter: pricePerLiter,
       );
       
@@ -111,12 +111,12 @@ class SuppliersNotifier extends StateNotifier<AsyncValue<List<Supplier>>> {
   }
 
   Future<void> deleteSupplier({
-    required int relationshipId,
+    required String supplierAccountCode, // Changed to accept account code
   }) async {
     try {
       // Delete the supplier via API
       await _suppliersService.deleteSupplier(
-        relationshipId: relationshipId,
+        supplierAccountCode: supplierAccountCode,
       );
       
       // Refresh the suppliers list to get the updated data

@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../shared/models/supplier.dart';
-import '../config/app_config.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class SuppliersService {
   static final SuppliersService _instance = SuppliersService._internal();
@@ -14,16 +12,9 @@ class SuppliersService {
   /// Get all suppliers for the authenticated user
   Future<List<Supplier>> getSuppliers() async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
         '/suppliers/get',
-        data: {
-          'token': token,
-        },
+        data: {}, // NestJS uses POST but doesn't need token in body
       );
 
       if (response.statusCode == 200) {
@@ -79,15 +70,9 @@ class SuppliersService {
     required double pricePerLiter,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
         '/suppliers/create',
         data: {
-          'token': token,
           'name': name,
           'phone': phone,
           'email': email,
@@ -136,19 +121,11 @@ class SuppliersService {
   }
 
   /// Get supplier details
-  Future<Supplier> getSupplierDetails(String supplierId) async {
+  Future<Supplier> getSupplierDetails(String supplierCode) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/suppliers/details',
-        data: {
-          'token': token,
-          'supplier_id': supplierId,
-        },
+      // NestJS uses GET /suppliers/:code
+      final response = await _dio.get(
+        '/suppliers/$supplierCode',
       );
 
       if (response.statusCode == 200) {
@@ -188,21 +165,16 @@ class SuppliersService {
   }
 
   /// Update supplier price per liter
+  /// Note: relationId should be the supplier account code (string), not relationship ID
   Future<void> updateSupplierPrice({
-    required int relationId,
+    required String supplierAccountCode, // Changed from int relationId to String accountCode
     required double pricePerLiter,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
+      final response = await _dio.put(
         '/suppliers/update',
         data: {
-          'token': token,
-          'relation_id': relationId,
+          'supplier_account_code': supplierAccountCode,
           'price_per_liter': pricePerLiter,
         },
       );
@@ -246,21 +218,14 @@ class SuppliersService {
   }
 
   /// Delete supplier relationship
+  /// Note: supplierAccountCode should be the supplier account code (string), not relationship ID
   Future<void> deleteSupplier({
-    required int relationshipId,
+    required String supplierAccountCode, // Changed from int relationshipId to String accountCode
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/suppliers/delete',
-        data: {
-          'token': token,
-          'relationship_id': relationshipId,
-        },
+      // NestJS uses DELETE /suppliers/:code
+      final response = await _dio.delete(
+        '/suppliers/$supplierAccountCode',
       );
 
       if (response.statusCode == 200) {

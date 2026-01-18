@@ -99,31 +99,47 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           builder: (context, ref, child) {
             final feedState = ref.watch(feedProvider);
             
-            return feedState.isLoading && feedState.posts.isEmpty
-                ? SkeletonLoaders.feedPostsSkeleton(count: 5)
-                : CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      // Posts Section
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            if (index < feedState.posts.length) {
-                              return _buildPostCard(feedState.posts[index]);
-                            }
-                            return null;
-                          },
-                          childCount: feedState.posts.length,
-                        ),
-                      ),
-                      
-                      // Loading indicator for pagination
-                      if (feedState.isLoading && feedState.posts.isNotEmpty)
-                        SliverToBoxAdapter(
-                          child: SkeletonLoaders.feedPostsSkeleton(count: 3),
-                        ),
-                    ],
-                  );
+            // Loading state
+            if (feedState.isLoading && feedState.posts.isEmpty) {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SkeletonLoaders.feedPostsSkeleton(count: 5),
+              );
+            }
+            
+            // Error state
+            if (feedState.error != null && feedState.posts.isEmpty) {
+              return _buildErrorState(feedState.error!);
+            }
+            
+            // Empty state
+            if (!feedState.isLoading && feedState.posts.isEmpty) {
+              return _buildEmptyState();
+            }
+            
+            return CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                // Posts Section
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      if (index < feedState.posts.length) {
+                        return _buildPostCard(feedState.posts[index]);
+                      }
+                      return null;
+                    },
+                    childCount: feedState.posts.length,
+                  ),
+                ),
+                
+                // Loading indicator for pagination
+                if (feedState.isLoading && feedState.posts.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SkeletonLoaders.feedPostsSkeleton(count: 3),
+                  ),
+              ],
+            );
           },
         ),
       ),
@@ -606,5 +622,106 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     } else {
       return 'now';
     }
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppTheme.textSecondaryColor,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'Failed to load feed',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textPrimaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              error,
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing24),
+            ElevatedButton(
+              onPressed: () => ref.read(feedProvider.notifier).refreshFeed(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing24,
+                  vertical: AppTheme.spacing12,
+                ),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.feed_outlined,
+              size: 64,
+              color: AppTheme.textSecondaryColor,
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'No posts yet',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textPrimaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              'Be the first to share something with the community!',
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppTheme.spacing24),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const CreatePostScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Create Post'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing24,
+                  vertical: AppTheme.spacing12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../../domain/models/category.dart';
 
-// API Base URL
-const String baseUrl = 'https://api.gemura.rw/v2/market';
+// API Base URL - Updated to use NestJS backend
+const String baseUrl = 'http://159.198.65.38:3004/api/market';
 
 // HTTP Client Provider
 final httpClientProvider = Provider<http.Client>((ref) {
@@ -14,9 +14,9 @@ final httpClientProvider = Provider<http.Client>((ref) {
 // Categories Provider - fetches all categories from API
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   try {
-    print('🔄 Fetching categories from: $baseUrl/categories/list.php');
+    print('🔄 Fetching categories from: $baseUrl/categories');
     final response = await ref.read(httpClientProvider).get(
-      Uri.parse('$baseUrl/categories/list.php'),
+      Uri.parse('$baseUrl/categories'),
       headers: {'Content-Type': 'application/json'},
     );
 

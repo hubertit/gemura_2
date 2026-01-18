@@ -14,7 +14,9 @@
     "prisma:studio": "prisma studio",
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "migrate": "ts-node src/migration/migrate.ts",
+    "migrate:selective": "ts-node src/migration/migrate-selective.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -41,6 +43,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "helmet": "^8.1.0",
+    "mysql2": "^3.16.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.1",
@@ -65,4 +68,3 @@
     "typescript": "^5.3.3"
   }
 }
-

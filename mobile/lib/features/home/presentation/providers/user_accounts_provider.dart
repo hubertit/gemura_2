@@ -52,7 +52,7 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
     }
   }
 
-  Future<bool> switchAccount(int accountId, BuildContext? context) async {
+  Future<bool> switchAccount(String accountId, BuildContext? context) async {
     if (_isSwitching) return false; // Prevent multiple simultaneous switches
     
     _setSwitching(true);

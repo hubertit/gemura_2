@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Gemura Application - Uses shared DevLabs PostgreSQL
+services:
+  # Backend API (NestJS)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gemura-backend
+    restart: unless-stopped
+    env_file:
+      - .env.devlabs
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:-3004}
+      # Connect to shared DevLabs PostgreSQL
+      DATABASE_URL: ${DATABASE_URL:-postgresql://devslab_admin:devslab_secure_password_2024@devslab-postgres:5432/gemura_db}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3005,http://localhost:3004,http://159.198.65.38:3005,http://159.198.65.38:3004}
+    ports:
+      - "3004:3004"
+    networks:
+      - devslab-network
+    volumes:
+      - ./backend/prisma:/app/prisma:ro
+    command: >
+      sh -c "
+        echo 'Waiting for database to be ready...' &&
+        sleep 10 &&
+        npx prisma migrate deploy &&
+        echo 'Running payroll migration...' &&
+        export PGPASSWORD=devslab_secure_password_2024 &&
+        if [ -f prisma/migrations/20260104_change_payroll_to_suppliers/migration.sql ]; then
+          psql -h devslab-postgres -p 5432 -U devslab_admin -d gemura_db -f prisma/migrations/20260104_change_payroll_to_suppliers/migration.sql 2>&1 || echo 'Migration may already be applied'
+        fi &&
+        echo 'Starting application...' &&
+        node dist/src/main.js
+      "
+
+  # Frontend Web App (Next.js) - To be added when ready
+  # frontend:
+  #   build:
+  #     context: ./ui
+  #     dockerfile: Dockerfile
+  #     args:
+  #       NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:3004/api}
+  #   container_name: gemura-frontend
+  #   restart: unless-stopped
+  #   environment:
+  #     NODE_ENV: production
+  #     PORT: 3005
+  #     NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:3004/api}
+  #   ports:
+  #     - "${FRONTEND_PORT:-3005}:3005"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - devslab-network
+
+networks:
+  devslab-network:
+    external: true
+    name: devslab-network
+

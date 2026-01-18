@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import '../../shared/models/registration_request.dart';
 import 'secure_storage_service.dart';
@@ -53,11 +54,22 @@ class AuthService {
   /// Login user
   Future<Map<String, dynamic>> login(String emailOrPhone, String password) async {
     try {
+      // Normalize phone number - remove + if present, backend will handle it
+      String identifier = emailOrPhone;
+      if (!identifier.contains('@')) {
+        // It's a phone number - remove + and spaces, keep only digits
+        identifier = identifier.replaceAll(RegExp(r'[^\d]'), '');
+      }
+      
       // Use identifier field as per API specification
       final loginData = {
-        'identifier': emailOrPhone,
+        'identifier': identifier,
         'password': password,
       };
+      
+      if (kDebugMode) {
+        print('🔧 AuthService: Login attempt with identifier: $identifier');
+      }
       
       final response = await _dio.post(
         AppConfig.authEndpoint + '/login',
@@ -93,8 +105,19 @@ class AuthService {
       
       return response.data;
     } on DioException catch (e) {
+      if (kDebugMode) {
+        print('🔧 AuthService: Login DioException: ${e.type}');
+        print('🔧 AuthService: Message: ${e.message}');
+        if (e.type == DioExceptionType.connectionTimeout || 
+            e.type == DioExceptionType.connectionError) {
+          print('🔧 AuthService: Server may be unreachable. Check network connection.');
+        }
+      }
       throw _handleDioError(e);
     } catch (e) {
+      if (kDebugMode) {
+        print('🔧 AuthService: Login general exception: $e');
+      }
       throw Exception('Login failed: $e');
     }
   }
@@ -107,7 +130,7 @@ class AuthService {
       if (email != null && email.isNotEmpty) data['email'] = email;
       
       final response = await _dio.post(
-        AppConfig.authEndpoint + '/request_reset.php',
+        AppConfig.authEndpoint + '/forgot-password',
         data: data,
       );
       
@@ -123,7 +146,7 @@ class AuthService {
   Future<Map<String, dynamic>> resetPasswordWithCode(int userId, String resetCode, String newPassword) async {
     try {
       final response = await _dio.post(
-        AppConfig.authEndpoint + '/reset_password.php',
+        AppConfig.authEndpoint + '/reset-password',
         data: {
           'user_id': userId,
           'reset_code': resetCode,
@@ -169,7 +192,7 @@ class AuthService {
     try {
       // Always fetch from API to ensure we have the latest data
       final response = await _authenticatedDio.get(
-        AppConfig.apiBaseUrl + '/profile/get.php',
+        AppConfig.apiBaseUrl + '/profile/get',
         options: Options(
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
@@ -203,15 +226,18 @@ class AuthService {
       // Get token for request body
       final token = SecureStorageService.getAuthToken();
       if (token == null || token.isEmpty) {
-        print('🔧 AuthService: No authentication token found for profile refresh');
+        if (kDebugMode) {
+          print('🔧 AuthService: No authentication token found for profile refresh');
+        }
         throw Exception('No authentication token found');
       }
-      print('🔧 AuthService: Token found for profile refresh: ${token.substring(0, 10)}...');
+      if (kDebugMode) {
+        print('🔧 AuthService: Token found for profile refresh');
+      }
 
       // Always fetch from API, ignore cache
-      final response = await _authenticatedDio.post(
-        AppConfig.apiBaseUrl + '/profile/get.php',
-        data: {'token': token},
+      final response = await _authenticatedDio.get(
+        AppConfig.apiBaseUrl + '/profile/get',
         options: Options(
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
@@ -245,21 +271,22 @@ class AuthService {
       // v2 PHP APIs expect token in body
       final token = SecureStorageService.getAuthToken();
       if (token == null || token.isEmpty) {
-        print('🔧 AuthService: No authentication token found');
+        if (kDebugMode) {
+          print('🔧 AuthService: No authentication token found');
+        }
         throw Exception('No authentication token found');
       }
-      print('🔧 AuthService: Token found: ${token.substring(0, 10)}...');
+      if (kDebugMode) {
+        print('🔧 AuthService: Token found');
+      }
 
-      final body = {
-        'token': token,
-        ...profileData,
-      };
-      print('🔧 AuthService: Request body: $body');
+      // Token is in header via AuthenticatedDioService, not in body
+      print('🔧 AuthService: Request body: $profileData');
 
-      print('🔧 AuthService: Making API call to: ${AppConfig.apiBaseUrl}/profile/update.php');
-      final response = await _authenticatedDio.post(
-        AppConfig.apiBaseUrl + '/profile/update.php',
-        data: body,
+      print('🔧 AuthService: Making API call to: ${AppConfig.apiBaseUrl}/profile/update');
+      final response = await _authenticatedDio.put(
+        AppConfig.apiBaseUrl + '/profile/update',
+        data: profileData, // NestJS doesn't need token in body, it's in header
       );
       
       print('🔧 AuthService: Response status: ${response.statusCode}');

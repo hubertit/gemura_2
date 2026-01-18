@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/features/suppliers/presentation/providers/suppliers_provider.dart';
 import 'package:gemura/shared/models/supplier.dart';
-import 'package:gemura/core/services/local_data_service.dart';
 import '../providers/collections_provider.dart';
 
 class RecordCollectionScreen extends ConsumerStatefulWidget {
@@ -82,18 +81,6 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
           notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
           collectionAt: collectionDateTime,
         );
-
-        // Also save to local storage for payroll generation
-        await LocalDataService.saveCollection({
-          'supplier_account_code': _selectedSupplier!.accountCode,
-          'supplier_id': _selectedSupplier!.accountCode,
-          'supplier_name': _selectedSupplier!.name,
-          'quantity': double.parse(_quantityController.text),
-          'price_per_liter': _selectedSupplier!.pricePerLiter,
-          'status': _selectedStatus.toLowerCase(),
-          'notes': _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-          'collection_at': collectionDateTime.toIso8601String(),
-        });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

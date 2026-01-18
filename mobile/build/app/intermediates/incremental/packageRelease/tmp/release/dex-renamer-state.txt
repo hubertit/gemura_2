@@ -1,4 +1,0 @@
-#Sat Nov 15 13:19:29 CAT 2025
-base.0=/Users/macbookpro/projects/flutter/gemura2/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
-renamed.0=classes.dex
-path.0=classes.dex

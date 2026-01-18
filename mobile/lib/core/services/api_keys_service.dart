@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import '../../shared/models/api_key.dart';
 import 'authenticated_dio_service.dart';
@@ -15,14 +16,12 @@ class ApiKeysService {
         throw Exception('No authentication token available');
       }
 
-      print('🔑 Token: ${token.substring(0, 10)}...');
-      print('🌐 API URL: ${AppConfig.apiBaseUrl}/api_keys/get');
+      if (kDebugMode) {
+        print('🌐 API URL: ${AppConfig.apiBaseUrl}/api-keys');
+      }
 
-      final response = await AuthenticatedDioService.instance.post(
-        '/api_keys/get',
-        data: {
-          'token': token, // API expects token in request body
-        },
+      final response = await AuthenticatedDioService.instance.get(
+        '/api-keys',
       );
 
       print('✅ Response: ${response.data}');

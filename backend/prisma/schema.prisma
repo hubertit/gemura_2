@@ -172,7 +172,8 @@ model Account {
   invoices_supplier     Invoice[]           @relation("InvoiceAccount")
   receipts_supplier     Receipt[]           @relation("ReceiptSupplierAccount")
   receipts_customer     Receipt[]           @relation("ReceiptCustomerAccount")
-  payroll_employees     PayrollEmployee[]   @relation("PayrollEmployeeAccount")
+  payroll_suppliers     PayrollSupplier[]   @relation("PayrollSupplierAccount")
+  payroll_payslips      PayrollPayslip[]    @relation("PayrollPayslipSupplier")
   default_account_users User[]              @relation("UserDefaultAccount")
   created_by_user       User?               @relation("AccountCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
   updated_by_user       User?               @relation("AccountUpdatedBy", fields: [updated_by], references: [id], onDelete: SetNull)
@@ -190,7 +191,7 @@ model User {
   legacy_id            BigInt?          @unique @map("legacy_id") // For migration reference
   code                 String?          @unique
   name                 String
-  phone                String?
+  phone                String?          @unique
   email                String?
   nid                  String?
   address              String?
@@ -217,7 +218,7 @@ model User {
   account_type         UserAccountType  @default(mcc) @map("account_type")
   referred_by          Int?             @map("referred_by")
   onboarded_by         Int?             @map("onboarded_by")
-  referral_code        String?          @map("referral_code")
+  referral_code        String?          @unique @map("referral_code")
   referral_count       Int              @default(0) @map("referral_count")
   onboarded_count      Int              @default(0) @map("onboarded_count")
   total_points         Int              @default(0) @map("total_points")
@@ -252,7 +253,6 @@ model User {
   user_referrals_referred      UserReferral[]     @relation("UserReferred")
   user_rewards                 UserReward[]
   user_onboardings             UserOnboarding[]
-  payroll_employees            PayrollEmployee[]  @relation("PayrollEmployeeUser")
 
   @@index([code])
   @@index([phone])
@@ -542,20 +542,26 @@ model FeedStory {
 }
 
 model FeedComment {
-  id         String   @id @default(uuid()) @db.Uuid
-  legacy_id  BigInt?  @unique @map("legacy_id") // For migration reference
-  post_id    String   @map("post_id") @db.Uuid
-  user_id    String   @map("user_id") @db.Uuid
-  content    String
-  created_at DateTime @default(now()) @map("created_at")
-  updated_at DateTime @updatedAt @map("updated_at")
+  id                String         @id @default(uuid()) @db.Uuid
+  legacy_id         BigInt?         @unique @map("legacy_id") // For migration reference
+  post_id           String          @map("post_id") @db.Uuid
+  user_id           String          @map("user_id") @db.Uuid
+  parent_comment_id String?         @map("parent_comment_id") @db.Uuid
+  content           String
+  likes_count       Int             @default(0) @map("likes_count")
+  status            FeedPostStatus  @default(active)
+  created_at        DateTime        @default(now()) @map("created_at")
+  updated_at        DateTime        @updatedAt @map("updated_at")
 
   // Relations
-  post FeedPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post           FeedPost      @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  parent_comment FeedComment?  @relation("CommentReplies", fields: [parent_comment_id], references: [id], onDelete: Cascade)
+  replies        FeedComment[] @relation("CommentReplies")
 
   @@index([post_id])
   @@index([user_id])
+  @@index([parent_comment_id])
   @@index([created_at])
   @@map("feed_comments")
 }
@@ -994,30 +1000,22 @@ model AuditLog {
 // NEW TABLES - PAYROLL MODULE
 // ============================================
 
-model PayrollEmployee {
-  id              String   @id @default(uuid()) @db.Uuid
-  user_id         String?  @map("user_id") @db.Uuid
-  account_id      String?  @map("account_id") @db.Uuid
-  employee_number String   @unique @map("employee_number")
-  position        String?
-  department      String?
-  salary          Decimal  @db.Decimal(15, 2)
-  employment_type String   @map("employment_type") // full_time, part_time, contract
-  hire_date       DateTime @map("hire_date")
-  is_active       Boolean  @default(true) @map("is_active")
-  created_at      DateTime @default(now()) @map("created_at")
-  updated_at      DateTime @updatedAt @map("updated_at")
+model PayrollSupplier {
+  id                  String   @id @default(uuid()) @db.Uuid
+  supplier_account_id String   @map("supplier_account_id") @db.Uuid
+  payment_terms_days  Int      @default(15) @map("payment_terms_days") // Default 15 days, but flexible
+  is_active           Boolean  @default(true) @map("is_active")
+  created_at          DateTime @default(now()) @map("created_at")
+  updated_at          DateTime @updatedAt @map("updated_at")
 
   // Relations
-  user     User?            @relation("PayrollEmployeeUser", fields: [user_id], references: [id], onDelete: SetNull)
-  account  Account?         @relation("PayrollEmployeeAccount", fields: [account_id], references: [id], onDelete: SetNull)
-  payslips PayrollPayslip[]
+  supplier_account Account          @relation("PayrollSupplierAccount", fields: [supplier_account_id], references: [id], onDelete: Cascade)
+  payslips         PayrollPayslip[] @relation("PayrollSupplierPayslips")
 
-  @@index([user_id])
-  @@index([account_id])
-  @@index([employee_number])
+  @@unique([supplier_account_id])
+  @@index([supplier_account_id])
   @@index([is_active])
-  @@map("payroll_employees")
+  @@map("payroll_suppliers")
 }
 
 model PayrollPeriod {
@@ -1039,44 +1037,57 @@ model PayrollPeriod {
 }
 
 model PayrollRun {
-  id           String   @id @default(uuid()) @db.Uuid
-  period_id    String   @map("period_id") @db.Uuid
-  run_date     DateTime @map("run_date")
-  total_amount Decimal  @map("total_amount") @db.Decimal(15, 2)
-  status       String // draft, processing, completed, failed
-  created_at   DateTime @default(now()) @map("created_at")
-  updated_at   DateTime @updatedAt @map("updated_at")
-  created_by   String?  @map("created_by") @db.Uuid
+  id                 String    @id @default(uuid()) @db.Uuid
+  period_id          String?   @map("period_id") @db.Uuid // Optional - flexible payroll generation
+  run_date           DateTime  @map("run_date")
+  period_start       DateTime? @map("period_start") // Start date for milk sales period (flexible)
+  period_end         DateTime? @map("period_end") // End date for milk sales period (flexible)
+  payment_terms_days Int?      @map("payment_terms_days") // Payment terms in days (default 15, but flexible)
+  total_amount       Decimal   @map("total_amount") @db.Decimal(15, 2)
+  status             String // draft, processing, completed, failed
+  created_at         DateTime  @default(now()) @map("created_at")
+  updated_at         DateTime  @updatedAt @map("updated_at")
+  created_by         String?   @map("created_by") @db.Uuid
 
   // Relations
-  period   PayrollPeriod    @relation(fields: [period_id], references: [id], onDelete: Cascade)
+  period   PayrollPeriod?   @relation(fields: [period_id], references: [id], onDelete: SetNull)
   payslips PayrollPayslip[]
 
   @@index([period_id])
   @@index([status])
   @@index([run_date])
+  @@index([period_start])
+  @@index([period_end])
   @@map("payroll_runs")
 }
 
 model PayrollPayslip {
-  id               String   @id @default(uuid()) @db.Uuid
-  run_id           String   @map("run_id") @db.Uuid
-  employee_id      String   @map("employee_id") @db.Uuid
-  gross_salary     Decimal  @map("gross_salary") @db.Decimal(15, 2)
-  total_deductions Decimal  @map("total_deductions") @db.Decimal(15, 2)
-  net_salary       Decimal  @map("net_salary") @db.Decimal(15, 2)
-  status           String // draft, generated, paid
-  created_at       DateTime @default(now()) @map("created_at")
-  updated_at       DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid()) @db.Uuid
+  run_id              String   @map("run_id") @db.Uuid
+  supplier_account_id String   @map("supplier_account_id") @db.Uuid
+  gross_amount        Decimal  @map("gross_amount") @db.Decimal(15, 2) // Total from milk sales
+  total_deductions    Decimal  @map("total_deductions") @db.Decimal(15, 2)
+  net_amount          Decimal  @map("net_amount") @db.Decimal(15, 2) // Amount to pay supplier
+  milk_sales_count    Int      @default(0) @map("milk_sales_count") // Number of milk sales included
+  period_start        DateTime @map("period_start") // Start date of milk sales period
+  period_end          DateTime @map("period_end") // End date of milk sales period
+  status              String // draft, generated, paid
+  created_at          DateTime @default(now()) @map("created_at")
+  updated_at          DateTime @updatedAt @map("updated_at")
 
   // Relations
-  run        PayrollRun         @relation(fields: [run_id], references: [id], onDelete: Cascade)
-  employee   PayrollEmployee    @relation(fields: [employee_id], references: [id], onDelete: Restrict)
-  deductions PayrollDeduction[]
+  run               PayrollRun         @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  supplier_account  Account            @relation("PayrollPayslipSupplier", fields: [supplier_account_id], references: [id], onDelete: Restrict)
+  payroll_supplier   PayrollSupplier?   @relation("PayrollSupplierPayslips", fields: [payroll_supplier_id], references: [id], onDelete: SetNull)
+  deductions        PayrollDeduction[]
+  
+  payroll_supplier_id String?            @map("payroll_supplier_id") @db.Uuid
 
   @@index([run_id])
-  @@index([employee_id])
+  @@index([supplier_account_id])
   @@index([status])
+  @@index([period_start])
+  @@index([period_end])
   @@map("payroll_payslips")
 }
 

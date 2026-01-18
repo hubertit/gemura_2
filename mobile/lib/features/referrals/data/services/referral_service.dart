@@ -1,28 +1,15 @@
 import 'package:dio/dio.dart';
 import '../../../../core/config/app_config.dart';
-import '../../../../core/services/secure_storage_service.dart';
+import '../../../../core/services/authenticated_dio_service.dart';
 
 class ReferralService {
-  static final Dio _dio = AppConfig.dioInstance();
-
-  /// Get authentication token
-  static Future<String?> _getToken() async {
-    return SecureStorageService.getAuthToken();
-  }
+  static final Dio _dio = AuthenticatedDioService.instance;
 
   /// Get user's referral code
   static Future<Map<String, dynamic>> getReferralCode() async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/referrals/get-code.php',
-        data: {
-          'token': token,
-        },
+      final response = await _dio.get(
+        '/referrals/get-code',
       );
 
       return response.data;
@@ -39,16 +26,10 @@ class ReferralService {
     required String referralCode,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/referrals/use-code.php',
+        '/referrals/use-code',
         data: {
-          'token': token,
-          'referral_code': referralCode,
+          'referralCode': referralCode,
         },
       );
 
@@ -64,16 +45,8 @@ class ReferralService {
   /// Get referral statistics
   static Future<Map<String, dynamic>> getReferralStats() async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/referrals/stats.php',
-        data: {
-          'token': token,
-        },
+      final response = await _dio.get(
+        '/referrals/stats',
       );
 
       return response.data;
@@ -88,16 +61,8 @@ class ReferralService {
   /// Get points balance
   static Future<Map<String, dynamic>> getPointsBalance() async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/points/balance.php',
-        data: {
-          'token': token,
-        },
+      final response = await _dio.get(
+        '/points/balance',
       );
 
       return response.data;
@@ -118,17 +83,11 @@ class ReferralService {
     String? location,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/onboard/create-user.php',
+        '/onboard/create-user',
         data: {
-          'token': token,
           'name': name,
-          'phone_number': phoneNumber,
+          'phoneNumber': phoneNumber,
           'password': password,
           if (email != null) 'email': email,
           if (location != null) 'location': location,

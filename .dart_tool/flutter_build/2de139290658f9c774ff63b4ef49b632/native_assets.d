@@ -1,0 +1,1 @@
+ /Users/macbookpro/projects/flutter/gemura2/.dart_tool/flutter_build/2de139290658f9c774ff63b4ef49b632/native_assets.yaml: 

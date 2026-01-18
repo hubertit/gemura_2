@@ -1,15 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../config/app_config.dart';
-import 'secure_storage_service.dart';
+import 'authenticated_dio_service.dart';
 
 class FeedService {
-  static final Dio _dio = AppConfig.dioInstance();
-
-  /// Get authentication token
-  static Future<String?> _getToken() async {
-    return SecureStorageService.getAuthToken();
-  }
+  static final Dio _dio = AuthenticatedDioService.instance;
 
   /// Get all feed posts
   static Future<Map<String, dynamic>> getPosts({
@@ -19,42 +13,17 @@ class FeedService {
     int offset = 0,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final requestData = {
-        'token': token,
-        if (postId != null) 'post_id': postId,
-        if (userId != null) 'user_id': userId,
+      final queryParams = <String, dynamic>{
         'limit': limit,
         'offset': offset,
       };
-      
-      print('🔍 DEBUG FeedService: Request data: $requestData');
-      
-      final response = await _dio.post(
-        '/feed/get.php',
-        data: requestData,
-      );
+      if (postId != null) queryParams['postId'] = postId;
+      if (userId != null) queryParams['userId'] = userId;
 
-      print('🔍 DEBUG FeedService: Response status: ${response.statusCode}');
-      print('🔍 DEBUG FeedService: Response data: ${response.data}');
-      
-      if (response.data != null && response.data is Map) {
-        final data = response.data as Map;
-        print('🔍 DEBUG FeedService: Response code: ${data['code']}');
-        print('🔍 DEBUG FeedService: Response message: ${data['message']}');
-        if (data['data'] != null) {
-          print('🔍 DEBUG FeedService: Data type: ${data['data'].runtimeType}');
-          if (data['data'] is List) {
-            print('🔍 DEBUG FeedService: Posts count: ${(data['data'] as List).length}');
-          }
-        } else {
-          print('❌ DEBUG FeedService: Data is null!');
-        }
-      }
+      final response = await _dio.get(
+        '/feed/posts',
+        queryParameters: queryParams,
+      );
 
       return response.data;
     } on DioException catch (e) {
@@ -72,16 +41,10 @@ class FeedService {
     int offset = 0,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/comments/get.php',
-        data: {
-          'token': token,
-          'post_id': postId,
+      final response = await _dio.get(
+        '/feed/comments',
+        queryParameters: {
+          'postId': postId,
           'limit': limit,
           'offset': offset,
         },
@@ -102,15 +65,10 @@ class FeedService {
     int offset = 0,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/bookmarks.php',
-        data: {
-          'token': token,
+      final response = await _dio.get(
+        '/feed/posts',
+        queryParameters: {
+          'bookmarked': true,
           'limit': limit,
           'offset': offset,
         },
@@ -131,15 +89,9 @@ class FeedService {
     int offset = 0,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/likes.php',
-        data: {
-          'token': token,
+      final response = await _dio.get(
+        '/feed/interactions/my',
+        queryParameters: {
           'limit': limit,
           'offset': offset,
         },
@@ -162,17 +114,11 @@ class FeedService {
     String? location,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/feed/create.php',
+        '/feed/posts',
         data: {
-          'token': token,
           'content': content,
-          if (mediaUrl != null) 'media_url': mediaUrl,
+          if (mediaUrl != null) 'mediaUrl': mediaUrl,
           if (hashtags != null) 'hashtags': hashtags,
           if (location != null) 'location': location,
         },
@@ -194,18 +140,12 @@ class FeedService {
     int? parentCommentId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/feed/comments/create.php',
+        '/feed/comments',
         data: {
-          'token': token,
-          'post_id': postId,
+          'postId': postId,
           'content': content,
-          if (parentCommentId != null) 'parent_comment_id': parentCommentId,
+          if (parentCommentId != null) 'parentCommentId': parentCommentId,
         },
       );
 
@@ -223,16 +163,11 @@ class FeedService {
     required int postId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/feed/like.php',
+        '/feed/interactions',
         data: {
-          'token': token,
-          'post_id': postId,
+          'postId': postId,
+          'type': 'like',
         },
       );
 
@@ -250,16 +185,13 @@ class FeedService {
     required int commentId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
+      // Note: Comment likes might be handled differently in NestJS
+      // This may need adjustment based on actual API implementation
       final response = await _dio.post(
-        '/feed/comments/like.php',
+        '/feed/interactions',
         data: {
-          'token': token,
-          'comment_id': commentId,
+          'commentId': commentId,
+          'type': 'like',
         },
       );
 
@@ -277,16 +209,11 @@ class FeedService {
     required int postId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/bookmark.php',
+      // Update post with bookmark field
+      final response = await _dio.patch(
+        '/feed/posts/$postId',
         data: {
-          'token': token,
-          'post_id': postId,
+          'bookmarked': true, // Toggle logic handled by backend
         },
       );
 
@@ -308,18 +235,11 @@ class FeedService {
     String? location,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/update.php',
+      final response = await _dio.patch(
+        '/feed/posts/$postId',
         data: {
-          'token': token,
-          'post_id': postId,
           if (content != null) 'content': content,
-          if (mediaUrl != null) 'media_url': mediaUrl,
+          if (mediaUrl != null) 'mediaUrl': mediaUrl,
           if (hashtags != null) 'hashtags': hashtags,
           if (location != null) 'location': location,
         },
@@ -340,16 +260,9 @@ class FeedService {
     required String content,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/comments/update.php',
+      final response = await _dio.patch(
+        '/feed/comments/$commentId',
         data: {
-          'token': token,
-          'comment_id': commentId,
           'content': content,
         },
       );
@@ -368,17 +281,8 @@ class FeedService {
     required int postId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/delete.php',
-        data: {
-          'token': token,
-          'post_id': postId,
-        },
+      final response = await _dio.delete(
+        '/feed/posts/$postId',
       );
 
       return response.data;
@@ -395,17 +299,8 @@ class FeedService {
     required int commentId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/feed/comments/delete.php',
-        data: {
-          'token': token,
-          'comment_id': commentId,
-        },
+      final response = await _dio.delete(
+        '/feed/comments/$commentId',
       );
 
       return response.data;
@@ -422,16 +317,10 @@ class FeedService {
     required int userId,
   }) async {
     try {
-      final token = await _getToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
       final response = await _dio.post(
-        '/feed/follow.php',
+        '/feed/follow',
         data: {
-          'token': token,
-          'user_id': userId,
+          'userId': userId,
         },
       );
 

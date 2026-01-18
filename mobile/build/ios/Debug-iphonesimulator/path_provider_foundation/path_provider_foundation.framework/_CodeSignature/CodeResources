@@ -14,7 +14,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		7HvKOnmhL4Bd1J0RFMy1n3qaxLk=
+		JesVjTUcyYWKcHqSwlVanToLFuQ=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -34,11 +34,11 @@
 		</data>
 		<key>Modules/path_provider_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		9XBej1HfA65k5p1UuqUS3IDEi/A=
+		QrlVhB/+uoiBaXGgKxr/DgJj0SA=
 		</data>
 		<key>path_provider_foundation_privacy.bundle/Info.plist</key>
 		<data>
-		X4CPxetiY1Cq3jOio2Nc58OU3/Y=
+		y6RpRtlnwoTjtiIkdKsf7gVlyAg=
 		</data>
 		<key>path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -93,14 +93,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			oIsQRE+CkunbrAwzZtXwrsc8ZRNbGTuLF0b0qyWutQQ=
+			jJ9+voV9ITzUA1xSncv1XRKH6nl+M5ymoDCWmUic/bs=
 			</data>
 		</dict>
 		<key>path_provider_foundation_privacy.bundle/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			5s+Dwd6/js6YUxUZDJUtI/GoyxtreTOxnQrbbaTtAvA=
+			tn2MTDxalPysDYuu4R8hdoEagfjxGMNEsYzSXymXmT0=
 			</data>
 		</dict>
 		<key>path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy</key>

@@ -41,11 +41,11 @@ Map<String, dynamic> _$UserAccountsDataToJson(UserAccountsData instance) =>
     };
 
 UserInfo _$UserInfoFromJson(Map<String, dynamic> json) => UserInfo(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       name: json['name'] as String,
       email: json['email'] as String?,
       phone: json['phone'] as String,
-      defaultAccountId: (json['default_account_id'] as num?)?.toInt(),
+      defaultAccountId: json['default_account_id'] as String?,
     );
 
 Map<String, dynamic> _$UserInfoToJson(UserInfo instance) => <String, dynamic>{
@@ -57,7 +57,7 @@ Map<String, dynamic> _$UserInfoToJson(UserInfo instance) => <String, dynamic>{
     };
 
 UserAccount _$UserAccountFromJson(Map<String, dynamic> json) => UserAccount(
-      accountId: UserAccount._parseInt(json['account_id']),
+      accountId: json['account_id'] as String,
       accountCode: json['account_code'] as String,
       accountName: json['account_name'] as String,
       accountType: json['account_type'] as String,
@@ -140,7 +140,7 @@ Map<String, dynamic> _$SwitchAccountDataToJson(SwitchAccountData instance) =>
 
 DefaultAccount _$DefaultAccountFromJson(Map<String, dynamic> json) =>
     DefaultAccount(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       code: json['code'] as String,
       name: json['name'] as String,
       type: json['type'] as String,

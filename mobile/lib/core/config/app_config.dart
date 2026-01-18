@@ -66,7 +66,8 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
   static const int maxRetries = 3;
 
   // Main API Configuration
-  static const String apiBaseUrl = 'https://api.gemura.rw/v2';
+  // Updated to use new NestJS backend
+  static const String apiBaseUrl = 'http://159.198.65.38:3004/api';
   
   // Your Custom API Configuration
   static const String yourApiBaseUrl = 'https://your-api-domain.com/api';

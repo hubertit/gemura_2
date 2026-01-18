@@ -5,11 +5,11 @@ part 'sale.g.dart';
 @JsonSerializable(includeIfNull: false)
 class Sale {
   final String id;
-  @JsonKey(name: 'quantity')
+  @JsonKey(name: 'quantity', fromJson: _stringFromJson)
   final String quantity;
-  @JsonKey(name: 'unit_price')
+  @JsonKey(name: 'unit_price', fromJson: _stringFromJson)
   final String unitPrice;
-  @JsonKey(name: 'total_amount')
+  @JsonKey(name: 'total_amount', fromJson: _stringFromJson)
   final String totalAmount;
   final String status;
   @JsonKey(name: 'sale_at')
@@ -37,6 +37,14 @@ class Sale {
 
   factory Sale.fromJson(Map<String, dynamic> json) => _$SaleFromJson(json);
   Map<String, dynamic> toJson() => _$SaleToJson(this);
+
+  // Helper function to convert int/double/num to String
+  static String _stringFromJson(dynamic value) {
+    if (value == null) return '0';
+    if (value is String) return value;
+    if (value is num) return value.toString();
+    return value.toString();
+  }
 
   // Convenience getters for backward compatibility
   double get quantityAsDouble => double.tryParse(quantity) ?? 0.0;

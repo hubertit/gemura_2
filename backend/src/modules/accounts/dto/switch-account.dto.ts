@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 export class SwitchAccountDto {
   @ApiProperty({
@@ -10,6 +10,7 @@ export class SwitchAccountDto {
   })
   @IsNotEmpty({ message: 'Account ID is required' })
   @IsString({ message: 'Account ID must be a string (UUID)' })
+  @IsUUID('4', { message: 'Account ID must be a valid UUID' })
   account_id: string;
 }
 

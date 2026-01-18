@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Query, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Query, Param, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -7,6 +7,7 @@ import { User } from '@prisma/client';
 import { GetSalesDto } from './dto/get-sales.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { CancelSaleDto } from './dto/cancel-sale.dto';
+import { CreateSaleDto } from './dto/create-sale.dto';
 
 @ApiTags('Sales')
 @Controller('sales')
@@ -16,6 +17,7 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post('sales')
+  @HttpCode(200)
   @ApiOperation({
     summary: 'Get sales list with filters',
     description: 'Retrieve sales/milk collections for the authenticated user\'s default account. Supports filtering by customer, status, date range, quantity, and price.',
@@ -152,6 +154,7 @@ export class SalesController {
   }
 
   @Post('cancel')
+  @HttpCode(200)
   @ApiOperation({
     summary: 'Cancel a sale',
     description: 'Cancel a sale by setting its status to "cancelled". Only sales belonging to the user\'s default account can be cancelled.',
@@ -198,5 +201,92 @@ export class SalesController {
   })
   async cancelSale(@CurrentUser() user: User, @Body() cancelDto: CancelSaleDto) {
     return this.salesService.cancelSale(user, cancelDto);
+  }
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create a new sale',
+    description: 'Create a new milk sale transaction. The sale is created from the supplier perspective (user\'s default account is the supplier).',
+  })
+  @ApiBody({
+    type: CreateSaleDto,
+    description: 'Sale details',
+    examples: {
+      createSale: {
+        summary: 'Create new sale',
+        value: {
+          customer_account_code: 'A_XYZ789',
+          quantity: 120.5,
+          unit_price: 390.0,
+          status: 'pending',
+          sale_at: '2025-01-04T10:00:00Z',
+          notes: 'Morning delivery',
+        },
+      },
+      minimalSale: {
+        summary: 'Create sale with minimal info',
+        value: {
+          customer_account_code: 'A_XYZ789',
+          quantity: 85.0,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sale created successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Sale created successfully.',
+      data: {
+        id: 'sale-uuid',
+        quantity: 120.5,
+        unit_price: 390.0,
+        total_amount: 46995.0,
+        status: 'pending',
+        sale_at: '2025-01-04T10:00:00Z',
+        notes: 'Morning delivery',
+        supplier_account: {
+          code: 'A_ABC123',
+          name: 'Supplier Name',
+          type: 'tenant',
+          status: 'active',
+        },
+        customer_account: {
+          code: 'A_XYZ789',
+          name: 'Customer Name',
+          type: 'tenant',
+          status: 'active',
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - missing required fields or no default account',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Customer account not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Customer account not found.',
+    },
+  })
+  async createSale(@CurrentUser() user: User, @Body() createDto: CreateSaleDto) {
+    return this.salesService.createSale(user, createDto);
   }
 }

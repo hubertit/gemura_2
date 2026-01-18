@@ -913,11 +913,11 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
           Consumer(
             builder: (context, ref, child) {
               final userInfo = ref.watch(userAccountsProvider);
-              final accountId = userInfo.value?.data.user.defaultAccountId;
               
               return userInfo.when(
                 data: (user) {
-                  final unreadCountAsync = ref.watch(unreadCountProvider(accountId));
+                  // Notifications don't use accountId in NestJS backend, pass null
+                  final unreadCountAsync = ref.watch(unreadCountProvider(null));
                   
                   return unreadCountAsync.when(
                     data: (unreadCount) {
@@ -2992,42 +2992,62 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
   }
 
   void _showAccountSwitcher(BuildContext context, WidgetRef ref, List<UserAccount> accounts) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * 0.7; // Max 70% of screen height
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surfaceColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
+      isScrollControlled: true,
+      builder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: maxHeight,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.account_balance,
-                  color: AppTheme.primaryColor,
-                ),
-                const SizedBox(width: 12),
-                Consumer(
-                  builder: (context, ref, child) {
-                    final localizationService = ref.watch(localizationServiceProvider);
-                    return Text(
-                      localizationService.translate('switchAccount'),
-                      style: AppTheme.titleMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimaryColor,
-                      ),
-                    );
-                  },
-                ),
-              ],
+            // Header (fixed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.account_balance,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final localizationService = ref.watch(localizationServiceProvider);
+                      return Text(
+                        localizationService.translate('switchAccount'),
+                        style: AppTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                          fontSize: 16,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            ...accounts.map((account) => _buildAccountOption(context, ref, account)),
-            const SizedBox(height: 20),
+            // Scrollable accounts list
+            Expanded(
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: accounts.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 6),
+                itemBuilder: (context, index) => _buildAccountOption(context, ref, accounts[index]),
+              ),
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -3039,103 +3059,89 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isCurrentAccount 
           ? AppTheme.primaryColor.withOpacity(0.08)
           : AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isCurrentAccount 
             ? AppTheme.primaryColor.withOpacity(0.4)
             : AppTheme.borderColor,
-          width: isCurrentAccount ? 2 : 1,
+          width: isCurrentAccount ? 1.5 : 1,
         ),
         boxShadow: isCurrentAccount ? [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ] : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppTheme.primaryColor.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
-        ],
+        ] : null,
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         leading: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: isCurrentAccount 
               ? AppTheme.primaryColor
               : AppTheme.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isCurrentAccount ? [
-              BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ] : null,
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             isCurrentAccount ? Icons.account_balance_wallet : Icons.account_balance,
             color: isCurrentAccount ? Colors.white : AppTheme.primaryColor,
-            size: 24,
+            size: 18,
           ),
         ),
         title: Text(
           account.accountName,
           style: AppTheme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: isCurrentAccount ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
-            fontSize: 16,
+            fontSize: 14,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                account.accountCode,
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 11,
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  Icons.person_outline,
-                  size: 14,
-                  color: AppTheme.textSecondaryColor,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  account.role.toUpperCase(),
+                child: Text(
+                  account.accountCode,
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.textSecondaryColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 10,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.person_outline,
+                size: 12,
+                color: AppTheme.textSecondaryColor,
+              ),
+              const SizedBox(width: 2),
+              Text(
+                account.role.toUpperCase(),
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
         ),
         trailing: Consumer(
           builder: (context, ref, child) {
@@ -3143,17 +3149,10 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             
             if (isCurrentAccount) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -3161,14 +3160,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     const Icon(
                       Icons.check_circle,
                       color: Colors.white,
-                      size: 16,
+                      size: 14,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Text(
                       ref.watch(localizationServiceProvider).translate('current'),
                       style: AppTheme.bodySmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -3178,35 +3178,28 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
             
             return AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isSwitching ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.surfaceColor,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSwitching ? AppTheme.primaryColor : AppTheme.borderColor,
-                  width: 1.5,
+                  width: 1,
                 ),
-                boxShadow: isSwitching ? [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ] : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isSwitching) ...[
                     const SizedBox(
-                      width: 16,
-                      height: 16,
+                      width: 12,
+                      height: 12,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                   ],
                   Text(
                     isSwitching 
@@ -3215,14 +3208,15 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                     style: AppTheme.bodySmall.copyWith(
                       color: isSwitching ? AppTheme.primaryColor : AppTheme.textPrimaryColor,
                       fontWeight: FontWeight.w600,
+                      fontSize: 11,
                     ),
                   ),
                   if (!isSwitching) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 3),
                     const Icon(
                       Icons.swap_horiz,
                       color: AppTheme.primaryColor,
-                      size: 16,
+                      size: 14,
                     ),
                   ],
                 ],

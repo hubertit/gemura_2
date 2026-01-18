@@ -1,9 +1,6 @@
 import 'package:dio/dio.dart';
-import '../../shared/models/user.dart';
 import '../../shared/models/employee.dart';
-import '../config/app_config.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class EmployeeService {
   static final EmployeeService _instance = EmployeeService._internal();
@@ -22,21 +19,17 @@ class EmployeeService {
       print('🔧 EmployeeService: User data: $userData');
       print('🔧 EmployeeService: Account access: $accountAccess');
       
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        print('🔧 EmployeeService: No authentication token found');
-        throw Exception('No authentication token found');
-      }
-      
-      print('🔧 EmployeeService: Token found: ${token.substring(0, 10)}...');
-      print('🔧 EmployeeService: Making API call to: /employees/create');
+      print('🔧 EmployeeService: Making API call to: /employees');
 
+      // NestJS expects: user_id, account_id (optional), role, permissions (optional)
+      // Note: May need to adjust userData/accountAccess structure to match NestJS DTO
       final response = await _dio.post(
-        '/employees/create',
+        '/employees',
         data: {
-          'token': token,
-          'user_data': userData,
-          'account_access': accountAccess,
+          'user_id': userData['id'] ?? userData['user_id'],
+          'account_id': accountAccess['account_id'],
+          'role': accountAccess['role'] ?? 'viewer',
+          'permissions': accountAccess['permissions'],
         },
       );
 
@@ -93,16 +86,8 @@ class EmployeeService {
   /// Get all employees for the default account
   Future<List<Employee>> getAccountEmployees() async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/employees/get',
-        data: {
-          'token': token,
-        },
+      final response = await _dio.get(
+        '/employees',
       );
 
       if (response.statusCode == 200) {
@@ -151,16 +136,9 @@ class EmployeeService {
     required List<String> permissions,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/employees/update-access',
+      final response = await _dio.put(
+        '/employees/$accessId/access',
         data: {
-          'token': token,
-          'access_id': accessId,
           'role': role,
           'permissions': permissions,
         },
@@ -207,17 +185,8 @@ class EmployeeService {
   /// Revoke employee access
   Future<bool> revokeEmployeeAccess(String accessId) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final response = await _dio.post(
-        '/employees/delete',
-        data: {
-          'token': token,
-          'access_id': accessId,
-        },
+      final response = await _dio.delete(
+        '/employees/$accessId',
       );
 
       if (response.statusCode == 200) {

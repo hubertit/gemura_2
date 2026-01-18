@@ -1,0 +1,129 @@
+# Gemura 2.0 Documentation
+
+Welcome to the Gemura project documentation. This directory contains all project documentation organized by category.
+
+## 📚 Documentation Structure
+
+```
+docs/
+├── README.md                    # This file - documentation index
+├── project/                     # Project overview and status
+│   ├── IMPLEMENTATION_STATUS.md
+│   └── PROJECT_ORGANIZATION.md
+├── architecture/                # System architecture docs
+├── deployment/                  # Deployment guides and procedures
+│   ├── README.md
+│   ├── FINAL_DEPLOYMENT_INSTRUCTIONS.md
+│   ├── DEPLOYMENT_GUIDE.md
+│   ├── DEPLOYMENT_OPTIMIZATION.md
+│   └── AUTOMATIC_DEPLOYMENT.md
+├── api/                        # API documentation
+│   ├── README.md
+│   ├── APP_FLOW_DOCUMENTATION.md
+│   └── REMAINING_ENDPOINTS.md
+├── mobile/                     # Mobile app documentation
+│   ├── MOBILE_APP_INTEGRATION.md
+│   └── API_ENDPOINT_MIGRATION.md
+├── testing/                    # Test results and reports
+│   └── README.md
+├── migration/                  # Data migration guides
+│   └── README.md
+└── archive/                    # Archived/outdated docs
+    ├── deployment/
+    └── testing/
+```
+
+## 🚀 Quick Links
+
+### Getting Started
+- **[Project Overview](./project/PROJECT_ORGANIZATION.md)** - Project structure and organization
+- **[Implementation Status](./project/IMPLEMENTATION_STATUS.md)** - Current development status
+
+### Deployment
+- **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Complete deployment instructions
+- **[Quick Deploy](./deployment/FINAL_DEPLOYMENT_INSTRUCTIONS.md)** - Fast deployment steps
+- **[Deployment Optimization](./deployment/DEPLOYMENT_OPTIMIZATION.md)** - Performance tips
+
+### API
+- **[API Documentation](./api/README.md)** - API endpoints and status
+- **[App Flow](./api/APP_FLOW_DOCUMENTATION.md)** - Application flow documentation
+
+### Development
+- **[Mobile Integration](./mobile/MOBILE_APP_INTEGRATION.md)** - Mobile app integration guide
+- **[Testing Results](./testing/README.md)** - Test results and verification
+
+### Migration
+- **[Migration Guide](./migration/README.md)** - Data migration procedures
+
+## 📖 Documentation Categories
+
+### Project Documentation (`/project`)
+Project overview, status, and organization information.
+
+### Deployment Documentation (`/deployment`)
+Complete guides for deploying the application to production.
+
+**Key Documents:**
+- `FINAL_DEPLOYMENT_INSTRUCTIONS.md` - Main deployment guide
+- `DEPLOYMENT_GUIDE.md` - Comprehensive deployment documentation
+- `DEPLOYMENT_OPTIMIZATION.md` - Performance optimization guide
+- `AUTOMATIC_DEPLOYMENT.md` - Automated deployment configuration
+
+### API Documentation (`/api`)
+API endpoints, testing results, and integration guides.
+
+### Mobile Documentation (`/mobile`)
+Flutter mobile app integration, migration guides, and UI documentation.
+
+### Testing Documentation (`/testing`)
+Test results, verification reports, and testing procedures.
+
+### Migration Documentation (`/migration`)
+Data migration plans, execution guides, and progress tracking.
+
+## 🔍 Finding Information
+
+### Need to deploy?
+→ Start with [`deployment/FINAL_DEPLOYMENT_INSTRUCTIONS.md`](./deployment/FINAL_DEPLOYMENT_INSTRUCTIONS.md)
+
+### Looking for API endpoints?
+→ Check [`api/README.md`](./api/README.md)
+
+### Want to understand the project structure?
+→ Read [`project/PROJECT_ORGANIZATION.md`](./project/PROJECT_ORGANIZATION.md)
+
+### Need migration help?
+→ See [`migration/README.md`](./migration/README.md)
+
+### Testing information?
+→ Review [`testing/README.md`](./testing/README.md)
+
+## 📝 Documentation Standards
+
+All documentation follows these standards:
+- **Markdown format** (.md files)
+- **Clear headings** and structure
+- **Code examples** with syntax highlighting
+- **Step-by-step guides** where applicable
+- **Regular updates** to reflect current state
+
+## 🔄 Keeping Documentation Updated
+
+Documentation is updated when:
+- New features are added
+- Deployment procedures change
+- API endpoints are modified
+- Project structure evolves
+
+## 📧 Contributing
+
+When adding new documentation:
+1. Place files in the appropriate category directory
+2. Update the relevant README.md file
+3. Follow the existing documentation style
+4. Include code examples where helpful
+
+---
+
+**Last Updated:** January 18, 2026  
+**Maintained By:** Development Team

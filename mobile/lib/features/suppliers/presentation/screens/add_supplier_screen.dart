@@ -5,7 +5,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/utils/phone_validator.dart';
 import '../../../../shared/utils/rwandan_phone_input_formatter.dart';
-import '../../../../core/services/local_data_service.dart';
 import '../providers/suppliers_provider.dart';
 
 class AddSupplierScreen extends ConsumerStatefulWidget {
@@ -103,20 +102,6 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
           address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
           pricePerLiter: double.parse(_pricePerLiterController.text),
         );
-
-        // Also save to local storage for payroll generation
-        await LocalDataService.saveSupplier({
-          'name': _nameController.text.trim(),
-          'account_name': _nameController.text.trim(),
-          'phone': _phoneController.text.trim(),
-          'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          'nid': _nidController.text.trim().isEmpty ? null : _nidController.text.trim(),
-          'address': _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-          'price_per_liter': double.parse(_pricePerLiterController.text),
-          'pricePerLiter': double.parse(_pricePerLiterController.text),
-          'code': _phoneController.text.trim(), // Use phone as code for now
-          'account_code': _phoneController.text.trim(),
-        });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

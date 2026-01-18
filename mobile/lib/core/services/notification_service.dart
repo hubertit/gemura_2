@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 import '../../shared/models/notification.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class NotificationService {
   final Dio _dio = AuthenticatedDioService.instance;
@@ -17,17 +16,12 @@ class NotificationService {
     int offset = 0,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
 
       print('🔔 NotificationService: Fetching notifications for accountId: $accountId');
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/notifications/get.php',
+        '${AppConfig.apiBaseUrl}/notifications/get',
         data: {
-          'token': token,
-          'account_id': accountId,
+          'accountId': accountId,
           'status': status,
           'type': type,
           'category': category,
@@ -57,24 +51,19 @@ class NotificationService {
     int? accountId,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
 
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/notifications/create.php',
+        '${AppConfig.apiBaseUrl}/notifications',
         data: {
-          'token': token,
           'title': title,
           'message': message,
           'type': type,
           'category': category,
-          'action_url': actionUrl,
-          'action_data': actionData,
-          'expires_at': expiresAt,
-          'user_id': userId,
-          'account_id': accountId,
+          'actionUrl': actionUrl,
+          'actionData': actionData,
+          'expiresAt': expiresAt,
+          'userId': userId,
+          'accountId': accountId,
         },
       );
 
@@ -91,18 +80,12 @@ class NotificationService {
     int? accountId,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
 
-      final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/notifications/update.php',
+      final response = await _dio.put(
+        '${AppConfig.apiBaseUrl}/notifications/$notificationId',
         data: {
-          'token': token,
-          'notification_id': notificationId,
           'status': status,
-          'account_id': accountId,
+          'accountId': accountId,
         },
       );
 
@@ -154,18 +137,9 @@ class NotificationService {
     int? accountId,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
 
-      final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/notifications/delete.php',
-        data: {
-          'token': token,
-          'notification_id': notificationId,
-          'account_id': accountId,
-        },
+      final response = await _dio.delete(
+        '${AppConfig.apiBaseUrl}/notifications/$notificationId',
       );
 
       return NotificationResponse.fromJson(response.data);

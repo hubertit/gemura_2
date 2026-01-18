@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import '../../domain/models/product.dart';
 import '../../domain/models/category.dart';
 
-// API Base URL
-const String baseUrl = 'https://api.gemura.rw/v2/market';
+// API Base URL - Updated to use NestJS backend
+const String baseUrl = 'http://159.198.65.38:3004/api/market';
 
 // HTTP Client Provider
 final httpClientProvider = Provider<http.Client>((ref) {
@@ -15,9 +15,9 @@ final httpClientProvider = Provider<http.Client>((ref) {
 // Products Provider - fetches all products from API
 final productsProvider = FutureProvider<List<Product>>((ref) async {
   try {
-    print('🔄 Fetching all products from: $baseUrl/products/list.php?limit=100');
+    print('🔄 Fetching all products from: $baseUrl/products?limit=100');
     final response = await ref.read(httpClientProvider).get(
-      Uri.parse('$baseUrl/products/list.php?limit=100'),
+      Uri.parse('$baseUrl/products').replace(queryParameters: {'limit': '100'}),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -45,9 +45,9 @@ final productsProvider = FutureProvider<List<Product>>((ref) async {
 // Featured Products Provider - fetches featured products from API
 final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
   try {
-    print('🔄 Fetching featured products from: $baseUrl/products/featured.php?limit=5');
+    print('🔄 Fetching featured products from: $baseUrl/products/featured?limit=5');
     final response = await ref.read(httpClientProvider).get(
-      Uri.parse('$baseUrl/products/featured.php?limit=5'),
+      Uri.parse('$baseUrl/products/featured').replace(queryParameters: {'limit': '5'}),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -75,9 +75,9 @@ final featuredProductsProvider = FutureProvider<List<Product>>((ref) async {
 // Recent Products Provider - fetches recent products from API
 final recentProductsProvider = FutureProvider<List<Product>>((ref) async {
   try {
-    print('🔄 Fetching recent products from: $baseUrl/products/recent.php?limit=10');
+    print('🔄 Fetching recent products from: $baseUrl/products/recent?limit=10');
     final response = await ref.read(httpClientProvider).get(
-      Uri.parse('$baseUrl/products/recent.php?limit=10'),
+      Uri.parse('$baseUrl/products/recent').replace(queryParameters: {'limit': '10'}),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -262,9 +262,9 @@ final topSellersProvider = FutureProvider<List<TopSeller>>((ref) async {
 // Categories Provider - fetches all categories from API
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   try {
-    print('🔄 Fetching categories from: $baseUrl/categories/list.php');
+    print('🔄 Fetching categories from: $baseUrl/categories');
     final response = await ref.read(httpClientProvider).get(
-      Uri.parse('$baseUrl/categories/list.php'),
+      Uri.parse('$baseUrl/categories'),
       headers: {'Content-Type': 'application/json'},
     );
 

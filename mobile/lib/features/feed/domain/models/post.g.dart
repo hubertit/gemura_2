@@ -22,7 +22,9 @@ Post _$PostFromJson(Map<String, dynamic> json) => Post(
       likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
       commentsCount: (json['commentsCount'] as num?)?.toInt() ?? 0,
       sharesCount: (json['sharesCount'] as num?)?.toInt() ?? 0,
+      bookmarksCount: (json['bookmarksCount'] as num?)?.toInt() ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
+      isBookmarked: json['isBookmarked'] as bool? ?? false,
       hashtags: (json['hashtags'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
@@ -44,7 +46,9 @@ Map<String, dynamic> _$PostToJson(Post instance) => <String, dynamic>{
       'likesCount': instance.likesCount,
       'commentsCount': instance.commentsCount,
       'sharesCount': instance.sharesCount,
+      'bookmarksCount': instance.bookmarksCount,
       'isLiked': instance.isLiked,
+      'isBookmarked': instance.isBookmarked,
       'hashtags': instance.hashtags,
       'location': instance.location,
       'isVerified': instance.isVerified,

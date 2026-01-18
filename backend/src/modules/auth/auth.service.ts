@@ -20,10 +20,11 @@ export class AuthService {
     const field = isEmail ? 'email' : 'phone';
     const value = isEmail ? identifier.toLowerCase() : identifier.replace(/\D/g, '');
 
-    // Find user
+    // Find user (phone numbers should be unique now)
     const user = await this.prisma.user.findFirst({
       where: {
         [field]: value,
+        status: 'active',
       },
     });
 
@@ -36,6 +37,15 @@ export class AuthService {
     }
 
     // Verify password
+    // Skip PHP bcrypt format ($2y$) as Node.js bcrypt doesn't support it
+    if (user.password_hash.startsWith('$2y$')) {
+      throw new UnauthorizedException({
+        code: 401,
+        status: 'error',
+        message: 'Invalid credentials.',
+      });
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       throw new UnauthorizedException({

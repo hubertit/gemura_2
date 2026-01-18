@@ -34,7 +34,24 @@ class AuthenticatedDioService {
           // Add auth token to all requests
           final token = SecureStorageService.getAuthToken();
           if (token != null && token.isNotEmpty) {
+            // Add to Authorization header (Bearer token) - primary method for NestJS endpoints
             options.headers['Authorization'] = 'Bearer $token';
+            
+            // Also add to query parameters as fallback (TokenGuard checks both header and query)
+            options.queryParameters['token'] = token;
+            
+            // NOTE: Do NOT add token to request body for NestJS endpoints
+            // All NestJS endpoints use TokenGuard which extracts token from:
+            // 1. Authorization header (Bearer token)
+            // 2. Query parameter (token=...)
+            // 3. Request body (token field) - but DTOs don't allow extra properties
+            // 
+            // Since all current endpoints are NestJS and use DTOs with validation,
+            // adding token to body causes validation errors like "[property token should not exist]"
+            // 
+            // Only add to body for legacy PHP endpoints if needed in the future
+          } else {
+            print('⚠️ AuthenticatedDioService: No token found in storage');
           }
           handler.next(options);
         },

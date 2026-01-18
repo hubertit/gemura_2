@@ -1,9 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import '../../shared/models/overview.dart';
-import '../config/app_config.dart';
 import 'authenticated_dio_service.dart';
-import 'secure_storage_service.dart';
 
 class OverviewService {
   static final OverviewService _instance = OverviewService._internal();
@@ -18,66 +15,57 @@ class OverviewService {
     String? dateTo,
   }) async {
     try {
-      final token = SecureStorageService.getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token found');
-      }
-
-      final Map<String, dynamic> requestData = {
-        'token': token,
-      };
+      final Map<String, dynamic> requestData = {};
 
       if (dateFrom != null) {
-        requestData['date_from'] = dateFrom;
+        requestData['dateFrom'] = dateFrom;
       }
       if (dateTo != null) {
-        requestData['date_to'] = dateTo;
+        requestData['dateTo'] = dateTo;
       }
+
+      print('📊 OverviewService: Fetching overview data');
+      print('📊 OverviewService: Request data: $requestData');
 
       final response = await _dio.post(
         '/stats/overview',
         data: requestData,
       );
 
-      // Debug logging
-      print('🔍 DEBUG OverviewService: Response status: ${response.statusCode}');
-      print('🔍 DEBUG OverviewService: Response data: ${response.data}');
-      print('🔍 DEBUG OverviewService: Request data: $requestData');
+      print('📊 OverviewService: Response status: ${response.statusCode}');
+      print('📊 OverviewService: Response data keys: ${response.data?.keys}');
 
-      if (response.statusCode == 200) {
+      // Accept both 200 (OK) and 201 (Created) status codes
+      // The important check is the response data structure
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        print('🔍 DEBUG OverviewService: Response code: ${data['code']}, status: ${data['status']}');
-        
         if (data['code'] == 200 || data['status'] == 'success') {
-          final overviewData = data['data'];
-          print('🔍 DEBUG OverviewService: Overview data: $overviewData');
-          
-          if (overviewData == null) {
-            print('❌ DEBUG OverviewService: Overview data is null!');
-            throw Exception('Overview data is null in API response');
+          print('📊 OverviewService: Parsing overview data...');
+          try {
+            final overview = Overview.fromJson(data['data']);
+            print('📊 OverviewService: Successfully parsed overview data');
+            return overview;
+          } catch (parseError, stackTrace) {
+            print('❌ OverviewService: JSON parsing error: $parseError');
+            print('❌ OverviewService: Stack trace: $stackTrace');
+            print('❌ OverviewService: Data structure: ${data['data']}');
+            throw Exception('Failed to parse overview data: $parseError');
           }
-          
-          // Check if data contains zeros or empty values
-          if (overviewData is Map) {
-            final summary = overviewData['summary'];
-            if (summary != null) {
-              print('🔍 DEBUG OverviewService: Summary data: $summary');
-              final collection = summary['collection'];
-              final sales = summary['sales'];
-              print('🔍 DEBUG OverviewService: Collection: $collection');
-              print('🔍 DEBUG OverviewService: Sales: $sales');
-            }
-          }
-          
-          return Overview.fromJson(overviewData);
         } else {
-          print('❌ DEBUG OverviewService: API returned error: ${data['message']}');
+          print('❌ OverviewService: API returned error: ${data['message']}');
           throw Exception(data['message'] ?? 'Failed to get overview data');
         }
       } else {
+        print('❌ OverviewService: Unexpected status code: ${response.statusCode}');
         throw Exception('Failed to get overview data: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print('❌ OverviewService: DioException occurred');
+      print('❌ OverviewService: Type: ${e.type}');
+      print('❌ OverviewService: Status code: ${e.response?.statusCode}');
+      print('❌ OverviewService: Response: ${e.response?.data}');
+      print('❌ OverviewService: Message: ${e.message}');
+      
       String errorMessage = 'Failed to get overview data. ';
       
       if (e.response?.statusCode == 401) {
@@ -100,7 +88,9 @@ class OverviewService {
       }
       
       throw Exception(errorMessage);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ OverviewService: Unexpected error: $e');
+      print('❌ OverviewService: Stack trace: $stackTrace');
       throw Exception('Unexpected error: $e');
     }
   }

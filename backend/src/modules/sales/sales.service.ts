@@ -4,6 +4,7 @@ import { User } from '@prisma/client';
 import { GetSalesDto, SalesFiltersDto } from './dto/get-sales.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { CancelSaleDto } from './dto/cancel-sale.dto';
+import { CreateSaleDto } from './dto/create-sale.dto';
 
 @Injectable()
 export class SalesService {
@@ -242,6 +243,104 @@ export class SalesService {
       status: 'success',
       message: 'Sale cancelled successfully.',
     };
+  }
+
+  async createSale(user: User, createDto: CreateSaleDto) {
+    const { customer_account_code, quantity, unit_price, status, sale_at, notes } = createDto;
+
+    // Check if user has a valid default account
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Get customer account by code
+    const customerAccount = await this.prisma.account.findUnique({
+      where: { code: customer_account_code },
+    });
+
+    if (!customerAccount || customerAccount.status !== 'active') {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer account not found.',
+      });
+    }
+
+    const customerAccountId = customerAccount.id;
+
+    // Get unit price from supplier-customer relationship if not provided
+    let finalUnitPrice = unit_price;
+    if (!finalUnitPrice) {
+      const relationship = await this.prisma.supplierCustomer.findFirst({
+        where: {
+          supplier_account_id: supplierAccountId,
+          customer_account_id: customerAccountId,
+          relationship_status: 'active',
+        },
+      });
+      finalUnitPrice = relationship ? Number(relationship.price_per_liter) : 0;
+    }
+
+    // Create milk sale
+    try {
+      const milkSale = await this.prisma.milkSale.create({
+        data: {
+          supplier_account_id: supplierAccountId,
+          customer_account_id: customerAccountId,
+          quantity: quantity,
+          unit_price: finalUnitPrice,
+          status: (status || 'pending') as any,
+          sale_at: sale_at ? new Date(sale_at) : new Date(),
+          notes: notes || null,
+          recorded_by: user.id,
+          created_by: user.id,
+        },
+        include: {
+          supplier_account: true,
+          customer_account: true,
+        },
+      });
+
+      return {
+        code: 200,
+        status: 'success',
+        message: 'Sale created successfully.',
+        data: {
+          id: milkSale.id,
+          quantity: Number(milkSale.quantity),
+          unit_price: Number(milkSale.unit_price),
+          total_amount: Number(milkSale.quantity) * Number(milkSale.unit_price),
+          status: milkSale.status,
+          sale_at: milkSale.sale_at,
+          notes: milkSale.notes,
+          supplier_account: {
+            code: milkSale.supplier_account.code,
+            name: milkSale.supplier_account.name,
+            type: milkSale.supplier_account.type,
+            status: milkSale.supplier_account.status,
+          },
+          customer_account: {
+            code: milkSale.customer_account.code,
+            name: milkSale.customer_account.name,
+            type: milkSale.customer_account.type,
+            status: milkSale.customer_account.status,
+          },
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        code: 500,
+        status: 'error',
+        message: 'Failed to create sale.',
+        error: error.message,
+      });
+    }
   }
 }
 
