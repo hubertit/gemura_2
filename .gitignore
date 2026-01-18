@@ -85,7 +85,6 @@ mobile/.metadata
 *.zip
 *.tar.gz
 /tmp/
-*.tar.gz
 
 # OS
 Thumbs.db
