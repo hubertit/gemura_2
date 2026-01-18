@@ -48,7 +48,7 @@ class UserInfo {
   @JsonKey(name: 'email')
   final String? email;
   @JsonKey(name: 'phone')
-  final String phone;
+  final String? phone; // Made nullable to handle null values from API
   @JsonKey(name: 'default_account_id')
   final String? defaultAccountId; // Changed to String for UUID support
 
@@ -56,7 +56,7 @@ class UserInfo {
     required this.id,
     required this.name,
     this.email,
-    required this.phone,
+    this.phone, // Made nullable
     this.defaultAccountId,
   });
 
