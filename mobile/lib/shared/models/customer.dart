@@ -19,11 +19,29 @@ class Customer {
   });
 
   factory Customer.fromApiResponse(Map<String, dynamic> json) {
+    // Helper function to safely convert to double (handles both string and number)
+    double _parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) {
+        return double.tryParse(value) ?? 0.0;
+      }
+      return 0.0;
+    }
+
+    // Helper function to safely convert to string
+    String _parseString(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      return value.toString();
+    }
+
     return Customer(
-      relationshipId: json['relationship_id'] ?? '',
-      pricePerLiter: double.tryParse(json['price_per_liter'] ?? '0') ?? 0.0,
-      averageSupplyQuantity: double.tryParse(json['average_supply_quantity'] ?? '0') ?? 0.0,
-      relationshipStatus: json['relationship_status'] ?? 'inactive',
+      relationshipId: _parseString(json['relationship_id']),
+      pricePerLiter: _parseDouble(json['price_per_liter']),
+      averageSupplyQuantity: _parseDouble(json['average_supply_quantity']),
+      relationshipStatus: _parseString(json['relationship_status']),
       customer: CustomerUser.fromApiResponse(json),
     );
   }
@@ -83,16 +101,23 @@ class CustomerUser {
   });
 
   factory CustomerUser.fromApiResponse(Map<String, dynamic> json) {
+    // Helper function to safely convert to string
+    String _parseString(dynamic value) {
+      if (value == null) return '';
+      if (value is String) return value;
+      return value.toString();
+    }
+
     final account = json['account'] as Map<String, dynamic>?;
     return CustomerUser(
-      userCode: json['code'] ?? '',
-      name: json['name'] ?? '',
-      phone: json['phone'] ?? '',
-      email: json['email'],
-      nid: json['nid'],
-      address: json['address'],
-      accountCode: account?['code'] ?? '', // Extract from nested account object
-      accountName: account?['name'] ?? '', // Extract from nested account object
+      userCode: _parseString(json['code']),
+      name: _parseString(json['name']),
+      phone: _parseString(json['phone']),
+      email: json['email'] != null ? _parseString(json['email']) : null,
+      nid: json['nid'] != null ? _parseString(json['nid']) : null,
+      address: json['address'] != null ? _parseString(json['address']) : null,
+      accountCode: account != null ? _parseString(account['code']) : '',
+      accountName: account != null ? _parseString(account['name']) : '',
     );
   }
 

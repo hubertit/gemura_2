@@ -169,6 +169,82 @@ export class CustomersService {
     };
   }
 
+  async getAllCustomers(user: User) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Get all customer relationships for this supplier
+    const relationships = await this.prisma.supplierCustomer.findMany({
+      where: {
+        supplier_account_id: supplierAccountId,
+        relationship_status: 'active',
+      },
+      include: {
+        customer_account: {
+          include: {
+            user_accounts: {
+              where: { status: 'active' },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    phone: true,
+                    email: true,
+                    nid: true,
+                    address: true,
+                    account_type: true,
+                  },
+                },
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    const customers = relationships.map((rel) => {
+      const customerUser = rel.customer_account.user_accounts[0]?.user;
+      return {
+        relationship_id: rel.id,
+        code: customerUser?.code || '',
+        name: customerUser?.name || rel.customer_account.name,
+        phone: customerUser?.phone || '',
+        email: customerUser?.email || null,
+        nid: customerUser?.nid || null,
+        address: customerUser?.address || null,
+        account: {
+          code: rel.customer_account.code,
+          name: rel.customer_account.name,
+        },
+        price_per_liter: Number(rel.price_per_liter),
+        average_supply_quantity: Number(rel.average_supply_quantity),
+        relationship_status: rel.relationship_status,
+        created_at: rel.created_at,
+        updated_at: rel.updated_at,
+      };
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Customers fetched successfully.',
+      data: customers,
+    };
+  }
+
   async getCustomer(user: User, customerAccountCode: string) {
     if (!user.default_account_id) {
       throw new BadRequestException({

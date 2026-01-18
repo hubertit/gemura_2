@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
 import { CustomersService } from './customers.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -80,6 +80,53 @@ export class CustomersController {
   })
   async createCustomer(@CurrentUser() user: User, @Body() createDto: CreateCustomerDto) {
     return this.customersService.createCustomer(user, createDto);
+  }
+
+  @Post('get')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Get all customers',
+    description: 'Retrieve all active customer relationships for the authenticated user.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Customers fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Customers fetched successfully.',
+      data: [
+        {
+          relationship_id: 'relationship-uuid',
+          code: 'U_ABC123',
+          name: 'John Doe',
+          phone: '250788123456',
+          email: 'customer@example.com',
+          nid: '1199887766554433',
+          address: 'Kigali, Rwanda',
+          account: {
+            code: 'A_ABC123',
+            name: 'John Doe',
+          },
+          price_per_liter: 400.0,
+          average_supply_quantity: 120.5,
+          relationship_status: 'active',
+          created_at: '2025-01-04T10:00:00Z',
+          updated_at: '2025-01-04T10:00:00Z',
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Unauthorized. Invalid token.',
+    },
+  })
+  async getAllCustomers(@CurrentUser() user: User) {
+    return this.customersService.getAllCustomers(user);
   }
 
   @Get(':code')

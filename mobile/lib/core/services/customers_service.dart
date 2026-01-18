@@ -10,18 +10,30 @@ class CustomersService {
   final Dio _dio = AuthenticatedDioService.instance;
 
   /// Get all customers for the authenticated user
-  /// Note: NestJS doesn't have a "get all customers" endpoint
-  /// Using suppliers endpoint pattern - customers are relationships, not a list endpoint
-  /// This returns an empty list - individual customers must be fetched by code
   Future<List<Customer>> getCustomers() async {
     try {
-      // Since NestJS doesn't have GET /customers, we return empty list
-      // Individual customers can be fetched using getCustomerDetails(customerCode)
-      // TODO: Backend should implement GET /customers endpoint OR
-      // Use a different approach like getting from sales relationships
-      print('⚠️ Warning: GET /customers endpoint not available in NestJS backend');
-      print('⚠️ Use getCustomerDetails(customerCode) to fetch individual customers');
-      return [];
+      final response = await _dio.post(
+        '/customers/get',
+        data: {}, // NestJS uses POST but doesn't need token in body
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        // Check if the API response indicates success
+        if (data['code'] == 200 || data['status'] == 'success') {
+          final List<dynamic> customersData = data['data'] ?? [];
+          return customersData.map((json) => Customer.fromApiResponse(json)).toList();
+        } else {
+          final errorMessage = data['message'] ?? 'Failed to get customers';
+          // Check if the message contains success info but is still an error
+          if (errorMessage.toString().toLowerCase().contains('successfully') && data['status'] != 'success') {
+            throw Exception('Customer created but failed to refresh list. Please try again.');
+          }
+          throw Exception(errorMessage);
+        }
+      } else {
+        throw Exception('Failed to get customers: ${response.statusCode}');
+      }
     } on DioException catch (e) {
       String errorMessage = 'Failed to get customers. ';
       
