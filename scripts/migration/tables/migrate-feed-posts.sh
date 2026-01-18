@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Migrate user_accounts table from MySQL to PostgreSQL
+# Migrate feed_posts table from MySQL to PostgreSQL
 
 set -e
 
@@ -9,33 +9,35 @@ PG_HOST=$6; PG_PORT=$7; PG_DB=$8; PG_USER=$9; PG_PASS=${10}
 
 export PGPASSWORD="$PG_PASS"
 
-echo "   Exporting user_accounts from MySQL..."
+echo "   Exporting feed_posts from MySQL..."
 
 mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASS" "$MYSQL_DB" \
     -e "SELECT 
         id as legacy_id,
         user_id,
-        account_id,
-        role,
-        permissions,
+        content,
+        media_url,
+        hashtags,
+        location,
+        likes_count,
+        shares_count,
+        bookmarks_count,
         status,
         created_at,
+        updated_at,
         created_by,
         updated_by
-    FROM user_accounts
+    FROM feed_posts
     ORDER BY id;" \
     --skip-column-names --raw | \
-while IFS=$'\t' read -r legacy_id user_id account_id role permissions status created_at created_by updated_by; do
+while IFS=$'\t' read -r legacy_id user_id content media_url hashtags location likes_count shares_count bookmarks_count status created_at updated_at created_by updated_by; do
     new_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
     
-    # Map user_id and account_id to new UUIDs
+    # Map user_id to new UUID
     user_uuid=$(psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -c \
         "SELECT id FROM users WHERE legacy_id = $user_id LIMIT 1;" | tr -d ' ')
-    account_uuid=$(psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -c \
-        "SELECT id FROM accounts WHERE legacy_id = $account_id LIMIT 1;" | tr -d ' ')
     
     [ -z "$user_uuid" ] && user_uuid="NULL"
-    [ -z "$account_uuid" ] && account_uuid="NULL"
     
     # Map created_by and updated_by to UUIDs if they exist
     created_by_uuid="NULL"
@@ -52,25 +54,31 @@ while IFS=$'\t' read -r legacy_id user_id account_id role permissions status cre
         [ -z "$updated_by_uuid" ] && updated_by_uuid="NULL"
     fi
     
-    # Handle permissions JSON
-    if [ "$permissions" != "NULL" ] && [ -n "$permissions" ]; then
-        perms_json="'$(echo "$permissions" | sed "s/'/''/g")'"
-    else
-        perms_json="NULL"
-    fi
+    # Handle NULL values and escape single quotes
+    content_escaped=$(echo "$content" | sed "s/'/''/g")
+    media_url_escaped=$(echo "$media_url" | sed "s/'/''/g")
+    hashtags_escaped=$(echo "$hashtags" | sed "s/'/''/g")
+    location_escaped=$(echo "$location" | sed "s/'/''/g")
     
     psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" << EOF
-INSERT INTO user_accounts (
-    id, legacy_id, user_id, account_id, role, permissions, status, created_at, created_by, updated_by
+INSERT INTO feed_posts (
+    id, legacy_id, user_id, content, media_url, hashtags, location,
+    likes_count, shares_count, bookmarks_count, status,
+    created_at, updated_at, created_by, updated_by
 ) VALUES (
     '$new_id',
     $legacy_id,
     $( [ "$user_uuid" = "NULL" ] && echo "NULL" || echo "'$user_uuid'" ),
-    $( [ "$account_uuid" = "NULL" ] && echo "NULL" || echo "'$account_uuid'" ),
-    '$role',
-    $perms_json::jsonb,
-    '$status',
+    $( [ "$content" = "NULL" ] || [ -z "$content" ] && echo "NULL" || echo "'$content_escaped'" ),
+    $( [ "$media_url" = "NULL" ] || [ -z "$media_url" ] && echo "NULL" || echo "'$media_url_escaped'" ),
+    $( [ "$hashtags" = "NULL" ] || [ -z "$hashtags" ] && echo "NULL" || echo "'$hashtags_escaped'" ),
+    $( [ "$location" = "NULL" ] || [ -z "$location" ] && echo "NULL" || echo "'$location_escaped'" ),
+    $( [ "$likes_count" = "NULL" ] || [ -z "$likes_count" ] && echo "0" || echo "$likes_count" ),
+    $( [ "$shares_count" = "NULL" ] || [ -z "$shares_count" ] && echo "0" || echo "$shares_count" ),
+    $( [ "$bookmarks_count" = "NULL" ] || [ -z "$bookmarks_count" ] && echo "0" || echo "$bookmarks_count" ),
+    $( [ "$status" = "NULL" ] || [ -z "$status" ] && echo "'active'" || echo "'$status'" ),
     '$created_at',
+    '$updated_at',
     $( [ "$created_by_uuid" = "NULL" ] && echo "NULL" || echo "'$created_by_uuid'" ),
     $( [ "$updated_by_uuid" = "NULL" ] && echo "NULL" || echo "'$updated_by_uuid'" )
 )
@@ -78,5 +86,4 @@ ON CONFLICT (legacy_id) DO NOTHING;
 EOF
 done
 
-echo "   ✓ User accounts migrated"
-
+echo "   ✓ Feed posts migrated"
