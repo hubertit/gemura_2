@@ -25,6 +25,7 @@ import { ApiKeysModule } from './modules/api-keys/api-keys.module';
 import { ReferralsModule } from './modules/referrals/referrals.module';
 import { PointsModule } from './modules/points/points.module';
 import { OnboardModule } from './modules/onboard/onboard.module';
+import { MediaModule } from './modules/media/media.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -63,6 +64,7 @@ import { AppController } from './app.controller';
     ReferralsModule,
     PointsModule,
     OnboardModule,
+    MediaModule,
   ],
 })
 export class AppModule {}

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import * as https from 'https';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -68,6 +69,45 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     exposedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // Media proxy route (MUST be before API prefix to avoid /api/media)
+  // Use a catch-all route for /media/*
+  expressApp.use('/media', async (req, res, next) => {
+    // Extract path after /media/
+    const path = req.path.replace('/media', '').replace(/^\//, '');
+    
+    if (!path) {
+      return res.status(400).json({
+        code: 400,
+        status: 'error',
+        message: 'Media path is required',
+      });
+    }
+    
+    const targetUrl = `https://www.kigalitoday.com/${path}`;
+    
+    https.get(targetUrl, (proxyRes) => {
+      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      if (proxyRes.statusCode === 200) {
+        proxyRes.pipe(res);
+      } else {
+        res.status(proxyRes.statusCode || 500).json({
+          code: proxyRes.statusCode || 500,
+          status: 'error',
+          message: `Failed to fetch media: ${proxyRes.statusCode}`,
+        });
+      }
+    }).on('error', (error) => {
+      res.status(502).json({
+        code: 502,
+        status: 'error',
+        message: `Failed to proxy media: ${error.message}`,
+      });
+    });
   });
 
   // Validation
