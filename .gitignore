@@ -13,6 +13,12 @@ build/
 .next/
 out/
 
+# Backend build artifacts
+backend/dist/
+backend/node_modules/
+backend/.next/
+backend/coverage/
+
 # Environment
 .env
 .env.local
@@ -29,7 +35,17 @@ out/
 *~
 .DS_Store
 
-# Flutter
+# Flutter - Root level
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.dill
+*.dill.track.dill
+
+# Flutter - Mobile directory
 mobile/.dart_tool/
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
@@ -39,6 +55,19 @@ mobile/.pub/
 mobile/build/
 mobile/.ios/
 mobile/.android/
+mobile/.metadata
+
+# Flutter build artifacts (large files)
+**/flutter_build/
+**/build/
+**/App.framework/
+**/Flutter/ephemeral/
+**/GeneratedPluginRegistrant.*
+**/kernel_blob.bin
+**/*.dill
+**/*.dill.track.dill
+**/app.so
+**/snapshot_assembly.*
 
 # Database
 *.db
@@ -54,6 +83,8 @@ mobile/.android/
 *.bak
 *.backup
 *.zip
+*.tar.gz
+/tmp/
 *.tar.gz
 
 # OS
