@@ -35,6 +35,16 @@ backend/coverage/
 *~
 .DS_Store
 
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+
 # Flutter - Root level
 .dart_tool/
 .flutter-plugins
@@ -97,6 +107,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+error_log
+**/error_log
 
 # Prisma
 backend/prisma/migrations/*.sql
