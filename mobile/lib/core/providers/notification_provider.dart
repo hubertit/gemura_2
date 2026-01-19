@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/notification_service.dart';
 import '../../shared/models/notification.dart';
-import '../../features/home/presentation/providers/user_accounts_provider.dart';
 
 // Service provider
 final notificationServiceProvider = Provider<NotificationService>((ref) {

@@ -92,6 +92,41 @@ export class AccountsService {
       },
     });
 
+    // Get all user accounts (same as getUserAccounts) for consistent response
+    const userAccounts = await this.prisma.userAccount.findMany({
+      where: {
+        user_id: user.id,
+        status: 'active',
+      },
+      include: {
+        account: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    // Format accounts (matching getUserAccounts structure)
+    const accounts = userAccounts
+      .filter((ua) => ua.account && ua.account.status === 'active')
+      .map((ua) => ({
+        account_id: ua.account!.id,
+        account_code: ua.account!.code,
+        account_name: ua.account!.name,
+        account_type: ua.account!.type,
+        account_status: ua.account!.status,
+        account_created_at: ua.account!.created_at,
+        role: ua.role,
+        permissions: ua.permissions
+          ? typeof ua.permissions === 'string'
+            ? JSON.parse(ua.permissions)
+            : ua.permissions
+          : null,
+        user_account_status: ua.status,
+        access_granted_at: ua.created_at,
+        is_default: updatedUser.default_account_id === ua.account!.id,
+      }));
+
     return {
       code: 200,
       status: 'success',
@@ -108,6 +143,7 @@ export class AccountsService {
           name: userAccount.account.name,
           type: userAccount.account.type,
         },
+        accounts,
       },
     };
   }

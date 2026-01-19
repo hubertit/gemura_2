@@ -13,6 +13,8 @@ import { ReceiptsController } from './receipts/receipts.controller';
 import { ReceiptsService } from './receipts/receipts.service';
 import { ReportsController } from './reports/reports.controller';
 import { ReportsService } from './reports/reports.service';
+import { TransactionsController } from './transactions/transactions.controller';
+import { TransactionsService } from './transactions/transactions.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
@@ -25,6 +27,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     InvoicesController,
     ReceiptsController,
     ReportsController,
+    TransactionsController,
   ],
   providers: [
     ChartOfAccountsService,
@@ -34,6 +37,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     InvoicesService,
     ReceiptsService,
     ReportsService,
+    TransactionsService,
   ],
   exports: [
     ChartOfAccountsService,
@@ -43,6 +47,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     InvoicesService,
     ReceiptsService,
     ReportsService,
+    TransactionsService,
   ],
 })
 export class AccountingModule {}

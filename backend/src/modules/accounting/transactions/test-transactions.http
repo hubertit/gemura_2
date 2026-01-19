@@ -1,0 +1,135 @@
+### Test Transactions API Endpoints
+### Make sure to replace {token} with actual auth token and {baseUrl} with your API base URL
+
+@baseUrl = http://localhost:3004/api
+@token = your-auth-token-here
+
+### 1. Create Revenue Transaction
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "amount": 50000,
+  "description": "Milk sales revenue",
+  "transaction_date": "2025-01-18"
+}
+
+### 2. Create Expense Transaction
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "expense",
+  "amount": 15000,
+  "description": "Transportation costs",
+  "transaction_date": "2025-01-18"
+}
+
+### 3. Create Revenue with specific account
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "amount": 75000,
+  "description": "Product sales",
+  "transaction_date": "2025-01-18",
+  "account_id": "account-uuid-here"
+}
+
+### 4. Get All Transactions
+GET {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+
+### 5. Get Revenue Transactions Only
+GET {{baseUrl}}/accounting/transactions?type=revenue
+Authorization: Bearer {{token}}
+
+### 6. Get Expense Transactions Only
+GET {{baseUrl}}/accounting/transactions?type=expense
+Authorization: Bearer {{token}}
+
+### 7. Get Transactions with Date Range
+GET {{baseUrl}}/accounting/transactions?date_from=2025-01-01&date_to=2025-01-31
+Authorization: Bearer {{token}}
+
+### 8. Get Transactions with Limit
+GET {{baseUrl}}/accounting/transactions?limit=10
+Authorization: Bearer {{token}}
+
+### 9. Get Revenue Transactions in Date Range
+GET {{baseUrl}}/accounting/transactions?type=revenue&date_from=2025-01-01&date_to=2025-01-31&limit=20
+Authorization: Bearer {{token}}
+
+### 10. Test Invalid Transaction Type (should fail)
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "invalid",
+  "amount": 1000,
+  "description": "Test",
+  "transaction_date": "2025-01-18"
+}
+
+### 11. Test Missing Amount (should fail)
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "description": "Test",
+  "transaction_date": "2025-01-18"
+}
+
+### 12. Test Negative Amount (should fail)
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "amount": -1000,
+  "description": "Test",
+  "transaction_date": "2025-01-18"
+}
+
+### 13. Test Zero Amount (should fail)
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "amount": 0,
+  "description": "Test",
+  "transaction_date": "2025-01-18"
+}
+
+### 14. Test Missing Description (should fail)
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "amount": 1000,
+  "transaction_date": "2025-01-18"
+}
+
+### 15. Test Missing Date (should fail)
+POST {{baseUrl}}/accounting/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "revenue",
+  "amount": 1000,
+  "description": "Test"
+}

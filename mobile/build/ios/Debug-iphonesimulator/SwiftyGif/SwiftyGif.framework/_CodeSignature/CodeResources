@@ -6,7 +6,7 @@
 	<dict>
 		<key>Headers/SwiftyGif-Swift.h</key>
 		<data>
-		eKRV2lBqHKjke/V3yQY7haCjEB4=
+		MF8UFIuW251iLa9wQcNAX90xCyc=
 		</data>
 		<key>Headers/SwiftyGif-umbrella.h</key>
 		<data>
@@ -18,11 +18,11 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		9vMc7y3RrvnUWPXCBqlcPWZ6pOU=
+		YYqziXG3YT/obyUrYacMeELXgOc=
 		</data>
 		<key>Modules/SwiftyGif.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		SHZDOMRIswMguKVLHRt0Ah18MBA=
+		NizuDhFwgkMn3VMAm1TNlyr539M=
 		</data>
 		<key>Modules/SwiftyGif.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -30,11 +30,11 @@
 		</data>
 		<key>Modules/SwiftyGif.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		98wrgSebJmSFvEBjcfn1q8trIKQ=
+		n2Ns8098/d8oGChYujGif7ISEWc=
 		</data>
 		<key>Modules/SwiftyGif.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		qg6H14F/jlKXDPo7cAd9jaBaYlU=
+		rcvLrsl9gE4HC6ZiOn6ccgs8Obo=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -42,7 +42,7 @@
 		</data>
 		<key>SwiftyGif.bundle/Info.plist</key>
 		<data>
-		wQFf0oltp+i+PAgNW6W0vJGZC/I=
+		Trn4IFt7D9NCkk2VdArOuEnRQE0=
 		</data>
 		<key>SwiftyGif.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -55,7 +55,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			gjNEXlLnHhFtpamcZTHUMR6xeLRsDUxY89KdIs+Z6iQ=
+			KyzZIYAws6+YcEyinI5vJg/ico0D15wuEFxyMtWi9kk=
 			</data>
 		</dict>
 		<key>Headers/SwiftyGif-umbrella.h</key>
@@ -76,7 +76,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			VESGIFDpvaDdPEC+KxlZ5zo05s7HxMIovXUq8i25U5w=
+			97eurAYdFZB1eQNGaxgj7K78PtwOTjf3o99I7Niz/oY=
 			</data>
 		</dict>
 		<key>Modules/SwiftyGif.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -90,14 +90,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			bvdNSH8YqgBnySimyjS8FkXGeRB8wMvZ7+6uNcDC4IU=
+			SBk5DPM0l0s60FyX4wF5AEm11Xw0wPlVR8QjFnjqOXw=
 			</data>
 		</dict>
 		<key>Modules/SwiftyGif.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			9XS8iFQqr0uvAiakH1QzIfbiA1kP6H9gkGBZgz2B5qo=
+			z6VryjSJBH64wiF/p1yIfR7XqyFVjDlb5XVccJQ1Tm0=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
@@ -111,7 +111,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			87G4qsBTGexZMgff7MYbfTHe6S6i/t4zP5DfG3PR2/c=
+			6dGbxzIrZ0Z/UyfjPj3QcDRFv9CX32rA1tcSOdsn7IM=
 			</data>
 		</dict>
 		<key>SwiftyGif.bundle/PrivacyInfo.xcprivacy</key>

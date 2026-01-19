@@ -76,7 +76,7 @@ class SecureConfig {
       _apiBaseUrl = dotenv.env['API_BASE_URL'];
     }
     
-    _apiBaseUrl ??= 'http://159.198.65.38:3004/api';
+    _apiBaseUrl ??= 'http://localhost:3004/api';
     return _apiBaseUrl!;
   }
 

@@ -6,7 +6,7 @@
 	<dict>
 		<key>Headers/path_provider_foundation-Swift.h</key>
 		<data>
-		7KgdxRUYCHLQWwcgXfF8kAYUEw0=
+		ETZ+hzcaKh0of4mYTEvGD8kCTJA=
 		</data>
 		<key>Headers/path_provider_foundation-umbrella.h</key>
 		<data>
@@ -14,7 +14,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		JesVjTUcyYWKcHqSwlVanToLFuQ=
+		iyMKXcuuubwTanYwzK/BG4JfTz0=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -22,7 +22,7 @@
 		</data>
 		<key>Modules/path_provider_foundation.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		J4fVSsleapz2fbAzrXAD+LPpxjw=
+		yNfrpbNBHiL4khAjGu/Q9ooFSqE=
 		</data>
 		<key>Modules/path_provider_foundation.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -30,15 +30,15 @@
 		</data>
 		<key>Modules/path_provider_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		irTA9myzFCXibLhAetbvSKJFKXY=
+		0z9zdpgGdGFp8RNZVw/lyQzpjHw=
 		</data>
 		<key>Modules/path_provider_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		QrlVhB/+uoiBaXGgKxr/DgJj0SA=
+		RKFlnPolpI9nwL5907Bmj7XkRAA=
 		</data>
 		<key>path_provider_foundation_privacy.bundle/Info.plist</key>
 		<data>
-		y6RpRtlnwoTjtiIkdKsf7gVlyAg=
+		sGtxODEq/xbrleNNt3VOIPI3Dbg=
 		</data>
 		<key>path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -51,7 +51,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			3FcuPEpyAs0ApLr3bPr/uM1Bhg/apLm9Qp+GU++vNi8=
+			ytXvTnYXHxiHhIZsNLc/r2im233D0EZdKchQjebwZEA=
 			</data>
 		</dict>
 		<key>Headers/path_provider_foundation-umbrella.h</key>
@@ -72,7 +72,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			5iBGrw0xD8GvTZgW+LExn1r3nOZiHAbIYEgcxKWTvZk=
+			PqCieB7+br0FnS7LXOKnlOJgVLZpwf94fXEOFmgZYJ4=
 			</data>
 		</dict>
 		<key>Modules/path_provider_foundation.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -86,21 +86,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			OXqwnWDkBs5ct3ObkGMeyk8vI+aVQQ1rwOSqhvfe6eg=
+			i57gp/tTSIJzxS11YxPfwiDUpZm/JUneinwJ3uLNMLo=
 			</data>
 		</dict>
 		<key>Modules/path_provider_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			jJ9+voV9ITzUA1xSncv1XRKH6nl+M5ymoDCWmUic/bs=
+			s+RFSOqJyLqxAK6pejRhjI+qZCiKGk0ggw+Fun8lhqQ=
 			</data>
 		</dict>
 		<key>path_provider_foundation_privacy.bundle/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			tn2MTDxalPysDYuu4R8hdoEagfjxGMNEsYzSXymXmT0=
+			GtykQz0NFxaD2xxv1QMl5+kvAA33pRFBtfNfsxMFeGQ=
 			</data>
 		</dict>
 		<key>path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy</key>

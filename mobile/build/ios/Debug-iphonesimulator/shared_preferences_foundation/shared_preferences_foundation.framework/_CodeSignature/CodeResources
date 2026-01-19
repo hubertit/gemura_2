@@ -6,7 +6,7 @@
 	<dict>
 		<key>Headers/shared_preferences_foundation-Swift.h</key>
 		<data>
-		d61I/3+Wdv/hsL/k9y0vcVSS6vA=
+		W2BKt1rd1udRNAfxTDF+XtFIRc0=
 		</data>
 		<key>Headers/shared_preferences_foundation-umbrella.h</key>
 		<data>
@@ -14,7 +14,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		p4sGfNLRypgeUzPXDg5mwVjDUpI=
+		MCcTthv77M6XJuxWpwyKFu8H1yM=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -22,7 +22,7 @@
 		</data>
 		<key>Modules/shared_preferences_foundation.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		rPRsI9AaeePn6Q83Kb/sPY+GVME=
+		0/akHEXcaZxlOCSs7v5GHk198fw=
 		</data>
 		<key>Modules/shared_preferences_foundation.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -30,15 +30,15 @@
 		</data>
 		<key>Modules/shared_preferences_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		aTpvT/s2baGvekXskROst6sEFm0=
+		l3lzvkVmptpyNTCVjnO3jPYcVnw=
 		</data>
 		<key>Modules/shared_preferences_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		mOJL3KFzAXEMwVDpbLxAZZHmAbg=
+		qa+BPR+A7Suu/LECBAHA7EMFUM4=
 		</data>
 		<key>shared_preferences_foundation_privacy.bundle/Info.plist</key>
 		<data>
-		GsC36kq1iEtHky51enFf0e6Xcvg=
+		ezlW3F/NrfbLO6VMv/4xKfW6mNg=
 		</data>
 		<key>shared_preferences_foundation_privacy.bundle/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -51,7 +51,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			247WFflgSK3vzp1nzvt4YlsiD7M60XgTSntb2/4Y1PE=
+			9J0YOAuuAyA18rsMrOKOKjNr5WYRDgsFba9BiZ7Ij1c=
 			</data>
 		</dict>
 		<key>Headers/shared_preferences_foundation-umbrella.h</key>
@@ -72,7 +72,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			u5FX/OjcC8vDY+buzdRf1QUj7IEZN5sTvhIPa2Pxupc=
+			1ATlrDMLnlG7zVNQXwt/29VSFHKPEredecKpS0O02Vo=
 			</data>
 		</dict>
 		<key>Modules/shared_preferences_foundation.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -86,21 +86,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z4lULitR5puQzYcA6DzQtUbQOjmaFxGcP5NReMiDhhk=
+			/GsMhvLBY7SVo7CvqJceZzqWjaaAOE18TSGxSHwXKgc=
 			</data>
 		</dict>
 		<key>Modules/shared_preferences_foundation.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			713yusaCS5exin+om1/Zo5IpqYMldzuyze/ljob4R2I=
+			jDbrZtYmAY498Q7Tr/0kXw3IsVh5UyMu3LK8WzUl9ps=
 			</data>
 		</dict>
 		<key>shared_preferences_foundation_privacy.bundle/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			N+WOGVSumudQZrcrNHFbhp1Tk+Vu5MFL/CeOAMTBGY0=
+			CZezAWit4IDk4HJoDDne7Sa9hztBpEw5gBTwkcDOpPo=
 			</data>
 		</dict>
 		<key>shared_preferences_foundation_privacy.bundle/PrivacyInfo.xcprivacy</key>

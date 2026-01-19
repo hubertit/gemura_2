@@ -67,7 +67,7 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
 
   // Main API Configuration
   // Updated to use new NestJS backend
-  static const String apiBaseUrl = 'http://159.198.65.38:3004/api';
+  static const String apiBaseUrl = 'http://localhost:3004/api';
   
   // Your Custom API Configuration
   static const String yourApiBaseUrl = 'https://your-api-domain.com/api';

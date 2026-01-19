@@ -10,7 +10,7 @@
 		</data>
 		<key>Headers/contacts_service-Swift.h</key>
 		<data>
-		EgY/82YzVLOAKvd2bmIJUfxnBFw=
+		Y7M1yPw2WOBVBTsq/Y11qmgCNgE=
 		</data>
 		<key>Headers/contacts_service-umbrella.h</key>
 		<data>
@@ -18,11 +18,11 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		mHZfvG+Dj+BT84OMIUyYtRDMT48=
+		hSu1qXmbemSqmvq4e91Ewyk/1oI=
 		</data>
 		<key>Modules/contacts_service.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		1mqFdBV2/kGX7o1nUou4nr3O3ts=
+		lN+3D+R2L5M/+UEjGLpl1QxDZ8M=
 		</data>
 		<key>Modules/contacts_service.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -30,11 +30,11 @@
 		</data>
 		<key>Modules/contacts_service.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		DDKWXUSgE2rD+E0OSVgxKjg1GIM=
+		Rm10fPz1ZyqgFUsuk47qrK1ZAEM=
 		</data>
 		<key>Modules/contacts_service.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		KxBBJnYhDm6T8IVhJWeaKR7Pmb8=
+		nBnKekIWlEthwGKfn28Fn22Kuvs=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -54,7 +54,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z1tYxvIDeV0mbd7qtC0QOxBdbEXsf9VLia/mKIZ4zdc=
+			cDydig9GY0RJ/m7wQqc8BednfaPegwkzJFBVd8cJq/4=
 			</data>
 		</dict>
 		<key>Headers/contacts_service-umbrella.h</key>
@@ -68,7 +68,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			42pj8M0sA4GF+Jfxt6G2PeBOanXZmZV661MkRSCETgo=
+			qMeZHfqxTetmXC7MiC7qXku/7HvbprD35sKt4AHFTkA=
 			</data>
 		</dict>
 		<key>Modules/contacts_service.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -82,14 +82,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			prJLls6cY9tF2GE5wRZouQWLgoIGiSVvZ7kRFS5NFu0=
+			mAtbyQde1ltpS73bn9Oiev7/66cTOlUoqWocZAir/7E=
 			</data>
 		</dict>
 		<key>Modules/contacts_service.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			v6jKnmEG55ZMnsP8ZyKuaemZKIbF2eXdpCByrdZ8Mog=
+			Y7SrEagTBvyaumBLRqzhsfZxvwM5MzJc5BmtVIBUbzk=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>

@@ -66,21 +66,41 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
       if (response.code == 200) {
         print('✅ Account switch API successful');
         
-        // Update accounts for immediate UI feedback
-        await fetchUserAccounts();
-        _ref.invalidate(userAccountsProvider); // Also invalidate the FutureProvider used by UI
-        
-        // Add a small delay to ensure account switch is processed
-        await Future.delayed(const Duration(milliseconds: 500));
+        // Use accounts from response if available (backend now returns them)
+        if (response.data.accounts.isNotEmpty) {
+          print('📋 Using accounts from switch response (${response.data.accounts.length} accounts)');
+          // Update state with accounts from response - create UserAccountsResponse from switch response
+          final userInfo = UserInfo(
+            id: response.data.user['id'] as String,
+            name: response.data.user['name'] as String,
+            email: response.data.user['email'] as String?,
+            phone: response.data.user['phone'] as String?,
+            defaultAccountId: response.data.user['default_account_id'] as String?,
+          );
+          final accountsData = UserAccountsData(
+            user: userInfo,
+            accounts: response.data.accounts,
+            totalAccounts: response.data.accounts.length,
+          );
+          final accountsResponse = UserAccountsResponse(
+            code: response.code,
+            status: response.status,
+            message: response.message,
+            data: accountsData,
+          );
+          state = AsyncValue.data(accountsResponse);
+          _ref.invalidate(userAccountsProvider);
+          print('✅ Updated state with accounts from switch response');
+        } else {
+          // Fallback: fetch accounts if response doesn't include them
+          print('🔄 Fetching accounts (not in response)');
+          await fetchUserAccounts();
+          _ref.invalidate(userAccountsProvider);
+        }
         
         // Refresh profile to get updated user data with new account context
         print('🔄 Refreshing profile with new account context');
         await _ref.read(authProvider.notifier).refreshProfile();
-        
-        // Force refresh accounts again to ensure UI updates with new default account
-        print('🔄 Force refreshing accounts to update UI');
-        await fetchUserAccounts();
-        _ref.invalidate(userAccountsProvider);
         
         // Debug: Check the updated accounts data
         final updatedAccounts = state.value?.data.accounts ?? [];

@@ -10,11 +10,9 @@ import 'notifications_screen.dart';
 import 'settings_screen.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/utils/number_formatter.dart';
-import '../../../merchant/presentation/screens/wallets_screen.dart';
-import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../widgets/financial_metrics_card.dart';
 import '../../../feed/presentation/screens/feed_screen.dart';
-import '../../../merchant/presentation/providers/wallets_provider.dart';
+import '../../../finance/presentation/screens/finance_screen.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../../core/providers/localization_provider.dart';
 
@@ -60,7 +58,7 @@ class HomeScreen extends ConsumerWidget {
     final tabs = [
       const _DashboardTab(), // Index 0: Home
       const FeedScreen(), // Index 1: Feed
-      const WalletsScreen(), // Index 2: Ikofi
+      const FinanceScreen(), // Index 2: Finance
       const ChatListScreen(), // Index 3: Chat
       const ProfileTab(), // Index 4: Profile
     ];
@@ -95,9 +93,9 @@ class HomeScreen extends ConsumerWidget {
             label: 'Feed',
           ),
           NavigationDestination(
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: const Icon(Icons.account_balance_wallet),
-            label: 'Ikofi',
+            icon: const Icon(Icons.account_balance_outlined),
+            selectedIcon: const Icon(Icons.account_balance),
+            label: 'Finance',
           ),
           NavigationDestination(
             icon: const Icon(Icons.chat_bubble_outline),

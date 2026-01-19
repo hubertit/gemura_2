@@ -9,7 +9,6 @@ import '../../../../core/services/attachment_handler_service.dart';
 import '../providers/chat_provider.dart';
 import '../../domain/models/chat_message.dart';
 import '../../domain/models/chat_room.dart';
-import '../../../merchant/presentation/screens/wallets_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final ChatRoom chatRoom;

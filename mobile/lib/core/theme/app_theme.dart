@@ -96,6 +96,30 @@ class AppTheme {
     fontWeight: FontWeight.w400,
     color: textPrimaryColor,
   );
+  static const TextStyle labelLarge = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: textPrimaryColor,
+  );
+  static const TextStyle labelMedium = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    color: textPrimaryColor,
+  );
+  static const TextStyle labelSmall = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: textPrimaryColor,
+  );
+  static const TextStyle labelXSmall = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: textPrimaryColor,
+  );
   static const TextStyle badge = TextStyle(
     fontFamily: 'Inter',
     fontSize: 13,
