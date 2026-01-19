@@ -24,18 +24,13 @@ export class SuppliersService {
 
     const customerAccountId = user.default_account_id;
 
-    // Normalize phone (remove non-digits)
+    // Normalize phone (remove non-digits) - Phone is the primary identifier
     const normalizedPhone = phone.replace(/\D/g, '');
 
-    // Find existing supplier by phone, email, or nid
-    const existingSupplier = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { phone: normalizedPhone },
-          ...(email ? [{ email: email.toLowerCase() }] : []),
-          ...(nid ? [{ nid }] : []),
-        ],
-      },
+    // Find existing user by phone (primary identifier)
+    // Phone number is the unique identifier for users
+    const existingUser = await this.prisma.user.findUnique({
+      where: { phone: normalizedPhone },
       include: {
         user_accounts: {
           where: { status: 'active' },
@@ -49,13 +44,60 @@ export class SuppliersService {
     let supplierAccountCode: string;
     let supplierName: string;
 
-    if (existingSupplier && existingSupplier.user_accounts.length > 0) {
-      // Use existing supplier account
-      supplierAccountId = existingSupplier.user_accounts[0].account_id;
-      supplierAccountCode = existingSupplier.user_accounts[0].account.code || '';
-      supplierName = existingSupplier.name;
+    if (existingUser) {
+      // User exists - use existing user
+      supplierName = existingUser.name;
+
+      if (existingUser.user_accounts.length > 0) {
+        // User has active account - use existing account
+        supplierAccountId = existingUser.user_accounts[0].account_id;
+        supplierAccountCode = existingUser.user_accounts[0].account.code || '';
+      } else {
+        // User exists but has no active accounts - create account for existing user
+        const accountCode = `A_${randomBytes(3).toString('hex').toUpperCase()}`;
+        const walletCode = `W_${randomBytes(3).toString('hex').toUpperCase()}`;
+
+        // Create account for existing user
+        const newAccount = await this.prisma.account.create({
+          data: {
+            code: accountCode,
+            name: existingUser.name || name,
+            type: 'tenant',
+            status: 'active',
+            created_by: user.id,
+          },
+        });
+
+        // Link existing user to new account
+        await this.prisma.userAccount.create({
+          data: {
+            user_id: existingUser.id,
+            account_id: newAccount.id,
+            role: 'supplier',
+            status: 'active',
+            created_by: user.id,
+          },
+        });
+
+        // Create wallet for the account
+        await this.prisma.wallet.create({
+          data: {
+            code: walletCode,
+            account_id: newAccount.id,
+            type: 'regular',
+            is_default: true,
+            balance: 0,
+            currency: 'RWF',
+            status: 'active',
+            created_by: user.id,
+          },
+        });
+
+        supplierAccountId = newAccount.id;
+        supplierAccountCode = accountCode;
+      }
     } else {
-      // Create new supplier (user + account + wallet)
+      // User doesn't exist - create new user + account + wallet
       const userCode = `U_${randomBytes(3).toString('hex').toUpperCase()}`;
       const accountCode = `A_${randomBytes(3).toString('hex').toUpperCase()}`;
       const walletCode = `W_${randomBytes(3).toString('hex').toUpperCase()}`;
