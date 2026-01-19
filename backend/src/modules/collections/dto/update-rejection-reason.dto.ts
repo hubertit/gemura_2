@@ -3,9 +3,10 @@ import { IsString, IsOptional, IsInt, IsBoolean, Min } from 'class-validator';
 
 export class UpdateRejectionReasonDto {
   @ApiProperty({
-    description: 'Name of the rejection reason',
+    description: 'Name of the rejection reason (must be unique if provided)',
     example: 'Added Water',
     required: false,
+    maxLength: 255,
   })
   @IsOptional()
   @IsString({ message: 'Name must be a string' })
@@ -15,13 +16,14 @@ export class UpdateRejectionReasonDto {
     description: 'Description of the rejection reason',
     example: 'Water was added to the milk',
     required: false,
+    maxLength: 500,
   })
   @IsOptional()
   @IsString({ message: 'Description must be a string' })
   description?: string;
 
   @ApiProperty({
-    description: 'Whether the rejection reason is active',
+    description: 'Whether the rejection reason is active. Set to false to hide from active lists (soft delete).',
     example: true,
     required: false,
   })

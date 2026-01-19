@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CollectionsService } from './collections.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
@@ -22,6 +22,13 @@ export class CollectionsController {
     summary: 'Get all milk rejection reasons',
     description: 'Returns a list of all active milk rejection reasons ordered by sort order. Use query parameter include_inactive=true to include inactive reasons.',
   })
+  @ApiQuery({
+    name: 'include_inactive',
+    required: false,
+    type: String,
+    description: 'Set to "true" to include inactive rejection reasons',
+    example: 'false',
+  })
   @ApiResponse({
     status: 200,
     description: 'Rejection reasons retrieved successfully',
@@ -36,7 +43,7 @@ export class CollectionsController {
           items: {
             type: 'object',
             properties: {
-              id: { type: 'string', example: 'uuid' },
+              id: { type: 'string', example: 'edd315d2-dc7f-4a21-b58c-810d2295b258' },
               name: { type: 'string', example: 'Added Water' },
               description: { type: 'string', example: 'Water was added to the milk' },
               is_active: { type: 'boolean', example: true },
@@ -49,7 +56,14 @@ export class CollectionsController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
+  @ApiBadRequestResponse({
+    description: 'Invalid query parameters',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Invalid query parameter format',
+    },
+  })
   async getRejectionReasons(@Query('include_inactive') includeInactive?: string) {
     const include = includeInactive === 'true';
     const reasons = await this.collectionsService.getRejectionReasons(include);
@@ -83,7 +97,7 @@ export class CollectionsController {
         data: {
           type: 'object',
           properties: {
-            id: { type: 'string', example: 'uuid' },
+            id: { type: 'string', example: 'edd315d2-dc7f-4a21-b58c-810d2295b258' },
             name: { type: 'string', example: 'Added Water' },
             description: { type: 'string', example: 'Water was added to the milk' },
             is_active: { type: 'boolean', example: true },
@@ -95,7 +109,14 @@ export class CollectionsController {
       },
     },
   })
-  @ApiNotFoundResponse({ description: 'Rejection reason not found' })
+  @ApiNotFoundResponse({
+    description: 'Rejection reason not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Rejection reason not found',
+    },
+  })
   async getRejectionReasonById(@Param('id') id: string) {
     const reason = await this.collectionsService.getRejectionReasonById(id);
     return {
@@ -145,7 +166,7 @@ export class CollectionsController {
         data: {
           type: 'object',
           properties: {
-            id: { type: 'string', example: 'uuid' },
+            id: { type: 'string', example: 'edd315d2-dc7f-4a21-b58c-810d2295b258' },
             name: { type: 'string', example: 'Added Water' },
             description: { type: 'string', example: 'Water was added to the milk' },
             is_active: { type: 'boolean', example: true },
@@ -157,7 +178,35 @@ export class CollectionsController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Invalid input or name already exists' })
+  @ApiBadRequestResponse({
+    description: 'Invalid input or name already exists',
+    examples: {
+      invalidInput: {
+        summary: 'Invalid input',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Name is required',
+        },
+      },
+      duplicateName: {
+        summary: 'Duplicate name',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'A rejection reason with this name already exists',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async createRejectionReason(@Body() createDto: CreateRejectionReasonDto) {
     const reason = await this.collectionsService.createRejectionReason(createDto);
     return {
@@ -217,7 +266,7 @@ export class CollectionsController {
         data: {
           type: 'object',
           properties: {
-            id: { type: 'string', example: 'uuid' },
+            id: { type: 'string', example: 'edd315d2-dc7f-4a21-b58c-810d2295b258' },
             name: { type: 'string', example: 'Added Water' },
             description: { type: 'string', example: 'Water was added to the milk' },
             is_active: { type: 'boolean', example: true },
@@ -229,8 +278,43 @@ export class CollectionsController {
       },
     },
   })
-  @ApiNotFoundResponse({ description: 'Rejection reason not found' })
-  @ApiBadRequestResponse({ description: 'Invalid input or name already exists' })
+  @ApiNotFoundResponse({
+    description: 'Rejection reason not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Rejection reason not found',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input or name already exists',
+    examples: {
+      invalidInput: {
+        summary: 'Invalid input',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Invalid input data',
+        },
+      },
+      duplicateName: {
+        summary: 'Duplicate name',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'A rejection reason with this name already exists',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async updateRejectionReason(@Param('id') id: string, @Body() updateDto: UpdateRejectionReasonDto) {
     const reason = await this.collectionsService.updateRejectionReason(id, updateDto);
     return {
@@ -276,7 +360,22 @@ export class CollectionsController {
       },
     },
   })
-  @ApiNotFoundResponse({ description: 'Rejection reason not found' })
+  @ApiNotFoundResponse({
+    description: 'Rejection reason not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Rejection reason not found',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async deleteRejectionReason(@Param('id') id: string) {
     const reason = await this.collectionsService.deleteRejectionReason(id);
     return {

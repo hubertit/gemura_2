@@ -9,32 +9,49 @@ export enum TransactionType {
 
 export class CreateTransactionDto {
   @ApiProperty({ 
-    description: 'Transaction type', 
+    description: 'Transaction type - either "revenue" or "expense"', 
     enum: TransactionType,
-    example: TransactionType.REVENUE 
+    example: TransactionType.REVENUE,
+    enumName: 'TransactionType',
   })
   @IsNotEmpty()
   @IsEnum(TransactionType)
   type: TransactionType;
 
-  @ApiProperty({ description: 'Amount', example: 1000.0 })
+  @ApiProperty({
+    description: 'Transaction amount (must be positive, minimum 0.01)',
+    example: 1000.0,
+    minimum: 0.01,
+  })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
   @Min(0.01)
   amount: number;
 
-  @ApiProperty({ description: 'Description', example: 'Milk sales revenue' })
+  @ApiProperty({
+    description: 'Description of the transaction',
+    example: 'Milk sales revenue',
+    maxLength: 500,
+  })
   @IsNotEmpty()
   @IsString()
   description: string;
 
-  @ApiProperty({ description: 'Transaction date', example: '2025-01-18' })
+  @ApiProperty({
+    description: 'Transaction date in YYYY-MM-DD format',
+    example: '2025-01-18',
+    pattern: '^\\d{4}-\\d{2}-\\d{2}$',
+  })
   @IsNotEmpty()
   @IsDateString()
   transaction_date: string;
 
-  @ApiProperty({ description: 'Chart of account ID for revenue/expense category', required: false })
+  @ApiProperty({
+    description: 'Optional: Chart of account ID (UUID) for specific revenue/expense category. If not provided, a default account will be created/used.',
+    required: false,
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
   @IsOptional()
   @IsUUID()
   account_id?: string; // Optional: specific revenue/expense account from chart of accounts
