@@ -211,16 +211,10 @@ export class PayrollRunsService {
       }, 0);
 
       // Get deductions for this supplier (fees, etc.)
-      const deductions = await this.prisma.supplierDeduction.findMany({
-        where: {
-          supplier_account_id: payrollSupplier.supplier_account_id,
-          milk_sale_id: {
-            in: milkSales.map((s) => s.id),
-          },
-        },
-      });
-
-      const totalDeductions = deductions.reduce((sum, d) => sum + Number(d.amount), 0);
+      // Note: SupplierDeduction table has been removed as it was not used by the mobile app
+      // Deductions are now calculated as 0 (no deductions feature in current implementation)
+      const deductions: any[] = [];
+      const totalDeductions = 0;
       const netAmount = grossAmount - totalDeductions;
 
       if (netAmount <= 0) {

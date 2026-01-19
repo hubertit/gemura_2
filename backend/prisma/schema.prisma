@@ -166,12 +166,6 @@ model Account {
   milk_sales_customer   MilkSale[]          @relation("MilkSaleCustomer")
   wallets               Wallet[]
   orders                Order[]
-  supplier_ledger       SupplierLedger[]    @relation("SupplierLedgerAccount")
-  supplier_fee_rules    SupplierFeeRule[]   @relation("SupplierFeeRuleAccount")
-  supplier_deductions   SupplierDeduction[] @relation("SupplierDeductionAccount")
-  invoices_supplier     Invoice[]           @relation("InvoiceAccount")
-  receipts_supplier     Receipt[]           @relation("ReceiptSupplierAccount")
-  receipts_customer     Receipt[]           @relation("ReceiptCustomerAccount")
   payroll_suppliers     PayrollSupplier[]   @relation("PayrollSupplierAccount")
   payroll_payslips      PayrollPayslip[]    @relation("PayrollPayslipSupplier")
   default_account_users User[]              @relation("UserDefaultAccount")
@@ -334,8 +328,6 @@ model MilkSale {
   supplier_account    Account             @relation("MilkSaleSupplier", fields: [supplier_account_id], references: [id], onDelete: Restrict)
   customer_account    Account             @relation("MilkSaleCustomer", fields: [customer_account_id], references: [id], onDelete: Restrict)
   recorded_by_user    User                @relation("MilkSaleRecordedBy", fields: [recorded_by], references: [id], onDelete: Restrict)
-  supplier_ledger     SupplierLedger[]
-  supplier_deductions SupplierDeduction[] @relation("SupplierDeductionMilkSale")
 
   @@index([supplier_account_id])
   @@index([customer_account_id])
@@ -797,7 +789,6 @@ model AccountingTransaction {
 
   // Relations
   entries         AccountingTransactionEntry[]
-  supplier_ledger SupplierLedger[]
 
   @@index([transaction_date])
   @@index([reference_number])
@@ -823,160 +814,6 @@ model AccountingTransactionEntry {
   @@map("accounting_transaction_entries")
 }
 
-model SupplierLedger {
-  id                  String   @id @default(uuid()) @db.Uuid
-  supplier_account_id String   @map("supplier_account_id") @db.Uuid
-  transaction_id      String?  @map("transaction_id") @db.Uuid
-  milk_sale_id        String?  @map("milk_sale_id") @db.Uuid
-  entry_type          String   @map("entry_type") // payment, collection, adjustment, fee, deduction
-  amount              Decimal  @db.Decimal(15, 2)
-  balance             Decimal  @db.Decimal(15, 2)
-  description         String?
-  created_at          DateTime @default(now()) @map("created_at")
-
-  // Relations
-  supplier_account Account                @relation("SupplierLedgerAccount", fields: [supplier_account_id], references: [id], onDelete: Restrict)
-  transaction      AccountingTransaction? @relation(fields: [transaction_id], references: [id], onDelete: SetNull)
-  milk_sale        MilkSale?              @relation(fields: [milk_sale_id], references: [id], onDelete: SetNull)
-
-  @@index([supplier_account_id])
-  @@index([transaction_id])
-  @@index([milk_sale_id])
-  @@index([entry_type])
-  @@index([created_at])
-  @@map("supplier_ledger")
-}
-
-model FeeType {
-  id               String   @id @default(uuid()) @db.Uuid
-  code             String   @unique
-  name             String
-  description      String?
-  fee_category     String   @map("fee_category") // collection_fee, processing_fee, service_fee, etc.
-  calculation_type String   @map("calculation_type") // fixed, percentage, tiered
-  is_active        Boolean  @default(true) @map("is_active")
-  created_at       DateTime @default(now()) @map("created_at")
-  updated_at       DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  fee_rules  SupplierFeeRule[]
-  deductions SupplierDeduction[]
-
-  @@index([code])
-  @@index([fee_category])
-  @@index([is_active])
-  @@map("fee_types")
-}
-
-model SupplierFeeRule {
-  id                  String    @id @default(uuid()) @db.Uuid
-  supplier_account_id String    @map("supplier_account_id") @db.Uuid
-  fee_type_id         String    @map("fee_type_id") @db.Uuid
-  fixed_amount        Decimal?  @map("fixed_amount") @db.Decimal(10, 2)
-  percentage          Decimal?  @db.Decimal(5, 2)
-  min_amount          Decimal?  @map("min_amount") @db.Decimal(10, 2)
-  max_amount          Decimal?  @map("max_amount") @db.Decimal(10, 2)
-  is_active           Boolean   @default(true) @map("is_active")
-  effective_from      DateTime  @map("effective_from")
-  effective_to        DateTime? @map("effective_to")
-  created_at          DateTime  @default(now()) @map("created_at")
-  updated_at          DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  supplier_account Account @relation("SupplierFeeRuleAccount", fields: [supplier_account_id], references: [id], onDelete: Cascade)
-  fee_type         FeeType @relation(fields: [fee_type_id], references: [id], onDelete: Restrict)
-
-  @@index([supplier_account_id])
-  @@index([fee_type_id])
-  @@index([is_active])
-  @@index([effective_from])
-  @@map("supplier_fee_rules")
-}
-
-model SupplierDeduction {
-  id                  String   @id @default(uuid()) @db.Uuid
-  supplier_account_id String   @map("supplier_account_id") @db.Uuid
-  fee_type_id         String   @map("fee_type_id") @db.Uuid
-  milk_sale_id        String?  @map("milk_sale_id") @db.Uuid
-  amount              Decimal  @db.Decimal(10, 2)
-  description         String?
-  applied_at          DateTime @map("applied_at")
-  created_at          DateTime @default(now()) @map("created_at")
-
-  // Relations
-  supplier_account Account   @relation("SupplierDeductionAccount", fields: [supplier_account_id], references: [id], onDelete: Restrict)
-  fee_type         FeeType   @relation(fields: [fee_type_id], references: [id], onDelete: Restrict)
-  milk_sale        MilkSale? @relation("SupplierDeductionMilkSale", fields: [milk_sale_id], references: [id], onDelete: SetNull)
-
-  @@index([supplier_account_id])
-  @@index([fee_type_id])
-  @@index([milk_sale_id])
-  @@index([applied_at])
-  @@map("supplier_deductions")
-}
-
-model Invoice {
-  id                  String    @id @default(uuid()) @db.Uuid
-  invoice_number      String    @unique @map("invoice_number")
-  supplier_account_id String    @map("supplier_account_id") @db.Uuid
-  issue_date          DateTime  @map("issue_date")
-  due_date            DateTime? @map("due_date")
-  total_amount        Decimal   @map("total_amount") @db.Decimal(15, 2)
-  tax_amount          Decimal?  @default(0) @map("tax_amount") @db.Decimal(15, 2)
-  status              String // draft, sent, paid, overdue, cancelled
-  created_at          DateTime  @default(now()) @map("created_at")
-  updated_at          DateTime  @updatedAt @map("updated_at")
-  created_by          String?   @map("created_by") @db.Uuid
-
-  // Relations
-  supplier_account Account       @relation("InvoiceAccount", fields: [supplier_account_id], references: [id], onDelete: Restrict)
-  items            InvoiceItem[]
-
-  @@index([invoice_number])
-  @@index([supplier_account_id])
-  @@index([status])
-  @@index([issue_date])
-  @@map("invoices")
-}
-
-model InvoiceItem {
-  id           String   @id @default(uuid()) @db.Uuid
-  invoice_id   String   @map("invoice_id") @db.Uuid
-  description  String
-  quantity     Decimal? @db.Decimal(10, 2)
-  unit_price   Decimal  @map("unit_price") @db.Decimal(10, 2)
-  total_amount Decimal  @map("total_amount") @db.Decimal(10, 2)
-  created_at   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  invoice Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
-
-  @@index([invoice_id])
-  @@map("invoice_items")
-}
-
-model Receipt {
-  id                  String   @id @default(uuid()) @db.Uuid
-  receipt_number      String   @unique @map("receipt_number")
-  supplier_account_id String?  @map("supplier_account_id") @db.Uuid
-  customer_account_id String?  @map("customer_account_id") @db.Uuid
-  payment_date        DateTime @map("payment_date")
-  amount              Decimal  @db.Decimal(15, 2)
-  payment_method      String?  @map("payment_method")
-  reference           String?
-  created_at          DateTime @default(now()) @map("created_at")
-  created_by          String?  @map("created_by") @db.Uuid
-
-  // Relations
-  supplier_account Account? @relation("ReceiptSupplierAccount", fields: [supplier_account_id], references: [id], onDelete: SetNull)
-  customer_account Account? @relation("ReceiptCustomerAccount", fields: [customer_account_id], references: [id], onDelete: SetNull)
-
-  @@index([receipt_number])
-  @@index([supplier_account_id])
-  @@index([customer_account_id])
-  @@index([payment_date])
-  @@map("receipts")
-}
 
 model AuditLog {
   id          String   @id @default(uuid()) @db.Uuid
