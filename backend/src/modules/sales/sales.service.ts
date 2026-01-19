@@ -19,21 +19,26 @@ export class SalesService {
       });
     }
 
-    const supplierAccountId = user.default_account_id;
+    const customerAccountId = user.default_account_id;
 
     // Build query with filters
+    // Collections are milk sales where the user is the customer (collecting from suppliers)
+    // So we filter by customer_account_id, not supplier_account_id
     const where: any = {
-      supplier_account_id: supplierAccountId,
+      customer_account_id: customerAccountId,
       status: { not: 'deleted' },
     };
 
     if (filters) {
+      // Filter by supplier account code (since we're viewing collections from suppliers)
       if (filters.customer_account_code) {
-        const customerAccount = await this.prisma.account.findUnique({
+        // Note: This filter name is misleading - it actually filters by supplier_account_code
+        // when viewing collections. For collections, we want to filter by supplier.
+        const supplierAccount = await this.prisma.account.findUnique({
           where: { code: filters.customer_account_code },
         });
-        if (customerAccount) {
-          where.customer_account_id = customerAccount.id;
+        if (supplierAccount) {
+          where.supplier_account_id = supplierAccount.id;
         }
       }
 

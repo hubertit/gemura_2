@@ -4,9 +4,9 @@ class PhoneValidator {
   static const int _expectedLength = 9; // Without country code
   static const int _fullLength = 12; // With country code (+250)
 
-  /// Validates a Rwandan phone number
+  /// Validates a phone number (supports international numbers)
   /// Returns null if valid, error message if invalid
-  /// Now accepts both formats: 788606765 or 250788606765
+  /// Checks minimum digits only since international numbers have different lengths
   static String? validateRwandanPhone(String? phoneNumber) {
     if (phoneNumber == null || phoneNumber.trim().isEmpty) {
       return 'Phone number is required';
@@ -15,27 +15,19 @@ class PhoneValidator {
     // Remove any spaces, dashes, or other separators
     String cleanNumber = phoneNumber.replaceAll(RegExp(r'[\s\-\(\)]'), '');
     
-    // Check if it starts with +250
-    if (cleanNumber.startsWith('+250')) {
-      cleanNumber = cleanNumber.substring(4); // Remove +250
-    } else if (cleanNumber.startsWith('250')) {
-      cleanNumber = cleanNumber.substring(3); // Remove 250
-    }
-
-    // Check length (should be 9 digits after removing country code)
-    if (cleanNumber.length != _expectedLength) {
-      return 'Phone number must be 9 digits (e.g., 250788123456)';
-    }
-
     // Check if it's all digits
     if (!RegExp(r'^\d+$').hasMatch(cleanNumber)) {
       return 'Phone number must contain only digits';
     }
 
-    // Check if it starts with valid Rwandan prefixes
-    bool hasValidPrefix = _validPrefixes.any((prefix) => cleanNumber.startsWith(prefix));
-    if (!hasValidPrefix) {
-      return 'Phone number must start with 78, 79, 72, or 73';
+    // Check minimum length (at least 7 digits for international numbers)
+    // Maximum 15 digits as per ITU-T E.164 standard
+    if (cleanNumber.length < 7) {
+      return 'Phone number must have at least 7 digits';
+    }
+    
+    if (cleanNumber.length > 15) {
+      return 'Phone number must not exceed 15 digits';
     }
 
     return null; // Valid phone number

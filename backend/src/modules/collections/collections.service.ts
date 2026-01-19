@@ -230,6 +230,136 @@ export class CollectionsService {
     }
   }
 
+  async getCollections(user: User, filters?: {
+    supplier_account_code?: string;
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    quantity_min?: number;
+    quantity_max?: number;
+    price_min?: number;
+    price_max?: number;
+  }) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const customerAccountId = user.default_account_id;
+
+    // Build query with filters
+    const where: any = {
+      customer_account_id: customerAccountId,
+      status: { not: 'deleted' },
+    };
+
+    if (filters) {
+      // Filter by supplier account code
+      if (filters.supplier_account_code) {
+        const supplierAccount = await this.prisma.account.findUnique({
+          where: { code: filters.supplier_account_code },
+        });
+        if (supplierAccount) {
+          where.supplier_account_id = supplierAccount.id;
+        }
+      }
+
+      if (filters.status) {
+        where.status = filters.status;
+      }
+
+      if (filters.date_from || filters.date_to) {
+        where.sale_at = {};
+        if (filters.date_from) {
+          where.sale_at.gte = new Date(filters.date_from);
+        }
+        if (filters.date_to) {
+          const dateTo = new Date(filters.date_to);
+          dateTo.setHours(23, 59, 59, 999);
+          where.sale_at.lte = dateTo;
+        }
+      }
+
+      if (filters.quantity_min !== undefined || filters.quantity_max !== undefined) {
+        where.quantity = {};
+        if (filters.quantity_min !== undefined) {
+          where.quantity.gte = filters.quantity_min;
+        }
+        if (filters.quantity_max !== undefined) {
+          where.quantity.lte = filters.quantity_max;
+        }
+      }
+
+      if (filters.price_min !== undefined || filters.price_max !== undefined) {
+        where.unit_price = {};
+        if (filters.price_min !== undefined) {
+          where.unit_price.gte = filters.price_min;
+        }
+        if (filters.price_max !== undefined) {
+          where.unit_price.lte = filters.price_max;
+        }
+      }
+    }
+
+    const collections = await this.prisma.milkSale.findMany({
+      where,
+      include: {
+        supplier_account: true,
+        customer_account: true,
+        recorded_by_user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: {
+        sale_at: 'desc',
+      },
+    });
+
+    const formattedCollections = collections.map((collection) => ({
+      id: collection.id,
+      quantity: Number(collection.quantity),
+      unit_price: Number(collection.unit_price),
+      total_amount: Number(collection.quantity) * Number(collection.unit_price),
+      status: collection.status,
+      sale_at: collection.sale_at,
+      collection_at: collection.sale_at,
+      notes: collection.notes,
+      created_at: collection.created_at,
+      updated_at: collection.updated_at,
+      supplier_account: {
+        code: collection.supplier_account.code,
+        name: collection.supplier_account.name,
+        type: collection.supplier_account.type,
+        status: collection.supplier_account.status,
+      },
+      customer_account: {
+        code: collection.customer_account.code,
+        name: collection.customer_account.name,
+        type: collection.customer_account.type,
+        status: collection.customer_account.status,
+      },
+      recorded_by: {
+        id: collection.recorded_by_user.id,
+        name: collection.recorded_by_user.name,
+        phone: collection.recorded_by_user.phone,
+      },
+    }));
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Collections fetched successfully.',
+      data: formattedCollections,
+    };
+  }
+
   async getCollection(user: User, collectionId: string) {
     if (!user.default_account_id) {
       throw new BadRequestException({

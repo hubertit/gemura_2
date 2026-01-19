@@ -80,6 +80,15 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
               backgroundColor: AppTheme.snackbarSuccessColor,
             ),
           );
+          
+          // Invalidate providers to ensure the list refreshes on the collections screen
+          // This will trigger a refresh of both FutureProvider and StateNotifierProvider
+          ref.invalidate(collectionsProvider);
+          ref.invalidate(collectionsNotifierProvider);
+          
+          // Small delay to ensure the success message is visible before navigating back
+          await Future.delayed(const Duration(milliseconds: 300));
+          
           Navigator.of(context).pop();
         }
       } catch (error) {

@@ -26,14 +26,8 @@ export class WalletsService {
       },
     });
 
-    if (wallets.length === 0) {
-      throw new NotFoundException({
-        code: 404,
-        status: 'error',
-        message: 'No wallets found for this account.',
-      });
-    }
-
+    // Return empty array instead of throwing error when no wallets found
+    // This allows the mobile app to handle empty state gracefully
     const formattedWallets = wallets.map((wallet) => ({
       wallet_code: wallet.code,
       type: wallet.type,

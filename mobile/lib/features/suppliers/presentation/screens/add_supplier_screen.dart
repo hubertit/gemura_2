@@ -153,12 +153,27 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             children: [
 
               
+              // Name field
               TextFormField(
                 controller: _nameController,
-                style: AppTheme.bodySmall,
-                decoration: const InputDecoration(
+                style: AppTheme.bodyMedium,
+                decoration: InputDecoration(
                   hintText: 'Full name',
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: const Icon(Icons.person),
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -175,16 +190,29 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _phoneController,
-                      style: AppTheme.bodySmall,
-                                    decoration: InputDecoration(
-                hintText: '250788123456',
-                prefixIcon: const Icon(Icons.phone),
-                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
-              ),
+                      style: AppTheme.bodyMedium,
                       keyboardType: TextInputType.phone,
                       inputFormatters: [
                         PhoneInputFormatter(),
                       ],
+                      decoration: InputDecoration(
+                        hintText: '250788123456',
+                        prefixIcon: const Icon(Icons.phone),
+                        hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceColor,
+                      ),
                       validator: PhoneValidator.validateRwandanPhone,
                     ),
                   ),
@@ -193,7 +221,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                     height: 56, // Match TextFormField height
                     decoration: BoxDecoration(
                       color: AppTheme.surfaceColor,
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                       border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                     ),
                     child: IconButton(
@@ -206,51 +234,114 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
               ),
               const SizedBox(height: AppTheme.spacing12),
               
+              // Email field
               TextFormField(
                 controller: _emailController,
-                style: AppTheme.bodySmall,
-                decoration: const InputDecoration(
-                  hintText: 'Email (optional)',
-                  prefixIcon: Icon(Icons.email),
-                ),
+                style: AppTheme.bodyMedium,
                 keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: 'Email (optional)',
+                  prefixIcon: const Icon(Icons.email),
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
+                ),
               ),
               const SizedBox(height: AppTheme.spacing12),
               
+              // Address field
               TextFormField(
                 controller: _addressController,
-                style: AppTheme.bodySmall,
-                decoration: const InputDecoration(
+                style: AppTheme.bodyMedium,
+                decoration: InputDecoration(
                   hintText: 'Address (optional)',
-                  prefixIcon: Icon(Icons.location_on),
+                  prefixIcon: const Icon(Icons.location_on),
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing12),
               
+              // National ID field
               TextFormField(
                 controller: _nidController,
-                style: AppTheme.bodySmall,
-                decoration: const InputDecoration(
+                style: AppTheme.bodyMedium,
+                decoration: InputDecoration(
                   hintText: 'National ID (optional)',
-                  prefixIcon: Icon(Icons.badge),
+                  prefixIcon: const Icon(Icons.badge),
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing12),
               
+              // Price per liter field
               TextFormField(
                 controller: _pricePerLiterController,
-                style: AppTheme.bodySmall,
-                decoration: const InputDecoration(
-                  hintText: 'Price per liter (RWF)',
-                  prefixIcon: Icon(Icons.attach_money),
-                ),
+                style: AppTheme.bodyMedium,
                 keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Price per liter (RWF)',
+                  prefixIcon: const Icon(Icons.attach_money),
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                    borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
+                ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Price per liter is required';
                   }
                   if (double.tryParse(value) == null) {
                     return 'Please enter a valid number';
+                  }
+                  if (double.parse(value) <= 0) {
+                    return 'Price must be greater than 0';
                   }
                   return null;
                 },
@@ -312,9 +403,9 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
     return SafeArea(
       child: Container(
         height: MediaQuery.of(context).size.height * 0.95,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           children: [
@@ -324,25 +415,26 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
               height: 4,
               margin: const EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppTheme.borderColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             
             // Header
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.grey),
+                    icon: Icon(Icons.close, color: AppTheme.textSecondaryColor),
                   ),
                   Expanded(
                     child: Text(
                       'Select Contact',
                       style: AppTheme.titleMedium.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimaryColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -354,39 +446,37 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
             
             // Search bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(25),
+                  color: AppTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius24),
                 ),
                 child: TextField(
                   onChanged: _filterContacts,
+                  style: AppTheme.bodyMedium,
                   decoration: InputDecoration(
                     hintText: 'Search contacts...',
-                    hintStyle: TextStyle(color: Colors.grey[600]),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                    hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                    prefixIcon: Icon(Icons.search, color: AppTheme.textHintColor),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing12),
                   ),
                 ),
               ),
             ),
             
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             
             // Contacts count
             if (_searchQuery.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing4),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '${_filteredContacts.length} contact${_filteredContacts.length == 1 ? '' : 's'}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                   ),
                 ),
               ),
@@ -401,26 +491,20 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                           Icon(
                             _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: AppTheme.textHintColor,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
                           Text(
                             _searchQuery.isEmpty 
                                 ? 'No contacts found'
                                 : 'No contacts match "${_searchQuery}"',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                            ),
+                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
                           ),
                           if (_searchQuery.isNotEmpty) ...[
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppTheme.spacing8),
                             Text(
                               'Try a different search term',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
+                              style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                             ),
                           ],
                         ],
@@ -435,13 +519,13 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             : '';
                         
                         return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                          margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: 0),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
                           ),
                           child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: 2),
                             leading: CircleAvatar(
                               radius: 18,
                               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
@@ -456,23 +540,19 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             ),
                             title: Text(
                               contact.displayName ?? 'Unknown Contact',
-                              style: const TextStyle(
+                              style: AppTheme.bodySmall.copyWith(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 14,
                               ),
                             ),
                             subtitle: phone.isNotEmpty
                                 ? Text(
                                     phone,
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
+                                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                                   )
                                 : null,
                             trailing: Icon(
                               Icons.arrow_forward_ios,
-                              color: Colors.grey[400],
+                              color: AppTheme.textHintColor,
                               size: 16,
                             ),
                             onTap: () => Navigator.of(context).pop(contact),
@@ -482,7 +562,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                     ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),

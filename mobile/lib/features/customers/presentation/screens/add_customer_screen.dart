@@ -96,15 +96,15 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
           email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          address: _addressController.text.trim(),
+          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
           pricePerLiter: double.parse(_priceController.text),
         );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Customer added successfully!'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: Text('Customer "${_nameController.text.trim()}" added successfully!'),
+              backgroundColor: AppTheme.snackbarSuccessColor,
             ),
           );
           Navigator.of(context).pop();
@@ -117,7 +117,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Failed to add customer: $e'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.snackbarErrorColor,
             ),
           );
         }
@@ -250,13 +250,14 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
               ),
               const SizedBox(height: AppTheme.spacing12),
 
-              // Address
+              // Address (optional)
               TextFormField(
                 controller: _addressController,
                 style: AppTheme.bodyMedium,
                 decoration: InputDecoration(
-                  hintText: 'Address',
+                  hintText: 'Address (optional)',
                   prefixIcon: const Icon(Icons.location_on),
+                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -271,12 +272,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceColor,
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter address';
-                  }
-                  return null;
-                },
+                // No validator - address is optional
               ),
               const SizedBox(height: AppTheme.spacing12),
 
@@ -330,15 +326,6 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppTheme.titleMedium.copyWith(
-        color: AppTheme.textPrimaryColor,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
 }
 
 // Contact picker bottom sheet
@@ -382,9 +369,9 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
     return SafeArea(
       child: Container(
         height: MediaQuery.of(context).size.height * 0.95,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           children: [
@@ -394,25 +381,26 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
               height: 4,
               margin: const EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppTheme.borderColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             
             // Header
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppTheme.spacing16),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: Colors.grey),
+                    icon: Icon(Icons.close, color: AppTheme.textSecondaryColor),
                   ),
                   Expanded(
                     child: Text(
                       'Select Contact',
                       style: AppTheme.titleMedium.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimaryColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -424,39 +412,37 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
             
             // Search bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(25),
+                  color: AppTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius24),
                 ),
                 child: TextField(
                   onChanged: _filterContacts,
+                  style: AppTheme.bodyMedium,
                   decoration: InputDecoration(
                     hintText: 'Search contacts...',
-                    hintStyle: TextStyle(color: Colors.grey[600]),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                    hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                    prefixIcon: Icon(Icons.search, color: AppTheme.textHintColor),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing12),
                   ),
                 ),
               ),
             ),
             
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTheme.spacing8),
             
             // Contacts count
             if (_searchQuery.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing4),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '${_filteredContacts.length} contact${_filteredContacts.length == 1 ? '' : 's'}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
+                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                   ),
                 ),
               ),
@@ -471,26 +457,20 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                           Icon(
                             _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: AppTheme.textHintColor,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppTheme.spacing16),
                           Text(
                             _searchQuery.isEmpty 
                                 ? 'No contacts found'
                                 : 'No contacts match "${_searchQuery}"',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                            ),
+                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
                           ),
                           if (_searchQuery.isNotEmpty) ...[
-                            const SizedBox(height: 8),
+                            const SizedBox(height: AppTheme.spacing8),
                             Text(
                               'Try a different search term',
-                              style: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
+                              style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                             ),
                           ],
                         ],
@@ -505,13 +485,13 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             : '';
                         
                         return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                          margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: 0),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
                           ),
                           child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: 2),
                             leading: CircleAvatar(
                               radius: 18,
                               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
@@ -526,23 +506,19 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                             ),
                             title: Text(
                               contact.displayName ?? 'Unknown Contact',
-                              style: const TextStyle(
+                              style: AppTheme.bodySmall.copyWith(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 14,
                               ),
                             ),
                             subtitle: phone.isNotEmpty
                                 ? Text(
                                     phone,
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
+                                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
                                   )
                                 : null,
                             trailing: Icon(
                               Icons.arrow_forward_ios,
-                              color: Colors.grey[400],
+                              color: AppTheme.textHintColor,
                               size: 16,
                             ),
                             onTap: () => Navigator.of(context).pop(contact),
@@ -552,7 +528,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                     ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: AppTheme.spacing16),
           ],
         ),
       ),

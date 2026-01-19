@@ -33,6 +33,12 @@ class WalletsService {
       if (e.response?.statusCode == 401) {
         errorMessage = 'Authentication failed. Please login again.';
       } else if (e.response?.statusCode == 404) {
+        // Backend returns 404 when no wallets found - return empty list instead of error
+        // Check if it's a "no wallets" message
+        final backendMsg = e.response?.data?['message'] ?? '';
+        if (backendMsg.contains('No wallets found')) {
+          return []; // Return empty list for "no wallets" case
+        }
         errorMessage = 'Wallets service not found.';
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';

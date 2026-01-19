@@ -165,12 +165,20 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.of(context).push(
+            onPressed: () async {
+              // Navigate to record collection screen and wait for result
+              await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const RecordCollectionScreen(),
                 ),
               );
+              
+              // Refresh collections when returning from record screen
+              // This ensures the list is updated even if provider invalidation didn't trigger
+              ref.invalidate(collectionsProvider);
+              if (_currentApiFilters != null) {
+                ref.invalidate(filteredCollectionsProvider(_currentApiFilters!));
+              }
             },
             tooltip: 'Add new collection',
           ),

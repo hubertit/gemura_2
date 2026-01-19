@@ -82,7 +82,8 @@ class CustomersService {
         },
       );
 
-      if (response.statusCode == 200) {
+      // Accept both 200 (OK) and 201 (Created) as success status codes
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         // Check if the API response indicates success
         if (data['code'] == 200 || data['code'] == 201 || data['status'] == 'success') {

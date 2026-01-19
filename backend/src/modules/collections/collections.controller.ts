@@ -386,6 +386,62 @@ export class CollectionsController {
     };
   }
 
+  @Get()
+  @ApiOperation({
+    summary: 'Get all collections',
+    description: 'Retrieve all milk collections for the authenticated user\'s default account. Supports filtering by supplier, status, date range, quantity, and price.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Collections fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Collections fetched successfully.',
+      data: [
+        {
+          id: 'collection-uuid',
+          quantity: 120.5,
+          unit_price: 390.0,
+          total_amount: 46995.0,
+          status: 'pending',
+          collection_at: '2025-01-04T10:00:00Z',
+          notes: 'Morning collection',
+          supplier_account: {
+            code: 'A_ABC123',
+            name: 'Supplier Name',
+            type: 'tenant',
+            status: 'active',
+          },
+          customer_account: {
+            code: 'A_XYZ789',
+            name: 'Customer Name',
+            type: 'tenant',
+            status: 'active',
+          },
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+  })
+  @ApiBadRequestResponse({
+    description: 'No default account found',
+  })
+  async getCollections(@CurrentUser() user: User, @Query('supplier_account_code') supplierAccountCode?: string, @Query('status') status?: string, @Query('date_from') dateFrom?: string, @Query('date_to') dateTo?: string, @Query('quantity_min') quantityMin?: number, @Query('quantity_max') quantityMax?: number, @Query('price_min') priceMin?: number, @Query('price_max') priceMax?: number) {
+    const filters: any = {};
+    if (supplierAccountCode) filters.supplier_account_code = supplierAccountCode;
+    if (status) filters.status = status;
+    if (dateFrom) filters.date_from = dateFrom;
+    if (dateTo) filters.date_to = dateTo;
+    if (quantityMin !== undefined) filters.quantity_min = quantityMin;
+    if (quantityMax !== undefined) filters.quantity_max = quantityMax;
+    if (priceMin !== undefined) filters.price_min = priceMin;
+    if (priceMax !== undefined) filters.price_max = priceMax;
+    return this.collectionsService.getCollections(user, Object.keys(filters).length > 0 ? filters : undefined);
+  }
+
   @Post('create')
   @ApiOperation({
     summary: 'Record milk collection',
