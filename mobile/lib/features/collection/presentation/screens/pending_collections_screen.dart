@@ -13,13 +13,6 @@ class PendingCollectionsScreen extends ConsumerStatefulWidget {
 }
 
 class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScreen> {
-  final List<String> _rejectionReasons = [
-    'Added Water',
-    'Antibiotics',
-    'Aflatoxin',
-    'Adulteration',
-    'Temperature',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -289,68 +282,110 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
   }
 
   void _showRejectDialog(Collection collection, CollectionsNotifier notifier) {
-    String selectedReason = _rejectionReasons.first;
     final notesController = TextEditingController();
     
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Reject Collection'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Are you sure you want to reject this collection from ${collection.supplierName}?'),
-              const SizedBox(height: AppTheme.spacing16),
-              const Text('Rejection Reason:'),
-              const SizedBox(height: AppTheme.spacing8),
-              DropdownButtonFormField<String>(
-                value: selectedReason,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final rejectionReasonsAsync = ref.watch(rejectionReasonsProvider);
+          return rejectionReasonsAsync.when(
+            data: (reasons) {
+              if (reasons.isEmpty) {
+                return AlertDialog(
+                  title: const Text('Reject Collection'),
+                  content: const Text('No rejection reasons available'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                );
+              }
+              
+              String selectedReason = reasons.first['name'] as String;
+              return StatefulBuilder(
+                builder: (dialogContext, setState) => AlertDialog(
+                  title: const Text('Reject Collection'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Are you sure you want to reject this collection from ${collection.supplierName}?'),
+                      const SizedBox(height: AppTheme.spacing16),
+                      const Text('Rejection Reason:'),
+                      const SizedBox(height: AppTheme.spacing8),
+                      DropdownButtonFormField<String>(
+                        value: selectedReason,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                        items: reasons.map((reason) {
+                          return DropdownMenuItem(
+                            value: reason['name'] as String,
+                            child: Text(reason['name'] as String),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedReason = value ?? '';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: AppTheme.spacing16),
+                      TextField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Additional Notes (Optional)',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        await _rejectCollection(collection, notifier, selectedReason, notesController.text);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Reject'),
+                    ),
+                  ],
                 ),
-                items: _rejectionReasons.map((reason) {
-                  return DropdownMenuItem(
-                    value: reason,
-                    child: Text(reason),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedReason = value!;
-                  });
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              TextField(
-                controller: notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Additional Notes (Optional)',
-                  border: OutlineInputBorder(),
+              );
+            },
+            loading: () => AlertDialog(
+              title: const Text('Reject Collection'),
+              content: const Center(child: CircularProgressIndicator()),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
                 ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _rejectCollection(collection, notifier, selectedReason, notesController.text);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Reject'),
+            error: (error, stack) => AlertDialog(
+              title: const Text('Reject Collection'),
+              content: Text('Failed to load rejection reasons: $error'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

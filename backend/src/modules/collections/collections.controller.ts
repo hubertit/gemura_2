@@ -15,6 +15,44 @@ import { CancelCollectionDto } from './dto/cancel-collection.dto';
 export class CollectionsController {
   constructor(private readonly collectionsService: CollectionsService) {}
 
+  @Get('rejection-reasons')
+  @ApiOperation({
+    summary: 'Get all active milk rejection reasons',
+    description: 'Returns a list of all active milk rejection reasons ordered by sort order',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Rejection reasons retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        status: { type: 'string', example: 'success' },
+        message: { type: 'string', example: 'Rejection reasons retrieved successfully' },
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', example: 'uuid' },
+              name: { type: 'string', example: 'Added Water' },
+              description: { type: 'string', example: 'Water was added to the milk' },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getRejectionReasons() {
+    const reasons = await this.collectionsService.getRejectionReasons();
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Rejection reasons retrieved successfully',
+      data: reasons,
+    };
+  }
+
   @Post('create')
   @ApiOperation({
     summary: 'Record milk collection',

@@ -362,3 +362,9 @@ final collectionsStatsProvider = Provider<Map<String, dynamic>>((ref) {
     'statusCounts': notifier.statusCounts,
   };
 });
+
+// Provider for milk rejection reasons
+final rejectionReasonsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final collectionsService = ref.read(collectionsServiceProvider);
+  return await collectionsService.getRejectionReasons();
+});

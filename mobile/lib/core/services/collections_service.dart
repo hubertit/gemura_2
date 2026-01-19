@@ -538,6 +538,52 @@ class CollectionsService {
     }
   }
 
+  /// Get milk rejection reasons from API
+  Future<List<Map<String, dynamic>>> getRejectionReasons() async {
+    try {
+      final response = await _dio.get('/collections/rejection-reasons');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 200 || data['status'] == 'success') {
+          final List<dynamic> reasonsData = data['data'] ?? [];
+          return reasonsData.map((reason) => {
+            'id': reason['id'],
+            'name': reason['name'],
+            'description': reason['description'],
+          }).toList();
+        } else {
+          throw Exception(data['message'] ?? 'Failed to get rejection reasons');
+        }
+      } else {
+        throw Exception('Failed to get rejection reasons: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to get rejection reasons. ';
+      
+      if (e.response?.statusCode == 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Rejection reasons service not found.';
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.receiveTimeout ||
+                 e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage += backendMsg ?? 'Please try again.';
+      }
+      
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
   /// Get collection statistics
   /// Note: Stats endpoint not yet implemented in NestJS backend
   Future<Map<String, dynamic>> getCollectionStats() async {

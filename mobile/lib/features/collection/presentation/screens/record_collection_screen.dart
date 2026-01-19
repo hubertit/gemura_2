@@ -31,14 +31,6 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
     'Rejected',
   ];
 
-  final List<String> _rejectionReasons = [
-    'Added Water',
-    'Antibiotics',
-    'Aflatoxin',
-    'Adulteration',
-    'Temperature',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -268,30 +260,58 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
 
               // Rejection Reason (only show if rejected)
               if (_selectedStatus == 'Rejected')
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedRejectionReason,
-                    decoration: const InputDecoration(
-                      hintText: 'Rejection Reason',
-                      prefixIcon: Icon(Icons.cancel),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    items: _rejectionReasons.map((reason) {
-                      return DropdownMenuItem<String>(
-                        value: reason,
-                        child: Text(reason, style: AppTheme.bodySmall),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setState(() => _selectedRejectionReason = value),
-                    style: AppTheme.bodySmall,
-                    dropdownColor: AppTheme.surfaceColor,
-                  ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final rejectionReasonsAsync = ref.watch(rejectionReasonsProvider);
+                    return rejectionReasonsAsync.when(
+                      data: (reasons) => Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedRejectionReason,
+                          decoration: const InputDecoration(
+                            hintText: 'Rejection Reason',
+                            prefixIcon: Icon(Icons.cancel),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          items: reasons.map((reason) {
+                            return DropdownMenuItem<String>(
+                              value: reason['name'] as String,
+                              child: Text(reason['name'] as String, style: AppTheme.bodySmall),
+                            );
+                          }).toList(),
+                          onChanged: (value) => setState(() => _selectedRejectionReason = value),
+                          style: AppTheme.bodySmall,
+                          dropdownColor: AppTheme.surfaceColor,
+                        ),
+                      ),
+                      loading: () => Container(
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, stack) => Container(
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          border: Border.all(color: AppTheme.errorColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: Text(
+                          'Failed to load rejection reasons',
+                          style: AppTheme.bodySmall.copyWith(color: AppTheme.errorColor),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               if (_selectedStatus == 'Rejected') const SizedBox(height: AppTheme.spacing12),
               const SizedBox(height: AppTheme.spacing16),

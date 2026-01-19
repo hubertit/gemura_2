@@ -9,6 +9,22 @@ import { CancelCollectionDto } from './dto/cancel-collection.dto';
 export class CollectionsService {
   constructor(private prisma: PrismaService) {}
 
+  async getRejectionReasons() {
+    return this.prisma.milkRejectionReason.findMany({
+      where: {
+        is_active: true,
+      },
+      orderBy: {
+        sort_order: 'asc',
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+      },
+    });
+  }
+
   async createCollection(user: User, createDto: CreateCollectionDto) {
     const { supplier_account_code, quantity, status, collection_at, notes } = createDto;
 

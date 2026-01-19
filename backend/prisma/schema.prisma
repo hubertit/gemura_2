@@ -543,15 +543,15 @@ model FeedStory {
 
 model FeedComment {
   id                String         @id @default(uuid()) @db.Uuid
-  legacy_id         BigInt?         @unique @map("legacy_id") // For migration reference
-  post_id           String          @map("post_id") @db.Uuid
-  user_id           String          @map("user_id") @db.Uuid
-  parent_comment_id String?         @map("parent_comment_id") @db.Uuid
+  legacy_id         BigInt?        @unique @map("legacy_id") // For migration reference
+  post_id           String         @map("post_id") @db.Uuid
+  user_id           String         @map("user_id") @db.Uuid
+  parent_comment_id String?        @map("parent_comment_id") @db.Uuid
   content           String
-  likes_count       Int             @default(0) @map("likes_count")
-  status            FeedPostStatus  @default(active)
-  created_at        DateTime        @default(now()) @map("created_at")
-  updated_at        DateTime        @updatedAt @map("updated_at")
+  likes_count       Int            @default(0) @map("likes_count")
+  status            FeedPostStatus @default(active)
+  created_at        DateTime       @default(now()) @map("created_at")
+  updated_at        DateTime       @updatedAt @map("updated_at")
 
   // Relations
   post           FeedPost      @relation(fields: [post_id], references: [id], onDelete: Cascade)
@@ -1076,12 +1076,12 @@ model PayrollPayslip {
   updated_at          DateTime @updatedAt @map("updated_at")
 
   // Relations
-  run               PayrollRun         @relation(fields: [run_id], references: [id], onDelete: Cascade)
-  supplier_account  Account            @relation("PayrollPayslipSupplier", fields: [supplier_account_id], references: [id], onDelete: Restrict)
-  payroll_supplier   PayrollSupplier?   @relation("PayrollSupplierPayslips", fields: [payroll_supplier_id], references: [id], onDelete: SetNull)
-  deductions        PayrollDeduction[]
-  
-  payroll_supplier_id String?            @map("payroll_supplier_id") @db.Uuid
+  run              PayrollRun         @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  supplier_account Account            @relation("PayrollPayslipSupplier", fields: [supplier_account_id], references: [id], onDelete: Restrict)
+  payroll_supplier PayrollSupplier?   @relation("PayrollSupplierPayslips", fields: [payroll_supplier_id], references: [id], onDelete: SetNull)
+  deductions       PayrollDeduction[]
+
+  payroll_supplier_id String? @map("payroll_supplier_id") @db.Uuid
 
   @@index([run_id])
   @@index([supplier_account_id])
@@ -1105,4 +1105,22 @@ model PayrollDeduction {
   @@index([payslip_id])
   @@index([deduction_type])
   @@map("payroll_deductions")
+}
+
+// ============================================
+// NEW TABLES - MILK COLLECTION MODULE
+// ============================================
+
+model MilkRejectionReason {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  is_active   Boolean  @default(true) @map("is_active")
+  sort_order  Int      @default(0) @map("sort_order")
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+
+  @@index([is_active])
+  @@index([sort_order])
+  @@map("milk_rejection_reasons")
 }
