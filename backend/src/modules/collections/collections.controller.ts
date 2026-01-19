@@ -348,7 +348,7 @@ export class CollectionsController {
         data: {
           type: 'object',
           properties: {
-            id: { type: 'string', example: 'uuid' },
+            id: { type: 'string', example: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e' },
             name: { type: 'string', example: 'Added Water' },
             description: { type: 'string', example: 'Water was added to the milk' },
             is_active: { type: 'boolean', example: false },
@@ -484,7 +484,7 @@ export class CollectionsController {
   @ApiParam({
     name: 'id',
     description: 'Collection ID',
-    example: 'collection-uuid',
+    example: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
   })
   @ApiResponse({
     status: 200,
