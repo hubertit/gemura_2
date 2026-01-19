@@ -14,12 +14,11 @@ class PendingCollectionsScreen extends ConsumerStatefulWidget {
 
 class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScreen> {
   final List<String> _rejectionReasons = [
-    'Poor Quality',
-    'Wrong Quantity',
-    'Late Delivery',
-    'Contamination',
-    'Temperature Issues',
-    'Other',
+    'Added Water',
+    'Antibiotics',
+    'Aflatoxin',
+    'Adulteration',
+    'Temperature',
   ];
 
   @override

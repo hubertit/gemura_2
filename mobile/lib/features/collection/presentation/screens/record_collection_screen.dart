@@ -32,12 +32,11 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
   ];
 
   final List<String> _rejectionReasons = [
-    'Poor Quality',
-    'Wrong Quantity',
-    'Late Delivery',
-    'Contamination',
-    'Temperature Issues',
-    'Other',
+    'Added Water',
+    'Antibiotics',
+    'Aflatoxin',
+    'Adulteration',
+    'Temperature',
   ];
 
   @override
