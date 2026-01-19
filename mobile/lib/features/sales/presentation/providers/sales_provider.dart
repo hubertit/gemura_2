@@ -53,6 +53,7 @@ class SalesNotifier extends StateNotifier<SalesState> {
     required String status,
     required DateTime saleAt,
     String? notes,
+    String? paymentStatus,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
@@ -63,6 +64,7 @@ class SalesNotifier extends StateNotifier<SalesState> {
         status: status,
         saleAt: saleAt,
         notes: notes,
+        paymentStatus: paymentStatus,
       );
 
       state = state.copyWith(isLoading: false, isSuccess: true);

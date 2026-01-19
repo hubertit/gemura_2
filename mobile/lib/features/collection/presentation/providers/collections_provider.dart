@@ -91,6 +91,7 @@ class CollectionsNotifier extends StateNotifier<AsyncValue<List<Collection>>> {
     required String status,
     String? notes,
     required DateTime collectionAt,
+    String? paymentStatus,
   }) async {
     try {
       // Create the collection via API
@@ -100,6 +101,7 @@ class CollectionsNotifier extends StateNotifier<AsyncValue<List<Collection>>> {
         status: status,
         notes: notes,
         collectionAt: collectionAt,
+        paymentStatus: paymentStatus,
       );
       
       // Add a small delay to ensure the backend has processed the creation

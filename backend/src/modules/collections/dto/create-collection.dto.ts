@@ -48,5 +48,16 @@ export class CreateCollectionDto {
   @IsOptional()
   @IsString({ message: 'Notes must be a string' })
   notes?: string;
+
+  @ApiProperty({
+    description: 'Payment status - whether payment has been made',
+    example: 'paid',
+    enum: ['paid', 'unpaid'],
+    required: false,
+    default: 'unpaid',
+  })
+  @IsOptional()
+  @IsString({ message: 'Payment status must be a string' })
+  payment_status?: string;
 }
 

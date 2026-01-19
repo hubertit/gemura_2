@@ -58,5 +58,16 @@ export class CreateSaleDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiProperty({
+    description: 'Payment status - whether payment has been made',
+    example: 'paid',
+    enum: ['paid', 'unpaid'],
+    required: false,
+    default: 'unpaid',
+  })
+  @IsOptional()
+  @IsString({ message: 'Payment status must be a string' })
+  payment_status?: string;
 }
 

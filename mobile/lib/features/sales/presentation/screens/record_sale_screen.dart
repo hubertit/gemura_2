@@ -4,6 +4,7 @@ import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/features/customers/presentation/providers/customers_provider.dart';
 import 'package:gemura/shared/models/customer.dart';
 import 'package:gemura/features/sales/presentation/providers/sales_provider.dart';
+import 'package:gemura/features/collection/presentation/providers/collections_provider.dart';
 
 class RecordSaleScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? preFilledData;
@@ -22,21 +23,13 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
   Customer? _selectedCustomer;
   String _selectedStatus = 'Accepted';
   String? _selectedRejectionReason;
+  String _paymentStatus = 'unpaid';
   DateTime _saleDate = DateTime.now();
   TimeOfDay _saleTime = TimeOfDay.now();
 
   final List<String> _statuses = [
     'Accepted',
     'Rejected',
-  ];
-
-  final List<String> _rejectionReasons = [
-    'Poor Quality',
-    'Wrong Quantity',
-    'Late Delivery',
-    'Contamination',
-    'Temperature Issues',
-    'Other',
   ];
 
   @override
@@ -73,6 +66,7 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
           _saleTime.minute,
         ),
         notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        paymentStatus: _paymentStatus,
       );
     } else if (_selectedCustomer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,10 +124,6 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Sale Information
-              _buildSectionTitle('Sale Information'),
-              const SizedBox(height: AppTheme.spacing12),
-              
               // Customer Selection
               InkWell(
                 onTap: () => _showCustomerSelectionDialog(customersAsync),
@@ -226,55 +216,127 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
                     hintText: 'Status',
                     prefixIcon: Icon(Icons.check_circle),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
                   ),
                   items: _statuses.map((status) {
                     return DropdownMenuItem<String>(
                       value: status,
-                      child: Text(status, style: AppTheme.bodySmall),
+                      child: Text(
+                        status,
+                        style: AppTheme.bodySmall,
+                        textAlign: TextAlign.left,
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedStatus = value!),
                   style: AppTheme.bodySmall,
                   dropdownColor: AppTheme.surfaceColor,
+                  alignment: AlignmentDirectional.centerStart,
+                  iconSize: 24,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing12),
 
               // Rejection Reason (only show if rejected)
               if (_selectedStatus == 'Rejected')
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                    border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedRejectionReason,
-                    decoration: const InputDecoration(
-                      hintText: 'Rejection Reason',
-                      prefixIcon: Icon(Icons.cancel),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    items: _rejectionReasons.map((reason) {
-                      return DropdownMenuItem<String>(
-                        value: reason,
-                        child: Text(reason, style: AppTheme.bodySmall),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setState(() => _selectedRejectionReason = value),
-                    style: AppTheme.bodySmall,
-                    dropdownColor: AppTheme.surfaceColor,
-                  ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final rejectionReasonsAsync = ref.watch(rejectionReasonsProvider);
+                    return rejectionReasonsAsync.when(
+                      data: (reasons) => Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedRejectionReason,
+                          decoration: InputDecoration(
+                            hintText: 'Rejection Reason',
+                            hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                            prefixIcon: const Icon(Icons.cancel),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+                          ),
+                          items: reasons.map((reason) {
+                            return DropdownMenuItem<String>(
+                              value: reason['name'] as String,
+                              child: Text(
+                                reason['name'] as String,
+                                style: AppTheme.bodySmall,
+                                textAlign: TextAlign.left,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) => setState(() => _selectedRejectionReason = value),
+                          style: AppTheme.bodySmall,
+                          dropdownColor: AppTheme.surfaceColor,
+                          alignment: AlignmentDirectional.centerStart,
+                          iconSize: 24,
+                        ),
+                      ),
+                      loading: () => Container(
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, stack) => Container(
+                        padding: const EdgeInsets.all(AppTheme.spacing16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceColor,
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          border: Border.all(color: AppTheme.errorColor, width: AppTheme.thinBorderWidth),
+                        ),
+                        child: Text(
+                          'Failed to load rejection reasons',
+                          style: AppTheme.bodySmall.copyWith(color: AppTheme.errorColor),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               if (_selectedStatus == 'Rejected') const SizedBox(height: AppTheme.spacing12),
+              const SizedBox(height: AppTheme.spacing12),
+
+              // Payment Status
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                ),
+                child: DropdownButtonFormField<String>(
+                  value: _paymentStatus,
+                  decoration: const InputDecoration(
+                    hintText: 'Payment Status',
+                    prefixIcon: Icon(Icons.payment),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+                  ),
+                  items: ['paid', 'unpaid'].map((status) {
+                    return DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(
+                        status == 'paid' ? 'Paid' : 'Unpaid',
+                        style: AppTheme.bodySmall,
+                        textAlign: TextAlign.left,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _paymentStatus = value!),
+                  style: AppTheme.bodySmall,
+                  dropdownColor: AppTheme.surfaceColor,
+                  alignment: AlignmentDirectional.centerStart,
+                  iconSize: 24,
+                ),
+              ),
               const SizedBox(height: AppTheme.spacing16),
 
               // Date and Time
-              _buildSectionTitle('Date & Time'),
-              const SizedBox(height: AppTheme.spacing12),
-
               Row(
                 children: [
                   Expanded(
@@ -328,12 +390,7 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
               ),
               const SizedBox(height: AppTheme.spacing16),
 
-
-
               // Notes
-              _buildSectionTitle('Additional Information'),
-              const SizedBox(height: AppTheme.spacing12),
-
               TextFormField(
                 controller: _notesController,
                 style: AppTheme.bodySmall,
@@ -478,16 +535,6 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppTheme.titleMedium.copyWith(
-        color: AppTheme.textPrimaryColor,
-        fontWeight: FontWeight.w600,
       ),
     );
   }

@@ -215,6 +215,7 @@ class CollectionsService {
     required String status,
     String? notes,
     required DateTime collectionAt,
+    String? paymentStatus,
   }) async {
     try {
       final response = await _dio.post(
@@ -224,7 +225,8 @@ class CollectionsService {
           'quantity': quantity,
           'status': status,
           'collection_at': collectionAt.toIso8601String().replaceAll('T', ' ').substring(0, 19),
-          'notes': notes,
+          if (notes != null && notes.isNotEmpty) 'notes': notes,
+          if (paymentStatus != null) 'payment_status': paymentStatus,
         },
       );
 

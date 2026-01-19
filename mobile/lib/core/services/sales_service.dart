@@ -59,6 +59,7 @@ class SalesService {
     required String status,
     required DateTime saleAt,
     String? notes,
+    String? paymentStatus,
   }) async {
     try {
       final response = await _dio.post(
@@ -69,6 +70,7 @@ class SalesService {
           'status': status.toLowerCase(),
           'sale_at': saleAt.toIso8601String().replaceAll('T', ' ').substring(0, 19),
           if (notes != null && notes.isNotEmpty) 'notes': notes,
+          if (paymentStatus != null) 'payment_status': paymentStatus,
         },
       );
 

@@ -5,10 +5,15 @@ import { GetSalesDto, SalesFiltersDto } from './dto/get-sales.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { CancelSaleDto } from './dto/cancel-sale.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { TransactionsService } from '../accounting/transactions/transactions.service';
+import { TransactionType } from '../accounting/transactions/dto/create-transaction.dto';
 
 @Injectable()
 export class SalesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private transactionsService: TransactionsService,
+  ) {}
 
   async getSales(user: User, filters?: SalesFiltersDto) {
     if (!user.default_account_id) {
@@ -251,7 +256,7 @@ export class SalesService {
   }
 
   async createSale(user: User, createDto: CreateSaleDto) {
-    const { customer_account_code, quantity, unit_price, status, sale_at, notes } = createDto;
+    const { customer_account_code, quantity, unit_price, status, sale_at, notes, payment_status } = createDto;
 
     // Check if user has a valid default account
     if (!user.default_account_id) {
@@ -312,6 +317,23 @@ export class SalesService {
         },
       });
 
+      const totalAmount = Number(milkSale.quantity) * Number(milkSale.unit_price);
+
+      // If payment status is "paid", create a revenue transaction in finance
+      if (payment_status === 'paid' && totalAmount > 0) {
+        try {
+          await this.transactionsService.createTransaction(user, {
+            type: TransactionType.REVENUE,
+            amount: totalAmount,
+            description: `Milk sale to ${customerAccount.name} - ${quantity}L @ ${finalUnitPrice} Frw/L`,
+            transaction_date: (sale_at ? new Date(sale_at) : new Date()).toISOString().split('T')[0],
+          });
+        } catch (error) {
+          // Log error but don't fail the sale creation
+          console.error('Failed to create finance transaction for sale:', error);
+        }
+      }
+
       return {
         code: 200,
         status: 'success',
@@ -320,10 +342,11 @@ export class SalesService {
           id: milkSale.id,
           quantity: Number(milkSale.quantity),
           unit_price: Number(milkSale.unit_price),
-          total_amount: Number(milkSale.quantity) * Number(milkSale.unit_price),
+          total_amount: totalAmount,
           status: milkSale.status,
           sale_at: milkSale.sale_at,
           notes: milkSale.notes,
+          payment_status: payment_status || 'unpaid',
           supplier_account: {
             code: milkSale.supplier_account.code,
             name: milkSale.supplier_account.name,

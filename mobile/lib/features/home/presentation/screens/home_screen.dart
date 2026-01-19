@@ -28,6 +28,8 @@ import '../../../suppliers/presentation/screens/suppliers_list_screen.dart';
 import '../../../customers/presentation/screens/customers_list_screen.dart';
 import '../../../suppliers/presentation/screens/collected_milk_screen.dart';
 import '../../../customers/presentation/screens/sold_milk_screen.dart';
+import '../../../collection/presentation/screens/record_collection_screen.dart';
+import '../../../sales/presentation/screens/record_sale_screen.dart';
 import '../../../account_access/presentation/screens/manage_account_access_screen.dart';
 import '../../../agent_reports/presentation/screens/agent_report_screen.dart';
 import '../providers/overview_provider.dart';
@@ -1127,7 +1129,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => const CollectedMilkScreen(),
+                                  builder: (context) => const RecordCollectionScreen(),
                                 ),
                               );
                             },
@@ -1140,7 +1142,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => const SoldMilkScreen(),
+                                  builder: (context) => const RecordSaleScreen(),
                                 ),
                               );
                             },
@@ -1148,12 +1150,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         ),
                         Expanded(
                           child: _QuickActionButton(
-                            icon: Icons.person_add,
-                            label: localizationService.translate('supplier'),
+                            icon: Icons.payments,
+                            label: 'Payroll',
                             onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const SuppliersListScreen(),
+                              // TODO: Link to payroll screen later
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                AppTheme.neutralSnackBar(
+                                  message: 'Payroll feature coming soon',
                                 ),
                               );
                             },
@@ -1161,12 +1164,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         ),
                         Expanded(
                           child: _QuickActionButton(
-                            icon: Icons.business,
-                            label: localizationService.translate('customer'),
+                            icon: Icons.inventory_2,
+                            label: 'Inventory',
                             onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const CustomersListScreen(),
+                              // TODO: Link to inventory screen later
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                AppTheme.neutralSnackBar(
+                                  message: 'Inventory feature coming soon',
                                 ),
                               );
                             },
@@ -1495,76 +1499,98 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
                             border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                           ),
-                          child: Column(
-                            children: [
-                              Container(
-                                height: 162,
-                                width: double.infinity,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: DChartComboO(
-                                   groupList: [
-                                     OrdinalGroup(
-                                       id: 'Collection',
-                                       data: overview.breakdown.map((item) => 
-                                         OrdinalData(domain: item.label, measure: item.collection.liters)
-                                       ).toList(),
-                                       color: AppTheme.primaryColor.withOpacity(0.85),
-                                       chartType: ChartType.bar,
-                                     ),
-                                     OrdinalGroup(
-                                       id: 'Sales',
-                                       data: overview.breakdown.map((item) => 
-                                         OrdinalData(domain: item.label, measure: item.sales.liters)
-                                       ).toList(),
-                                       color: Colors.grey.withOpacity(0.85),
-                                       chartType: ChartType.bar,
-                                     ),
-                                   ],
-                                   animate: true,
-                                   domainAxis: DomainAxis(
-                                     showLine: true,
-                                     labelStyle: const LabelStyle(
-                                       color: AppTheme.textSecondaryColor,
-                                       fontSize: 12,
-                                       fontWeight: FontWeight.w600,
-                                     ),
-                                   ),
-                                   measureAxis: MeasureAxis(
-                                     showLine: true,
-                                     labelStyle: const LabelStyle(
-                                       color: AppTheme.textSecondaryColor,
-                                       fontSize: 12,
-                                       fontWeight: FontWeight.w600,
-                                     ),
-                                   ),
-                                 ),
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spacing12),
-                              // Chart Legend
-                              Consumer(
-                                builder: (context, ref, child) {
-                                  final localizationService = ref.watch(localizationServiceProvider);
-                                  return Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final localizationService = ref.watch(localizationServiceProvider);
+                              
+                              // Prepare data for donut chart
+                              final collectionLiters = overview.summary.collection.liters;
+                              final salesLiters = overview.summary.sales.liters;
+                              final total = collectionLiters + salesLiters;
+                              
+                              final dataList = <OrdinalData>[];
+                              
+                              if (collectionLiters > 0) {
+                                dataList.add(
+                                  OrdinalData(
+                                    domain: localizationService.translate('collections'),
+                                    measure: collectionLiters,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                );
+                              }
+                              
+                              if (salesLiters > 0) {
+                                dataList.add(
+                                  OrdinalData(
+                                    domain: localizationService.translate('sales'),
+                                    measure: salesLiters,
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              }
+                              
+                              return Column(
+                                children: [
+                                  SizedBox(
+                                    height: 200,
+                                    width: double.infinity,
+                                    child: dataList.isEmpty || total == 0
+                                        ? Center(
+                                            child: Text(
+                                              'No data available',
+                                              style: AppTheme.bodyMedium.copyWith(
+                                                color: AppTheme.textSecondaryColor,
+                                              ),
+                                            ),
+                                          )
+                                        : DChartPieO(
+                                            data: dataList,
+                                            animate: true,
+                                            customLabel: (ordinalData, index) {
+                                              final percentage = total > 0 
+                                                  ? (ordinalData.measure / total * 100).toStringAsFixed(1)
+                                                  : '0.0';
+                                              return '$percentage%';
+                                            },
+                                            configRenderPie: ConfigRenderPie(
+                                              arcWidth: 80, // Donut chart width
+                                              strokeWidthPx: 2,
+                                              arcLabelDecorator: ArcLabelDecorator(
+                                                labelPosition: ArcLabelPosition.inside,
+                                                insideLabelStyle: const LabelStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                  ),
+                                  const SizedBox(height: AppTheme.spacing12),
+                                  // Chart Legend with percentages
+                                  Column(
                                     children: [
-                                      _buildLegendItem(
+                                      _buildLegendItemWithPercentage(
                                         localizationService.translate('collections'),
-                                        AppTheme.primaryColor.withOpacity(0.85),
+                                        AppTheme.primaryColor,
+                                        collectionLiters,
+                                        total,
                                         Icons.local_shipping,
                                       ),
-                                      const SizedBox(width: AppTheme.spacing16),
-                                      _buildLegendItem(
+                                      const SizedBox(height: AppTheme.spacing8),
+                                      _buildLegendItemWithPercentage(
                                         localizationService.translate('sales'),
-                                        Colors.grey.withOpacity(0.85),
+                                        Colors.grey,
+                                        salesLiters,
+                                        total,
                                         Icons.point_of_sale,
                                       ),
                                     ],
-                                  );
-                                },
-                              ),
-                            ],
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -1914,6 +1940,47 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
       default:
         return _capitalize(period);
     }
+  }
+
+  Widget _buildLegendItemWithPercentage(String label, Color color, double value, double total, IconData icon) {
+    final percentage = total > 0 ? (value / total * 100) : 0.0;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: AppTheme.spacing8),
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing8),
+        Text(
+          label,
+          style: AppTheme.bodySmall.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing8),
+        Text(
+          '${percentage.toStringAsFixed(1)}%',
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textSecondaryColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: AppTheme.spacing8),
+        Text(
+          '(${NumberFormat('#,##0.0').format(value)} L)',
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textSecondaryColor,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildLegendItem(String label, Color color, IconData icon) {

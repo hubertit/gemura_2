@@ -22,6 +22,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
   Supplier? _selectedSupplier;
   String _selectedStatus = 'Accepted';
   String? _selectedRejectionReason;
+  String _paymentStatus = 'unpaid';
   DateTime _collectionDate = DateTime.now();
   TimeOfDay _collectionTime = TimeOfDay.now();
   bool _isSubmitting = false;
@@ -71,6 +72,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
           status: _selectedStatus.toLowerCase(),
           notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
           collectionAt: collectionDateTime,
+          paymentStatus: _paymentStatus,
         );
 
         if (mounted) {
@@ -163,10 +165,6 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Collection Information
-              _buildSectionTitle('Collection Information'),
-              const SizedBox(height: AppTheme.spacing12),
-              
               // Supplier Selection
               InkWell(
                 onTap: () => _showSupplierSelectionDialog(suppliersAsync),
@@ -252,17 +250,23 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                     hintText: 'Status',
                     prefixIcon: Icon(Icons.check_circle),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
                   ),
                   items: _statuses.map((status) {
                     return DropdownMenuItem<String>(
                       value: status,
-                      child: Text(status, style: AppTheme.bodySmall),
+                      child: Text(
+                        status,
+                        style: AppTheme.bodySmall,
+                        textAlign: TextAlign.left,
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) => setState(() => _selectedStatus = value!),
                   style: AppTheme.bodySmall,
                   dropdownColor: AppTheme.surfaceColor,
+                  alignment: AlignmentDirectional.centerStart,
+                  iconSize: 24,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing12),
@@ -281,21 +285,28 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                         ),
                         child: DropdownButtonFormField<String>(
                           value: _selectedRejectionReason,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Rejection Reason',
-                            prefixIcon: Icon(Icons.cancel),
+                            hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                            prefixIcon: const Icon(Icons.cancel),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            contentPadding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
                           ),
                           items: reasons.map((reason) {
                             return DropdownMenuItem<String>(
                               value: reason['name'] as String,
-                              child: Text(reason['name'] as String, style: AppTheme.bodySmall),
+                              child: Text(
+                                reason['name'] as String,
+                                style: AppTheme.bodySmall,
+                                textAlign: TextAlign.left,
+                              ),
                             );
                           }).toList(),
                           onChanged: (value) => setState(() => _selectedRejectionReason = value),
                           style: AppTheme.bodySmall,
                           dropdownColor: AppTheme.surfaceColor,
+                          alignment: AlignmentDirectional.centerStart,
+                          iconSize: 24,
                         ),
                       ),
                       loading: () => Container(
@@ -323,12 +334,43 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                   },
                 ),
               if (_selectedStatus == 'Rejected') const SizedBox(height: AppTheme.spacing12),
+              const SizedBox(height: AppTheme.spacing12),
+
+              // Payment Status
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                  border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                ),
+                child: DropdownButtonFormField<String>(
+                  value: _paymentStatus,
+                  decoration: const InputDecoration(
+                    hintText: 'Payment Status',
+                    prefixIcon: Icon(Icons.payment),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),
+                  ),
+                  items: ['paid', 'unpaid'].map((status) {
+                    return DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(
+                        status == 'paid' ? 'Paid' : 'Unpaid',
+                        style: AppTheme.bodySmall,
+                        textAlign: TextAlign.left,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setState(() => _paymentStatus = value!),
+                  style: AppTheme.bodySmall,
+                  dropdownColor: AppTheme.surfaceColor,
+                  alignment: AlignmentDirectional.centerStart,
+                  iconSize: 24,
+                ),
+              ),
               const SizedBox(height: AppTheme.spacing16),
 
               // Date and Time
-              _buildSectionTitle('Date & Time'),
-              const SizedBox(height: AppTheme.spacing12),
-
               Row(
                 children: [
                   Expanded(
@@ -382,12 +424,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
               ),
               const SizedBox(height: AppTheme.spacing16),
 
-
-
               // Notes
-              _buildSectionTitle('Additional Information'),
-              const SizedBox(height: AppTheme.spacing12),
-
               TextFormField(
                 controller: _notesController,
                 style: AppTheme.bodySmall,
@@ -511,16 +548,6 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppTheme.titleMedium.copyWith(
-        color: AppTheme.textPrimaryColor,
-        fontWeight: FontWeight.w600,
       ),
     );
   }

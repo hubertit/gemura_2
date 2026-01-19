@@ -4,10 +4,15 @@ import { User } from '@prisma/client';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { CancelCollectionDto } from './dto/cancel-collection.dto';
+import { TransactionsService } from '../accounting/transactions/transactions.service';
+import { TransactionType } from '../accounting/transactions/dto/create-transaction.dto';
 
 @Injectable()
 export class CollectionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private transactionsService: TransactionsService,
+  ) {}
 
   async getRejectionReasons(includeInactive = false) {
     return this.prisma.milkRejectionReason.findMany({
@@ -150,7 +155,7 @@ export class CollectionsService {
   }
 
   async createCollection(user: User, createDto: CreateCollectionDto) {
-    const { supplier_account_code, quantity, status, collection_at, notes } = createDto;
+    const { supplier_account_code, quantity, status, collection_at, notes, payment_status } = createDto;
 
     // Check if user has a valid default account
     if (!user.default_account_id) {
@@ -205,6 +210,23 @@ export class CollectionsService {
         },
       });
 
+      const totalAmount = quantity * Number(unitPrice);
+
+      // If payment status is "paid", create an expense transaction in finance
+      if (payment_status === 'paid' && totalAmount > 0) {
+        try {
+          await this.transactionsService.createTransaction(user, {
+            type: TransactionType.EXPENSE,
+            amount: totalAmount,
+            description: `Milk collection from ${supplierAccount.name} - ${quantity}L @ ${unitPrice} Frw/L`,
+            transaction_date: new Date(collection_at).toISOString().split('T')[0],
+          });
+        } catch (error) {
+          // Log error but don't fail the collection creation
+          console.error('Failed to create finance transaction for collection:', error);
+        }
+      }
+
       return {
         code: 200,
         status: 'success',
@@ -215,9 +237,10 @@ export class CollectionsService {
           customer_account_id: customerAccountId,
           quantity: quantity,
           unit_price: unitPrice,
-          total_amount: quantity * Number(unitPrice),
+          total_amount: totalAmount,
           status: status,
           collection_at: collection_at,
+          payment_status: payment_status || 'unpaid',
         },
       };
     } catch (error) {
