@@ -9,11 +9,9 @@ import { CancelCollectionDto } from './dto/cancel-collection.dto';
 export class CollectionsService {
   constructor(private prisma: PrismaService) {}
 
-  async getRejectionReasons() {
+  async getRejectionReasons(includeInactive = false) {
     return this.prisma.milkRejectionReason.findMany({
-      where: {
-        is_active: true,
-      },
+      where: includeInactive ? {} : { is_active: true },
       orderBy: {
         sort_order: 'asc',
       },
@@ -21,6 +19,132 @@ export class CollectionsService {
         id: true,
         name: true,
         description: true,
+        is_active: true,
+        sort_order: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+  }
+
+  async getRejectionReasonById(id: string) {
+    const reason = await this.prisma.milkRejectionReason.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        is_active: true,
+        sort_order: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    if (!reason) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Rejection reason not found',
+      });
+    }
+
+    return reason;
+  }
+
+  async createRejectionReason(createDto: { name: string; description?: string; sort_order?: number }) {
+    // Check if name already exists
+    const existing = await this.prisma.milkRejectionReason.findUnique({
+      where: { name: createDto.name },
+    });
+
+    if (existing) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'A rejection reason with this name already exists',
+      });
+    }
+
+    // Get max sort_order if not provided
+    let sortOrder = createDto.sort_order;
+    if (sortOrder === undefined) {
+      const maxOrder = await this.prisma.milkRejectionReason.findFirst({
+        orderBy: { sort_order: 'desc' },
+        select: { sort_order: true },
+      });
+      sortOrder = (maxOrder?.sort_order ?? 0) + 1;
+    }
+
+    return this.prisma.milkRejectionReason.create({
+      data: {
+        name: createDto.name,
+        description: createDto.description,
+        sort_order: sortOrder,
+        is_active: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        is_active: true,
+        sort_order: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+  }
+
+  async updateRejectionReason(id: string, updateDto: { name?: string; description?: string; is_active?: boolean; sort_order?: number }) {
+    // Check if reason exists
+    await this.getRejectionReasonById(id);
+
+    // If updating name, check if new name already exists
+    if (updateDto.name) {
+      const existing = await this.prisma.milkRejectionReason.findUnique({
+        where: { name: updateDto.name },
+      });
+
+      if (existing && existing.id !== id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'A rejection reason with this name already exists',
+        });
+      }
+    }
+
+    return this.prisma.milkRejectionReason.update({
+      where: { id },
+      data: updateDto,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        is_active: true,
+        sort_order: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+  }
+
+  async deleteRejectionReason(id: string) {
+    // Check if reason exists
+    await this.getRejectionReasonById(id);
+
+    // Soft delete by setting is_active to false
+    return this.prisma.milkRejectionReason.update({
+      where: { id },
+      data: { is_active: false },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        is_active: true,
+        sort_order: true,
+        created_at: true,
+        updated_at: true,
       },
     });
   }

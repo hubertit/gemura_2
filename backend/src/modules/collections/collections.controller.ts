@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Body, UseGuards, Param, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
 import { CollectionsService } from './collections.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -7,6 +7,8 @@ import { User } from '@prisma/client';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { CancelCollectionDto } from './dto/cancel-collection.dto';
+import { CreateRejectionReasonDto } from './dto/create-rejection-reason.dto';
+import { UpdateRejectionReasonDto } from './dto/update-rejection-reason.dto';
 
 @ApiTags('Collections')
 @Controller('collections')
@@ -17,8 +19,8 @@ export class CollectionsController {
 
   @Get('rejection-reasons')
   @ApiOperation({
-    summary: 'Get all active milk rejection reasons',
-    description: 'Returns a list of all active milk rejection reasons ordered by sort order',
+    summary: 'Get all milk rejection reasons',
+    description: 'Returns a list of all active milk rejection reasons ordered by sort order. Use query parameter include_inactive=true to include inactive reasons.',
   })
   @ApiResponse({
     status: 200,
@@ -37,19 +39,251 @@ export class CollectionsController {
               id: { type: 'string', example: 'uuid' },
               name: { type: 'string', example: 'Added Water' },
               description: { type: 'string', example: 'Water was added to the milk' },
+              is_active: { type: 'boolean', example: true },
+              sort_order: { type: 'number', example: 1 },
+              created_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+              updated_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
             },
           },
         },
       },
     },
   })
-  async getRejectionReasons() {
-    const reasons = await this.collectionsService.getRejectionReasons();
+  @ApiBadRequestResponse({ description: 'Invalid query parameters' })
+  async getRejectionReasons(@Query('include_inactive') includeInactive?: string) {
+    const include = includeInactive === 'true';
+    const reasons = await this.collectionsService.getRejectionReasons(include);
     return {
       code: 200,
       status: 'success',
       message: 'Rejection reasons retrieved successfully',
       data: reasons,
+    };
+  }
+
+  @Get('rejection-reasons/:id')
+  @ApiOperation({
+    summary: 'Get rejection reason by ID',
+    description: 'Returns a single milk rejection reason by its ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Rejection reason ID (UUID)',
+    example: 'edd315d2-dc7f-4a21-b58c-810d2295b258',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Rejection reason retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        status: { type: 'string', example: 'success' },
+        message: { type: 'string', example: 'Rejection reason retrieved successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'uuid' },
+            name: { type: 'string', example: 'Added Water' },
+            description: { type: 'string', example: 'Water was added to the milk' },
+            is_active: { type: 'boolean', example: true },
+            sort_order: { type: 'number', example: 1 },
+            created_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+            updated_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Rejection reason not found' })
+  async getRejectionReasonById(@Param('id') id: string) {
+    const reason = await this.collectionsService.getRejectionReasonById(id);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Rejection reason retrieved successfully',
+      data: reason,
+    };
+  }
+
+  @Post('rejection-reasons')
+  @ApiOperation({
+    summary: 'Create a new milk rejection reason',
+    description: 'Creates a new milk rejection reason. The name must be unique.',
+  })
+  @ApiBody({
+    type: CreateRejectionReasonDto,
+    description: 'Rejection reason details',
+    examples: {
+      addedWater: {
+        summary: 'Added Water',
+        value: {
+          name: 'Added Water',
+          description: 'Water was added to the milk',
+          sort_order: 1,
+        },
+      },
+      antibiotics: {
+        summary: 'Antibiotics',
+        value: {
+          name: 'Antibiotics',
+          description: 'Antibiotic residues detected in milk',
+          sort_order: 2,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Rejection reason created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 201 },
+        status: { type: 'string', example: 'success' },
+        message: { type: 'string', example: 'Rejection reason created successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'uuid' },
+            name: { type: 'string', example: 'Added Water' },
+            description: { type: 'string', example: 'Water was added to the milk' },
+            is_active: { type: 'boolean', example: true },
+            sort_order: { type: 'number', example: 1 },
+            created_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+            updated_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Invalid input or name already exists' })
+  async createRejectionReason(@Body() createDto: CreateRejectionReasonDto) {
+    const reason = await this.collectionsService.createRejectionReason(createDto);
+    return {
+      code: 201,
+      status: 'success',
+      message: 'Rejection reason created successfully',
+      data: reason,
+    };
+  }
+
+  @Put('rejection-reasons/:id')
+  @ApiOperation({
+    summary: 'Update a milk rejection reason',
+    description: 'Updates an existing milk rejection reason. All fields are optional.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Rejection reason ID (UUID)',
+    example: 'edd315d2-dc7f-4a21-b58c-810d2295b258',
+  })
+  @ApiBody({
+    type: UpdateRejectionReasonDto,
+    description: 'Rejection reason update details',
+    examples: {
+      updateName: {
+        summary: 'Update name',
+        value: {
+          name: 'Water Added',
+        },
+      },
+      deactivate: {
+        summary: 'Deactivate reason',
+        value: {
+          is_active: false,
+        },
+      },
+      updateAll: {
+        summary: 'Update all fields',
+        value: {
+          name: 'Added Water',
+          description: 'Water was added to the milk',
+          is_active: true,
+          sort_order: 1,
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Rejection reason updated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        status: { type: 'string', example: 'success' },
+        message: { type: 'string', example: 'Rejection reason updated successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'uuid' },
+            name: { type: 'string', example: 'Added Water' },
+            description: { type: 'string', example: 'Water was added to the milk' },
+            is_active: { type: 'boolean', example: true },
+            sort_order: { type: 'number', example: 1 },
+            created_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+            updated_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Rejection reason not found' })
+  @ApiBadRequestResponse({ description: 'Invalid input or name already exists' })
+  async updateRejectionReason(@Param('id') id: string, @Body() updateDto: UpdateRejectionReasonDto) {
+    const reason = await this.collectionsService.updateRejectionReason(id, updateDto);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Rejection reason updated successfully',
+      data: reason,
+    };
+  }
+
+  @Delete('rejection-reasons/:id')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Delete a milk rejection reason',
+    description: 'Soft deletes a milk rejection reason by setting is_active to false. The reason will no longer appear in active lists but can be reactivated.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Rejection reason ID (UUID)',
+    example: 'edd315d2-dc7f-4a21-b58c-810d2295b258',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Rejection reason deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 200 },
+        status: { type: 'string', example: 'success' },
+        message: { type: 'string', example: 'Rejection reason deleted successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'uuid' },
+            name: { type: 'string', example: 'Added Water' },
+            description: { type: 'string', example: 'Water was added to the milk' },
+            is_active: { type: 'boolean', example: false },
+            sort_order: { type: 'number', example: 1 },
+            created_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+            updated_at: { type: 'string', example: '2025-01-19T20:11:54.000Z' },
+          },
+        },
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Rejection reason not found' })
+  async deleteRejectionReason(@Param('id') id: string) {
+    const reason = await this.collectionsService.deleteRejectionReason(id);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Rejection reason deleted successfully',
+      data: reason,
     };
   }
 
