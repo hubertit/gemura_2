@@ -94,6 +94,9 @@ class SettingsScreen extends ConsumerWidget {
                       return Switch(
                         value: enabled,
                         onChanged: (val) => ref.read(notificationsEnabledProvider.notifier).state = val,
+                        activeColor: AppTheme.primaryColor,
+                        inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
+                        inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
                       );
                     },
                   ),

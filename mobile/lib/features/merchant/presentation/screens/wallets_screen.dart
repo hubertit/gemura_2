@@ -426,8 +426,8 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
               onChanged: (val) => setState(() {
                 wallet = wallet.copyWith(status: val ? 'active' : 'inactive');
               }),
-              activeColor: AppTheme.successColor,
-              inactiveThumbColor: AppTheme.errorColor,
+              activeColor: AppTheme.primaryColor,
+              inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
               inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
             ),
           ),
@@ -1373,9 +1373,9 @@ class _WalletCardState extends State<WalletCard> {
                    onChanged: (val) {
                      if (val) widget.onMakeDefaultChanged!(val);
                    },
-                   activeColor: Colors.amber,
-                   inactiveThumbColor: Colors.amber.withOpacity(0.6),
-                   inactiveTrackColor: Colors.amber.withOpacity(0.2),
+                   activeColor: AppTheme.primaryColor,
+                   inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
+                   inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
                  ),
                ],
              ),
@@ -1499,9 +1499,9 @@ class _WalletCardState extends State<WalletCard> {
                    onChanged: (val) {
                      if (val) widget.onMakeDefaultChanged!(val);
                    },
-                   activeColor: Colors.amber,
-                   inactiveThumbColor: Colors.amber.withOpacity(0.6),
-                   inactiveTrackColor: Colors.amber.withOpacity(0.2),
+                   activeColor: AppTheme.primaryColor,
+                   inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
+                   inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
                  ),
                ],
              ),
@@ -2484,8 +2484,8 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                       value: _isSavingWallet,
                       onChanged: (value) => setState(() => _isSavingWallet = value),
                       activeColor: AppTheme.primaryColor,
-                      inactiveThumbColor: AppTheme.thinBorderColor,
-                      inactiveTrackColor: AppTheme.thinBorderColor.withOpacity(0.3),
+                      inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
+                      inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
                     ),
                   ],
                 ),
