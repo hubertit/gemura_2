@@ -193,43 +193,68 @@ class InventoryService {
         },
       );
 
-      if (response.statusCode == 200) {
+      // Accept both 200 (OK) and 201 (Created) as success
+      // Backend should return 200, but handle 201 defensively
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        if (data['code'] == 200 && data['status'] == 'success') {
-          return Map<String, dynamic>.from(data['data'] ?? {});
+        
+        // Check response structure
+        if (data is Map<String, dynamic>) {
+          // Standard response format with code and status
+          if (data['code'] == 200 && data['status'] == 'success') {
+            return Map<String, dynamic>.from(data['data'] ?? {});
+          } else if (data['status'] == 'error') {
+            // Backend returned error in response body
+            throw Exception(data['message'] ?? 'Failed to create inventory item');
+          } else {
+            // Unexpected response structure
+            throw Exception('Invalid response format from server');
+          }
         } else {
-          throw Exception(data['message'] ?? 'Failed to create inventory item');
+          // Direct data response (unlikely but handle it)
+          return Map<String, dynamic>.from(data ?? {});
         }
       } else {
         throw Exception(
-            'Failed to create inventory item: ${response.statusCode}');
+            'Unexpected status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      String errorMessage = 'Failed to create inventory item. ';
+      String errorMessage;
 
+      // Handle specific HTTP status codes
       if (e.response?.statusCode == 401) {
         errorMessage = 'Authentication failed. Please login again.';
       } else if (e.response?.statusCode == 400) {
         final backendMsg = e.response?.data?['message'];
-        errorMessage =
-            backendMsg ?? 'Invalid inventory data. Please check your input.';
+        errorMessage = backendMsg ?? 'Invalid inventory data. Please check your input.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Resource not found. Please try again.';
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
+      } else if (e.response?.statusCode != null) {
+        // Other HTTP error status codes
+        final backendMsg = e.response?.data?['message'];
+        errorMessage = backendMsg ?? 'Request failed with status ${e.response?.statusCode}';
       } else if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        errorMessage =
-            'Connection timeout. Please check your internet connection.';
+        errorMessage = 'Connection timeout. Please check your internet connection.';
       } else if (e.type == DioExceptionType.connectionError) {
         errorMessage = 'No internet connection. Please check your network.';
       } else {
+        // Generic error
         final backendMsg = e.response?.data?['message'];
-        errorMessage += backendMsg ?? 'Please try again.';
+        errorMessage = backendMsg ?? 'Failed to create inventory item. Please try again.';
       }
 
       throw Exception(errorMessage);
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      // Re-throw DioException as-is (already handled above)
+      if (e is DioException) {
+        rethrow;
+      }
+      // Handle any other unexpected errors
+      throw Exception('Unexpected error: ${e.toString()}');
     }
   }
 
@@ -261,44 +286,54 @@ class InventoryService {
 
       if (response.statusCode == 200) {
         final result = response.data;
-        if (result['code'] == 200 && result['status'] == 'success') {
-          return Map<String, dynamic>.from(result['data'] ?? {});
+        
+        // Check response structure
+        if (result is Map<String, dynamic>) {
+          if (result['code'] == 200 && result['status'] == 'success') {
+            return Map<String, dynamic>.from(result['data'] ?? {});
+          } else if (result['status'] == 'error') {
+            throw Exception(result['message'] ?? 'Failed to update inventory item');
+          } else {
+            throw Exception('Invalid response format from server');
+          }
         } else {
-          throw Exception(
-              result['message'] ?? 'Failed to update inventory item');
+          return Map<String, dynamic>.from(result ?? {});
         }
       } else {
-        throw Exception(
-            'Failed to update inventory item: ${response.statusCode}');
+        throw Exception('Unexpected status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      String errorMessage = 'Failed to update inventory item. ';
+      String errorMessage;
 
       if (e.response?.statusCode == 401) {
         errorMessage = 'Authentication failed. Please login again.';
       } else if (e.response?.statusCode == 400) {
         final backendMsg = e.response?.data?['message'];
-        errorMessage =
-            backendMsg ?? 'Invalid inventory data. Please check your input.';
+        errorMessage = backendMsg ?? 'Invalid inventory data. Please check your input.';
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Inventory item not found.';
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
+      } else if (e.response?.statusCode != null) {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage = backendMsg ?? 'Request failed with status ${e.response?.statusCode}';
       } else if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        errorMessage =
-            'Connection timeout. Please check your internet connection.';
+        errorMessage = 'Connection timeout. Please check your internet connection.';
       } else if (e.type == DioExceptionType.connectionError) {
         errorMessage = 'No internet connection. Please check your network.';
       } else {
         final backendMsg = e.response?.data?['message'];
-        errorMessage += backendMsg ?? 'Please try again.';
+        errorMessage = backendMsg ?? 'Failed to update inventory item. Please try again.';
       }
 
       throw Exception(errorMessage);
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      if (e is DioException) {
+        rethrow;
+      }
+      throw Exception('Unexpected error: ${e.toString()}');
     }
   }
 
@@ -317,16 +352,24 @@ class InventoryService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['code'] == 200 && data['status'] == 'success') {
-          return Map<String, dynamic>.from(data['data'] ?? {});
+        
+        // Check response structure
+        if (data is Map<String, dynamic>) {
+          if (data['code'] == 200 && data['status'] == 'success') {
+            return Map<String, dynamic>.from(data['data'] ?? {});
+          } else if (data['status'] == 'error') {
+            throw Exception(data['message'] ?? 'Failed to update stock');
+          } else {
+            throw Exception('Invalid response format from server');
+          }
         } else {
-          throw Exception(data['message'] ?? 'Failed to update stock');
+          return Map<String, dynamic>.from(data ?? {});
         }
       } else {
-        throw Exception('Failed to update stock: ${response.statusCode}');
+        throw Exception('Unexpected status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      String errorMessage = 'Failed to update stock. ';
+      String errorMessage;
 
       if (e.response?.statusCode == 401) {
         errorMessage = 'Authentication failed. Please login again.';
@@ -337,21 +380,26 @@ class InventoryService {
         errorMessage = 'Inventory item not found.';
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
+      } else if (e.response?.statusCode != null) {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage = backendMsg ?? 'Request failed with status ${e.response?.statusCode}';
       } else if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        errorMessage =
-            'Connection timeout. Please check your internet connection.';
+        errorMessage = 'Connection timeout. Please check your internet connection.';
       } else if (e.type == DioExceptionType.connectionError) {
         errorMessage = 'No internet connection. Please check your network.';
       } else {
         final backendMsg = e.response?.data?['message'];
-        errorMessage += backendMsg ?? 'Please try again.';
+        errorMessage = backendMsg ?? 'Failed to update stock. Please try again.';
       }
 
       throw Exception(errorMessage);
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      if (e is DioException) {
+        rethrow;
+      }
+      throw Exception('Unexpected error: ${e.toString()}');
     }
   }
 

@@ -48,6 +48,7 @@ export class InventoryController {
   }
 
   @Post()
+  @HttpCode(200)
   @ApiOperation({ summary: 'Create inventory item' })
   @ApiResponse({ status: 200, description: 'Inventory item created successfully' })
   async createInventoryItem(@CurrentUser() user: User, @Body() createDto: CreateInventoryDto) {
