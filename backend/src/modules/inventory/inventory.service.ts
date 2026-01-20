@@ -8,6 +8,8 @@ import { ToggleListingDto } from './dto/toggle-listing.dto';
 import { CreateInventorySaleDto, InventorySaleBuyerType, InventorySalePaymentStatus } from './dto/create-inventory-sale.dto';
 import { TransactionsService } from '../accounting/transactions/transactions.service';
 import { TransactionType } from '../accounting/transactions/dto/create-transaction.dto';
+import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class InventoryService {
@@ -547,20 +549,113 @@ export class InventoryService {
       });
     }
 
-    // 4. Validate buyer_account_id is required for suppliers
-    if (createSaleDto.buyer_type === InventorySaleBuyerType.SUPPLIER && !createSaleDto.buyer_account_id) {
+    // 4. Handle new customer/supplier creation on-the-fly if phone provided
+    let finalBuyerAccountId = createSaleDto.buyer_account_id;
+    let buyerAccount = null;
+
+    // If buyer_account_id is not provided but phone is provided, try to create/find account
+    if (!finalBuyerAccountId && createSaleDto.buyer_phone) {
+      const normalizedPhone = createSaleDto.buyer_phone.replace(/\D/g, '');
+
+      // Find existing user by phone
+      const existingUser = await this.prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+        include: {
+          user_accounts: {
+            where: { status: 'active' },
+            include: { account: true },
+            take: 1,
+          },
+        },
+      });
+
+      if (existingUser && existingUser.user_accounts.length > 0) {
+        // User exists with account - use it
+        finalBuyerAccountId = existingUser.user_accounts[0].account_id;
+        buyerAccount = existingUser.user_accounts[0].account;
+      } else if (createSaleDto.buyer_name) {
+        // Create new customer account (for 'other' buyers, we create as customer)
+        // For 'supplier' or 'customer' types, we also create if phone/name provided
+        const accountCode = `A_${randomBytes(3).toString('hex').toUpperCase()}`;
+        const walletCode = `W_${randomBytes(3).toString('hex').toUpperCase()}`;
+        const token = randomBytes(32).toString('hex');
+        const passwordHash = await bcrypt.hash('default123', 10);
+
+        let newUser;
+        if (existingUser) {
+          // User exists but no account - create account for existing user
+          newUser = existingUser;
+        } else {
+          // Create new user
+          const userCode = `U_${randomBytes(3).toString('hex').toUpperCase()}`;
+          newUser = await this.prisma.user.create({
+            data: {
+              code: userCode,
+              name: createSaleDto.buyer_name,
+              phone: normalizedPhone,
+              password_hash: passwordHash,
+              token,
+              status: 'active',
+              account_type: createSaleDto.buyer_type === InventorySaleBuyerType.SUPPLIER ? 'supplier' : 'customer',
+              created_by: user.id,
+            },
+          });
+        }
+
+        // Create account
+        const newAccount = await this.prisma.account.create({
+          data: {
+            code: accountCode,
+            name: createSaleDto.buyer_name,
+            type: 'tenant',
+            status: 'active',
+            created_by: user.id,
+          },
+        });
+
+        // Link user to account
+        await this.prisma.userAccount.create({
+          data: {
+            user_id: newUser.id,
+            account_id: newAccount.id,
+            role: createSaleDto.buyer_type === InventorySaleBuyerType.SUPPLIER ? 'supplier' : 'customer',
+            status: 'active',
+            created_by: user.id,
+          },
+        });
+
+        // Create wallet
+        await this.prisma.wallet.create({
+          data: {
+            code: walletCode,
+            account_id: newAccount.id,
+            type: 'regular',
+            is_default: true,
+            balance: 0,
+            currency: 'RWF',
+            status: 'active',
+            created_by: user.id,
+          },
+        });
+
+        finalBuyerAccountId = newAccount.id;
+        buyerAccount = newAccount;
+      }
+    }
+
+    // 5. Validate buyer_account_id is required for suppliers
+    if (createSaleDto.buyer_type === InventorySaleBuyerType.SUPPLIER && !finalBuyerAccountId) {
       throw new BadRequestException({
         code: 400,
         status: 'error',
-        message: 'buyer_account_id is required when buyer_type is supplier.',
+        message: 'buyer_account_id is required when buyer_type is supplier. Provide buyer_account_id or buyer_phone with buyer_name.',
       });
     }
 
-    // 5. Validate buyer account exists if provided
-    let buyerAccount = null;
-    if (createSaleDto.buyer_account_id) {
+    // 6. Validate buyer account exists if we have an ID
+    if (finalBuyerAccountId && !buyerAccount) {
       buyerAccount = await this.prisma.account.findUnique({
-        where: { id: createSaleDto.buyer_account_id },
+        where: { id: finalBuyerAccountId },
       });
 
       if (!buyerAccount) {
@@ -572,7 +667,7 @@ export class InventoryService {
       }
     }
 
-    // 6. Calculate total amount and payment status
+    // 7. Calculate total amount and payment status
     const totalAmount = createSaleDto.quantity * createSaleDto.unit_price;
     const amountPaid = createSaleDto.amount_paid || 0;
     let paymentStatus: InventorySalePaymentStatus;
@@ -585,7 +680,7 @@ export class InventoryService {
       paymentStatus = InventorySalePaymentStatus.UNPAID;
     }
 
-    // 7. Validate payment rules
+    // 8. Validate payment rules
     // Only suppliers can take debt (unpaid/partial payment)
     // Customers and others must pay full amount upfront
     if (createSaleDto.buyer_type !== InventorySaleBuyerType.SUPPLIER) {
@@ -598,18 +693,18 @@ export class InventoryService {
       }
     }
 
-    // 8. Parse sale date
+    // 9. Parse sale date
     const saleDate = createSaleDto.sale_date 
       ? new Date(createSaleDto.sale_date) 
       : new Date();
 
     try {
-      // 9. Create inventory sale record
+      // 10. Create inventory sale record
       const inventorySale = await this.prisma.inventorySale.create({
         data: {
           product_id: productId,
           buyer_type: createSaleDto.buyer_type as any,
-          buyer_account_id: createSaleDto.buyer_account_id || null,
+          buyer_account_id: finalBuyerAccountId || null,
           buyer_name: createSaleDto.buyer_name || null,
           buyer_phone: createSaleDto.buyer_phone || null,
           quantity: createSaleDto.quantity,
@@ -627,7 +722,7 @@ export class InventoryService {
         },
       });
 
-      // 10. Reduce product stock
+      // 11. Reduce product stock
       const newStockQuantity = product.stock_quantity - createSaleDto.quantity;
       let newStatus = product.status;
       
@@ -654,7 +749,7 @@ export class InventoryService {
         });
       }
 
-      // 11. Create finance transaction if amount_paid > 0
+      // 12. Create finance transaction if amount_paid > 0
       if (amountPaid > 0) {
         try {
           const buyerName = buyerAccount?.name || createSaleDto.buyer_name || 'Unknown Buyer';
