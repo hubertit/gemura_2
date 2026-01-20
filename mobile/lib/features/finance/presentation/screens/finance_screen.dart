@@ -198,15 +198,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               icon: netIncome >= 0 ? Icons.account_balance_rounded : Icons.warning_rounded,
               isFullWidth: true,
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Chart Section - Using DChartComboO like home screen
             _buildChartSection(revenue, expenses),
-            const SizedBox(height: AppTheme.spacing16),
+            const SizedBox(height: AppTheme.spacing12),
 
             // Breakdown Section
             _buildBreakdownSection(revenue, expenses, netIncome),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Transactions List Section
             _buildTransactionsSection(transactionsAsync),
@@ -218,10 +218,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildDateRangeCard(DateFormat dateFormat) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         border: Border.all(
           color: AppTheme.thinBorderColor,
           width: AppTheme.thinBorderWidth,
@@ -235,19 +235,24 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             children: [
               Text(
                 'Date Range',
-                style: AppTheme.bodySmall.copyWith(
+                style: AppTheme.labelSmall.copyWith(
                   color: AppTheme.textSecondaryColor,
                 ),
               ),
               const SizedBox(height: AppTheme.spacing4),
               Text(
                 '${dateFormat.format(_fromDate)} - ${dateFormat.format(_toDate)}',
-              style: AppTheme.titleSmall,
+                style: AppTheme.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimaryColor,
+                ),
               ),
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.edit_calendar_outlined),
+            icon: const Icon(Icons.edit_calendar_outlined, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
             onPressed: () => _selectDateRange(context),
           ),
         ],
@@ -264,10 +269,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }) {
     return Container(
       width: isFullWidth ? double.infinity : null,
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         border: Border.all(
           color: AppTheme.thinBorderColor,
           width: AppTheme.thinBorderWidth,
@@ -279,29 +284,29 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppTheme.spacing8),
+                padding: const EdgeInsets.all(AppTheme.spacing6),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: 18),
               ),
-              const SizedBox(width: AppTheme.spacing12),
+              const SizedBox(width: AppTheme.spacing8),
               Expanded(
                 child: Text(
                   label,
-                  style: AppTheme.bodySmall.copyWith(
+                  style: AppTheme.labelSmall.copyWith(
                     color: AppTheme.textSecondaryColor,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          const SizedBox(height: AppTheme.spacing8),
           Text(
             '${_formatAmount(amount)} RWF',
-            style: AppTheme.titleLarge.copyWith(
+            style: AppTheme.titleMedium.copyWith(
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimaryColor,
             ),
@@ -342,10 +347,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         border: Border.all(
           color: AppTheme.thinBorderColor,
           width: AppTheme.thinBorderWidth,
@@ -356,11 +361,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         children: [
           Text(
             'Revenue vs Expenses',
-            style: AppTheme.titleMedium,
+            style: AppTheme.titleSmall.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
+          const SizedBox(height: AppTheme.spacing12),
           SizedBox(
-            height: 250,
+            height: 200,
             width: double.infinity,
             child: dataList.isEmpty || total == 0
                 ? Center(
@@ -394,7 +401,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     ),
                   ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
+          const SizedBox(height: AppTheme.spacing8),
           // Chart Legend with percentages
           Column(
             children: [
@@ -403,7 +410,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 AppTheme.successColor,
                 revenuePercentage,
               ),
-              const SizedBox(height: AppTheme.spacing8),
+              const SizedBox(height: AppTheme.spacing6),
               _buildLegendItemWithPercentage(
                 'Expenses',
                 AppTheme.warningColor,
@@ -444,8 +451,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 14,
-          height: 14,
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
@@ -455,17 +462,17 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         Expanded(
           child: Text(
             label,
-            style: AppTheme.bodyMedium.copyWith(
+            style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textPrimaryColor,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
         Text(
           '${percentage.toStringAsFixed(1)}%',
-          style: AppTheme.bodyMedium.copyWith(
+          style: AppTheme.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -474,10 +481,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildBreakdownSection(double revenue, double expenses, double netIncome) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.all(AppTheme.spacing12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         border: Border.all(
           color: AppTheme.thinBorderColor,
           width: AppTheme.thinBorderWidth,
@@ -488,13 +495,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         children: [
           Text(
             'Financial Breakdown',
-            style: AppTheme.titleMedium,
+            style: AppTheme.titleSmall.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(height: AppTheme.spacing16),
+          const SizedBox(height: AppTheme.spacing12),
           _buildBreakdownRow('Total Revenue', revenue, AppTheme.successColor),
-          const Divider(height: AppTheme.spacing24),
+          const SizedBox(height: AppTheme.spacing12),
+          const Divider(height: 1),
+          const SizedBox(height: AppTheme.spacing12),
           _buildBreakdownRow('Total Expenses', expenses, AppTheme.warningColor),
-          const Divider(height: AppTheme.spacing24),
+          const SizedBox(height: AppTheme.spacing12),
+          const Divider(height: 1),
+          const SizedBox(height: AppTheme.spacing12),
           _buildBreakdownRow(
             'Net Income',
             netIncome,
@@ -512,15 +525,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       children: [
         Text(
           label,
-          style: AppTheme.bodyMedium.copyWith(
+          style: AppTheme.bodySmall.copyWith(
             fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
             color: AppTheme.textPrimaryColor,
           ),
         ),
         Text(
           '${_formatAmount(amount)} RWF',
-          style: AppTheme.bodyMedium.copyWith(
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+          style: AppTheme.bodySmall.copyWith(
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
             color: color,
           ),
         ),
@@ -531,19 +544,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildErrorState(BuildContext context, Object error, localizationService) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing24),
+        padding: const EdgeInsets.all(AppTheme.spacing16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
-              size: 64,
+              size: 48,
               color: AppTheme.errorColor.withOpacity(0.5),
             ),
-            const SizedBox(height: AppTheme.spacing16),
+            const SizedBox(height: AppTheme.spacing12),
             Text(
               'Failed to load financial data',
-              style: AppTheme.titleMedium.copyWith(
+              style: AppTheme.titleSmall.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -555,7 +568,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing16),
             ElevatedButton.icon(
               onPressed: () {
                 ref.invalidate(
@@ -583,11 +596,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       children: [
         Text(
           'Recent Transactions',
-          style: AppTheme.titleMedium.copyWith(
+          style: AppTheme.titleSmall.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: AppTheme.spacing16),
+        const SizedBox(height: AppTheme.spacing12),
         transactionsAsync.when(
           data: (transactions) {
             if (transactions.isEmpty) {
@@ -599,7 +612,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           },
           loading: () => const Center(
             child: Padding(
-              padding: EdgeInsets.all(AppTheme.spacing24),
+              padding: EdgeInsets.all(AppTheme.spacing16),
               child: CircularProgressIndicator(),
             ),
           ),
@@ -634,92 +647,100 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing12),
+      margin: const EdgeInsets.only(bottom: AppTheme.spacing8),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         border: Border.all(
           color: AppTheme.thinBorderColor,
           width: AppTheme.thinBorderWidth,
         ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spacing16,
-          vertical: AppTheme.spacing8,
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(AppTheme.spacing8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          transaction.description,
-            style: AppTheme.titleSmall.copyWith(
-              color: AppTheme.textPrimaryColor,
-            ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppTheme.spacing4),
-            Text(
-              dateFormat.format(transaction.transactionDate),
-              style: AppTheme.labelMedium.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-            ),
-            if (transaction.categoryAccount != null) ...[
-              const SizedBox(height: AppTheme.spacing4),
-              Text(
-                transaction.categoryAccount!,
-                style: AppTheme.labelSmall.copyWith(
-                  color: AppTheme.textSecondaryColor.withOpacity(0.7),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spacing12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      transaction.description,
+                      style: AppTheme.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimaryColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppTheme.spacing4),
+                    Text(
+                      dateFormat.format(transaction.transactionDate),
+                      style: AppTheme.labelSmall.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                    if (transaction.categoryAccount != null) ...[
+                      const SizedBox(height: AppTheme.spacing2),
+                      Text(
+                        transaction.categoryAccount!,
+                        style: AppTheme.labelXSmall.copyWith(
+                          color: AppTheme.textSecondaryColor.withOpacity(0.7),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_formatAmount(transaction.amount)} RWF',
+                    style: AppTheme.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing8,
+                      vertical: AppTheme.spacing2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
+                    ),
+                    child: Text(
+                      isRevenue ? 'Revenue' : 'Expense',
+                      style: AppTheme.labelXSmall.copyWith(
+                        color: color,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${_formatAmount(transaction.amount)} RWF',
-              style: AppTheme.bodyMedium.copyWith(
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing4),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing8,
-                vertical: AppTheme.spacing4,
-              ),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
-              ),
-              child: Text(
-                isRevenue ? 'Revenue' : 'Expense',
-                style: AppTheme.labelXSmall.copyWith(
-                  color: color,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -727,10 +748,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildEmptyTransactionsState() {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing24),
+      padding: const EdgeInsets.all(AppTheme.spacing16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         border: Border.all(
           color: AppTheme.thinBorderColor,
           width: AppTheme.thinBorderWidth,
@@ -740,20 +761,21 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         children: [
           Icon(
             Icons.receipt_long_outlined,
-            size: 48,
+            size: 40,
             color: AppTheme.textSecondaryColor.withOpacity(0.5),
           ),
-          const SizedBox(height: AppTheme.spacing16),
+          const SizedBox(height: AppTheme.spacing12),
           Text(
             'No transactions found',
-            style: AppTheme.titleSmall.copyWith(
+            style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppTheme.spacing8),
+          const SizedBox(height: AppTheme.spacing4),
           Text(
             'Record your first revenue or expense transaction',
-            style: AppTheme.bodySmall.copyWith(
+            style: AppTheme.labelSmall.copyWith(
               color: AppTheme.textSecondaryColor.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
@@ -916,11 +938,11 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
             ),
             Text(
               'Record Transaction',
-              style: AppTheme.titleLarge.copyWith(
-                fontWeight: FontWeight.w700,
+              style: AppTheme.titleMedium.copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Transaction Type Selector
             Row(
@@ -934,7 +956,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
                 ),
               ],
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Amount Field
             TextFormField(
@@ -997,7 +1019,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
                 ),
               ),
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: AppTheme.spacing16),
 
             // Submit Button
             ElevatedButton(
@@ -1042,28 +1064,31 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacing16),
+        padding: const EdgeInsets.all(AppTheme.spacing12),
         decoration: BoxDecoration(
           color: isSelected ? color.withOpacity(0.1) : AppTheme.surfaceColor,
           border: Border.all(
             color: isSelected ? color : AppTheme.thinBorderColor,
             width: isSelected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         ),
         child: Column(
           children: [
             Icon(
               icon,
               color: isSelected ? color : AppTheme.textSecondaryColor,
-              size: 32,
+              size: 24,
             ),
-            const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: AppTheme.spacing6),
             Text(
               label,
               style: isSelected
-                  ? AppTheme.titleSmall.copyWith(color: color)
-                  : AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
+                  ? AppTheme.bodySmall.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    )
+                  : AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
             ),
           ],
         ),
