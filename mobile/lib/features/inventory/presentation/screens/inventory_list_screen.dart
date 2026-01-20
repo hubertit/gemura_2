@@ -276,6 +276,35 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           const SizedBox(height: AppTheme.spacing8),
           Row(
             children: [
+              // Sell Button (only show if listed in marketplace)
+              if (isListed)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SellInventoryScreen(item: item),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.sell, size: 18),
+                    label: const Text('Sell'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.successColor,
+                      foregroundColor: AppTheme.surfaceColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                      ),
+                    ),
+                  ),
+                ),
+              if (isListed) const SizedBox(width: AppTheme.spacing8),
               // List/Unlist Button
               Expanded(
                 child: OutlinedButton.icon(
