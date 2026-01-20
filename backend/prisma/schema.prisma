@@ -139,6 +139,18 @@ enum NotificationStatus {
   archived
 }
 
+enum InventorySaleBuyerType {
+  supplier
+  customer
+  other
+}
+
+enum InventorySalePaymentStatus {
+  paid
+  partial
+  unpaid
+}
+
 // ============================================
 // EXISTING TABLES (25 tables)
 // ============================================
@@ -170,6 +182,7 @@ model Account {
   payroll_payslips      PayrollPayslip[]    @relation("PayrollPayslipSupplier")
   products              Product[]           @relation("ProductAccount")
   default_account_users User[]              @relation("UserDefaultAccount")
+  inventory_sales_buyer InventorySale[]     @relation("InventorySaleBuyer") // Used for both buyer tracking and supplier debt tracking
   created_by_user       User?               @relation("AccountCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
   updated_by_user       User?               @relation("AccountUpdatedBy", fields: [updated_by], references: [id], onDelete: SetNull)
 
@@ -248,6 +261,7 @@ model User {
   user_referrals_referred      UserReferral[]     @relation("UserReferred")
   user_rewards                 UserReward[]
   user_onboardings             UserOnboarding[]
+  inventory_sales_created      InventorySale[]   @relation("InventorySaleCreatedBy")
 
   @@index([code])
   @@index([phone])
@@ -360,6 +374,7 @@ model Product {
   categories  ProductCategory[]
   images      ProductImage[]
   order_items OrderItem[]
+  sales       InventorySale[]   @relation("InventorySaleProduct")
 
   @@index([status])
   @@index([created_at])
@@ -433,6 +448,7 @@ model Order {
   // Relations
   account Account     @relation(fields: [account_id], references: [id], onDelete: Restrict)
   items   OrderItem[]
+  inventory_sales InventorySale[] @relation("InventorySaleOrder")
 
   @@index([customer_id])
   @@index([seller_id])
@@ -969,4 +985,42 @@ model MilkRejectionReason {
   @@index([is_active])
   @@index([sort_order])
   @@map("milk_rejection_reasons")
+}
+
+// ============================================
+// INVENTORY SALES MODULE
+// ============================================
+
+model InventorySale {
+  id              String                      @id @default(uuid()) @db.Uuid
+  product_id      String                      @map("product_id") @db.Uuid
+  order_id        String?                     @map("order_id") @db.Uuid // Nullable: Links to Order if from online marketplace
+  buyer_type      InventorySaleBuyerType      @map("buyer_type")
+  buyer_account_id String?                    @map("buyer_account_id") @db.Uuid // Required for 'supplier', nullable for 'customer'/'other'
+  buyer_name      String?                     @map("buyer_name") // Optional for new clients
+  buyer_phone     String?                     @map("buyer_phone") // Optional for new clients
+  quantity        Decimal                     @db.Decimal(10, 2)
+  unit_price      Decimal                     @map("unit_price") @db.Decimal(10, 2)
+  total_amount    Decimal                     @map("total_amount") @db.Decimal(10, 2)
+  amount_paid     Decimal                     @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  payment_status  InventorySalePaymentStatus  @default(unpaid) @map("payment_status")
+  sale_date       DateTime                    @map("sale_date")
+  notes           String?                     @db.Text
+  created_at      DateTime                    @default(now()) @map("created_at")
+  updated_at      DateTime                    @updatedAt @map("updated_at")
+  created_by      String?                     @map("created_by") @db.Uuid
+
+  // Relations
+  product         Product                     @relation("InventorySaleProduct", fields: [product_id], references: [id], onDelete: Restrict)
+  order           Order?                      @relation("InventorySaleOrder", fields: [order_id], references: [id], onDelete: SetNull) // Link to marketplace order
+  buyer_account   Account?                    @relation("InventorySaleBuyer", fields: [buyer_account_id], references: [id], onDelete: SetNull) // For buyer (supplier/customer) - also used for supplier debt tracking
+  created_by_user User?                       @relation("InventorySaleCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([product_id])
+  @@index([order_id]) // For linking to marketplace orders
+  @@index([buyer_account_id])
+  @@index([buyer_type])
+  @@index([payment_status])
+  @@index([sale_date])
+  @@map("inventory_sales")
 }
