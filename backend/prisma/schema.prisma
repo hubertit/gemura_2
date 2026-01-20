@@ -168,6 +168,7 @@ model Account {
   orders                Order[]
   payroll_suppliers     PayrollSupplier[]   @relation("PayrollSupplierAccount")
   payroll_payslips      PayrollPayslip[]    @relation("PayrollPayslipSupplier")
+  products              Product[]           @relation("ProductAccount")
   default_account_users User[]              @relation("UserDefaultAccount")
   created_by_user       User?               @relation("AccountCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
   updated_by_user       User?               @relation("AccountUpdatedBy", fields: [updated_by], references: [id], onDelete: SetNull)
@@ -339,25 +340,31 @@ model MilkSale {
 }
 
 model Product {
-  id             String        @id @default(uuid()) @db.Uuid
-  legacy_id      BigInt?       @unique @map("legacy_id") // For migration reference
-  name           String
-  description    String?
-  price          Decimal       @db.Decimal(10, 2)
-  stock_quantity Int           @default(0) @map("stock_quantity")
-  status         ProductStatus @default(active)
-  created_at     DateTime      @default(now()) @map("created_at")
-  updated_at     DateTime      @updatedAt @map("updated_at")
-  created_by     String?       @map("created_by") @db.Uuid
-  updated_by     String?       @map("updated_by") @db.Uuid
+  id                     String        @id @default(uuid()) @db.Uuid
+  legacy_id              BigInt?       @unique @map("legacy_id") // For migration reference
+  name                   String
+  description            String?
+  price                  Decimal       @db.Decimal(10, 2)
+  stock_quantity         Int           @default(0) @map("stock_quantity")
+  min_stock_level        Int?          @map("min_stock_level") // Optional: for low stock alerts
+  status                 ProductStatus @default(active)
+  account_id             String?       @map("account_id") @db.Uuid // Link to user's account
+  is_listed_in_marketplace Boolean     @default(false) @map("is_listed_in_marketplace") // Whether product is listed in marketplace
+  created_at             DateTime      @default(now()) @map("created_at")
+  updated_at             DateTime      @updatedAt @map("updated_at")
+  created_by             String?       @map("created_by") @db.Uuid
+  updated_by             String?       @map("updated_by") @db.Uuid
 
   // Relations
+  account     Account?          @relation("ProductAccount", fields: [account_id], references: [id], onDelete: SetNull)
   categories  ProductCategory[]
   images      ProductImage[]
   order_items OrderItem[]
 
   @@index([status])
   @@index([created_at])
+  @@index([account_id])
+  @@index([is_listed_in_marketplace])
   @@map("products")
 }
 

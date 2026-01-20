@@ -11,6 +11,7 @@ import 'liked_posts_screen.dart';
 import 'create_post_screen.dart';
 import 'edit_post_screen.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
+import '../../../../shared/widgets/confirmation_dialog.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/feed_service.dart';
 
@@ -222,51 +223,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   /// Show delete confirmation dialog
-  void _showDeleteConfirmation(Post post) {
-    showDialog(
+  Future<void> _showDeleteConfirmation(Post post) async {
+    final confirmed = await ConfirmationDialog.showDelete(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Text(
-          'Delete Post',
-          style: AppTheme.titleMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimaryColor,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to delete this post? This action cannot be undone.',
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppTheme.textPrimaryColor,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.textSecondaryColor,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _deletePost(post);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(
-              'Delete',
-              style: AppTheme.bodyMedium.copyWith(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+      title: 'Delete Post',
+      message: 'Are you sure you want to delete this post? This action cannot be undone.',
     );
+    
+    if (confirmed) {
+      _deletePost(post);
+    }
   }
 
   /// Delete post

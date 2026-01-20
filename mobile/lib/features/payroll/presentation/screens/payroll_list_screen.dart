@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/confirmation_dialog.dart';
 import '../providers/payroll_provider.dart';
 import '../../../../core/services/payroll_service.dart';
 
@@ -52,28 +53,17 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
   bool _isExporting = false;
 
   Future<void> _markAsPaid(BuildContext context, String runId) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ConfirmationDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Mark as Paid'),
-        content: const Text('Are you sure you want to mark this payroll as paid? This will create an expense transaction in finance.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-            ),
-            child: const Text('Confirm', style: TextStyle(color: AppTheme.surfaceColor)),
-          ),
-        ],
-      ),
+      title: 'Mark as Paid',
+      message: 'Are you sure you want to mark this payroll as paid? This will create an expense transaction in finance.',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+      isDestructive: false,
+      showIcon: false,
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     setState(() => _isMarkingPaid = true);
 

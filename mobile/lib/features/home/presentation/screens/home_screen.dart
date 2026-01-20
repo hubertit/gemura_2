@@ -39,6 +39,7 @@ import '../../../../core/providers/notification_provider.dart';
 import '../../../../shared/widgets/error_boundary.dart';
 import '../../../../shared/widgets/profile_completion_widget.dart';
 import '../../../../shared/widgets/account_type_badge.dart';
+import '../../../../shared/widgets/confirmation_dialog.dart';
 import '../../../market/presentation/providers/products_provider.dart';
 import '../../../market/presentation/screens/all_products_screen.dart';
 import '../../../market/presentation/screens/product_details_screen.dart';
@@ -49,6 +50,8 @@ import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
 import '../../../referrals/presentation/screens/referral_screen.dart';
 import '../../../payroll/presentation/screens/payroll_screen.dart';
+import '../../../inventory/presentation/screens/inventory_list_screen.dart';
+import '../../../inventory/presentation/providers/inventory_provider.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
@@ -63,9 +66,9 @@ class HomeScreen extends ConsumerWidget {
     
     final tabs = [
       const _DashboardTab(), // Index 0: Home
-      const FeedScreen(), // Index 1: Feed
-      const FinanceScreen(), // Index 2: Finance
-      const ChatListScreen(), // Index 3: Chat
+      const FinanceScreen(), // Index 1: Finance
+      const ChatListScreen(), // Index 2: Chats
+      const FeedScreen(), // Index 3: Feeds
       const ProfileTab(), // Index 4: Profile
     ];
     
@@ -94,11 +97,6 @@ class HomeScreen extends ConsumerWidget {
             label: localizationService.translate('home'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.dynamic_feed_outlined),
-            selectedIcon: const Icon(Icons.dynamic_feed),
-            label: 'Feed',
-          ),
-          NavigationDestination(
             icon: const Icon(Icons.account_balance_outlined),
             selectedIcon: const Icon(Icons.account_balance),
             label: 'Finance',
@@ -107,6 +105,11 @@ class HomeScreen extends ConsumerWidget {
             icon: const Icon(Icons.chat_bubble_outline),
             selectedIcon: const Icon(Icons.chat_bubble),
             label: localizationService.translate('chats'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.dynamic_feed_outlined),
+            selectedIcon: const Icon(Icons.dynamic_feed),
+            label: 'Feeds',
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
@@ -1168,10 +1171,10 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             icon: Icons.inventory_2,
                             label: 'Inventory',
                             onTap: () {
-                              // TODO: Link to inventory screen later
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                AppTheme.neutralSnackBar(
-                                  message: 'Inventory feature coming soon',
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const InventoryListScreen(),
                                 ),
                               );
                             },
@@ -1182,6 +1185,125 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                   },
                 ),
               ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            // Inventory Statistics Widget
+            Consumer(
+              builder: (context, ref, child) {
+                final inventoryStatsAsync = ref.watch(inventoryStatsProvider);
+                
+                return inventoryStatsAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                  data: (stats) {
+                    final totalItems = stats['total_items'] ?? 0;
+                    final lowStockItems = stats['low_stock_items'] ?? 0;
+                    final listedItems = stats['listed_in_marketplace'] ?? 0;
+                    
+                    // Only show if there are items
+                    if (totalItems == 0) return const SizedBox.shrink();
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const InventoryListScreen(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            border: Border.all(
+                              color: AppTheme.thinBorderColor,
+                              width: AppTheme.thinBorderWidth,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(AppTheme.spacing8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                                ),
+                                child: const Icon(
+                                  Icons.inventory_2,
+                                  color: AppTheme.primaryColor,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.spacing12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Inventory',
+                                      style: AppTheme.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textPrimaryColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppTheme.spacing2),
+                                    Text(
+                                      '$totalItems items • $listedItems listed',
+                                      style: AppTheme.labelSmall.copyWith(
+                                        color: AppTheme.textSecondaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (lowStockItems > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppTheme.spacing8,
+                                    vertical: AppTheme.spacing4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.warningColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.warning_amber_rounded,
+                                        size: 14,
+                                        color: AppTheme.warningColor,
+                                      ),
+                                      const SizedBox(width: AppTheme.spacing4),
+                                      Text(
+                                        '$lowStockItems low',
+                                        style: AppTheme.labelXSmall.copyWith(
+                                          color: AppTheme.warningColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(width: AppTheme.spacing8),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: AppTheme.textSecondaryColor,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
             const SizedBox(height: AppTheme.spacing8),
             // Milk Business Metrics
@@ -2873,8 +2995,8 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                             localizationService.translate('market'),
                             'Buy and sell dairy products',
                             () {
-                              // Navigate to market tab
-                              ref.read(tabIndexProvider.notifier).state = 1;
+                              // Navigate to feeds tab
+                              ref.read(tabIndexProvider.notifier).state = 3;
                             },
                           );
                         },
@@ -3390,23 +3512,14 @@ class _AccountActionsWidget extends ConsumerWidget {
                 localizationService.translate('signOutAccount'),
                 () async {
                   // Show confirmation dialog
-                  final shouldLogout = await showDialog<bool>(
+                  final shouldLogout = await ConfirmationDialog.show(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.white,
-                      title: Text(localizationService.translate('signOut')),
-                      content: Text(localizationService.translate('signOutConfirm')),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: Text(localizationService.translate('cancel')),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: Text(localizationService.translate('signOut')),
-                        ),
-                      ],
-                    ),
+                    title: localizationService.translate('signOut'),
+                    message: localizationService.translate('signOutConfirm'),
+                    confirmText: localizationService.translate('signOut'),
+                    cancelText: localizationService.translate('cancel'),
+                    isDestructive: false,
+                    showIcon: false,
                   );
                   
                   if (shouldLogout == true) {
@@ -3431,23 +3544,12 @@ class _AccountActionsWidget extends ConsumerWidget {
                 localizationService.translate('deleteAccount'),
                 localizationService.translate('permanentlyDeleteAccount'),
                 () async {
-                  final confirm = await showDialog<bool>(
+                  final confirm = await ConfirmationDialog.showDelete(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: AppTheme.surfaceColor,
-                      title: Text(localizationService.translate('deleteAccount'), style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor)),
-                      content: Text(localizationService.translate('deleteAccountConfirm'), style: AppTheme.bodyMedium),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(localizationService.translate('cancel'), style: AppTheme.bodyMedium.copyWith(color: AppTheme.primaryColor)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(localizationService.translate('delete'), style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor)),
-                        ),
-                      ],
-                    ),
+                    title: localizationService.translate('deleteAccount'),
+                    message: localizationService.translate('deleteAccountConfirm'),
+                    confirmText: localizationService.translate('delete'),
+                    cancelText: localizationService.translate('cancel'),
                   );
                   if (confirm == true) {
                     try {

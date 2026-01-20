@@ -9,6 +9,7 @@ import '../../../../shared/widgets/transaction_item.dart';
 import '../../../../shared/widgets/layout_widgets.dart' show AddItemCard, CustomRulesActionSheet, DetailsActionSheet, DetailRow;
 import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/widgets/confirmation_dialog.dart';
 import '../../../savings/presentation/screens/savings_screen.dart';
 import '../../../savings/presentation/providers/savings_provider.dart';
 import '../../../savings/domain/models/savings_goal.dart';
@@ -2050,23 +2051,14 @@ class _MemberDetailsSheetState extends State<_MemberDetailsSheet> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        final confirmed = await showDialog<bool>(
+                        final confirmed = await ConfirmationDialog.show(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Remove Member'),
-                            content: Text('Are you sure you want to remove ${_member['name']} from this wallet?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(true),
-                                style: TextButton.styleFrom(foregroundColor: AppTheme.errorColor),
-                                child: const Text('Remove'),
-                              ),
-                            ],
-                          ),
+                          title: 'Remove Member',
+                          message: 'Are you sure you want to remove ${_member['name']} from this wallet?',
+                          confirmText: 'Remove',
+                          cancelText: 'Cancel',
+                          isDestructive: true,
+                          icon: Icons.person_remove,
                         );
                         if (confirmed == true && context.mounted) {
                           widget.onDelete();

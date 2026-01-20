@@ -6,6 +6,7 @@ import 'package:gemura/shared/models/supplier.dart';
 import 'package:gemura/features/suppliers/presentation/screens/add_supplier_screen.dart';
 // Removed unused import
 import 'package:gemura/shared/widgets/skeleton_loaders.dart';
+import 'package:gemura/shared/widgets/confirmation_dialog.dart';
 import 'package:gemura/core/providers/localization_provider.dart';
 
 class SuppliersListScreen extends ConsumerStatefulWidget {
@@ -844,91 +845,43 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(
-            'Delete Supplier',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textPrimaryColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.warning,
-                size: 48,
-                color: AppTheme.errorColor,
-              ),
-              const SizedBox(height: AppTheme.spacing16),
-              Text(
-                'Are you sure you want to delete ${supplier.name}?',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppTheme.textPrimaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppTheme.spacing8),
-              Text(
-                'This action cannot be undone.',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isDeleting ? null : () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isDeleting ? null : () async {
-                setDialogState(() {
-                  isDeleting = true;
-                });
+        builder: (context, setDialogState) => ConfirmationDialog(
+          title: 'Delete Supplier',
+          message: 'Are you sure you want to delete ${supplier.name}? This action cannot be undone.',
+          isDestructive: true,
+          isLoading: isDeleting,
+          onConfirm: () async {
+            setDialogState(() {
+              isDeleting = true;
+            });
 
-                try {
-                  await ref.read(suppliersNotifierProvider.notifier).deleteSupplier(
-                    supplierAccountCode: supplier.accountCode, // Use account code, not relationship ID
-                  );
+            try {
+              await ref.read(suppliersNotifierProvider.notifier).deleteSupplier(
+                supplierAccountCode: supplier.accountCode,
+              );
 
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Supplier deleted successfully!'),
-                        backgroundColor: AppTheme.snackbarSuccessColor,
-                      ),
-                    );
-                  }
-                } catch (error) {
-                  if (mounted) {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to delete supplier: ${error.toString()}'),
-                        backgroundColor: AppTheme.snackbarErrorColor,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.errorColor,
-                foregroundColor: Colors.white,
-              ),
-              child: isDeleting
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : Text('Delete'),
-            ),
-          ],
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Supplier deleted successfully!'),
+                    backgroundColor: AppTheme.snackbarSuccessColor,
+                  ),
+                );
+              }
+            } catch (error) {
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to delete supplier: ${error.toString()}'),
+                    backgroundColor: AppTheme.snackbarErrorColor,
+                  ),
+                );
+              }
+            }
+          },
+          onCancel: () => Navigator.of(context).pop(),
         ),
       ),
     );

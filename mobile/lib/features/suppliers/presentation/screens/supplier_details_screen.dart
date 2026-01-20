@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/features/suppliers/domain/models/supplier.dart';
 import 'package:gemura/features/suppliers/presentation/providers/supplier_provider.dart';
+import 'package:gemura/shared/widgets/confirmation_dialog.dart';
 import 'package:intl/intl.dart';
 
 class SupplierDetailsScreen extends ConsumerWidget {
@@ -683,34 +684,22 @@ class SupplierDetailsScreen extends ConsumerWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) async {
+    final confirmed = await ConfirmationDialog.showDelete(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Supplier'),
-        content: Text('Are you sure you want to delete "${supplier.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(supplierProvider.notifier).deleteSupplier(supplier.id);
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Supplier "${supplier.name}" deleted'),
-                  backgroundColor: AppTheme.snackbarSuccessColor,
-                ),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Supplier',
+      message: 'Are you sure you want to delete "${supplier.name}"? This action cannot be undone.',
     );
+    
+    if (confirmed) {
+      ref.read(supplierProvider.notifier).deleteSupplier(supplier.id);
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.successSnackBar(
+          message: 'Supplier "${supplier.name}" deleted',
+        ),
+      );
+    }
   }
 } 

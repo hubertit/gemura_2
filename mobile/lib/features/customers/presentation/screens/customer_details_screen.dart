@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import 'package:gemura/features/customers/domain/models/customer.dart';
 import 'package:gemura/features/customers/presentation/providers/customer_provider.dart';
+import 'package:gemura/shared/widgets/confirmation_dialog.dart';
 
 class CustomerDetailsScreen extends ConsumerWidget {
   final Customer customer;
@@ -335,34 +336,22 @@ class CustomerDetailsScreen extends ConsumerWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) async {
+    final confirmed = await ConfirmationDialog.showDelete(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Customer'),
-        content: Text('Are you sure you want to delete ${customer.name}? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(customerProvider.notifier).deleteCustomer(customer.id);
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Customer deleted successfully!'),
-                  backgroundColor: AppTheme.snackbarSuccessColor,
-                ),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: AppTheme.errorColor),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Customer',
+      message: 'Are you sure you want to delete ${customer.name}? This action cannot be undone.',
     );
+    
+    if (confirmed) {
+      ref.read(customerProvider.notifier).deleteCustomer(customer.id);
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.successSnackBar(
+          message: 'Customer deleted successfully!',
+        ),
+      );
+    }
   }
 } 

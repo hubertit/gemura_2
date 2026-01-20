@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
 import '../../../../shared/models/customer.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
+import '../../../../shared/widgets/confirmation_dialog.dart';
 import '../providers/customers_provider.dart';
 import 'add_customer_screen.dart';
 
@@ -557,96 +558,43 @@ class _CustomersListScreenState extends ConsumerState<CustomersListScreen> {
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(
-            'Delete Customer',
-            style: AppTheme.titleMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppTheme.errorColor,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.warning,
-                color: Colors.orange,
-                size: 48,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Are you sure you want to delete ${customer.name}?',
-                style: AppTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'This action cannot be undone.',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: isSubmitting ? null : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isSubmitting
-                  ? null
-                  : () async {
-                      setState(() {
-                        isSubmitting = true;
-                      });
+        builder: (context, setState) => ConfirmationDialog(
+          title: 'Delete Customer',
+          message: 'Are you sure you want to delete ${customer.name}? This action cannot be undone.',
+          isDestructive: true,
+          isLoading: isSubmitting,
+          onConfirm: () async {
+            setState(() {
+              isSubmitting = true;
+            });
 
-                      try {
-                        await ref.read(customersNotifierProvider.notifier).deleteCustomer(
-                          customerAccountCode: customer.accountCode, // Use account code, not relationship ID
-                        );
+            try {
+              await ref.read(customersNotifierProvider.notifier).deleteCustomer(
+                customerAccountCode: customer.accountCode,
+              );
 
-                        if (mounted) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Customer deleted successfully'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          setState(() {
-                            isSubmitting = false;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to delete customer: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.errorColor,
-                foregroundColor: Colors.white,
-              ),
-              child: isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text('Delete'),
-            ),
-          ],
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.successSnackBar(
+                    message: 'Customer deleted successfully',
+                  ),
+                );
+              }
+            } catch (e) {
+              if (mounted) {
+                setState(() {
+                  isSubmitting = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.errorSnackBar(
+                    message: 'Failed to delete customer: $e',
+                  ),
+                );
+              }
+            }
+          },
+          onCancel: () => Navigator.of(context).pop(),
         ),
       ),
     );

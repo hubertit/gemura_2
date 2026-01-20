@@ -46,6 +46,7 @@ export class ProductsService {
     const products = await this.prisma.product.findMany({
       where: {
         status: filters?.status || 'active',
+        is_listed_in_marketplace: true, // Only show products listed in marketplace
       },
       include: {
         categories: { include: { category: true } },
@@ -178,6 +179,7 @@ export class ProductsService {
     const products = await this.prisma.product.findMany({
       where: {
         status: 'active',
+        is_listed_in_marketplace: true, // Only search products listed in marketplace
         OR: [
           { name: { contains: query, mode: 'insensitive' } },
           { description: { contains: query, mode: 'insensitive' } },
@@ -205,7 +207,10 @@ export class ProductsService {
 
   async getFeaturedProducts(user: User) {
     const products = await this.prisma.product.findMany({
-      where: { status: 'active' },
+      where: { 
+        status: 'active',
+        is_listed_in_marketplace: true, // Only show featured products listed in marketplace
+      },
       include: {
         categories: { include: { category: true } },
         images: { where: { is_primary: true }, take: 1 },
@@ -229,7 +234,10 @@ export class ProductsService {
 
   async getRecentProducts(user: User) {
     const products = await this.prisma.product.findMany({
-      where: { status: 'active' },
+      where: { 
+        status: 'active',
+        is_listed_in_marketplace: true, // Only show recent products listed in marketplace
+      },
       include: {
         categories: { include: { category: true } },
         images: { where: { is_primary: true }, take: 1 },
