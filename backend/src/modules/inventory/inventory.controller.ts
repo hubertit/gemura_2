@@ -8,6 +8,7 @@ import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { ToggleListingDto } from './dto/toggle-listing.dto';
+import { CreateInventorySaleDto } from './dto/create-inventory-sale.dto';
 
 @ApiTags('Inventory')
 @Controller('inventory')
