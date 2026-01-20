@@ -141,6 +141,195 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     }
   }
 
+  void _showInventoryItemBottomSheet(
+      BuildContext context, Map<String, dynamic> item) {
+    final status = item['status']?.toString() ?? 'unknown';
+    final statusColor = _getStatusColor(status);
+    final stockQuantity = item['stock_quantity'] ?? 0;
+    final minStockLevel = item['min_stock_level'];
+    final isLowStock = minStockLevel != null && stockQuantity <= minStockLevel;
+    final isListed = item['is_listed_in_marketplace'] == true;
+    final price = item['price'] as num? ?? 0;
+    final description = item['description']?.toString() ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => DetailsActionSheet(
+        title: item['name'] ?? 'Inventory Item',
+        headerWidget: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inventory_2,
+                size: 32,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              '${_formatAmount(price)} Frw',
+              style: AppTheme.titleLarge.copyWith(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            StatusBadge(
+              status: status.toUpperCase(),
+              color: statusColor,
+            ),
+          ],
+        ),
+        details: [
+          DetailRow(
+            label: 'Stock Quantity',
+            value: stockQuantity.toString(),
+            valueColor: isLowStock ? AppTheme.warningColor : null,
+          ),
+          if (minStockLevel != null)
+            DetailRow(
+              label: 'Min Stock Level',
+              value: minStockLevel.toString(),
+            ),
+          if (description.isNotEmpty)
+            DetailRow(
+              label: 'Description',
+              value: description,
+            ),
+          DetailRow(
+            label: 'Marketplace',
+            value: isListed ? 'Listed' : 'Not Listed',
+            valueColor: isListed ? AppTheme.infoColor : AppTheme.textSecondaryColor,
+          ),
+          if (item['created_at'] != null)
+            DetailRow(
+              label: 'Created',
+              value: DateFormat('MMM dd, yyyy').format(
+                DateTime.parse(item['created_at']),
+              ),
+            ),
+        ],
+        actions: [
+          // Compact button grid
+          Row(
+            children: [
+              // Edit Button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddEditInventoryScreen(item: item),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('Edit'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: AppTheme.surfaceColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              // Stock Button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showStockMovementDialog(context, item);
+                  },
+                  icon: const Icon(Icons.inventory, size: 18),
+                  label: const Text('Stock'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryColor,
+                    side: BorderSide(color: AppTheme.primaryColor, width: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Row(
+            children: [
+              // List/Unlist Button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _toggleMarketplaceListing(item['id'], isListed);
+                  },
+                  icon: Icon(
+                    isListed ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                  ),
+                  label: Text(isListed ? 'Unlist' : 'List'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.infoColor,
+                    side: BorderSide(color: AppTheme.infoColor, width: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              // Delete Button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _deleteItem(item['id']);
+                  },
+                  icon: const Icon(Icons.delete, size: 18),
+                  label: const Text('Delete'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.errorColor,
+                    side: BorderSide(color: AppTheme.errorColor, width: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showStockMovementDialog(
       BuildContext context, Map<String, dynamic> item) {
     final currentStock = item['stock_quantity'] ?? 0;
@@ -330,196 +519,7 @@ class _StockMovementDialogState extends ConsumerState<_StockMovementDialog> {
       ],
     );
   }
-  }
-
-  void _showInventoryItemBottomSheet(
-      BuildContext context, Map<String, dynamic> item) {
-    final status = item['status']?.toString() ?? 'unknown';
-    final statusColor = _getStatusColor(status);
-    final stockQuantity = item['stock_quantity'] ?? 0;
-    final minStockLevel = item['min_stock_level'];
-    final isLowStock = minStockLevel != null && stockQuantity <= minStockLevel;
-    final isListed = item['is_listed_in_marketplace'] == true;
-    final price = item['price'] as num? ?? 0;
-    final description = item['description']?.toString() ?? '';
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => DetailsActionSheet(
-        title: item['name'] ?? 'Inventory Item',
-        headerWidget: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spacing16),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.inventory_2,
-                size: 32,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing12),
-            Text(
-              '${_formatAmount(price)} Frw',
-              style: AppTheme.titleLarge.copyWith(
-                color: AppTheme.primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spacing8),
-            StatusBadge(
-              status: status.toUpperCase(),
-              color: statusColor,
-            ),
-          ],
-        ),
-        details: [
-          DetailRow(
-            label: 'Stock Quantity',
-            value: stockQuantity.toString(),
-            valueColor: isLowStock ? AppTheme.warningColor : null,
-          ),
-          if (minStockLevel != null)
-            DetailRow(
-              label: 'Min Stock Level',
-              value: minStockLevel.toString(),
-            ),
-          if (description.isNotEmpty)
-            DetailRow(
-              label: 'Description',
-              value: description,
-            ),
-          DetailRow(
-            label: 'Marketplace',
-            value: isListed ? 'Listed' : 'Not Listed',
-            valueColor: isListed ? AppTheme.infoColor : AppTheme.textSecondaryColor,
-          ),
-          if (item['created_at'] != null)
-            DetailRow(
-              label: 'Created',
-              value: DateFormat('MMM dd, yyyy').format(
-                DateTime.parse(item['created_at']),
-              ),
-            ),
-        ],
-        actions: [
-          // Compact button grid
-          Row(
-            children: [
-              // Edit Button
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddEditInventoryScreen(item: item),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('Edit'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: AppTheme.surfaceColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing8),
-              // Stock Button
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _showStockMovementDialog(context, item);
-                  },
-                  icon: const Icon(Icons.inventory, size: 18),
-                  label: const Text('Stock'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primaryColor,
-                    side: BorderSide(color: AppTheme.primaryColor, width: 1),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-          Row(
-            children: [
-              // List/Unlist Button
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _toggleMarketplaceListing(item['id'], isListed);
-                  },
-                  icon: Icon(
-                    isListed ? Icons.visibility_off : Icons.visibility,
-                    size: 18,
-                  ),
-                  label: Text(isListed ? 'Unlist' : 'List'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.infoColor,
-                    side: BorderSide(color: AppTheme.infoColor, width: 1),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spacing8),
-              // Delete Button
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _deleteItem(item['id']);
-                  },
-                  icon: const Icon(Icons.delete, size: 18),
-                  label: const Text('Delete'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.errorColor,
-                    side: BorderSide(color: AppTheme.errorColor, width: 1),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing12,
-                      vertical: AppTheme.spacing12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+}
 
   @override
   Widget build(BuildContext context) {
