@@ -31,6 +31,7 @@ SupplierUser _$SupplierUserFromJson(Map<String, dynamic> json) => SupplierUser(
       address: json['address'] as String?,
       accountCode: json['accountCode'] as String,
       accountName: json['accountName'] as String,
+      accountId: json['accountId'] as String?,
     );
 
 Map<String, dynamic> _$SupplierUserToJson(SupplierUser instance) =>
@@ -43,4 +44,5 @@ Map<String, dynamic> _$SupplierUserToJson(SupplierUser instance) =>
       'address': instance.address,
       'accountCode': instance.accountCode,
       'accountName': instance.accountName,
+      'accountId': instance.accountId,
     };

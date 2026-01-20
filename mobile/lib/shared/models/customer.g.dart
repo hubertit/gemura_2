@@ -31,6 +31,7 @@ CustomerUser _$CustomerUserFromJson(Map<String, dynamic> json) => CustomerUser(
       address: json['address'] as String?,
       accountCode: json['accountCode'] as String,
       accountName: json['accountName'] as String,
+      accountId: json['accountId'] as String?,
     );
 
 Map<String, dynamic> _$CustomerUserToJson(CustomerUser instance) =>
@@ -43,4 +44,5 @@ Map<String, dynamic> _$CustomerUserToJson(CustomerUser instance) =>
       'address': instance.address,
       'accountCode': instance.accountCode,
       'accountName': instance.accountName,
+      'accountId': instance.accountId,
     };

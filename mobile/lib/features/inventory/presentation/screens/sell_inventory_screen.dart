@@ -429,7 +429,7 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                       ),
                       items: suppliers.map((supplier) {
                         return DropdownMenuItem<String>(
-                          value: supplier.accountCode,
+                          value: supplier.accountId ?? supplier.accountCode,
                           child: Text(
                             supplier.name,
                             style: AppTheme.bodySmall,
@@ -494,7 +494,7 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                         ),
                         ...customers.map((customer) {
                           return DropdownMenuItem<String>(
-                            value: customer.accountCode,
+                            value: customer.accountId ?? customer.accountCode,
                             child: Text(
                               customer.name,
                               style: AppTheme.bodySmall,

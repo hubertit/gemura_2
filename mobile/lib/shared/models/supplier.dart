@@ -75,6 +75,7 @@ class Supplier {
   String get userCode => supplier.userCode;
   String get accountCode => supplier.accountCode;
   String get accountName => supplier.accountName;
+  String? get accountId => supplier.accountId;
   bool get isActive => relationshipStatus == 'active';
 }
 
@@ -88,6 +89,7 @@ class SupplierUser {
   final String? address;
   final String accountCode;
   final String accountName;
+  final String? accountId; // UUID for API calls
 
   SupplierUser({
     required this.userCode,
@@ -98,6 +100,7 @@ class SupplierUser {
     this.address,
     required this.accountCode,
     required this.accountName,
+    this.accountId,
   });
 
   factory SupplierUser.fromApiResponse(Map<String, dynamic> json) {
@@ -118,6 +121,7 @@ class SupplierUser {
       address: json['address'] != null ? _parseString(json['address']) : null,
       accountCode: account != null ? _parseString(account['code']) : '',
       accountName: account != null ? _parseString(account['name']) : '',
+      accountId: account != null ? _parseString(account['id']) : null,
     );
   }
 
@@ -133,6 +137,7 @@ class SupplierUser {
     String? address,
     String? accountCode,
     String? accountName,
+    String? accountId,
   }) {
     return SupplierUser(
       userCode: userCode ?? this.userCode,
@@ -143,6 +148,7 @@ class SupplierUser {
       address: address ?? this.address,
       accountCode: accountCode ?? this.accountCode,
       accountName: accountName ?? this.accountName,
+      accountId: accountId ?? this.accountId,
     );
   }
 }

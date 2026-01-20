@@ -75,6 +75,7 @@ class Customer {
   String get userCode => customer.userCode;
   String get accountCode => customer.accountCode;
   String get accountName => customer.accountName;
+  String? get accountId => customer.accountId;
   bool get isActive => relationshipStatus == 'active';
 }
 
@@ -88,6 +89,7 @@ class CustomerUser {
   final String? address;
   final String accountCode;
   final String accountName;
+  final String? accountId; // UUID for API calls
 
   CustomerUser({
     required this.userCode,
@@ -98,6 +100,7 @@ class CustomerUser {
     this.address,
     required this.accountCode,
     required this.accountName,
+    this.accountId,
   });
 
   factory CustomerUser.fromApiResponse(Map<String, dynamic> json) {
@@ -118,6 +121,7 @@ class CustomerUser {
       address: json['address'] != null ? _parseString(json['address']) : null,
       accountCode: account != null ? _parseString(account['code']) : '',
       accountName: account != null ? _parseString(account['name']) : '',
+      accountId: account != null ? _parseString(account['id']) : null,
     );
   }
 
@@ -133,6 +137,7 @@ class CustomerUser {
     String? address,
     String? accountCode,
     String? accountName,
+    String? accountId,
   }) {
     return CustomerUser(
       userCode: userCode ?? this.userCode,
@@ -143,6 +148,7 @@ class CustomerUser {
       address: address ?? this.address,
       accountCode: accountCode ?? this.accountCode,
       accountName: accountName ?? this.accountName,
+      accountId: accountId ?? this.accountId,
     );
   }
 }
