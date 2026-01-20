@@ -12,6 +12,13 @@ CREATE INDEX IF NOT EXISTS "products_account_id_idx" ON "products"("account_id")
 CREATE INDEX IF NOT EXISTS "products_is_listed_in_marketplace_idx" ON "products"("is_listed_in_marketplace");
 
 -- Step 3: Add foreign key constraint
-ALTER TABLE "products" 
-  ADD CONSTRAINT IF NOT EXISTS "products_account_id_fkey" 
-  FOREIGN KEY ("account_id") REFERENCES "accounts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'products_account_id_fkey'
+  ) THEN
+    ALTER TABLE "products" 
+      ADD CONSTRAINT "products_account_id_fkey" 
+      FOREIGN KEY ("account_id") REFERENCES "accounts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;
