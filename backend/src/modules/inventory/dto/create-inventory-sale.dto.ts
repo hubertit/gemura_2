@@ -33,14 +33,11 @@ export class CreateInventorySaleDto {
   buyer_type: InventorySaleBuyerType;
 
   @ApiPropertyOptional({
-    description: 'Buyer account ID (required for supplier, optional for customer)',
+    description: 'Buyer account ID (required for supplier, optional for customer/other)',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  @ValidateIf((o) => o.buyer_type === InventorySaleBuyerType.SUPPLIER)
-  @IsNotEmpty({ message: 'buyer_account_id is required when buyer_type is supplier' })
-  @IsString()
-  @ValidateIf((o) => o.buyer_type === InventorySaleBuyerType.CUSTOMER || o.buyer_type === InventorySaleBuyerType.OTHER)
   @IsOptional()
+  @IsString({ message: 'buyer_account_id must be a string' })
   buyer_account_id?: string;
 
   @ApiPropertyOptional({
