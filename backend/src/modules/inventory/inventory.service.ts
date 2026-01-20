@@ -460,12 +460,19 @@ export class InventoryService {
         where: { account_id: user.default_account_id, status: 'out_of_stock' },
       }),
       this.prisma.product.count({
-        where: { account_id: user.default_account_id, is_listed_in_marketplace: true },
+        where: { 
+          account_id: user.default_account_id, 
+          is_listed_in_marketplace: true,
+          status: { not: 'inactive' }, // Exclude deleted/inactive items
+        },
       }),
-      // Count low stock items (fetch and filter in memory)
+      // Count low stock items (fetch and filter in memory, excluding inactive items)
       (async () => {
         const allProducts = await this.prisma.product.findMany({
-          where: { account_id: user.default_account_id },
+          where: { 
+            account_id: user.default_account_id,
+            status: { not: 'inactive' }, // Exclude deleted/inactive items
+          },
           select: { stock_quantity: true, min_stock_level: true },
         });
         return allProducts.filter((p) => {
