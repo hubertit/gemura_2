@@ -299,6 +299,8 @@ class _AddEditInventoryScreenState
                         });
                       },
                       activeColor: AppTheme.primaryColor,
+                      inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
+                      inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
                     ),
                   ],
                 ),
