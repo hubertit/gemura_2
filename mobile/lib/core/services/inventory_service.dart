@@ -368,45 +368,68 @@ class InventoryService {
         },
       );
 
-      if (response.statusCode == 200) {
+      // Accept both 200 (OK) and 201 (Created) as success
+      // Backend should return 200, but handle 201 defensively
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
-        if (data['code'] == 200 && data['status'] == 'success') {
-          return Map<String, dynamic>.from(data['data'] ?? {});
+        
+        // Check response structure
+        if (data is Map<String, dynamic>) {
+          // Standard response format with code and status
+          if (data['code'] == 200 && data['status'] == 'success') {
+            return Map<String, dynamic>.from(data['data'] ?? {});
+          } else if (data['status'] == 'error') {
+            // Backend returned error in response body
+            throw Exception(data['message'] ?? 'Failed to toggle marketplace listing');
+          } else {
+            // Unexpected response structure
+            throw Exception('Invalid response format from server');
+          }
         } else {
-          throw Exception(
-              data['message'] ?? 'Failed to toggle marketplace listing');
+          // Direct data response (unlikely but handle it)
+          return Map<String, dynamic>.from(data ?? {});
         }
       } else {
         throw Exception(
-            'Failed to toggle marketplace listing: ${response.statusCode}');
+            'Unexpected status code: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      String errorMessage = 'Failed to toggle marketplace listing. ';
+      String errorMessage;
 
+      // Handle specific HTTP status codes
       if (e.response?.statusCode == 401) {
         errorMessage = 'Authentication failed. Please login again.';
       } else if (e.response?.statusCode == 400) {
         final backendMsg = e.response?.data?['message'];
-        errorMessage = backendMsg ?? 'Cannot toggle marketplace listing.';
+        errorMessage = backendMsg ?? 'Cannot toggle marketplace listing. Invalid request.';
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Inventory item not found.';
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
+      } else if (e.response?.statusCode != null) {
+        // Other HTTP error status codes
+        final backendMsg = e.response?.data?['message'];
+        errorMessage = backendMsg ?? 'Request failed with status ${e.response?.statusCode}';
       } else if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
-        errorMessage =
-            'Connection timeout. Please check your internet connection.';
+        errorMessage = 'Connection timeout. Please check your internet connection.';
       } else if (e.type == DioExceptionType.connectionError) {
         errorMessage = 'No internet connection. Please check your network.';
       } else {
+        // Generic error
         final backendMsg = e.response?.data?['message'];
-        errorMessage += backendMsg ?? 'Please try again.';
+        errorMessage = backendMsg ?? 'Failed to toggle marketplace listing. Please try again.';
       }
 
       throw Exception(errorMessage);
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      // Re-throw DioException as-is (already handled above)
+      if (e is DioException) {
+        rethrow;
+      }
+      // Handle any other unexpected errors
+      throw Exception('Unexpected error: ${e.toString()}');
     }
   }
 

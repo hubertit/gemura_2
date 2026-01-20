@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -79,6 +79,7 @@ export class InventoryController {
   }
 
   @Post(':id/toggle-listing')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Toggle marketplace listing' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Marketplace listing toggled successfully' })
