@@ -39,7 +39,7 @@ export class CreateInventorySaleDto {
   @ValidateIf((o) => o.buyer_type === InventorySaleBuyerType.SUPPLIER)
   @IsNotEmpty({ message: 'buyer_account_id is required when buyer_type is supplier' })
   @IsString()
-  @ValidateIf((o) => o.buyer_type !== InventorySaleBuyerType.OTHER)
+  @ValidateIf((o) => o.buyer_type === InventorySaleBuyerType.CUSTOMER || o.buyer_type === InventorySaleBuyerType.OTHER)
   @IsOptional()
   buyer_account_id?: string;
 
