@@ -533,4 +533,72 @@ class InventoryService {
       throw Exception('Unexpected error: $e');
     }
   }
+
+  /// Sell inventory item
+  Future<Map<String, dynamic>> sellInventoryItem({
+    required String productId,
+    required String buyerType, // 'supplier', 'customer', 'other'
+    String? buyerAccountId,
+    String? buyerName,
+    String? buyerPhone,
+    required double quantity,
+    required double unitPrice,
+    required double amountPaid,
+    DateTime? saleDate,
+    String? notes,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/inventory/$productId/sell',
+        data: {
+          'buyer_type': buyerType,
+          if (buyerAccountId != null) 'buyer_account_id': buyerAccountId,
+          if (buyerName != null) 'buyer_name': buyerName,
+          if (buyerPhone != null) 'buyer_phone': buyerPhone,
+          'quantity': quantity,
+          'unit_price': unitPrice,
+          'amount_paid': amountPaid,
+          if (saleDate != null) 'sale_date': saleDate.toIso8601String(),
+          if (notes != null) 'notes': notes,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 200 && data['status'] == 'success') {
+          return Map<String, dynamic>.from(data['data'] ?? {});
+        } else {
+          throw Exception(data['message'] ?? 'Failed to sell inventory item');
+        }
+      } else {
+        throw Exception('Failed to sell inventory item: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to sell inventory item. ';
+
+      if (e.response?.statusCode == 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (e.response?.statusCode == 400) {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage = backendMsg ?? 'Invalid request. Please check your input.';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Inventory item or buyer account not found.';
+      } else if (e.response?.statusCode == 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.sendTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet connection.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection. Please check your network.';
+      } else {
+        final backendMsg = e.response?.data?['message'];
+        errorMessage += backendMsg ?? 'Please try again.';
+      }
+
+      throw Exception(errorMessage);
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
 }
