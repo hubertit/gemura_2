@@ -410,7 +410,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 AppTheme.successColor,
                 revenuePercentage,
               ),
-              const SizedBox(height: AppTheme.spacing6),
+              const SizedBox(height: AppTheme.spacing8),
               _buildLegendItemWithPercentage(
                 'Expenses',
                 AppTheme.warningColor,
@@ -1080,7 +1080,7 @@ class _TransactionFormState extends ConsumerState<_TransactionForm> {
               color: isSelected ? color : AppTheme.textSecondaryColor,
               size: 24,
             ),
-            const SizedBox(height: AppTheme.spacing6),
+            const SizedBox(height: AppTheme.spacing8),
             Text(
               label,
               style: isSelected
