@@ -7,6 +7,7 @@ import '../providers/finance_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
 import '../../../../shared/widgets/layout_widgets.dart';
 import '../../domain/models/transaction.dart';
+import 'all_transactions_screen.dart';
 import 'package:d_chart/d_chart.dart';
 
 class FinanceScreen extends ConsumerStatefulWidget {
@@ -595,11 +596,36 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Recent Transactions',
-          style: AppTheme.titleSmall.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Transactions',
+              style: AppTheme.titleSmall.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AllTransactionsScreen(
+                      initialFromDate: _fromDate,
+                      initialToDate: _toDate,
+                    ),
+                  ),
+                );
+              },
+              child: Text(
+                'View All',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: AppTheme.spacing12),
         transactionsAsync.when(
