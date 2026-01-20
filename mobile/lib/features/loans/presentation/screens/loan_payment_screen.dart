@@ -162,9 +162,7 @@ class _LoanPaymentScreenState extends ConsumerState<LoanPaymentScreen> {
                 ),
                 decoration: InputDecoration(
                   hintText: 'Enter amount',
-                  hintStyle: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
+                  hintStyle: AppTheme.hintText,
                   prefixText: 'RWF ',
                   prefixStyle: AppTheme.bodyMedium.copyWith(
                     color: AppTheme.textSecondaryColor,

@@ -74,7 +74,7 @@ class _MarketSearchScreenState extends ConsumerState<MarketSearchScreen> {
           style: AppTheme.bodyMedium,
           decoration: InputDecoration(
             hintText: 'Search products...',
-            hintStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textHintColor),
+            hintStyle: AppTheme.hintText,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
               borderSide: BorderSide.none,

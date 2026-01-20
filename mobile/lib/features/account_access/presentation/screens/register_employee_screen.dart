@@ -120,7 +120,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.phone),
                 hintText: '788606765',
-                hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                hintStyle: AppTheme.hintText,
               ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [

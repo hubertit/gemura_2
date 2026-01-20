@@ -265,9 +265,7 @@ class _OnboardUserScreenState extends ConsumerState<OnboardUserScreen> {
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.textSecondaryColor,
-            ),
+            hintStyle: AppTheme.hintText,
             prefixIcon: Icon(
               icon,
               color: AppTheme.primaryColor,

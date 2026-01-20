@@ -189,7 +189,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                       decoration: InputDecoration(
                         hintText: '788606765',
                         prefixIcon: const Icon(Icons.phone),
-                        hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                        hintStyle: AppTheme.hintText,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                         ),
@@ -257,7 +257,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                 decoration: InputDecoration(
                   hintText: 'Address (optional)',
                   prefixIcon: const Icon(Icons.location_on),
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  hintStyle: AppTheme.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -423,7 +423,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                   style: AppTheme.bodyMedium,
                   decoration: InputDecoration(
                     hintText: 'Search contacts...',
-                    hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                    hintStyle: AppTheme.hintText,
                     prefixIcon: Icon(Icons.search, color: AppTheme.textHintColor),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing12),

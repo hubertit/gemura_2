@@ -97,9 +97,7 @@ class _CreateListScreenState extends State<CreateListScreen> {
                 controller: _listNameController,
                 decoration: InputDecoration(
                   hintText: 'Examples: Work, Friends',
-                  hintStyle: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
+                  hintStyle: AppTheme.hintText,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacing16,

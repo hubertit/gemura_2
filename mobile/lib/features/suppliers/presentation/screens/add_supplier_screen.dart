@@ -160,7 +160,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 decoration: InputDecoration(
                   hintText: 'Full name',
                   prefixIcon: const Icon(Icons.person),
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  hintStyle: AppTheme.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -198,7 +198,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                       decoration: InputDecoration(
                         hintText: '250788123456',
                         prefixIcon: const Icon(Icons.phone),
-                        hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                        hintStyle: AppTheme.hintText,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                         ),
@@ -242,7 +242,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 decoration: InputDecoration(
                   hintText: 'Email (optional)',
                   prefixIcon: const Icon(Icons.email),
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  hintStyle: AppTheme.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -267,7 +267,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 decoration: InputDecoration(
                   hintText: 'Address (optional)',
                   prefixIcon: const Icon(Icons.location_on),
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  hintStyle: AppTheme.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -292,7 +292,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 decoration: InputDecoration(
                   hintText: 'National ID (optional)',
                   prefixIcon: const Icon(Icons.badge),
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  hintStyle: AppTheme.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -318,7 +318,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                 decoration: InputDecoration(
                   hintText: 'Price per liter (RWF)',
                   prefixIcon: const Icon(Icons.attach_money),
-                  hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  hintStyle: AppTheme.hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   ),
@@ -457,7 +457,7 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
                   style: AppTheme.bodyMedium,
                   decoration: InputDecoration(
                     hintText: 'Search contacts...',
-                    hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                    hintStyle: AppTheme.hintText,
                     prefixIcon: Icon(Icons.search, color: AppTheme.textHintColor),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16, vertical: AppTheme.spacing12),

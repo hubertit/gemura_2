@@ -447,9 +447,7 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
               controller: _commentController,
               decoration: InputDecoration(
                 hintText: 'Add a comment...',
-                hintStyle: AppTheme.bodyMedium.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                ),
+                hintStyle: AppTheme.hintText,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                   borderSide: BorderSide(color: AppTheme.borderColor),

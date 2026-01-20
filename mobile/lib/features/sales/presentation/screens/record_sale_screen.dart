@@ -253,7 +253,7 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
                           value: _selectedRejectionReason,
                           decoration: InputDecoration(
                             hintText: 'Rejection Reason',
-                            hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                            hintStyle: AppTheme.hintText,
                             prefixIcon: const Icon(Icons.cancel),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 16),

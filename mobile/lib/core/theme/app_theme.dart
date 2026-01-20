@@ -120,6 +120,12 @@ class AppTheme {
     fontWeight: FontWeight.w600,
     color: textPrimaryColor,
   );
+  static const TextStyle hintText = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: textHintColor,
+  );
   static const TextStyle badge = TextStyle(
     fontFamily: 'Inter',
     fontSize: 13,
@@ -321,7 +327,7 @@ class AppTheme {
         borderSide: BorderSide(color: errorColor, width: 2),
       ),
       labelStyle: TextStyle(color: textSecondaryColor, fontFamily: 'Inter'),
-      hintStyle: TextStyle(color: textHintColor, fontFamily: 'Inter'),
+      hintStyle: hintText,
       contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
     ),
     canvasColor: surfaceColor.withOpacity(0.98),
