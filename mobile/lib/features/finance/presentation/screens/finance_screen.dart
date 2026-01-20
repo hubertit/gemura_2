@@ -284,7 +284,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppTheme.spacing6),
+                padding: const EdgeInsets.all(AppTheme.spacing8),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
