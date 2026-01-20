@@ -156,7 +156,6 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         itemId: item['id'],
         stockController: stockController,
         formKey: formKey,
-        ref: ref,
         onSuccess: () {
           // Refresh inventory data
           final filters = InventoryFilters(
@@ -246,13 +245,6 @@ class _StockMovementDialogState extends ConsumerState<_StockMovementDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-          backgroundColor: AppTheme.surfaceColor,
-          title: Text(
-            'Adjust Stock',
-            style: AppTheme.titleMedium.copyWith(
-              color: AppTheme.textPrimaryColor,
-            ),
-          ),
       backgroundColor: AppTheme.surfaceColor,
       title: Text(
         'Adjust Stock',
@@ -337,6 +329,7 @@ class _StockMovementDialogState extends ConsumerState<_StockMovementDialog> {
         ),
       ],
     );
+  }
   }
 
   void _showInventoryItemBottomSheet(
