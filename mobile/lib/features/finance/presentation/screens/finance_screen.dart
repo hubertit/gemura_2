@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/localization_provider.dart';
 import '../providers/finance_provider.dart';
 import '../../../../shared/widgets/skeleton_loaders.dart';
+import '../../../../shared/widgets/layout_widgets.dart';
 import '../../domain/models/transaction.dart';
 import 'package:d_chart/d_chart.dart';
 
@@ -657,6 +658,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
       ),
       child: InkWell(
+        onTap: () => _showTransactionDetails(context, transaction),
         borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spacing12),
@@ -779,6 +781,90 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               color: AppTheme.textSecondaryColor.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTransactionDetails(BuildContext context, Transaction transaction) {
+    final isRevenue = transaction.type == 'revenue';
+    final color = isRevenue ? AppTheme.successColor : AppTheme.warningColor;
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    final timeFormat = DateFormat('hh:mm a');
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => DetailsActionSheet(
+        headerWidget: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isRevenue ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                  color: color,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing12),
+              Text(
+                '${_formatAmount(transaction.amount)} RWF',
+                style: AppTheme.titleLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing4),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing12,
+                  vertical: AppTheme.spacing4,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                ),
+                child: Text(
+                  isRevenue ? 'Revenue' : 'Expense',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        details: [
+          DetailRow(
+            label: 'Description',
+            value: transaction.description,
+          ),
+          DetailRow(
+            label: 'Date',
+            value: dateFormat.format(transaction.transactionDate),
+          ),
+          DetailRow(
+            label: 'Time',
+            value: timeFormat.format(transaction.transactionDate),
+          ),
+          if (transaction.categoryAccount != null)
+            DetailRow(
+              label: 'Category',
+              value: transaction.categoryAccount!,
+            ),
+          DetailRow(
+            label: 'Amount',
+            value: '${_formatAmount(transaction.amount)} RWF',
+            valueColor: color,
           ),
         ],
       ),
