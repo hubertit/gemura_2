@@ -20,12 +20,25 @@ class AllTransactionsScreen extends ConsumerStatefulWidget {
   ConsumerState<AllTransactionsScreen> createState() => _AllTransactionsScreenState();
 }
 
+enum TransactionSortBy {
+  date,
+  amount,
+  description,
+}
+
+enum SortOrder {
+  ascending,
+  descending,
+}
+
 class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
   String? _selectedType;
   DateTime? _dateFrom;
   DateTime? _dateTo;
   RangeValues _amountRange = const RangeValues(0, 10000000);
   bool _hasActiveFilters = false;
+  TransactionSortBy _sortBy = TransactionSortBy.date;
+  SortOrder _sortOrder = SortOrder.descending;
 
   @override
   void initState() {
@@ -288,12 +301,32 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
       ),
     );
 
-    // Filter by amount range in memory
-    final filteredTransactions = transactionsAsync.when(
+    // Filter by amount range and sort in memory
+    final filteredAndSortedTransactions = transactionsAsync.when(
       data: (transactions) {
-        return transactions.where((t) {
+        // Filter by amount range
+        var filtered = transactions.where((t) {
           return t.amount >= _amountRange.start && t.amount <= _amountRange.end;
         }).toList();
+
+        // Sort transactions
+        filtered.sort((a, b) {
+          int comparison = 0;
+          switch (_sortBy) {
+            case TransactionSortBy.date:
+              comparison = a.transactionDate.compareTo(b.transactionDate);
+              break;
+            case TransactionSortBy.amount:
+              comparison = a.amount.compareTo(b.amount);
+              break;
+            case TransactionSortBy.description:
+              comparison = a.description.toLowerCase().compareTo(b.description.toLowerCase());
+              break;
+          }
+          return _sortOrder == SortOrder.ascending ? comparison : -comparison;
+        });
+
+        return filtered;
       },
       loading: () => <Transaction>[],
       error: (_, __) => <Transaction>[],
@@ -310,6 +343,152 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
           color: AppTheme.textPrimaryColor,
         ),
         actions: [
+          // Sort menu
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.sort,
+              color: _sortBy != TransactionSortBy.date || _sortOrder != SortOrder.descending
+                  ? AppTheme.primaryColor
+                  : null,
+            ),
+            tooltip: 'Sort Transactions',
+            onSelected: (value) {
+              setState(() {
+                switch (value) {
+                  case 'date_desc':
+                    _sortBy = TransactionSortBy.date;
+                    _sortOrder = SortOrder.descending;
+                    break;
+                  case 'date_asc':
+                    _sortBy = TransactionSortBy.date;
+                    _sortOrder = SortOrder.ascending;
+                    break;
+                  case 'amount_desc':
+                    _sortBy = TransactionSortBy.amount;
+                    _sortOrder = SortOrder.descending;
+                    break;
+                  case 'amount_asc':
+                    _sortBy = TransactionSortBy.amount;
+                    _sortOrder = SortOrder.ascending;
+                    break;
+                  case 'description_asc':
+                    _sortBy = TransactionSortBy.description;
+                    _sortOrder = SortOrder.ascending;
+                    break;
+                  case 'description_desc':
+                    _sortBy = TransactionSortBy.description;
+                    _sortOrder = SortOrder.descending;
+                    break;
+                }
+              });
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'date_desc',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: _sortBy == TransactionSortBy.date &&
+                              _sortOrder == SortOrder.descending
+                          ? AppTheme.primaryColor
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Text('Date (Newest First)'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'date_asc',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: _sortBy == TransactionSortBy.date &&
+                              _sortOrder == SortOrder.ascending
+                          ? AppTheme.primaryColor
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Text('Date (Oldest First)'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'amount_desc',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: _sortBy == TransactionSortBy.amount &&
+                              _sortOrder == SortOrder.descending
+                          ? AppTheme.primaryColor
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Text('Amount (Highest First)'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'amount_asc',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: _sortBy == TransactionSortBy.amount &&
+                              _sortOrder == SortOrder.ascending
+                          ? AppTheme.primaryColor
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Text('Amount (Lowest First)'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'description_asc',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: _sortBy == TransactionSortBy.description &&
+                              _sortOrder == SortOrder.ascending
+                          ? AppTheme.primaryColor
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Text('Description (A-Z)'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'description_desc',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check,
+                      size: 18,
+                      color: _sortBy == TransactionSortBy.description &&
+                              _sortOrder == SortOrder.descending
+                          ? AppTheme.primaryColor
+                          : Colors.transparent,
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    const Text('Description (Z-A)'),
+                  ],
+                ),
+              ),
+            ],
+          ),
           if (_hasActiveFilters)
             IconButton(
               icon: const Icon(Icons.clear_all),
@@ -328,7 +507,7 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
       ),
       body: transactionsAsync.when(
         data: (transactions) {
-          if (filteredTransactions.isEmpty) {
+          if (filteredAndSortedTransactions.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppTheme.spacing16),
@@ -378,9 +557,9 @@ class _AllTransactionsScreenState extends ConsumerState<AllTransactionsScreen> {
             },
             child: ListView.builder(
               padding: const EdgeInsets.all(AppTheme.spacing16),
-              itemCount: filteredTransactions.length,
+              itemCount: filteredAndSortedTransactions.length,
               itemBuilder: (context, index) {
-                return _buildTransactionCard(filteredTransactions[index]);
+                return _buildTransactionCard(filteredAndSortedTransactions[index]);
               },
             ),
           );
