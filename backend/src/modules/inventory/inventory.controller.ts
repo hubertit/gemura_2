@@ -100,4 +100,19 @@ export class InventoryController {
   async deleteInventoryItem(@CurrentUser() user: User, @Param('id') id: string) {
     return this.inventoryService.deleteInventoryItem(user, id);
   }
+
+  @Post(':id/sell')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Sell inventory item' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiResponse({ status: 200, description: 'Inventory item sold successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - validation failed or business rule violation' })
+  @ApiResponse({ status: 404, description: 'Inventory item or buyer account not found' })
+  async sellInventoryItem(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() createSaleDto: CreateInventorySaleDto,
+  ) {
+    return this.inventoryService.sellInventoryItem(user, id, createSaleDto);
+  }
 }
