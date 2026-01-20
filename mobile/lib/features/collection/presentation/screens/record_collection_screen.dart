@@ -613,10 +613,7 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                     style: AppTheme.bodySmall,
                     decoration: InputDecoration(
                       hintText: 'Search by name, phone, or address...',
-                      hintStyle: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        fontSize: 12,
-                      ),
+                      hintStyle: AppTheme.hintText,
                       prefixIcon: Icon(Icons.search, size: 18, color: AppTheme.textSecondaryColor),
                       filled: true,
                       fillColor: Colors.grey[100],
