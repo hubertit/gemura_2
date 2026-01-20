@@ -39,4 +39,9 @@ export class UpdateInventoryDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiProperty({ description: 'Whether to list in marketplace', example: true, required: false })
+  @IsOptional()
+  @IsBoolean()
+  is_listed_in_marketplace?: boolean;
 }

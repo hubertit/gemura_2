@@ -78,6 +78,7 @@ class _AddEditInventoryScreenState
           minStockLevel: _minStockLevelController.text.trim().isEmpty
               ? null
               : int.parse(_minStockLevelController.text),
+          isListedInMarketplace: _isListedInMarketplace,
         );
       } else {
         // Create new item
@@ -254,57 +255,55 @@ class _AddEditInventoryScreenState
               ),
               const SizedBox(height: AppTheme.spacing16),
 
-              // List in Marketplace Toggle (only for new items)
-              if (!isEdit) ...[
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                    border: Border.all(
-                      color: AppTheme.thinBorderColor,
-                      width: AppTheme.thinBorderWidth,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.store,
-                          color: AppTheme.infoColor, size: 20),
-                      const SizedBox(width: AppTheme.spacing12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'List in Marketplace',
-                              style: AppTheme.bodySmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spacing2),
-                            Text(
-                              'Make this item visible in marketplace',
-                              style: AppTheme.labelSmall.copyWith(
-                                color: AppTheme.textSecondaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: _isListedInMarketplace,
-                        onChanged: (value) {
-                          setState(() {
-                            _isListedInMarketplace = value;
-                          });
-                        },
-                        activeColor: AppTheme.primaryColor,
-                      ),
-                    ],
+              // List in Marketplace Toggle
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spacing12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                  border: Border.all(
+                    color: AppTheme.thinBorderColor,
+                    width: AppTheme.thinBorderWidth,
                   ),
                 ),
-                const SizedBox(height: AppTheme.spacing24),
-              ],
+                child: Row(
+                  children: [
+                    const Icon(Icons.store,
+                        color: AppTheme.infoColor, size: 20),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'List in Marketplace',
+                            style: AppTheme.bodySmall.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.spacing2),
+                          Text(
+                            'Make this item visible in marketplace',
+                            style: AppTheme.labelSmall.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _isListedInMarketplace,
+                      onChanged: (value) {
+                        setState(() {
+                          _isListedInMarketplace = value;
+                        });
+                      },
+                      activeColor: AppTheme.primaryColor,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spacing24),
 
               // Submit Button
               PrimaryButton(

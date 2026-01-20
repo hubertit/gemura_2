@@ -226,6 +226,16 @@ export class InventoryService {
       }
     }
 
+    // Can't list if out of stock
+    if (updateDto.is_listed_in_marketplace && 
+        (updateDto.stock_quantity !== undefined ? updateDto.stock_quantity === 0 : existing.stock_quantity === 0)) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Cannot list item in marketplace when stock is 0.',
+      });
+    }
+
     const product = await this.prisma.product.update({
       where: { id: productId },
       data: {
@@ -234,6 +244,7 @@ export class InventoryService {
         ...(updateDto.price !== undefined && { price: updateDto.price }),
         ...(updateDto.stock_quantity !== undefined && { stock_quantity: updateDto.stock_quantity }),
         ...(updateDto.min_stock_level !== undefined && { min_stock_level: updateDto.min_stock_level }),
+        ...(updateDto.is_listed_in_marketplace !== undefined && { is_listed_in_marketplace: updateDto.is_listed_in_marketplace }),
         ...(status && { status: status as any }),
         updated_by: user.id,
       },

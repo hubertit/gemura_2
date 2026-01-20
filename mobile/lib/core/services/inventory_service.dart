@@ -268,6 +268,7 @@ class InventoryService {
     int? minStockLevel,
     List<String>? categoryIds,
     String? status,
+    bool? isListedInMarketplace,
   }) async {
     try {
       final data = <String, dynamic>{};
@@ -278,6 +279,7 @@ class InventoryService {
       if (minStockLevel != null) data['min_stock_level'] = minStockLevel;
       if (categoryIds != null) data['category_ids'] = categoryIds;
       if (status != null) data['status'] = status;
+      if (isListedInMarketplace != null) data['is_listed_in_marketplace'] = isListedInMarketplace;
 
       final response = await _dio.put(
         '/inventory/$id',
