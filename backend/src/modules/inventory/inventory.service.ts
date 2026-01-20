@@ -1,14 +1,20 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { ToggleListingDto } from './dto/toggle-listing.dto';
+import { CreateInventorySaleDto, InventorySaleBuyerType, InventorySalePaymentStatus } from './dto/create-inventory-sale.dto';
+import { TransactionsService } from '../accounting/transactions/transactions.service';
+import { TransactionType } from '../accounting/transactions/dto/create-transaction.dto';
 
 @Injectable()
 export class InventoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private transactionsService: TransactionsService,
+  ) {}
 
   async getInventory(user: User, filters?: { status?: string; low_stock?: boolean }) {
     if (!user.default_account_id) {
@@ -496,5 +502,204 @@ export class InventoryService {
         low_stock_items: lowStockItems,
       },
     };
+  }
+
+  async sellInventoryItem(user: User, productId: string, createSaleDto: CreateInventorySaleDto) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found.',
+      });
+    }
+
+    // 1. Validate product exists and belongs to user
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: productId,
+        account_id: user.default_account_id,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Inventory item not found.',
+      });
+    }
+
+    // 2. Validate product is listed in marketplace
+    if (!product.is_listed_in_marketplace) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Item must be listed in marketplace to sell.',
+      });
+    }
+
+    // 3. Validate stock availability
+    if (product.stock_quantity < createSaleDto.quantity) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: `Insufficient stock. Available: ${product.stock_quantity}, Requested: ${createSaleDto.quantity}`,
+      });
+    }
+
+    // 4. Validate buyer_account_id is required for suppliers
+    if (createSaleDto.buyer_type === InventorySaleBuyerType.SUPPLIER && !createSaleDto.buyer_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'buyer_account_id is required when buyer_type is supplier.',
+      });
+    }
+
+    // 5. Validate buyer account exists if provided
+    let buyerAccount = null;
+    if (createSaleDto.buyer_account_id) {
+      buyerAccount = await this.prisma.account.findUnique({
+        where: { id: createSaleDto.buyer_account_id },
+      });
+
+      if (!buyerAccount) {
+        throw new NotFoundException({
+          code: 404,
+          status: 'error',
+          message: 'Buyer account not found.',
+        });
+      }
+    }
+
+    // 6. Calculate total amount and payment status
+    const totalAmount = createSaleDto.quantity * createSaleDto.unit_price;
+    const amountPaid = createSaleDto.amount_paid || 0;
+    let paymentStatus: InventorySalePaymentStatus;
+
+    if (amountPaid >= totalAmount) {
+      paymentStatus = InventorySalePaymentStatus.PAID;
+    } else if (amountPaid > 0) {
+      paymentStatus = InventorySalePaymentStatus.PARTIAL;
+    } else {
+      paymentStatus = InventorySalePaymentStatus.UNPAID;
+    }
+
+    // 7. Validate payment rules
+    // Only suppliers can take debt (unpaid/partial payment)
+    // Customers and others must pay full amount upfront
+    if (createSaleDto.buyer_type !== InventorySaleBuyerType.SUPPLIER) {
+      if (amountPaid < totalAmount) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Customers and other buyers must pay the full amount upfront. Only suppliers can buy on credit.',
+        });
+      }
+    }
+
+    // 8. Parse sale date
+    const saleDate = createSaleDto.sale_date 
+      ? new Date(createSaleDto.sale_date) 
+      : new Date();
+
+    try {
+      // 9. Create inventory sale record
+      const inventorySale = await this.prisma.inventorySale.create({
+        data: {
+          product_id: productId,
+          buyer_type: createSaleDto.buyer_type as any,
+          buyer_account_id: createSaleDto.buyer_account_id || null,
+          buyer_name: createSaleDto.buyer_name || null,
+          buyer_phone: createSaleDto.buyer_phone || null,
+          quantity: createSaleDto.quantity,
+          unit_price: createSaleDto.unit_price,
+          total_amount: totalAmount,
+          amount_paid: amountPaid,
+          payment_status: paymentStatus as any,
+          sale_date: saleDate,
+          notes: createSaleDto.notes || null,
+          created_by: user.id,
+        },
+        include: {
+          product: true,
+          buyer_account: true,
+        },
+      });
+
+      // 10. Reduce product stock
+      const newStockQuantity = product.stock_quantity - createSaleDto.quantity;
+      let newStatus = product.status;
+      
+      if (newStockQuantity === 0) {
+        newStatus = 'out_of_stock';
+        // Also unlist from marketplace if stock reaches 0
+        await this.prisma.product.update({
+          where: { id: productId },
+          data: {
+            stock_quantity: newStockQuantity,
+            status: newStatus as any,
+            is_listed_in_marketplace: false,
+            updated_by: user.id,
+          },
+        });
+      } else {
+        await this.prisma.product.update({
+          where: { id: productId },
+          data: {
+            stock_quantity: newStockQuantity,
+            status: newStatus as any,
+            updated_by: user.id,
+          },
+        });
+      }
+
+      // 11. Create finance transaction if amount_paid > 0
+      if (amountPaid > 0) {
+        try {
+          const buyerName = buyerAccount?.name || createSaleDto.buyer_name || 'Unknown Buyer';
+          await this.transactionsService.createTransaction(user, {
+            type: TransactionType.REVENUE,
+            amount: amountPaid,
+            description: `Sale of ${product.name} - ${createSaleDto.quantity} units to ${buyerName}`,
+            transaction_date: saleDate.toISOString().split('T')[0],
+          });
+        } catch (error) {
+          // Log error but don't fail the sale creation
+          console.error('Failed to create finance transaction for inventory sale:', error);
+        }
+      }
+
+      return {
+        code: 200,
+        status: 'success',
+        message: 'Inventory item sold successfully.',
+        data: {
+          id: inventorySale.id,
+          product_id: inventorySale.product_id,
+          product_name: inventorySale.product.name,
+          buyer_type: inventorySale.buyer_type,
+          buyer_account_id: inventorySale.buyer_account_id,
+          buyer_name: inventorySale.buyer_name,
+          buyer_phone: inventorySale.buyer_phone,
+          quantity: Number(inventorySale.quantity),
+          unit_price: Number(inventorySale.unit_price),
+          total_amount: Number(inventorySale.total_amount),
+          amount_paid: Number(inventorySale.amount_paid),
+          payment_status: inventorySale.payment_status,
+          sale_date: inventorySale.sale_date,
+          notes: inventorySale.notes,
+          remaining_stock: newStockQuantity,
+        },
+      };
+    } catch (error) {
+      console.error('Error creating inventory sale:', error);
+      throw new InternalServerErrorException({
+        code: 500,
+        status: 'error',
+        message: 'Failed to create inventory sale.',
+        error: error.message,
+      });
+    }
   }
 }
