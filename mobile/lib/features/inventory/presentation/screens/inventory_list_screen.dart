@@ -8,6 +8,7 @@ import '../../../../shared/widgets/confirmation_dialog.dart';
 import '../../../../shared/widgets/layout_widgets.dart';
 import '../providers/inventory_provider.dart';
 import 'add_edit_inventory_screen.dart';
+import 'sell_inventory_screen.dart';
 
 class InventoryListScreen extends ConsumerStatefulWidget {
   const InventoryListScreen({super.key});
