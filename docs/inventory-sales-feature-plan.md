@@ -6,9 +6,11 @@ Add ability to sell inventory items that are listed in the marketplace. Track sa
 ## Database Schema Changes
 
 ### New Enum: `InventorySaleBuyerType`
-- `customer` - Existing customer from customers list
-- `supplier` - Existing supplier from suppliers list  
+- `supplier` - Existing supplier from suppliers list (ONLY type that can take debt)
+- `customer` - Existing customer from customers list (must pay upfront)
 - `other` - New client (must pay upfront, no credit)
+
+**IMPORTANT**: Only suppliers can take items on debt because they have payroll payments that can offset the debt.
 
 ### New Enum: `InventorySalePaymentStatus`
 - `paid` - Fully paid
@@ -24,7 +26,7 @@ model InventorySale {
   product_id      String                      @map("product_id") @db.Uuid
   order_id        String?                     @map("order_id") @db.Uuid // Nullable: Links to Order if from online marketplace
   buyer_type      InventorySaleBuyerType      @map("buyer_type")
-  buyer_account_id String?                    @map("buyer_account_id") @db.Uuid // Nullable for 'other' buyers
+  buyer_account_id String?                    @map("buyer_account_id") @db.Uuid // Required for 'supplier', nullable for 'customer'/'other'
   buyer_name      String?                     @map("buyer_name") // Optional for new clients
   buyer_phone     String?                     @map("buyer_phone") // Optional for new clients
   quantity        Decimal                     @db.Decimal(10, 2)
@@ -42,6 +44,7 @@ model InventorySale {
   product         Product                     @relation("InventorySaleProduct", fields: [product_id], references: [id], onDelete: Restrict)
   order           Order?                      @relation("InventorySaleOrder", fields: [order_id], references: [id], onDelete: SetNull) // Link to marketplace order
   buyer_account   Account?                    @relation("InventorySaleBuyer", fields: [buyer_account_id], references: [id], onDelete: SetNull)
+  supplier_account Account?                   @relation("InventorySaleSupplierDebt", fields: [buyer_account_id], references: [id], onDelete: SetNull) // For supplier debt tracking
   created_by_user User?                       @relation("InventorySaleCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
 
   @@index([product_id])
@@ -112,14 +115,24 @@ inventory_sales_created InventorySale[] @relation("InventorySaleCreatedBy")
    - Only show "Sell" button if `is_listed_in_marketplace == true`
    - Only show if `stock_quantity > 0`
 
-2. **Buyer Types**
-   - **Customer**: Can buy on credit (unpaid/partial payment allowed)
+2. **Buyer Types & Credit Rules**
    - **Supplier**: Can buy on credit (unpaid/partial payment allowed)
+     - **IMPORTANT**: Debt is deducted from their payroll payments
+     - Unpaid amounts reduce their expected payroll payments
+     - Must be clear/visible in payroll calculations
+   - **Customer**: Must pay upfront (payment_status must be 'paid')
    - **Other**: Must pay upfront (payment_status must be 'paid')
+   
+   **Note**: Only suppliers can take items on debt. This is because suppliers have payroll payments that can be offset against their debt.
 
 3. **Payment Rules**
-   - If `buyer_type == 'other'`: `amount_paid` must equal `total_amount` (full payment required)
-   - If `buyer_type == 'customer'` or `'supplier'`: Can be unpaid, partial, or paid
+   - If `buyer_type == 'supplier'`: 
+     - Can be unpaid, partial, or paid
+     - **Debt Deduction**: Unpaid amount (`total_amount - amount_paid`) is deducted from supplier's payroll payments
+     - Debt is tracked and visible in payroll calculations
+   - If `buyer_type == 'customer'` or `'other'`: 
+     - `amount_paid` must equal `total_amount` (full payment required upfront)
+     - No credit allowed
    - If `amount_paid > 0`: Create finance transaction as revenue
 
 4. **Stock Management**
@@ -138,6 +151,35 @@ inventory_sales_created InventorySale[] @relation("InventorySaleCreatedBy")
      - Amount: `amount_paid`
      - Description: "Sale of [product_name] - [quantity] units"
      - Transaction date: `sale_date`
+
+7. **Payroll Integration (Suppliers Only) - CRITICAL**
+   - **Only suppliers can take items on debt** (customers and others must pay upfront)
+   - When supplier buys on debt (`buyer_type == 'supplier'` and `payment_status != 'paid'`):
+     - Calculate debt amount: `total_amount - amount_paid`
+     - Link debt to supplier's account via `buyer_account_id`
+     - **Debt is automatically deducted from supplier's payroll payments**
+   - **Payroll Calculation Logic**:
+     - When generating payroll for a supplier:
+       1. Calculate gross amount from milk sales (existing logic)
+       2. **Get all unpaid inventory sales** for this supplier:
+          ```sql
+          SELECT SUM(total_amount - amount_paid) as total_debt
+          FROM inventory_sales
+          WHERE buyer_type = 'supplier'
+            AND buyer_account_id = [supplier_account_id]
+            AND payment_status != 'paid'
+          ```
+       3. **Deduct debt from gross amount**: `net_amount = gross_amount - total_deductions - inventory_debt`
+       4. Create `PayrollDeduction` record for inventory debt (type: 'inventory_debt')
+   - **Debt Visibility** (must be clear):
+     - Payroll calculation screen: Show "Inventory Debt" as a deduction line item
+     - Supplier payroll details: Show outstanding inventory debt
+     - Inventory sale details: Show if sale is on debt and linked to supplier
+     - Supplier details screen: Show total outstanding inventory debt
+   - **Debt Payment**:
+     - When payroll is paid: Mark inventory sales as paid (if debt <= payroll amount)
+     - If debt > payroll amount: Partially pay debt, remaining debt stays
+     - Clear debt when `amount_paid` is updated to match `total_amount`
 
 ## Backend Implementation
 
@@ -159,12 +201,64 @@ inventory_sales_created InventorySale[] @relation("InventorySaleCreatedBy")
 ### Service Method: `sellInventoryItem`
 1. Validate product exists and is listed in marketplace
 2. Validate stock availability
-3. Validate payment rules (other buyers must pay full amount)
-4. Create InventorySale record (order_id = null for manual sales)
-5. Reduce product stock_quantity
-6. Update product status if needed
-7. If amount_paid > 0, create finance transaction
-8. If buyer_type == 'other' and buyer_phone provided, optionally create customer
+3. **Validate payment rules**:
+   - If `buyer_type == 'supplier'`: Can be unpaid, partial, or paid (debt allowed)
+   - If `buyer_type == 'customer'` or `'other'`: `amount_paid` must equal `total_amount` (full payment required)
+4. **Validate buyer**:
+   - If `buyer_type == 'supplier'`: `buyer_account_id` is required (must be existing supplier)
+   - If `buyer_type == 'customer'`: `buyer_account_id` is optional (can be new customer)
+   - If `buyer_type == 'other'`: `buyer_account_id` is null (new client)
+5. Create InventorySale record (order_id = null for manual sales)
+6. Reduce product stock_quantity
+7. Update product status if needed
+8. If amount_paid > 0, create finance transaction
+9. If buyer_type == 'other' and buyer_phone provided, optionally create customer
+10. **If supplier debt created**: Log debt amount for payroll deduction
+
+### Payroll Service Update: `processPayroll`
+**Update existing payroll calculation to include inventory debt deduction:**
+
+1. For each supplier in payroll run:
+   - Calculate gross amount from milk sales (existing logic)
+   - **NEW**: Get total inventory debt:
+     ```typescript
+     const inventoryDebt = await this.prisma.inventorySale.aggregate({
+       where: {
+         buyer_type: 'supplier',
+         buyer_account_id: supplierAccountId,
+         payment_status: { not: 'paid' },
+       },
+       _sum: {
+         total_amount: true,
+         amount_paid: true,
+       },
+     });
+     const totalDebt = Number(inventoryDebt._sum.total_amount || 0) - Number(inventoryDebt._sum.amount_paid || 0);
+     ```
+   - **Deduct inventory debt from gross amount**:
+     ```typescript
+     const totalDeductions = existingDeductions + totalDebt;
+     const netAmount = grossAmount - totalDeductions;
+     ```
+   - **Create PayrollDeduction** for inventory debt:
+     ```typescript
+     if (totalDebt > 0) {
+       await this.prisma.payrollDeduction.create({
+         data: {
+           payslip_id: payslip.id,
+           deduction_type: 'inventory_debt',
+           amount: totalDebt,
+           description: `Inventory purchases on debt`,
+         },
+       });
+     }
+     ```
+2. **When payroll is marked as paid**:
+   - Update inventory sales payment status:
+     ```typescript
+     // Mark inventory sales as paid (up to payroll amount)
+     await this.updateInventorySalesPayment(payslip.supplier_account_id, payslip.net_amount);
+     ```
 
 ### Future: Service Method: `fulfillOrder` (for marketplace)
 1. Validate order exists and is in 'pending' or 'processing' status
@@ -175,6 +269,7 @@ inventory_sales_created InventorySale[] @relation("InventorySaleCreatedBy")
 3. Update Order status to 'processing' or 'shipped'
 4. If order was pre-paid, create finance transaction
 5. Unified stock and finance tracking with manual sales
+6. **Note**: Online orders typically require upfront payment, so debt tracking may not apply
 
 ## Mobile Implementation
 
