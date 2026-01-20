@@ -519,7 +519,6 @@ class _StockMovementDialogState extends ConsumerState<_StockMovementDialog> {
       ],
     );
   }
-}
 
   @override
   Widget build(BuildContext context) {
