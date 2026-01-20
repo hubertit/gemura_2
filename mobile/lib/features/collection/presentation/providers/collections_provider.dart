@@ -327,27 +327,12 @@ final collectionsByStatusProvider = Provider.family<List<Collection>, String>((r
   return notifier.getCollectionsByStatus(status);
 });
 
-final pendingCollectionsProvider = Provider<List<Collection>>((ref) {
-  // For testing purposes, return static pending collections directly
-  final now = DateTime.now();
-  return [
-    Collection(
-      id: 'pending_001',
-      supplierId: 'SUP001',
-      supplierName: 'Jean Baptiste',
-      supplierPhone: '+250 788 123 456',
-      quantity: 25.5,
-      pricePerLiter: 400.0,
-      totalValue: 10200.0,
-      status: 'pending',
-      rejectionReason: null,
-      quality: null,
-      notes: null,
-      collectionDate: now.subtract(const Duration(hours: 2)),
-      createdAt: now.subtract(const Duration(hours: 2)),
-      updatedAt: now.subtract(const Duration(hours: 2)),
-    ),
-  ];
+final pendingCollectionsProvider = FutureProvider<List<Collection>>((ref) async {
+  final collectionsService = ref.read(collectionsServiceProvider);
+  // Fetch pending collections from API
+  return await collectionsService.getFilteredCollections(
+    status: 'pending',
+  );
 });
 
 final searchCollectionsProvider = Provider.family<List<Collection>, String>((ref, query) {

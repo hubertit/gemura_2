@@ -26,6 +26,7 @@ import { ReferralsModule } from './modules/referrals/referrals.module';
 import { PointsModule } from './modules/points/points.module';
 import { OnboardModule } from './modules/onboard/onboard.module';
 import { MediaModule } from './modules/media/media.module';
+import { HealthModule } from './modules/health/health.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -65,6 +66,7 @@ import { AppController } from './app.controller';
     PointsModule,
     OnboardModule,
     MediaModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

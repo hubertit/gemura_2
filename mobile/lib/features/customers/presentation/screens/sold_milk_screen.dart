@@ -24,7 +24,7 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
   String _selectedStatus = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
-  RangeValues _quantityRange = const RangeValues(0, 5000);
+  RangeValues _quantityRange = const RangeValues(0, 200);
   RangeValues _priceRange = const RangeValues(0, 2000);
   
   // Store current API filters to avoid recreation
@@ -568,23 +568,29 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       RangeSlider(
-                        values: _quantityRange,
+                        values: RangeValues(
+                          _quantityRange.start.clamp(0.0, 200.0),
+                          _quantityRange.end.clamp(0.0, 200.0),
+                        ),
                         min: 0,
                         max: 200,
                         divisions: 40,
                         activeColor: AppTheme.primaryColor,
                         inactiveColor: AppTheme.primaryColor.withOpacity(0.3),
                         labels: RangeLabels(
-                          '${_quantityRange.start.toStringAsFixed(1)} L',
-                          '${_quantityRange.end.toStringAsFixed(1)} L',
+                          '${_quantityRange.start.clamp(0.0, 200.0).toStringAsFixed(1)} L',
+                          '${_quantityRange.end.clamp(0.0, 200.0).toStringAsFixed(1)} L',
                         ),
                         onChanged: (values) {
                           setState(() {
-                            _quantityRange = values;
+                            _quantityRange = RangeValues(
+                              values.start.clamp(0.0, 200.0),
+                              values.end.clamp(0.0, 200.0),
+                            );
                           });
                           // Update text controllers
-                          _minQuantityController.text = values.start.toStringAsFixed(1);
-                          _maxQuantityController.text = values.end.toStringAsFixed(1);
+                          _minQuantityController.text = _quantityRange.start.toStringAsFixed(1);
+                          _maxQuantityController.text = _quantityRange.end.toStringAsFixed(1);
                         },
                       ),
                       // Quantity input fields
@@ -606,10 +612,12 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                               ),
                               onChanged: (value) {
                                 final newValue = double.tryParse(value) ?? 0.0;
-                                if (newValue <= _quantityRange.end && newValue >= 0) {
+                                final clampedValue = newValue.clamp(0.0, 200.0);
+                                if (clampedValue <= _quantityRange.end && clampedValue >= 0) {
                                   setState(() {
-                                    _quantityRange = RangeValues(newValue, _quantityRange.end);
+                                    _quantityRange = RangeValues(clampedValue, _quantityRange.end);
                                   });
+                                  _minQuantityController.text = clampedValue.toStringAsFixed(1);
                                 }
                               },
                             ),
@@ -631,10 +639,12 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                               ),
                               onChanged: (value) {
                                 final newValue = double.tryParse(value) ?? 200.0;
-                                if (newValue >= _quantityRange.start && newValue <= 200) {
+                                final clampedValue = newValue.clamp(0.0, 200.0);
+                                if (clampedValue >= _quantityRange.start && clampedValue <= 200) {
                                   setState(() {
-                                    _quantityRange = RangeValues(_quantityRange.start, newValue);
+                                    _quantityRange = RangeValues(_quantityRange.start, clampedValue);
                                   });
+                                  _maxQuantityController.text = clampedValue.toStringAsFixed(1);
                                 }
                               },
                             ),
@@ -653,23 +663,29 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       RangeSlider(
-                        values: _priceRange,
+                        values: RangeValues(
+                          _priceRange.start.clamp(0.0, 2000.0),
+                          _priceRange.end.clamp(0.0, 2000.0),
+                        ),
                         min: 0,
                         max: 2000,
                         divisions: 40,
                         activeColor: AppTheme.primaryColor,
                         inactiveColor: AppTheme.primaryColor.withOpacity(0.3),
                         labels: RangeLabels(
-                          '${_priceRange.start.toStringAsFixed(0)} Frw',
-                          '${_priceRange.end.toStringAsFixed(0)} Frw',
+                          '${_priceRange.start.clamp(0.0, 2000.0).toStringAsFixed(0)} Frw',
+                          '${_priceRange.end.clamp(0.0, 2000.0).toStringAsFixed(0)} Frw',
                         ),
                         onChanged: (values) {
                           setState(() {
-                            _priceRange = values;
+                            _priceRange = RangeValues(
+                              values.start.clamp(0.0, 2000.0),
+                              values.end.clamp(0.0, 2000.0),
+                            );
                           });
                           // Update text controllers
-                          _minPriceController.text = values.start.toStringAsFixed(0);
-                          _maxPriceController.text = values.end.toStringAsFixed(0);
+                          _minPriceController.text = _priceRange.start.toStringAsFixed(0);
+                          _maxPriceController.text = _priceRange.end.toStringAsFixed(0);
                         },
                       ),
                       // Price input fields
@@ -691,10 +707,12 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                               ),
                               onChanged: (value) {
                                 final newValue = double.tryParse(value) ?? 0.0;
-                                if (newValue <= _priceRange.end && newValue >= 0) {
+                                final clampedValue = newValue.clamp(0.0, 2000.0);
+                                if (clampedValue <= _priceRange.end && clampedValue >= 0) {
                                   setState(() {
-                                    _priceRange = RangeValues(newValue, _priceRange.end);
+                                    _priceRange = RangeValues(clampedValue, _priceRange.end);
                                   });
+                                  _minPriceController.text = clampedValue.toStringAsFixed(0);
                                 }
                               },
                             ),
@@ -716,10 +734,12 @@ class _SoldMilkScreenState extends ConsumerState<SoldMilkScreen> {
                               ),
                               onChanged: (value) {
                                 final newValue = double.tryParse(value) ?? 2000.0;
-                                if (newValue >= _priceRange.start && newValue <= 2000) {
+                                final clampedValue = newValue.clamp(0.0, 2000.0);
+                                if (clampedValue >= _priceRange.start && clampedValue <= 2000) {
                                   setState(() {
-                                    _priceRange = RangeValues(_priceRange.start, newValue);
+                                    _priceRange = RangeValues(_priceRange.start, clampedValue);
                                   });
+                                  _maxPriceController.text = clampedValue.toStringAsFixed(0);
                                 }
                               },
                             ),

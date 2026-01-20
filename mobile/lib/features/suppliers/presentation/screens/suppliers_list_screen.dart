@@ -1041,17 +1041,23 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       RangeSlider(
-                        values: _priceRange,
+                        values: RangeValues(
+                          _priceRange.start.clamp(0.0, 2000.0),
+                          _priceRange.end.clamp(0.0, 2000.0),
+                        ),
                         min: 0,
                         max: 2000,
                         divisions: 20,
                         labels: RangeLabels(
-                          '${_priceRange.start.round()}',
-                          '${_priceRange.end.round()}',
+                          '${_priceRange.start.clamp(0.0, 2000.0).round()}',
+                          '${_priceRange.end.clamp(0.0, 2000.0).round()}',
                         ),
                         onChanged: (values) {
                           setState(() {
-                            _priceRange = values;
+                            _priceRange = RangeValues(
+                              values.start.clamp(0.0, 2000.0),
+                              values.end.clamp(0.0, 2000.0),
+                            );
                           });
                         },
                       ),
@@ -1085,17 +1091,23 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       RangeSlider(
-                        values: _supplyRange,
+                        values: RangeValues(
+                          _supplyRange.start.clamp(0.0, 500.0),
+                          _supplyRange.end.clamp(0.0, 500.0),
+                        ),
                         min: 0,
                         max: 500,
                         divisions: 25,
                         labels: RangeLabels(
-                          '${_supplyRange.start.round()}',
-                          '${_supplyRange.end.round()}',
+                          '${_supplyRange.start.clamp(0.0, 500.0).round()}',
+                          '${_supplyRange.end.clamp(0.0, 500.0).round()}',
                         ),
                         onChanged: (values) {
                           setState(() {
-                            _supplyRange = values;
+                            _supplyRange = RangeValues(
+                              values.start.clamp(0.0, 500.0),
+                              values.end.clamp(0.0, 500.0),
+                            );
                           });
                         },
                       ),

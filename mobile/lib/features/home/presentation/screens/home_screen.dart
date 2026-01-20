@@ -48,6 +48,7 @@ import '../../../market/presentation/screens/user_profile_screen.dart';
 import '../../../market/domain/models/product.dart';
 import '../../../market/domain/models/category.dart';
 import '../../../referrals/presentation/screens/referral_screen.dart';
+import '../../../payroll/presentation/screens/payroll_screen.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
@@ -1153,10 +1154,10 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                             icon: Icons.payments,
                             label: 'Payroll',
                             onTap: () {
-                              // TODO: Link to payroll screen later
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                AppTheme.neutralSnackBar(
-                                  message: 'Payroll feature coming soon',
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PayrollScreen(),
                                 ),
                               );
                             },
@@ -1533,7 +1534,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                               return Column(
                                 children: [
                                   SizedBox(
-                                    height: 200,
+                                    height: 280,
                                     width: double.infinity,
                                     child: dataList.isEmpty || total == 0
                                         ? Center(
@@ -1554,13 +1555,13 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                                               return '$percentage%';
                                             },
                                             configRenderPie: ConfigRenderPie(
-                                              arcWidth: 80, // Donut chart width
+                                              arcWidth: 60, // Donut chart width
                                               strokeWidthPx: 2,
                                               arcLabelDecorator: ArcLabelDecorator(
                                                 labelPosition: ArcLabelPosition.inside,
                                                 insideLabelStyle: const LabelStyle(
                                                   color: Colors.white,
-                                                  fontSize: 14,
+                                                  fontSize: 16,
                                                   fontWeight: FontWeight.w700,
                                                 ),
                                               ),

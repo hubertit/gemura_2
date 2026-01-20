@@ -26,7 +26,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
   String _selectedStatus = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
-  RangeValues _quantityRange = const RangeValues(0, 5000);
+  RangeValues _quantityRange = const RangeValues(0, 100);
   RangeValues _priceRange = const RangeValues(0, 1000);
   
   // Store current API filters to avoid recreation
@@ -395,8 +395,6 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
   }
 
   void _showFilterDialog() {
-    final suppliersAsync = ref.watch(suppliersNotifierProvider);
-    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -508,32 +506,72 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                         ),
                       ),
                       const SizedBox(height: AppTheme.spacing8),
-                      suppliersAsync.when(
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (error, stack) => Text('Error loading suppliers: $error'),
-                        data: (suppliers) => DropdownButtonFormField<String>(
-                          value: _selectedSupplier,
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final suppliersAsync = ref.watch(suppliersNotifierProvider);
+                          return suppliersAsync.when(
+                            loading: () => SizedBox(
+                              height: 48,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                                ),
+                              ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                          items: [
-                            'All',
-                            ...suppliers.map((supplier) => supplier.accountCode).toList(),
-                          ].map((supplierCode) {
-                            return DropdownMenuItem(
-                              value: supplierCode,
-                              child: Text(_getSupplierName(supplierCode, suppliers)),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedSupplier = value!;
-                            });
-                          },
-                        ),
+                            error: (error, stack) => Container(
+                              padding: const EdgeInsets.all(AppTheme.spacing8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.errorColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                                border: Border.all(color: AppTheme.errorColor.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline, color: AppTheme.errorColor, size: 16),
+                                  const SizedBox(width: AppTheme.spacing8),
+                                  Expanded(
+                                    child: Text(
+                                      'Error loading suppliers: ${error.toString()}',
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.errorColor,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      ref.read(suppliersNotifierProvider.notifier).refreshSuppliers();
+                                    },
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            data: (suppliers) => DropdownButtonFormField<String>(
+                              value: _selectedSupplier,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              items: [
+                                'All',
+                                ...suppliers.map((supplier) => supplier.accountCode).toList(),
+                              ].map((supplierCode) {
+                                return DropdownMenuItem(
+                                  value: supplierCode,
+                                  child: Text(_getSupplierName(supplierCode, suppliers)),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedSupplier = value!;
+                                });
+                              },
+                            ),
+                          );
+                        },
                       ),
 
 
@@ -631,17 +669,23 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       RangeSlider(
-                        values: _quantityRange,
+                        values: RangeValues(
+                          _quantityRange.start.clamp(0.0, 100.0),
+                          _quantityRange.end.clamp(0.0, 100.0),
+                        ),
                         min: 0,
                         max: 100,
                         divisions: 20,
                         labels: RangeLabels(
-                          '${_quantityRange.start.round()} L',
-                          '${_quantityRange.end.round()} L',
+                          '${_quantityRange.start.clamp(0.0, 100.0).round()} L',
+                          '${_quantityRange.end.clamp(0.0, 100.0).round()} L',
                         ),
                         onChanged: (values) {
                           setState(() {
-                            _quantityRange = values;
+                            _quantityRange = RangeValues(
+                              values.start.clamp(0.0, 100.0),
+                              values.end.clamp(0.0, 100.0),
+                            );
                           });
                         },
                       ),
@@ -657,17 +701,23 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing8),
                       RangeSlider(
-                        values: _priceRange,
+                        values: RangeValues(
+                          _priceRange.start.clamp(0.0, 1000.0),
+                          _priceRange.end.clamp(0.0, 1000.0),
+                        ),
                         min: 0,
                         max: 1000,
                         divisions: 20,
                         labels: RangeLabels(
-                          '${_priceRange.start.round()} Frw',
-                          '${_priceRange.end.round()} Frw',
+                          '${_priceRange.start.clamp(0.0, 1000.0).round()} Frw',
+                          '${_priceRange.end.clamp(0.0, 1000.0).round()} Frw',
                         ),
                         onChanged: (values) {
                           setState(() {
-                            _priceRange = values;
+                            _priceRange = RangeValues(
+                              values.start.clamp(0.0, 1000.0),
+                              values.end.clamp(0.0, 1000.0),
+                            );
                           });
                         },
                       ),
@@ -1085,8 +1135,8 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                             _selectedStatus = 'All';
                             _startDate = null;
                             _endDate = null;
-                            _quantityRange = const RangeValues(0, 200);
-                            _priceRange = const RangeValues(0, 2000);
+                            _quantityRange = const RangeValues(0, 100);
+                            _priceRange = const RangeValues(0, 1000);
                             _currentApiFilters = null;
                           });
                         },

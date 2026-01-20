@@ -466,78 +466,115 @@ export class CollectionsService {
       });
     }
 
-    const customerAccountId = user.default_account_id;
-
-    // Check if collection exists and belongs to customer
-    const collection = await this.prisma.milkSale.findFirst({
-      where: {
-        id: updateDto.collection_id,
-        customer_account_id: customerAccountId,
-        status: { not: 'deleted' },
-      },
-    });
-
-    if (!collection) {
-      throw new NotFoundException({
-        code: 404,
-        status: 'error',
-        message: 'Collection not found or not authorized.',
-      });
-    }
-
-    // Build update data
-    const updateData: any = {
-      updated_by: user.id,
-    };
-
-    if (updateDto.quantity !== undefined) {
-      updateData.quantity = updateDto.quantity;
-    }
-
-    if (updateDto.status) {
-      updateData.status = updateDto.status as any;
-    }
-
-    if (updateDto.collection_at) {
-      updateData.sale_at = new Date(updateDto.collection_at);
-    }
-
-    if (updateDto.notes !== undefined) {
-      updateData.notes = updateDto.notes;
-    }
-
-    if (Object.keys(updateData).length === 1) {
-      // Only updated_by, no actual fields to update
+    // Validate collection_id is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(updateDto.collection_id)) {
       throw new BadRequestException({
         code: 400,
         status: 'error',
-        message: 'No fields to update.',
+        message: 'Invalid collection ID format. Collection ID must be a valid UUID.',
       });
     }
 
-    const updatedCollection = await this.prisma.milkSale.update({
-      where: { id: updateDto.collection_id },
-      data: updateData,
-      include: {
-        supplier_account: true,
-        customer_account: true,
-      },
-    });
+    const customerAccountId = user.default_account_id;
 
-    return {
-      code: 200,
-      status: 'success',
-      message: 'Collection updated successfully.',
-      data: {
-        id: updatedCollection.id,
-        quantity: Number(updatedCollection.quantity),
-        unit_price: Number(updatedCollection.unit_price),
-        total_amount: Number(updatedCollection.quantity) * Number(updatedCollection.unit_price),
-        status: updatedCollection.status,
-        collection_at: updatedCollection.sale_at,
-        notes: updatedCollection.notes,
-      },
-    };
+    try {
+      // Check if collection exists and belongs to customer
+      const collection = await this.prisma.milkSale.findFirst({
+        where: {
+          id: updateDto.collection_id,
+          customer_account_id: customerAccountId,
+          status: { not: 'deleted' },
+        },
+      });
+
+      if (!collection) {
+        throw new NotFoundException({
+          code: 404,
+          status: 'error',
+          message: 'Collection not found or not authorized.',
+        });
+      }
+
+      // Build update data
+      const updateData: any = {
+        updated_by: user.id,
+      };
+
+      if (updateDto.quantity !== undefined) {
+        updateData.quantity = updateDto.quantity;
+      }
+
+      if (updateDto.status) {
+        // Validate status is a valid enum value
+        const validStatuses = ['pending', 'accepted', 'rejected', 'cancelled'];
+        if (!validStatuses.includes(updateDto.status as string)) {
+          throw new BadRequestException({
+            code: 400,
+            status: 'error',
+            message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+          });
+        }
+        updateData.status = updateDto.status as any;
+      }
+
+      if (updateDto.collection_at) {
+        updateData.sale_at = new Date(updateDto.collection_at);
+      }
+
+      if (updateDto.notes !== undefined) {
+        updateData.notes = updateDto.notes;
+      }
+
+      if (Object.keys(updateData).length === 1) {
+        // Only updated_by, no actual fields to update
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No fields to update.',
+        });
+      }
+
+      const updatedCollection = await this.prisma.milkSale.update({
+        where: { id: updateDto.collection_id },
+        data: updateData,
+        include: {
+          supplier_account: true,
+          customer_account: true,
+        },
+      });
+
+      return {
+        code: 200,
+        status: 'success',
+        message: 'Collection updated successfully.',
+        data: {
+          id: updatedCollection.id,
+          quantity: Number(updatedCollection.quantity),
+          unit_price: Number(updatedCollection.unit_price),
+          total_amount: Number(updatedCollection.quantity) * Number(updatedCollection.unit_price),
+          status: updatedCollection.status,
+          collection_at: updatedCollection.sale_at,
+          notes: updatedCollection.notes,
+        },
+      };
+    } catch (error) {
+      // If it's already a known exception, rethrow it
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+
+      // Log the error for debugging
+      console.error('Error updating collection:', error);
+
+      // Return a proper error response
+      throw new InternalServerErrorException({
+        code: 500,
+        status: 'error',
+        message: 'Failed to update collection.',
+        error: error.message || 'Unknown error occurred',
+      });
+    }
   }
 
   async cancelCollection(user: User, cancelDto: CancelCollectionDto) {

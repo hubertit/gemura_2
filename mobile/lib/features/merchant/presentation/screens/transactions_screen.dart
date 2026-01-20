@@ -609,7 +609,10 @@ class _FilterSheetState extends State<_FilterSheet> {
             child: Column(
               children: [
                 RangeSlider(
-                  values: _amountRange,
+                  values: RangeValues(
+                    _amountRange.start.clamp(0.0, 200000.0),
+                    _amountRange.end.clamp(0.0, 200000.0),
+                  ),
                   min: 0,
                   max: 200000,
                   divisions: 20,
@@ -617,7 +620,10 @@ class _FilterSheetState extends State<_FilterSheet> {
                   inactiveColor: AppTheme.thinBorderColor,
                   onChanged: (values) {
                     setState(() {
-                      _amountRange = values;
+                      _amountRange = RangeValues(
+                        values.start.clamp(0.0, 200000.0),
+                        values.end.clamp(0.0, 200000.0),
+                      );
                     });
                   },
                 ),

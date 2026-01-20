@@ -16,7 +16,7 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
 
   @override
   Widget build(BuildContext context) {
-    final pendingCollections = ref.watch(pendingCollectionsProvider);
+    final pendingCollectionsAsync = ref.watch(pendingCollectionsProvider);
     final collectionsNotifier = ref.watch(collectionsNotifierProvider.notifier);
 
     return Scaffold(
@@ -31,15 +31,47 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              collectionsNotifier.refreshCollections();
+              ref.invalidate(pendingCollectionsProvider);
             },
             tooltip: 'Refresh',
           ),
         ],
       ),
-      body: pendingCollections.isEmpty
-          ? _buildEmptyState()
-          : _buildCollectionsList(pendingCollections, collectionsNotifier),
+      body: pendingCollectionsAsync.when(
+        data: (pendingCollections) {
+          if (pendingCollections.isEmpty) {
+            return _buildEmptyState();
+          }
+          return _buildCollectionsList(pendingCollections, collectionsNotifier);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+              const SizedBox(height: AppTheme.spacing16),
+              Text(
+                'Failed to load pending collections',
+                style: AppTheme.titleMedium.copyWith(color: AppTheme.errorColor),
+              ),
+              const SizedBox(height: AppTheme.spacing8),
+              Text(
+                error.toString(),
+                style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(pendingCollectionsProvider);
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -404,6 +436,8 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
             backgroundColor: AppTheme.snackbarSuccessColor,
           ),
         );
+        // Refresh pending collections
+        ref.invalidate(pendingCollectionsProvider);
       }
     } catch (error) {
       if (mounted) {
@@ -432,6 +466,8 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
             backgroundColor: AppTheme.snackbarSuccessColor,
           ),
         );
+        // Refresh pending collections
+        ref.invalidate(pendingCollectionsProvider);
       }
     } catch (error) {
       if (mounted) {

@@ -42,11 +42,7 @@ class CollectionsService {
           // Convert API data to collections
           final apiCollections = collectionsData.map((json) => Collection.fromApiResponse(json)).toList();
           
-          // Add static pending collections for testing
-          final staticPendingCollections = _getStaticPendingCollections();
-          
-          // Combine API collections with static pending collections
-          return [...apiCollections, ...staticPendingCollections];
+          return apiCollections;
         } else {
           throw Exception(data['message'] ?? 'Failed to get collections');
         }
@@ -61,7 +57,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Collections service not found.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -79,29 +77,6 @@ class CollectionsService {
     }
   }
 
-  /// Get static pending collections for testing
-  List<Collection> _getStaticPendingCollections() {
-    final now = DateTime.now();
-    return [
-      Collection(
-        id: 'pending_001',
-        supplierId: 'SUP001',
-        supplierName: 'Jean Baptiste',
-        supplierPhone: '+250 788 123 456',
-        quantity: 25.5,
-        pricePerLiter: 400.0,
-        totalValue: 10200.0,
-        status: 'pending',
-        rejectionReason: null,
-        quality: null,
-        notes: null,
-        collectionDate: now.subtract(const Duration(hours: 2)),
-        createdAt: now.subtract(const Duration(hours: 2)),
-        updatedAt: now.subtract(const Duration(hours: 2)),
-      ),
-    ];
-  }
-
   /// Get filtered collections for the authenticated user
   Future<List<Collection>> getFilteredCollections({
     String? supplierAccountCode,
@@ -116,46 +91,43 @@ class CollectionsService {
     int? offset,
   }) async {
     try {
-      // Collections are milk sales from supplier perspective
-      // Use sales endpoint with filters
-      final Map<String, dynamic> filters = {};
+      // Use collections endpoint with query parameters
+      final Map<String, dynamic> queryParams = {};
 
       if (supplierAccountCode != null && supplierAccountCode.isNotEmpty) {
-        filters['supplier_account_code'] = supplierAccountCode;
+        queryParams['supplier_account_code'] = supplierAccountCode;
       }
       if (status != null && status.isNotEmpty && status != 'All') {
-        filters['status'] = status;
+        queryParams['status'] = status;
       }
       if (dateFrom != null) {
-        filters['date_from'] = dateFrom.toIso8601String().split('T')[0];
+        queryParams['date_from'] = dateFrom.toIso8601String().split('T')[0];
       }
       if (dateTo != null) {
-        filters['date_to'] = dateTo.toIso8601String().split('T')[0];
+        queryParams['date_to'] = dateTo.toIso8601String().split('T')[0];
       }
       if (quantityMin != null) {
-        filters['quantity_min'] = quantityMin;
+        queryParams['quantity_min'] = quantityMin;
       }
       if (quantityMax != null) {
-        filters['quantity_max'] = quantityMax;
+        queryParams['quantity_max'] = quantityMax;
       }
       if (priceMin != null) {
-        filters['price_min'] = priceMin;
+        queryParams['price_min'] = priceMin;
       }
       if (priceMax != null) {
-        filters['price_max'] = priceMax;
+        queryParams['price_max'] = priceMax;
       }
       if (limit != null) {
-        filters['limit'] = limit;
+        queryParams['limit'] = limit;
       }
       if (offset != null) {
-        filters['offset'] = offset;
+        queryParams['offset'] = offset;
       }
 
-      final response = await _dio.post(
-        '/sales/sales',
-        data: {
-          'filters': filters,
-        },
+      final response = await _dio.get(
+        '/collections',
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -190,7 +162,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 400) {
         errorMessage = 'Invalid filter parameters. Please check your input.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -249,7 +223,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 400) {
         errorMessage = 'Invalid collection data. Please check your input.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -314,7 +290,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 400) {
         errorMessage = 'Invalid update data. Please check your input.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -364,7 +342,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 400) {
         errorMessage = 'Invalid request. Please check your input.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -414,7 +394,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Collection not found.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -468,7 +450,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 400) {
         errorMessage = 'Invalid request. Collection may not be in pending status.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -523,7 +507,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 400) {
         errorMessage = 'Invalid request. Collection may not be in pending status.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
@@ -569,7 +555,9 @@ class CollectionsService {
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Rejection reasons service not found.';
       } else if (e.response?.statusCode == 500) {
-        errorMessage = 'Server error. Please try again later.';
+        // Try to get the actual error message from backend
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||
                  e.type == DioExceptionType.receiveTimeout ||
                  e.type == DioExceptionType.sendTimeout) {
