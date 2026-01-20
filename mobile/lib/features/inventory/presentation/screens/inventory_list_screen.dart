@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -140,6 +141,204 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     }
   }
 
+  void _showStockMovementDialog(
+      BuildContext context, Map<String, dynamic> item) {
+    final currentStock = item['stock_quantity'] ?? 0;
+    final itemName = item['name'] ?? 'Item';
+    final stockController = TextEditingController(text: currentStock.toString());
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => _StockMovementDialog(
+        itemName: itemName,
+        currentStock: currentStock,
+        itemId: item['id'],
+        stockController: stockController,
+        formKey: formKey,
+        ref: ref,
+        onSuccess: () {
+          // Refresh inventory data
+          final filters = InventoryFilters(
+            status: _selectedStatus,
+            lowStock: _showLowStock ? true : null,
+          );
+          // ignore: unused_result
+          ref.refresh(inventoryProvider(filters));
+          // ignore: unused_result
+          ref.refresh(inventoryStatsProvider);
+        },
+      ),
+    );
+  }
+}
+
+class _StockMovementDialog extends ConsumerStatefulWidget {
+  final String itemName;
+  final int currentStock;
+  final String itemId;
+  final TextEditingController stockController;
+  final GlobalKey<FormState> formKey;
+
+  const _StockMovementDialog({
+    required this.itemName,
+    required this.currentStock,
+    required this.itemId,
+    required this.stockController,
+    required this.formKey,
+    required this.onSuccess,
+  });
+
+  final VoidCallback onSuccess;
+
+  @override
+  ConsumerState<_StockMovementDialog> createState() =>
+      _StockMovementDialogState();
+}
+
+class _StockMovementDialogState extends ConsumerState<_StockMovementDialog> {
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    widget.stockController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateStock() async {
+    if (widget.formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      try {
+        final newStock = int.parse(widget.stockController.text);
+        final inventoryService = ref.read(inventoryServiceProvider);
+        await inventoryService.updateStock(
+          id: widget.itemId,
+          stockQuantity: newStock,
+        );
+
+        if (mounted) {
+          widget.onSuccess();
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            AppTheme.successSnackBar(
+              message: 'Stock updated successfully',
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            AppTheme.errorSnackBar(
+              message: 'Error: ${e.toString()}',
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+          backgroundColor: AppTheme.surfaceColor,
+          title: Text(
+            'Adjust Stock',
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textPrimaryColor,
+            ),
+          ),
+      backgroundColor: AppTheme.surfaceColor,
+      title: Text(
+        'Adjust Stock',
+        style: AppTheme.titleMedium.copyWith(
+          color: AppTheme.textPrimaryColor,
+        ),
+      ),
+      content: Form(
+        key: widget.formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.itemName,
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              'Current Stock: ${widget.currentStock}',
+              style: AppTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            TextFormField(
+              controller: widget.stockController,
+              decoration: const InputDecoration(
+                labelText: 'New Stock Quantity *',
+                hintText: 'Enter new quantity',
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              autofocus: true,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Stock quantity is required';
+                }
+                final quantity = int.tryParse(value);
+                if (quantity == null || quantity < 0) {
+                  return 'Please enter a valid quantity';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSubmitting
+              ? null
+              : () => Navigator.of(context).pop(),
+          child: Text(
+            'Cancel',
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.textSecondaryColor,
+            ),
+          ),
+        ),
+        ElevatedButton(
+          onPressed: _isSubmitting ? null : _updateStock,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primaryColor,
+            foregroundColor: AppTheme.surfaceColor,
+          ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text('Update'),
+        ),
+      ],
+    );
+  }
+
   void _showInventoryItemBottomSheet(
       BuildContext context, Map<String, dynamic> item) {
     final status = item['status']?.toString() ?? 'unknown';
@@ -216,84 +415,113 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
             ),
         ],
         actions: [
-          // Edit Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddEditInventoryScreen(item: item),
+          // Compact button grid
+          Row(
+            children: [
+              // Edit Button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddEditInventoryScreen(item: item),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('Edit'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: AppTheme.surfaceColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.edit, size: 20),
-              label: const Text('Edit Item'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: AppTheme.surfaceColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing24,
-                  vertical: AppTheme.spacing16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
                 ),
               ),
-            ),
+              const SizedBox(width: AppTheme.spacing8),
+              // Stock Button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showStockMovementDialog(context, item);
+                  },
+                  icon: const Icon(Icons.inventory, size: 18),
+                  label: const Text('Stock'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryColor,
+                    side: BorderSide(color: AppTheme.primaryColor, width: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppTheme.spacing12),
-          // Toggle Marketplace Listing Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _toggleMarketplaceListing(item['id'], isListed);
-              },
-              icon: Icon(
-                isListed ? Icons.visibility_off : Icons.visibility,
-                size: 20,
-              ),
-              label: Text(isListed ? 'Remove from Marketplace' : 'List in Marketplace'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.infoColor,
-                side: BorderSide(color: AppTheme.infoColor, width: 1),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing24,
-                  vertical: AppTheme.spacing16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          // Delete Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteItem(item['id']);
-              },
-              icon: const Icon(Icons.delete, size: 20),
-              label: const Text('Delete Item'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.errorColor,
-                side: BorderSide(color: AppTheme.errorColor, width: 1),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing24,
-                  vertical: AppTheme.spacing16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+          const SizedBox(height: AppTheme.spacing8),
+          Row(
+            children: [
+              // List/Unlist Button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _toggleMarketplaceListing(item['id'], isListed);
+                  },
+                  icon: Icon(
+                    isListed ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                  ),
+                  label: Text(isListed ? 'Unlist' : 'List'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.infoColor,
+                    side: BorderSide(color: AppTheme.infoColor, width: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: AppTheme.spacing8),
+              // Delete Button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _deleteItem(item['id']);
+                  },
+                  icon: const Icon(Icons.delete, size: 18),
+                  label: const Text('Delete'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.errorColor,
+                    side: BorderSide(color: AppTheme.errorColor, width: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
