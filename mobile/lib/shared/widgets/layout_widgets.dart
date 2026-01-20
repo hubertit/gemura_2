@@ -52,7 +52,7 @@ class DetailsActionSheet extends StatelessWidget {
               const SizedBox(height: 16),
             ],
             // Details with dotted separators - make scrollable
-            Expanded(
+            Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -63,14 +63,14 @@ class DetailsActionSheet extends StatelessWidget {
             
             // Action buttons
             if (actions != null && actions!.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: actions!,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
             ],
           ],
         ),
