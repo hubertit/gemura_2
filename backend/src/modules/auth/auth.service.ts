@@ -1,5 +1,7 @@
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SmsService } from '../../common/services/sms.service';
+import { EmailService } from '../../common/services/email.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto, LoginResponseDataDto } from './dto/auth-response.dto';
@@ -10,7 +12,11 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private smsService: SmsService,
+    private emailService: EmailService,
+  ) {}
 
   async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string): Promise<AuthResponseDto> {
     const { identifier, password } = loginDto;
@@ -533,9 +539,18 @@ export class AuthService {
       },
     });
 
-    // TODO: Send SMS/Email with reset code
-    const smsSent = false;
-    const emailSent = false;
+    // Send SMS if phone is available
+    let smsSent = false;
+    if (user.phone) {
+      const smsMessage = `Kode yanyu yo guhindura ijambo banga: ${resetCode}\n\nIyi kode irarangira mu minota 15.`;
+      smsSent = await this.smsService.sendSMS(user.phone, smsMessage);
+    }
+
+    // Send email if email is available
+    let emailSent = false;
+    if (user.email) {
+      emailSent = await this.emailService.sendPasswordResetCode(user.email, resetCode);
+    }
 
     return {
       code: 200,

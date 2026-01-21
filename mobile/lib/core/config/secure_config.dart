@@ -78,7 +78,7 @@ class SecureConfig {
     
     // Production API fallback
     // For local development, set API_BASE_URL in .env file
-    _apiBaseUrl ??= 'http://localhost:3004/api';
+    _apiBaseUrl ??= 'http://159.198.65.38:3004/api';
     return _apiBaseUrl!;
   }
 
