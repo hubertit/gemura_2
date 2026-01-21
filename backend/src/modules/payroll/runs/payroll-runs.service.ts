@@ -409,6 +409,8 @@ export class PayrollRunsService {
       const supplierPaymentTerms = payrollSupplier.payment_terms_days || paymentTermsDays;
 
       // Get milk sales for this supplier
+      // Exclude deleted sales, but include pending, accepted, rejected, and cancelled
+      // (rejected and cancelled might need to be reviewed, but we include them for now)
       console.log(`Querying milk sales for supplier ${payrollSupplier.supplier_account_id}, customer ${user.default_account_id}, dates ${startDate.toISOString()} to ${endDate.toISOString()}`);
       const milkSales = await this.prisma.milkSale.findMany({
         where: {
@@ -417,6 +419,9 @@ export class PayrollRunsService {
           sale_at: {
             gte: startDate,
             lte: endDate,
+          },
+          status: {
+            not: 'deleted', // Exclude deleted sales, include all others
           },
         },
         orderBy: {

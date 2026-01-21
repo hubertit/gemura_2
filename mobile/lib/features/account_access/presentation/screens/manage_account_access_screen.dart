@@ -91,6 +91,35 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
   }
 
   Widget _buildUsersList(List<Employee> employees) {
+    if (employees.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: AppTheme.textSecondaryColor.withOpacity(0.5),
+            ),
+            const SizedBox(height: AppTheme.spacing16),
+            Text(
+              'No employees found',
+              style: AppTheme.titleMedium.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            Text(
+              'Tap the + icon to add an employee',
+              style: AppTheme.bodySmall.copyWith(
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
     return ListView.builder(
       padding: const EdgeInsets.all(AppTheme.spacing16),
       itemCount: employees.length,
@@ -117,7 +146,7 @@ class _ManageAccountAccessScreenState extends ConsumerState<ManageAccountAccessS
                   CircleAvatar(
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
               child: Text(
-                      employee.name.substring(0, 1).toUpperCase(),
+                      employee.name.isNotEmpty ? employee.name[0].toUpperCase() : 'E',
                 style: TextStyle(
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.bold,

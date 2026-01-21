@@ -404,16 +404,18 @@ export class CollectionsController {
           quantity: 120.5,
           unit_price: 390.0,
           total_amount: 46995.0,
-          status: 'pending',
+          status: 'accepted',
           collection_at: '2025-01-04T10:00:00Z',
           notes: 'Morning collection',
           supplier_account: {
+            id: 'supplier-account-uuid',
             code: 'A_ABC123',
             name: 'Supplier Name',
             type: 'tenant',
             status: 'active',
           },
           customer_account: {
+            id: 'customer-account-uuid',
             code: 'A_XYZ789',
             name: 'Customer Name',
             type: 'tenant',
@@ -451,22 +453,30 @@ export class CollectionsController {
     type: CreateCollectionDto,
     description: 'Milk collection details',
     examples: {
-      pendingCollection: {
-        summary: 'Record pending collection',
+      createCollection: {
+        summary: 'Record collection (defaults to accepted)',
         value: {
           supplier_account_code: 'A_ABC123',
           quantity: 120.5,
-          status: 'pending',
           collection_at: '2025-01-04 10:00:00',
           notes: 'Morning collection',
         },
       },
-      completedCollection: {
-        summary: 'Record completed collection',
+      createCollectionWithStatus: {
+        summary: 'Record collection with explicit status',
+        value: {
+          supplier_account_code: 'A_ABC123',
+          quantity: 120.5,
+          status: 'accepted',
+          collection_at: '2025-01-04 10:00:00',
+          notes: 'Morning collection',
+        },
+      },
+      minimalCollection: {
+        summary: 'Record collection with minimal info',
         value: {
           supplier_account_code: 'A_XYZ789',
           quantity: 85.0,
-          status: 'completed',
           collection_at: '2025-01-04 14:30:00',
         },
       },
@@ -486,8 +496,9 @@ export class CollectionsController {
         quantity: 120.5,
         unit_price: 390.0,
         total_amount: 46995.0,
-        status: 'pending',
+        status: 'accepted',
         collection_at: '2025-01-04 10:00:00',
+        payment_status: 'unpaid',
       },
     },
   })
@@ -532,6 +543,53 @@ export class CollectionsController {
     return this.collectionsService.createCollection(user, createDto);
   }
 
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Delete collection (soft delete)',
+    description: 'Soft delete a milk collection by setting status to deleted. This preserves the record for historical purposes. Only collections belonging to the user\'s default account can be deleted.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Collection ID (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Collection deleted successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Collection deleted successfully.',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid collection ID format',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Invalid collection ID format.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Unauthorized. Invalid token.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Collection not found or not authorized',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Collection not found or not authorized.',
+    },
+  })
+  async deleteCollection(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.collectionsService.deleteCollection(user, id);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get collection details',
@@ -554,16 +612,18 @@ export class CollectionsController {
         quantity: 120.5,
         unit_price: 390.0,
         total_amount: 46995.0,
-        status: 'pending',
+        status: 'accepted',
         collection_at: '2025-01-04T10:00:00Z',
         notes: 'Morning collection',
         supplier_account: {
+          id: 'supplier-account-uuid',
           code: 'A_ABC123',
           name: 'Supplier Name',
           type: 'tenant',
           status: 'active',
         },
         customer_account: {
+          id: 'customer-account-uuid',
           code: 'A_XYZ789',
           name: 'Customer Name',
           type: 'tenant',

@@ -1382,7 +1382,17 @@ class _WalletCardState extends State<WalletCard> {
           ],
         ),
         const SizedBox(height: AppTheme.spacing8),
-        Text('Balance',
+        // Show "Net Profit" for default wallet when balance is from finance module
+        // We detect this by checking if balance is not one of the mock values
+        // and if it's the default wallet (which gets updated with net profit on home screen)
+        Text(
+            widget.wallet.isDefault && 
+            widget.wallet.balance != 250000.0 && 
+            widget.wallet.balance != 350000.0 &&
+            widget.wallet.balance != 1200000.0 &&
+            widget.wallet.balance != 0.0
+                ? 'Net Profit'
+                : 'Balance',
             style: AppTheme.bodySmall
                 .copyWith(color: getTextColor().withOpacity(0.85))),
         Row(
@@ -1508,7 +1518,15 @@ class _WalletCardState extends State<WalletCard> {
           ],
         ),
         const SizedBox(height: AppTheme.spacing8),
-        Text('Balance',
+        // Show "Net Profit" for default wallet when balance is from finance module
+        Text(
+            widget.wallet.isDefault && 
+            widget.wallet.balance != 250000.0 && 
+            widget.wallet.balance != 350000.0 &&
+            widget.wallet.balance != 1200000.0 &&
+            widget.wallet.balance != 0.0
+                ? 'Net Profit'
+                : 'Balance',
             style: AppTheme.bodySmall
                 .copyWith(color: getTextColor().withOpacity(0.85))),
         Row(

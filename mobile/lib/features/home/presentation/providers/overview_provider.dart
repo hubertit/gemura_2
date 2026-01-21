@@ -9,13 +9,12 @@ final overviewServiceProvider = Provider<OverviewService>((ref) {
 final overviewProvider = FutureProvider<Overview>((ref) async {
   final overviewService = ref.read(overviewServiceProvider);
   
-  // Get data for current year only
-  final String dateFrom = '${DateTime.now().year}-01-01';
-  final String dateTo = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+  // Get all-time data (no date filter)
+  // Backend returns all data by default when no date filters are provided
   
   return await overviewService.getOverview(
-    dateFrom: dateFrom,
-    dateTo: dateTo,
+    dateFrom: null,
+    dateTo: null,
   );
 });
 
@@ -43,13 +42,12 @@ class OverviewNotifier extends StateNotifier<AsyncValue<Overview>> {
     try {
       state = const AsyncValue.loading();
       
-      // Get data for current year only
-      final String dateFrom = '${DateTime.now().year}-01-01';
-      final String dateTo = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+      // Get all-time data (no date filter)
+      // Backend returns all data by default when no date filters are provided
       
       final overview = await _overviewService.getOverview(
-        dateFrom: dateFrom,
-        dateTo: dateTo,
+        dateFrom: null,
+        dateTo: null,
       );
       state = AsyncValue.data(overview);
     } catch (error, stackTrace) {

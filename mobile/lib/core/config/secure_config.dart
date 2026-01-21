@@ -76,6 +76,8 @@ class SecureConfig {
       _apiBaseUrl = dotenv.env['API_BASE_URL'];
     }
     
+    // Production API fallback
+    // For local development, set API_BASE_URL in .env file
     _apiBaseUrl ??= 'http://localhost:3004/api';
     return _apiBaseUrl!;
   }

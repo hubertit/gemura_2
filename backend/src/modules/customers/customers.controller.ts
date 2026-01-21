@@ -129,9 +129,81 @@ export class CustomersController {
     return this.customersService.getAllCustomers(user);
   }
 
+  @Get('by-id/:id')
+  @ApiOperation({
+    summary: 'Get customer details by ID',
+    description: 'Retrieve details of a specific customer by account ID (UUID). Returns customer information and relationship details.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Customer account ID (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Customer fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Customer fetched successfully.',
+      data: {
+        customer: {
+          account_id: 'account-uuid',
+          account_code: 'A_XYZ789',
+          name: 'John Doe',
+          type: 'tenant',
+          status: 'active',
+          user: {
+            id: 'user-uuid',
+            name: 'John Doe',
+            phone: '250788123456',
+            email: 'customer@example.com',
+            nid: '1199887766554433',
+            address: 'Kigali, Rwanda',
+            account_type: 'customer',
+          },
+          relationship: {
+            price_per_liter: 400.0,
+            average_supply_quantity: 120.5,
+            relationship_status: 'active',
+            created_at: '2025-01-04T10:00:00Z',
+            updated_at: '2025-01-04T10:00:00Z',
+          },
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Unauthorized. Invalid token.',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Invalid customer account ID format. Must be a valid UUID.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Customer account not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Customer account not found.',
+    },
+  })
+  async getCustomerById(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.customersService.getCustomerById(user, id);
+  }
+
   @Get(':code')
   @ApiOperation({
-    summary: 'Get customer details',
+    summary: 'Get customer details by code',
     description: 'Retrieve details of a specific customer by account code. Returns customer information and relationship details.',
   })
   @ApiParam({

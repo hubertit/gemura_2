@@ -56,6 +56,7 @@ class Sale {
 
 @JsonSerializable(includeIfNull: false)
 class SaleAccount {
+  final String? id; // UUID for account
   final String? code;
   final String? name;
   final String? type;
@@ -63,6 +64,7 @@ class SaleAccount {
   final String? currency;
 
   SaleAccount({
+    this.id,
     this.code,
     this.name,
     this.type,

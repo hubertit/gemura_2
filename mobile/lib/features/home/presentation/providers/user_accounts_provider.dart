@@ -66,10 +66,15 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
       if (response.code == 200) {
         print('✅ Account switch API successful');
         
-        // Use accounts from response if available (backend now returns them)
-        if (response.data.accounts.isNotEmpty) {
-          print('📋 Using accounts from switch response (${response.data.accounts.length} accounts)');
-          // Update state with accounts from response - create UserAccountsResponse from switch response
+        // Always refetch accounts to ensure we have the latest list (including any newly added accounts)
+        // This ensures accounts like Gahengeri appear if they were recently added
+        print('🔄 Refetching accounts list to ensure it is up to date');
+        await fetchUserAccounts();
+        _ref.invalidate(userAccountsProvider);
+        
+        // Use accounts from switch response as fallback if fetch fails
+        if (response.data.accounts.isNotEmpty && state.value == null) {
+          print('📋 Using accounts from switch response as fallback (${response.data.accounts.length} accounts)');
           final userInfo = UserInfo(
             id: response.data.user['id'] as String,
             name: response.data.user['name'] as String,
@@ -89,13 +94,7 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
             data: accountsData,
           );
           state = AsyncValue.data(accountsResponse);
-          _ref.invalidate(userAccountsProvider);
-          print('✅ Updated state with accounts from switch response');
-        } else {
-          // Fallback: fetch accounts if response doesn't include them
-          print('🔄 Fetching accounts (not in response)');
-          await fetchUserAccounts();
-          _ref.invalidate(userAccountsProvider);
+          print('✅ Updated state with accounts from switch response (fallback)');
         }
         
         // Refresh profile to get updated user data with new account context
@@ -124,6 +123,8 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
         }
         
         // Refresh overview/stats data
+        // Add delay to ensure backend has updated default_account_id
+        await Future.delayed(const Duration(milliseconds: 300));
         try {
           await _ref.read(overviewNotifierProvider.notifier).refreshOverview();
           _ref.invalidate(overviewProvider); // Also invalidate the FutureProvider used by UI

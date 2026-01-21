@@ -161,6 +161,12 @@ export class AuthService {
     // Normalize phone
     const normalizedPhone = phone.replace(/\D/g, '');
     const normalizedEmail = email ? email.toLowerCase().trim() : null;
+    
+    // Extract account name: use business name (account_name) if provided and not empty,
+    // otherwise extract from full name (name)
+    const finalAccountName = (account_name && account_name.trim().length > 0) 
+      ? account_name.trim() 
+      : name.trim();
 
     // Check if user exists
     const existingUser = await this.prisma.user.findFirst({
@@ -170,21 +176,14 @@ export class AuthService {
           ...(nid ? [{ nid }] : []),
         ],
       },
+      include: {
+        user_accounts: {
+          where: { status: 'active' },
+          include: { account: true },
+          take: 1,
+        },
+      },
     });
-
-    if (existingUser) {
-      throw new ConflictException({
-        code: 409,
-        status: 'error',
-        message: 'Phone number already registered.',
-      });
-    }
-
-    // Generate codes
-    const userCode = `U_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    const accountCode = `A_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    const walletCode = `W_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-    const token = `token_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
@@ -196,6 +195,159 @@ export class AuthService {
       can_view_reports: true,
     };
     const userPermissions = permissions || defaultPermissions;
+
+    // If user exists, update their profile instead of throwing error
+    // This handles cases where users were registered by customers or referrals
+    if (existingUser) {
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Update existing user profile
+        const updatedUser = await tx.user.update({
+          where: { id: existingUser.id },
+          data: {
+            name: name.trim(),
+            email: normalizedEmail || existingUser.email,
+            phone: normalizedPhone,
+            nid: nid?.trim() || existingUser.nid,
+            password_hash: passwordHash, // Update password
+            account_type: account_type || existingUser.account_type,
+            status: 'active', // Ensure status is active
+          },
+        });
+
+        // Check if user has an active account
+        const existingUserAccount = existingUser.user_accounts?.[0];
+        let account = existingUserAccount?.account;
+        
+        if (!account) {
+          // Create account if user doesn't have one
+          const accountCode = `A_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+          account = await tx.account.create({
+            data: {
+              code: accountCode,
+              name: finalAccountName,
+              type: 'tenant',
+              status: 'active',
+              created_by: updatedUser.id,
+            },
+          });
+
+          // Link user to account
+          await tx.userAccount.create({
+            data: {
+              user_id: updatedUser.id,
+              account_id: account.id,
+              role: role || 'customer',
+              permissions: userPermissions,
+              status: 'active',
+              created_by: updatedUser.id,
+            },
+          });
+
+          // Set default account
+          await tx.user.update({
+            where: { id: updatedUser.id },
+            data: { default_account_id: account.id },
+          });
+        } else {
+          // Update account name if provided
+          if (finalAccountName && finalAccountName !== account.name) {
+            account = await tx.account.update({
+              where: { id: account.id },
+              data: { name: finalAccountName },
+            });
+          }
+
+          // Update user_account role and permissions if provided
+          if (existingUserAccount && (role || permissions)) {
+            const updateData: any = {
+              role: role || existingUserAccount.role,
+            };
+            
+            // Only update permissions if explicitly provided in the request
+            // Otherwise preserve existing permissions
+            if (permissions) {
+              updateData.permissions = userPermissions;
+            }
+            // If permissions not provided, keep existing permissions (don't update)
+            
+            await tx.userAccount.update({
+              where: { id: existingUserAccount.id },
+              data: updateData,
+            });
+          }
+        }
+
+        // Check if account has a default wallet
+        let walletData = await tx.wallet.findFirst({
+          where: {
+            account_id: account.id,
+            is_default: true,
+            status: 'active',
+          },
+        });
+
+        if (!walletData) {
+          // Create wallet if account doesn't have one
+          const walletCode = `W_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+          walletData = await tx.wallet.create({
+            data: {
+              code: walletCode,
+              account_id: account.id,
+              type: wallet?.type || 'regular',
+              is_joint: wallet?.is_joint || false,
+              is_default: true,
+              balance: 0,
+              currency: 'RWF',
+              status: 'active',
+              created_by: updatedUser.id,
+            },
+          });
+        }
+
+        return { user: updatedUser, account, wallet: walletData };
+      });
+
+      // Return same success response format
+      return {
+        code: 201,
+        status: 'success',
+        message: 'Registration successful.',
+        data: {
+          user: {
+            code: result.user.code,
+            name: result.user.name,
+            email: result.user.email,
+            phone: result.user.phone,
+            nid: result.user.nid,
+            account_type: result.user.account_type,
+            status: result.user.status,
+            token: result.user.token,
+          },
+          account: {
+            code: result.account.code,
+            name: result.account.name,
+            type: result.account.type,
+            status: result.account.status,
+          },
+          wallet: {
+            code: result.wallet.code,
+            type: result.wallet.type,
+            is_joint: result.wallet.is_joint,
+            is_default: result.wallet.is_default,
+            balance: result.wallet.balance,
+            currency: result.wallet.currency,
+            status: result.wallet.status,
+          },
+          sms_sent: false, // TODO: Implement SMS service
+        },
+      };
+    }
+
+    // Generate codes for new user
+    const userCode = `U_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    const accountCode = `A_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    const walletCode = `W_${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+    const token = `token_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // Create user, account, wallet in transaction
     const result = await this.prisma.$transaction(async (tx) => {
@@ -218,7 +370,7 @@ export class AuthService {
       const account = await tx.account.create({
         data: {
           code: accountCode,
-          name: account_name.trim(),
+          name: finalAccountName,
           type: 'tenant',
           status: 'active',
           created_by: user.id,

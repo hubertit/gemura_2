@@ -355,7 +355,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             decoration: InputDecoration(
                               labelText: 'Phone Number',
                               prefixIcon: const Icon(Icons.phone_outlined),
-                              hintText: '788606765',
+                              hintText: '788123456',
                               hintStyle: AppTheme.hintText,
                             ),
                             validator: PhoneValidator.validateInternationalPhone,

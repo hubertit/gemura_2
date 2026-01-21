@@ -62,12 +62,14 @@ export class SalesController {
           status: 'completed',
           sale_at: '2025-01-04T10:00:00Z',
           supplier_account: {
+            id: 'supplier-account-uuid',
             code: 'A_ABC123',
             name: 'Supplier Name',
             type: 'tenant',
             status: 'active',
           },
           customer_account: {
+            id: 'customer-account-uuid',
             code: 'A_XYZ789',
             name: 'Customer Name',
             type: 'tenant',
@@ -100,7 +102,16 @@ export class SalesController {
         summary: 'Update sale status',
         value: {
           sale_id: 'sale-uuid',
-          status: 'completed',
+          status: 'accepted',
+        },
+      },
+      updateWithUUID: {
+        summary: 'Update sale with customer UUID',
+        value: {
+          sale_id: 'sale-uuid',
+          customer_account_id: '123e4567-e89b-12d3-a456-426614174000',
+          quantity: 150.0,
+          notes: 'Updated quantity after verification',
         },
       },
       updateQuantity: {
@@ -212,21 +223,32 @@ export class SalesController {
     type: CreateSaleDto,
     description: 'Sale details',
     examples: {
-      createSale: {
-        summary: 'Create new sale',
+      createSaleWithUUID: {
+        summary: 'Create new sale (using UUID)',
+        value: {
+          customer_account_id: '123e4567-e89b-12d3-a456-426614174000',
+          quantity: 120.5,
+          unit_price: 390.0,
+          status: 'accepted',
+          sale_at: '2025-01-04T10:00:00Z',
+          notes: 'Morning delivery',
+        },
+      },
+      createSaleWithCode: {
+        summary: 'Create sale with account code (fallback)',
         value: {
           customer_account_code: 'A_XYZ789',
           quantity: 120.5,
           unit_price: 390.0,
-          status: 'pending',
+          status: 'accepted',
           sale_at: '2025-01-04T10:00:00Z',
           notes: 'Morning delivery',
         },
       },
       minimalSale: {
-        summary: 'Create sale with minimal info',
+        summary: 'Create sale with minimal info (defaults to accepted)',
         value: {
-          customer_account_code: 'A_XYZ789',
+          customer_account_id: '123e4567-e89b-12d3-a456-426614174000',
           quantity: 85.0,
         },
       },
@@ -244,16 +266,19 @@ export class SalesController {
         quantity: 120.5,
         unit_price: 390.0,
         total_amount: 46995.0,
-        status: 'pending',
+        status: 'accepted',
         sale_at: '2025-01-04T10:00:00Z',
         notes: 'Morning delivery',
+        payment_status: 'unpaid',
         supplier_account: {
+          id: 'supplier-account-uuid',
           code: 'A_ABC123',
           name: 'Supplier Name',
           type: 'tenant',
           status: 'active',
         },
         customer_account: {
+          id: 'customer-account-uuid',
           code: 'A_XYZ789',
           name: 'Customer Name',
           type: 'tenant',

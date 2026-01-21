@@ -268,6 +268,7 @@ export class CustomersService {
         nid: customerUser?.nid || null,
         address: customerUser?.address || null,
         account: {
+          id: rel.customer_account.id, // Include UUID for API calls
           code: rel.customer_account.code,
           name: rel.customer_account.name,
         },
@@ -301,6 +302,105 @@ export class CustomersService {
     // Get customer account by code
     const customerAccount = await this.prisma.account.findUnique({
       where: { code: customerAccountCode },
+      include: {
+        user_accounts: {
+          where: { status: 'active' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                email: true,
+                nid: true,
+                address: true,
+                account_type: true,
+              },
+            },
+          },
+          take: 1,
+        },
+      },
+    });
+
+    if (!customerAccount) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Customer account not found.',
+      });
+    }
+
+    // Get supplier-customer relationship
+    const relationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccountId,
+        customer_account_id: customerAccount.id,
+      },
+      include: {
+        supplier_account: true,
+        customer_account: true,
+      },
+    });
+
+    const customerUser = customerAccount.user_accounts[0]?.user;
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Customer fetched successfully.',
+      data: {
+        customer: {
+          account_id: customerAccount.id,
+          account_code: customerAccount.code,
+          name: customerAccount.name,
+          type: customerAccount.type,
+          status: customerAccount.status,
+          user: customerUser ? {
+            id: customerUser.id,
+            name: customerUser.name,
+            phone: customerUser.phone,
+            email: customerUser.email,
+            nid: customerUser.nid,
+            address: customerUser.address,
+            account_type: customerUser.account_type,
+          } : null,
+          relationship: relationship ? {
+            price_per_liter: Number(relationship.price_per_liter),
+            average_supply_quantity: Number(relationship.average_supply_quantity),
+            relationship_status: relationship.relationship_status,
+            created_at: relationship.created_at,
+            updated_at: relationship.updated_at,
+          } : null,
+        },
+      },
+    };
+  }
+
+  async getCustomerById(user: User, customerAccountId: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const supplierAccountId = user.default_account_id;
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(customerAccountId)) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Invalid customer account ID format. Must be a valid UUID.',
+      });
+    }
+
+    // Get customer account by ID
+    const customerAccount = await this.prisma.account.findUnique({
+      where: { id: customerAccountId },
       include: {
         user_accounts: {
           where: { status: 'active' },

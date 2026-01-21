@@ -98,13 +98,50 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'User registration',
-    description: 'Register a new user with account and wallet. Creates user, account, and default wallet.',
+    summary: 'User registration or profile update',
+    description: 'Register a new user with account and wallet, or update existing user profile if phone number is already registered. If the phone number is already registered (e.g., user was registered by a customer or referral), the existing user profile will be updated with the provided information, password will be updated, and status will be set to active. Creates user, account, and default wallet for new users. Returns the same success response format in both cases.',
   })
-  @ApiBody({ type: RegisterDto })
+  @ApiBody({
+    type: RegisterDto,
+    description: 'User registration data. Business name (account_name) is optional - if not provided, it will be extracted from the full name.',
+    examples: {
+      newUser: {
+        summary: 'Register new user',
+        value: {
+          name: 'John Doe',
+          phone: '250788123456',
+          email: 'user@example.com',
+          password: 'SecurePassword123!',
+          account_name: 'My Business Account',
+          account_type: 'mcc',
+          role: 'owner',
+        },
+      },
+      existingUser: {
+        summary: 'Update existing user (phone already registered)',
+        value: {
+          name: 'John Doe Updated',
+          phone: '250788123456',
+          email: 'newemail@example.com',
+          password: 'NewPassword123!',
+          account_name: 'Updated Business Name',
+          account_type: 'supplier',
+        },
+      },
+      minimalRegistration: {
+        summary: 'Minimal registration (business name optional)',
+        value: {
+          name: 'Jane Smith',
+          phone: '250788654321',
+          password: 'SecurePassword123!',
+          account_type: 'farmer',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 201,
-    description: 'Registration successful',
+    description: 'Registration successful. Same response format for both new registrations and profile updates.',
     example: {
       code: 201,
       status: 'success',
@@ -138,8 +175,14 @@ export class AuthController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Invalid request' })
-  @ApiConflictResponse({ description: 'Phone number already registered' })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - missing required fields or validation errors',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Validation failed',
+    },
+  })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }

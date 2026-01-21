@@ -266,6 +266,7 @@ export class SuppliersService {
         nid: supplierUser?.nid || null,
         address: supplierUser?.address || null,
         account: {
+          id: rel.supplier_account.id,
           code: rel.supplier_account.code,
           name: rel.supplier_account.name,
         },
@@ -299,6 +300,105 @@ export class SuppliersService {
     // Get supplier account by code
     const supplierAccount = await this.prisma.account.findUnique({
       where: { code: supplierAccountCode },
+      include: {
+        user_accounts: {
+          where: { status: 'active' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                email: true,
+                nid: true,
+                address: true,
+                account_type: true,
+              },
+            },
+          },
+          take: 1,
+        },
+      },
+    });
+
+    if (!supplierAccount) {
+      throw new BadRequestException({
+        code: 404,
+        status: 'error',
+        message: 'Supplier account not found.',
+      });
+    }
+
+    // Get supplier-customer relationship
+    const relationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccount.id,
+        customer_account_id: customerAccountId,
+      },
+      include: {
+        supplier_account: true,
+        customer_account: true,
+      },
+    });
+
+    const supplierUser = supplierAccount.user_accounts[0]?.user;
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Supplier fetched successfully.',
+      data: {
+        supplier: {
+          account_id: supplierAccount.id,
+          account_code: supplierAccount.code,
+          name: supplierAccount.name,
+          type: supplierAccount.type,
+          status: supplierAccount.status,
+          user: supplierUser ? {
+            id: supplierUser.id,
+            name: supplierUser.name,
+            phone: supplierUser.phone,
+            email: supplierUser.email,
+            nid: supplierUser.nid,
+            address: supplierUser.address,
+            account_type: supplierUser.account_type,
+          } : null,
+          relationship: relationship ? {
+            price_per_liter: Number(relationship.price_per_liter),
+            average_supply_quantity: Number(relationship.average_supply_quantity),
+            relationship_status: relationship.relationship_status,
+            created_at: relationship.created_at,
+            updated_at: relationship.updated_at,
+          } : null,
+        },
+      },
+    };
+  }
+
+  async getSupplierById(user: User, supplierAccountId: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    const customerAccountId = user.default_account_id;
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(supplierAccountId)) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Invalid supplier account ID format. Must be a valid UUID.',
+      });
+    }
+
+    // Get supplier account by ID
+    const supplierAccount = await this.prisma.account.findUnique({
+      where: { id: supplierAccountId },
       include: {
         user_accounts: {
           where: { status: 'active' },

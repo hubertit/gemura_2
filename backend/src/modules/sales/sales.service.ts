@@ -105,12 +105,14 @@ export class SalesService {
       notes: sale.notes,
       created_at: sale.created_at,
       supplier_account: {
+        id: sale.supplier_account.id,
         code: sale.supplier_account.code,
         name: sale.supplier_account.name,
         type: sale.supplier_account.type,
         status: sale.supplier_account.status,
       },
       customer_account: {
+        id: sale.customer_account.id,
         code: sale.customer_account.code,
         name: sale.customer_account.name,
         type: sale.customer_account.type,
@@ -156,7 +158,20 @@ export class SalesService {
       updated_by: user.id,
     };
 
-    if (updateDto.customer_account_code) {
+    // Support both UUID and code for customer account
+    if (updateDto.customer_account_id) {
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(updateDto.customer_account_id)) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Invalid customer account ID format. Must be a valid UUID.',
+        });
+      }
+      updateData.customer_account_id = updateDto.customer_account_id;
+    } else if (updateDto.customer_account_code) {
+      // Fallback: Find by code
       const customerAccount = await this.prisma.account.findUnique({
         where: { code: updateDto.customer_account_code },
       });
@@ -256,7 +271,7 @@ export class SalesService {
   }
 
   async createSale(user: User, createDto: CreateSaleDto) {
-    const { customer_account_code, quantity, unit_price, status, sale_at, notes, payment_status } = createDto;
+    const { customer_account_code, customer_account_id, quantity, unit_price, status, sale_at, notes, payment_status } = createDto;
 
     // Check if user has a valid default account
     if (!user.default_account_id) {
@@ -267,12 +282,40 @@ export class SalesService {
       });
     }
 
+    // Validate that at least one customer identifier is provided
+    if (!customer_account_code && !customer_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Either customer_account_id (UUID) or customer_account_code must be provided.',
+      });
+    }
+
     const supplierAccountId = user.default_account_id;
 
-    // Get customer account by code
-    const customerAccount = await this.prisma.account.findUnique({
-      where: { code: customer_account_code },
-    });
+    // Get customer account - prioritize UUID, fallback to code
+    let customerAccount;
+    if (customer_account_id) {
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(customer_account_id)) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Invalid customer account ID format. Must be a valid UUID.',
+        });
+      }
+      
+      // Find by UUID
+      customerAccount = await this.prisma.account.findUnique({
+        where: { id: customer_account_id },
+      });
+    } else if (customer_account_code) {
+      // Fallback: Find by code
+      customerAccount = await this.prisma.account.findUnique({
+        where: { code: customer_account_code },
+      });
+    }
 
     if (!customerAccount || customerAccount.status !== 'active') {
       throw new NotFoundException({
@@ -305,7 +348,7 @@ export class SalesService {
           customer_account_id: customerAccountId,
           quantity: quantity,
           unit_price: finalUnitPrice,
-          status: (status || 'pending') as any,
+          status: (status || 'accepted') as any,
           sale_at: sale_at ? new Date(sale_at) : new Date(),
           notes: notes || null,
           recorded_by: user.id,
@@ -348,12 +391,14 @@ export class SalesService {
           notes: milkSale.notes,
           payment_status: payment_status || 'unpaid',
           supplier_account: {
+            id: milkSale.supplier_account.id,
             code: milkSale.supplier_account.code,
             name: milkSale.supplier_account.name,
             type: milkSale.supplier_account.type,
             status: milkSale.supplier_account.status,
           },
           customer_account: {
+            id: milkSale.customer_account.id,
             code: milkSale.customer_account.code,
             name: milkSale.customer_account.name,
             type: milkSale.customer_account.type,

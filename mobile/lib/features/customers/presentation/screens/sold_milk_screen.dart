@@ -1345,7 +1345,8 @@ class _UpdateSaleFormState extends ConsumerState<_UpdateSaleForm> {
     try {
       await ref.read(salesNotifierProvider.notifier).updateSale(
         saleId: widget.sale.id,
-        customerAccountCode: widget.sale.customerAccount?.code ?? '',
+        customerAccountId: widget.sale.customerAccount?.id,
+        customerAccountCode: widget.sale.customerAccount?.id == null ? (widget.sale.customerAccount?.code ?? '') : null,
         quantity: double.parse(_quantityController.text),
         status: _selectedStatus,
         saleAt: _selectedDate,

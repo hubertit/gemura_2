@@ -54,8 +54,26 @@ class _RecordSaleScreenState extends ConsumerState<RecordSaleScreen> {
     if (_formKey.currentState!.validate() && _selectedCustomer != null) {
       final salesNotifier = ref.read(salesNotifierProvider.notifier);
       
+      // Prefer UUID over code - ensure at least one is provided
+      final customerAccountId = _selectedCustomer!.accountId;
+      final customerAccountCode = (customerAccountId == null || customerAccountId.isEmpty) 
+          ? _selectedCustomer!.accountCode 
+          : null;
+      
+      // Validate that at least one identifier is available
+      if (customerAccountId == null && (customerAccountCode == null || customerAccountCode.isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Customer account information is missing. Please select a valid customer.'),
+            backgroundColor: AppTheme.snackbarErrorColor,
+          ),
+        );
+        return;
+      }
+      
       await salesNotifier.recordSale(
-        customerAccountCode: _selectedCustomer!.accountCode,
+        customerAccountId: customerAccountId,
+        customerAccountCode: customerAccountCode,
         quantity: double.parse(_quantityController.text),
         status: _selectedStatus,
         saleAt: DateTime(

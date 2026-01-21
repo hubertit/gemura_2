@@ -408,7 +408,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Phone Number',
                                 prefixIcon: const Icon(Icons.phone_outlined),
-                                hintText: '788606765',
+                                hintText: '788123456',
                                 hintStyle: AppTheme.hintText,
                               ),
                               validator: PhoneValidator.validateInternationalPhone,

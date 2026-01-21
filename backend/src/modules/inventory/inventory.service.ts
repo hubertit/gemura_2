@@ -507,6 +507,16 @@ export class InventoryService {
   }
 
   async sellInventoryItem(user: User, productId: string, createSaleDto: CreateInventorySaleDto) {
+    console.log('📦 [Inventory Sale] Starting sale process');
+    console.log('📦 [Inventory Sale] Product ID:', productId);
+    console.log('📦 [Inventory Sale] Buyer type:', createSaleDto.buyer_type);
+    console.log('📦 [Inventory Sale] Buyer account ID/code:', createSaleDto.buyer_account_id);
+    console.log('📦 [Inventory Sale] Buyer name:', createSaleDto.buyer_name);
+    console.log('📦 [Inventory Sale] Buyer phone:', createSaleDto.buyer_phone);
+    console.log('📦 [Inventory Sale] Quantity:', createSaleDto.quantity);
+    console.log('📦 [Inventory Sale] Unit price:', createSaleDto.unit_price);
+    console.log('📦 [Inventory Sale] Amount paid:', createSaleDto.amount_paid);
+
     if (!user.default_account_id) {
       throw new BadRequestException({
         code: 400,
@@ -653,18 +663,32 @@ export class InventoryService {
     }
 
     // 6. Validate buyer account exists if we have an ID
+    // Handle both UUID and account code
     if (finalBuyerAccountId && !buyerAccount) {
-      buyerAccount = await this.prisma.account.findUnique({
-        where: { id: finalBuyerAccountId },
+      console.log('📦 [Inventory Sale] Looking up buyer account:', finalBuyerAccountId);
+      
+      // Try to find by ID first (UUID), then by code
+      buyerAccount = await this.prisma.account.findFirst({
+        where: {
+          OR: [
+            { id: finalBuyerAccountId },
+            { code: finalBuyerAccountId },
+          ],
+        },
       });
 
       if (!buyerAccount) {
+        console.log('📦 [Inventory Sale] ❌ Buyer account not found:', finalBuyerAccountId);
         throw new NotFoundException({
           code: 404,
           status: 'error',
           message: 'Buyer account not found.',
         });
       }
+      
+      console.log('📦 [Inventory Sale] ✅ Found buyer account:', buyerAccount.code, buyerAccount.id);
+      // Update finalBuyerAccountId to use the UUID
+      finalBuyerAccountId = buyerAccount.id;
     }
 
     // 7. Calculate total amount and payment status
@@ -699,6 +723,9 @@ export class InventoryService {
       : new Date();
 
     try {
+      console.log('📦 [Inventory Sale] Creating inventory sale record...');
+      console.log('📦 [Inventory Sale] Final buyer account ID:', finalBuyerAccountId);
+      
       // 10. Create inventory sale record
       const inventorySale = await this.prisma.inventorySale.create({
         data: {
@@ -788,7 +815,8 @@ export class InventoryService {
         },
       };
     } catch (error) {
-      console.error('Error creating inventory sale:', error);
+      console.error('📦 [Inventory Sale] ❌ Error creating inventory sale:', error);
+      console.error('📦 [Inventory Sale] Error stack:', error.stack);
       throw new InternalServerErrorException({
         code: 500,
         status: 'error',

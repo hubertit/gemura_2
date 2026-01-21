@@ -125,5 +125,20 @@ When adding new documentation:
 
 ---
 
-**Last Updated:** January 18, 2026  
+**Last Updated:** January 20, 2026  
 **Maintained By:** Development Team
+
+## 🆕 Recent Updates
+
+### January 20, 2026
+- ✅ Sales module completed (POST /api/sales endpoint)
+- ✅ Collections module completed (GET, PUT, DELETE endpoints)
+- ✅ Suppliers module completed (GET by-id, UPDATE, DELETE)
+- ✅ Customers module completed (GET by-id, UPDATE, DELETE)
+- ✅ UUID consistency implemented across all modules
+- ✅ Soft delete implemented for all delete operations
+- ✅ Default status changed to 'accepted' for sales/collections
+- ✅ Account IDs (UUIDs) included in all responses
+- ✅ Swagger documentation updated and complete
+
+See [API Documentation](./api/README.md) for details.

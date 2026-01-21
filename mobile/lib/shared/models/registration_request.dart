@@ -34,7 +34,7 @@ class RegistrationRequest {
       'role': role,
       'account_type': accountType, // New field
       if (permissions.isNotEmpty) 'permissions': permissions,
-      'is_agent_candidate': isAgentCandidate,
+      // Removed is_agent_candidate as it's not accepted by the backend DTO
     };
   }
 

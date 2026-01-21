@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/config/app_config.dart';
 import '../../domain/models/product.dart';
 import '../../domain/models/category.dart';
 
 // API Base URL - Updated to use NestJS backend
-const String baseUrl = 'http://159.198.65.38:3004/api/market';
+final String baseUrl = '${AppConfig.apiBaseUrl}/market';
 
 // HTTP Client Provider
 final httpClientProvider = Provider<http.Client>((ref) {

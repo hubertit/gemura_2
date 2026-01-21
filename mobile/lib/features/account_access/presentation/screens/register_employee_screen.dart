@@ -119,7 +119,7 @@ class _RegisterEmployeeScreenState extends ConsumerState<RegisterEmployeeScreen>
                 labelText: 'Phone Number',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.phone),
-                hintText: '788606765',
+                hintText: '788123456',
                 hintStyle: AppTheme.hintText,
               ),
                 keyboardType: TextInputType.phone,

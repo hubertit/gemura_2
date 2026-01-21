@@ -11,9 +11,11 @@ Overview _$OverviewFromJson(Map<String, dynamic> json) => Overview(
           OverviewSummary.fromJson(json['summary'] as Map<String, dynamic>),
       breakdownType: json['breakdown_type'] as String,
       chartPeriod: json['chart_period'] as String?,
-      breakdown: (json['breakdown'] as List<dynamic>)
-          .map((e) => OverviewBreakdown.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      breakdown: (json['breakdown'] as List<dynamic>?)
+              ?.map(
+                  (e) => OverviewBreakdown.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       recentTransactions: (json['recent_transactions'] as List<dynamic>?)
           ?.map((e) => OverviewTransaction.fromJson(e as Map<String, dynamic>))
           .toList(),

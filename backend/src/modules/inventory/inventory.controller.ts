@@ -18,10 +18,27 @@ export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get inventory items' })
-  @ApiQuery({ name: 'status', required: false, enum: ['active', 'inactive', 'out_of_stock'] })
-  @ApiQuery({ name: 'low_stock', required: false, type: Boolean })
-  @ApiResponse({ status: 200, description: 'Inventory fetched successfully' })
+  @ApiOperation({
+    summary: 'Get inventory items',
+    description: 'Retrieve a list of inventory items for the current user\'s account. Can be filtered by status and low stock alerts.',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'inactive', 'out_of_stock'],
+    description: 'Filter by inventory status',
+  })
+  @ApiQuery({
+    name: 'low_stock',
+    required: false,
+    type: Boolean,
+    description: 'Filter items with low stock (set to true)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory items retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   async getInventory(
     @CurrentUser() user: User,
     @Query('status') status?: string,
@@ -34,8 +51,15 @@ export class InventoryController {
   }
 
   @Get('stats')
-  @ApiOperation({ summary: 'Get inventory statistics' })
-  @ApiResponse({ status: 200, description: 'Inventory statistics fetched successfully' })
+  @ApiOperation({
+    summary: 'Get inventory statistics',
+    description: 'Retrieve aggregated statistics about inventory including total items, stock levels, low stock alerts, and value summaries.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory statistics retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   async getInventoryStats(@CurrentUser() user: User) {
     return this.inventoryService.getInventoryStats(user);
   }
@@ -50,8 +74,16 @@ export class InventoryController {
 
   @Post()
   @HttpCode(200)
-  @ApiOperation({ summary: 'Create inventory item' })
-  @ApiResponse({ status: 200, description: 'Inventory item created successfully' })
+  @ApiOperation({
+    summary: 'Create inventory item',
+    description: 'Create a new inventory item (product) in the system. The item will be associated with the current user\'s account.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory item created successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   async createInventoryItem(@CurrentUser() user: User, @Body() createDto: CreateInventoryDto) {
     return this.inventoryService.createInventoryItem(user, createDto);
   }
@@ -103,10 +135,17 @@ export class InventoryController {
 
   @Post(':id/sell')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Sell inventory item' })
-  @ApiParam({ name: 'id', description: 'Product ID' })
-  @ApiResponse({ status: 200, description: 'Inventory item sold successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - validation failed or business rule violation' })
+  @ApiOperation({
+    summary: 'Sell inventory item',
+    description: 'Record a sale of an inventory item to a customer. This will update stock levels and create a sales record.',
+  })
+  @ApiParam({ name: 'id', description: 'Product ID (UUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Inventory item sold successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - validation failed or business rule violation (e.g., insufficient stock)' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
   @ApiResponse({ status: 404, description: 'Inventory item or buyer account not found' })
   async sellInventoryItem(
     @CurrentUser() user: User,

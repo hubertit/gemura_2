@@ -1,13 +1,55 @@
 import { Controller, Get, Param, Res, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBadRequestResponse, ApiBadGatewayResponse } from '@nestjs/swagger';
 import { Response } from 'express';
 import * as https from 'https';
 import * as http from 'http';
 
+@ApiTags('Media')
 @Controller('media')
 export class MediaController {
   private readonly OLD_SERVER_BASE_URL = 'https://www.kigalitoday.com';
 
   @Get('*')
+  @ApiOperation({
+    summary: 'Proxy media files from legacy server',
+    description: 'Proxies media files (images, documents) from the legacy server (kigalitoday.com). The path should be the relative path to the media file, e.g., "IMG/jpg/444-12.jpg".',
+  })
+  @ApiParam({
+    name: '0',
+    description: 'Media file path (wildcard parameter)',
+    example: 'IMG/jpg/444-12.jpg',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Media file retrieved successfully',
+    content: {
+      'image/jpeg': {},
+      'image/png': {},
+      'application/pdf': {},
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Media path is required',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 400 },
+        status: { type: 'string', example: 'error' },
+        message: { type: 'string', example: 'Media path is required' },
+      },
+    },
+  })
+  @ApiBadGatewayResponse({
+    description: 'Failed to fetch media from legacy server',
+    schema: {
+      type: 'object',
+      properties: {
+        code: { type: 'number', example: 502 },
+        status: { type: 'string', example: 'error' },
+        message: { type: 'string', example: 'Failed to proxy media: Connection error' },
+      },
+    },
+  })
   async proxyMedia(@Param('0') path: string, @Res() res: Response) {
     if (!path) {
       throw new HttpException('Media path is required', HttpStatus.BAD_REQUEST);

@@ -54,18 +54,30 @@ class SalesService {
   }
 
   Future<void> recordSale({
-    required String customerAccountCode,
+    String? customerAccountId,
+    String? customerAccountCode,
     required double quantity,
     required String status,
     required DateTime saleAt,
     String? notes,
     String? paymentStatus,
   }) async {
+    // Prefer UUID over code for consistency
+    // Validate that at least one identifier is provided and not empty
+    final hasValidId = customerAccountId != null && customerAccountId.isNotEmpty;
+    final hasValidCode = customerAccountCode != null && customerAccountCode.isNotEmpty;
+    
+    if (!hasValidId && !hasValidCode) {
+      throw Exception('Either customerAccountId (UUID) or customerAccountCode must be provided');
+    }
+
     try {
       final response = await _dio.post(
         '/sales', // NestJS uses POST /sales for creating sales
         data: {
-          'customer_account_code': customerAccountCode,
+          // Prefer UUID, fallback to code
+          if (hasValidId) 'customer_account_id': customerAccountId,
+          if (!hasValidId && hasValidCode) 'customer_account_code': customerAccountCode,
           'quantity': quantity,
           'status': status.toLowerCase(),
           'sale_at': saleAt.toIso8601String().replaceAll('T', ' ').substring(0, 19),
@@ -94,7 +106,8 @@ class SalesService {
 
   Future<void> updateSale({
     required String saleId,
-    required String customerAccountCode,
+    String? customerAccountId,
+    String? customerAccountCode,
     required double quantity,
     required String status,
     required DateTime saleAt,
@@ -105,7 +118,8 @@ class SalesService {
         '/sales/update',
         data: {
           'sale_id': saleId,
-          'customer_account_code': customerAccountCode,
+          if (customerAccountId != null) 'customer_account_id': customerAccountId,
+          if (customerAccountId == null && customerAccountCode != null) 'customer_account_code': customerAccountCode,
           'quantity': quantity,
           'status': status.toLowerCase(),
           'sale_at': saleAt.toIso8601String().replaceAll('T', ' ').substring(0, 19),

@@ -48,7 +48,8 @@ class SalesNotifier extends StateNotifier<SalesState> {
   SalesNotifier(this._salesService) : super(SalesState());
 
   Future<void> recordSale({
-    required String customerAccountCode,
+    String? customerAccountId,
+    String? customerAccountCode,
     required double quantity,
     required String status,
     required DateTime saleAt,
@@ -59,6 +60,7 @@ class SalesNotifier extends StateNotifier<SalesState> {
 
     try {
       await _salesService.recordSale(
+        customerAccountId: customerAccountId,
         customerAccountCode: customerAccountCode,
         quantity: quantity,
         status: status,
@@ -79,7 +81,8 @@ class SalesNotifier extends StateNotifier<SalesState> {
 
   Future<void> updateSale({
     required String saleId,
-    required String customerAccountCode,
+    String? customerAccountId,
+    String? customerAccountCode,
     required double quantity,
     required String status,
     required DateTime saleAt,
@@ -90,6 +93,7 @@ class SalesNotifier extends StateNotifier<SalesState> {
     try {
       await _salesService.updateSale(
         saleId: saleId,
+        customerAccountId: customerAccountId,
         customerAccountCode: customerAccountCode,
         quantity: quantity,
         status: status,

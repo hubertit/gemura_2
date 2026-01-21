@@ -23,13 +23,14 @@ export class CreateCollectionDto {
 
   @ApiProperty({
     description: 'Collection status',
-    example: 'pending',
-    enum: ['pending', 'completed', 'cancelled'],
-    required: true,
+    example: 'accepted',
+    enum: ['pending', 'accepted', 'rejected', 'cancelled'],
+    required: false,
+    default: 'accepted',
   })
-  @IsNotEmpty({ message: 'Status is required' })
+  @IsOptional()
   @IsString({ message: 'Status must be a string' })
-  status: string;
+  status?: string;
 
   @ApiProperty({
     description: 'Collection date and time in format: YYYY-MM-DD HH:mm:ss',

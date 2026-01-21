@@ -23,7 +23,6 @@ import 'package:intl/intl.dart';
 
 import 'search_screen.dart';
 import '../../../../shared/widgets/primary_button.dart';
-import '../../../chat/presentation/screens/chat_list_screen.dart';
 import '../../../suppliers/presentation/screens/suppliers_list_screen.dart';
 import '../../../customers/presentation/screens/customers_list_screen.dart';
 import '../../../suppliers/presentation/screens/collected_milk_screen.dart';
@@ -55,6 +54,7 @@ import '../../../inventory/presentation/providers/inventory_provider.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
 import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
+import '../../../finance/presentation/providers/finance_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -67,8 +67,8 @@ class HomeScreen extends ConsumerWidget {
     final tabs = [
       const _DashboardTab(), // Index 0: Home
       const FinanceScreen(), // Index 1: Finance
-      const ChatListScreen(), // Index 2: Chats
-      const FeedScreen(), // Index 3: Feeds
+      const InventoryListScreen(), // Index 2: Inventory
+      const PayrollScreen(), // Index 3: Payroll
       const ProfileTab(), // Index 4: Profile
     ];
     
@@ -102,14 +102,14 @@ class HomeScreen extends ConsumerWidget {
             label: 'Finance',
           ),
           NavigationDestination(
-            icon: const Icon(Icons.chat_bubble_outline),
-            selectedIcon: const Icon(Icons.chat_bubble),
-            label: localizationService.translate('chats'),
+            icon: const Icon(Icons.inventory_2_outlined),
+            selectedIcon: const Icon(Icons.inventory_2),
+            label: 'Inventory',
           ),
           NavigationDestination(
-            icon: const Icon(Icons.dynamic_feed_outlined),
-            selectedIcon: const Icon(Icons.dynamic_feed),
-            label: 'Feeds',
+            icon: const Icon(Icons.payments_outlined),
+            selectedIcon: const Icon(Icons.payments),
+            label: 'Payroll',
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline),
@@ -776,6 +776,34 @@ class _DashboardTab extends ConsumerStatefulWidget {
 class _DashboardTabState extends ConsumerState<_DashboardTab> {
   // Wallet balance visibility state
   final Map<String, bool> _walletBalanceVisibility = {};
+  
+  // Memoize date range for income statement to prevent repeated calls
+  late final DateTime _incomeStatementFromDate;
+  late final DateTime _incomeStatementToDate;
+  DateTime? _lastDateUpdate;
+  
+  @override
+  void initState() {
+    super.initState();
+    _updateIncomeStatementDates();
+  }
+  
+  void _updateIncomeStatementDates() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    _incomeStatementFromDate = today.subtract(const Duration(days: 30));
+    _incomeStatementToDate = today;
+    _lastDateUpdate = today;
+  }
+  
+  // Update dates once per day if needed
+  void _ensureDateRangeIsCurrent() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (_lastDateUpdate == null || _lastDateUpdate!.isBefore(today)) {
+      _updateIncomeStatementDates();
+    }
+  }
 
   // Method to handle balance visibility changes
   void _onBalanceVisibilityChanged(String walletId, bool showBalance) {
@@ -790,11 +818,11 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // Static mock wallets as fallback for home screen - Joint ikofi temporarily hidden
-  List<Wallet> get homeWallets => [
+  // Dynamic mock wallets as fallback for home screen - uses current account name
+  List<Wallet> getHomeWallets(String? accountName) => [
     Wallet(
       id: 'WALLET-1',
-      name: 'Main Ikofi',
+      name: accountName ?? 'Main Ikofi', // Use current account name if available
       balance: 250000,
       currency: 'RWF',
       type: 'individual',
@@ -1050,7 +1078,24 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                   ),
                   data: (apiWallets) {
                     // Use API wallets, fallback to mock if empty
-                    final wallets = apiWallets.isNotEmpty ? apiWallets : homeWallets;
+                    // Get current account name for fallback wallet
+                    String? accountName;
+                    try {
+                      final accountsData = ref.read(userAccountsNotifierProvider).value?.data.accounts;
+                      if (accountsData != null && accountsData.isNotEmpty) {
+                        try {
+                          final currentAccount = accountsData.firstWhere((acc) => acc.isDefault);
+                          accountName = currentAccount.accountName;
+                        } catch (e) {
+                          // No default account, use first account
+                          accountName = accountsData.first.accountName;
+                        }
+                      }
+                    } catch (e) {
+                      // If error getting account, use null (will default to 'Main Ikofi')
+                      print('⚠️ Could not get account name for wallet: $e');
+                    }
+                    final wallets = apiWallets.isNotEmpty ? apiWallets : getHomeWallets(accountName);
                     
                     if (wallets.isEmpty) {
                       return SizedBox(
@@ -1076,34 +1121,72 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                       );
                     }
                     
-                    return SizedBox(
-                      height: 180, // Increased height to match wallet card natural height
-                      child: PageView.builder(
-                        itemCount: wallets.length,
-                        controller: PageController(viewportFraction: 0.92),
-                        itemBuilder: (context, index) {
-                          final isFirst = index == 0;
-                          final isLast = index == wallets.length - 1;
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              left: isFirst ? 0 : AppTheme.spacing8,
-                              right: isLast ? 0 : AppTheme.spacing8,
-                            ),
-                            child: WalletCard(
-                              wallet: wallets[index], 
-                              showBalance: _walletBalanceVisibility[wallets[index].id] ?? true,
-                              onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallets[index].id, showBalance),
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => TransactionsScreen(wallet: wallets[index]),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                    // Fetch net profit from finance and update the default wallet balance
+                    // Use same date range as finance screen (last 30 days) to match displayed net profit
+                    // Use memoized dates to prevent repeated API calls
+                    _ensureDateRangeIsCurrent();
+                    
+                    // Use a separate Consumer for income statement to avoid rebuild loops
+                    return Consumer(
+                      builder: (context, ref, child) {
+                        final incomeStatementAsync = ref.watch(
+                          incomeStatementProvider(
+                            IncomeStatementParams(fromDate: _incomeStatementFromDate, toDate: _incomeStatementToDate),
+                          ),
+                        );
+                        
+                        // Update wallets with net profit for the default wallet (or first wallet if no default)
+                        final updatedWallets = incomeStatementAsync.when(
+                          data: (incomeStatement) {
+                            if (wallets.isEmpty) return wallets;
+                            // Find default wallet, or use first wallet
+                            final defaultWalletIndex = wallets.indexWhere((w) => w.isDefault);
+                            final walletIndex = defaultWalletIndex >= 0 ? defaultWalletIndex : 0;
+                            final updatedWalletsList = List<Wallet>.from(wallets);
+                            // Update the wallet balance with net profit from finance
+                            updatedWalletsList[walletIndex] = updatedWalletsList[walletIndex].copyWith(
+                              balance: incomeStatement.netIncome,
+                            );
+                            return updatedWalletsList;
+                          },
+                          loading: () => wallets,
+                          error: (error, stackTrace) {
+                            // On error, log it but still show wallets
+                            print('⚠️ Failed to fetch net profit for wallet balance: $error');
+                            return wallets;
+                          },
+                        );
+                        
+                        return SizedBox(
+                          height: 180, // Increased height to match wallet card natural height
+                          child: PageView.builder(
+                            itemCount: updatedWallets.length,
+                            controller: PageController(viewportFraction: 0.92),
+                            itemBuilder: (context, index) {
+                              final isFirst = index == 0;
+                              final isLast = index == updatedWallets.length - 1;
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  left: isFirst ? 0 : AppTheme.spacing8,
+                                  right: isLast ? 0 : AppTheme.spacing8,
+                                ),
+                                child: WalletCard(
+                                  wallet: updatedWallets[index], 
+                                  showBalance: _walletBalanceVisibility[updatedWallets[index].id] ?? true,
+                                  onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(updatedWallets[index].id, showBalance),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => TransactionsScreen(wallet: updatedWallets[index]),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -2995,8 +3078,13 @@ class _ProfileTabState extends ConsumerState<ProfileTab> {
                             localizationService.translate('market'),
                             'Buy and sell dairy products',
                             () {
-                              // Navigate to feeds tab
-                              ref.read(tabIndexProvider.notifier).state = 3;
+                              // Navigate to market/feed screen (if still accessible via other means)
+                              // Note: Feeds tab removed from bottom navigation
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const FeedScreen(),
+                                ),
+                              );
                             },
                           );
                         },

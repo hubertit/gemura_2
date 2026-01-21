@@ -187,7 +187,7 @@ class _AddCustomerScreenState extends ConsumerState<AddCustomerScreen> {
                         PhoneInputFormatter(),
                       ],
                       decoration: InputDecoration(
-                        hintText: '788606765',
+                        hintText: '788123456',
                         prefixIcon: const Icon(Icons.phone),
                         hintStyle: AppTheme.hintText,
                         border: OutlineInputBorder(

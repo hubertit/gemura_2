@@ -42,13 +42,18 @@ class OverviewService {
         if (data['code'] == 200 || data['status'] == 'success') {
           print('📊 OverviewService: Parsing overview data...');
           try {
+            print('📊 OverviewService: Data keys: ${data['data']?.keys}');
+            print('📊 OverviewService: Data summary: ${data['data']?['summary']}');
+            print('📊 OverviewService: Data breakdown: ${data['data']?['breakdown']}');
+            print('📊 OverviewService: Data breakdown type: ${data['data']?['breakdown_type']}');
+            print('📊 OverviewService: Data date_range: ${data['data']?['date_range']}');
             final overview = Overview.fromJson(data['data']);
             print('📊 OverviewService: Successfully parsed overview data');
             return overview;
           } catch (parseError, stackTrace) {
             print('❌ OverviewService: JSON parsing error: $parseError');
             print('❌ OverviewService: Stack trace: $stackTrace');
-            print('❌ OverviewService: Data structure: ${data['data']}');
+            print('❌ OverviewService: Full data structure: ${data['data']}');
             throw Exception('Failed to parse overview data: $parseError');
           }
         } else {

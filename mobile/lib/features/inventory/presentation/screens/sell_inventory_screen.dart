@@ -34,6 +34,7 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
   String? _selectedBuyerAccountId;
   DateTime _saleDate = DateTime.now();
   bool _isSubmitting = false;
+  bool _isPaid = true; // Payment status - suppliers can toggle, customers/other must be paid
 
   @override
   void initState() {
@@ -124,13 +125,37 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
 
     // Validate payment rules
     final totalAmount = _calculatedTotal;
-    if (_buyerType != 'supplier' && amountPaid < totalAmount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        AppTheme.errorSnackBar(
-          message: 'Customers and other buyers must pay the full amount upfront',
-        ),
-      );
-      return;
+    
+    // Suppliers can take debt (amount paid can be 0 if not paid)
+    // Customers and others must pay full amount
+    if (_buyerType == 'supplier') {
+      // Suppliers: If not paid, amount can be 0. If paid, amount can be 0 to total
+      if (_isPaid && amountPaid > totalAmount) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(
+            message: 'Amount paid cannot exceed total amount',
+          ),
+        );
+        return;
+      }
+    } else {
+      // Customers and others: Must be paid and pay full amount
+      if (!_isPaid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(
+            message: 'Customers and other buyers must pay the full amount upfront',
+          ),
+        );
+        return;
+      }
+      if (amountPaid < totalAmount) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.errorSnackBar(
+            message: 'Customers and other buyers must pay the full amount upfront',
+          ),
+        );
+        return;
+      }
     }
 
     // Validate supplier requires buyer_account_id
@@ -149,6 +174,10 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
 
     try {
       final inventoryService = ref.read(inventoryServiceProvider);
+      // For suppliers: If not paid, send 0. Otherwise send the actual amount paid
+      // For customers/others: Always send the full amount (they must be paid)
+      final finalAmountPaid = (_buyerType == 'supplier' && !_isPaid) ? 0.0 : amountPaid;
+      
       await inventoryService.sellInventoryItem(
         productId: widget.item['id'] as String,
         buyerType: _buyerType,
@@ -161,7 +190,7 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
             : _buyerPhoneController.text.trim(),
         quantity: quantity,
         unitPrice: _unitPrice,
-        amountPaid: amountPaid,
+        amountPaid: finalAmountPaid,
         saleDate: _saleDate,
         notes: _notesController.text.trim().isEmpty
             ? null
@@ -309,6 +338,8 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                             _selectedBuyerAccountId = null;
                             _buyerNameController.clear();
                             _buyerPhoneController.clear();
+                            // Suppliers can take debt, so allow unpaid
+                            // Keep current _isPaid state
                           });
                         }
                       },
@@ -342,6 +373,10 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                             _selectedBuyerAccountId = null;
                             _buyerNameController.clear();
                             _buyerPhoneController.clear();
+                            // Customers must pay full amount
+                            _isPaid = true;
+                            // Update amount paid to match total
+                            _amountPaidController.text = _calculatedTotal.toStringAsFixed(0);
                           });
                         }
                       },
@@ -375,6 +410,10 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                             _selectedBuyerAccountId = null;
                             _buyerNameController.clear();
                             _buyerPhoneController.clear();
+                            // Other buyers must pay full amount
+                            _isPaid = true;
+                            // Update amount paid to match total
+                            _amountPaidController.text = _calculatedTotal.toStringAsFixed(0);
                           });
                         }
                       },
@@ -412,44 +451,117 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                 const SizedBox(height: AppTheme.spacing8),
                 if (_buyerType == 'supplier')
                   suppliersAsync.when(
-                    data: (suppliers) => DropdownButtonFormField<String>(
-                      value: _selectedBuyerAccountId,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                          vertical: AppTheme.spacing12,
-                        ),
-                      ),
-                      hint: Text(
-                        'Select supplier',
-                        style: AppTheme.hintText,
-                      ),
-                      items: suppliers.map((supplier) {
-                        return DropdownMenuItem<String>(
-                          value: supplier.accountId ?? supplier.accountCode,
+                    data: (suppliers) {
+                      if (suppliers.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
                           child: Text(
-                            supplier.name,
-                            style: AppTheme.bodySmall,
+                            'No suppliers available',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.warningColor,
+                            ),
                           ),
                         );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedBuyerAccountId = value;
-                          _buyerNameController.clear();
-                          _buyerPhoneController.clear();
-                        });
-                      },
-                      validator: (value) {
-                        if (_buyerType == 'supplier' && value == null) {
-                          return 'Please select a supplier or provide phone/name';
+                      }
+
+                      // Create a map with unique values, using accountId (UUID) as primary key
+                      // This ensures we send IDs to the backend instead of codes
+                      final uniqueSuppliers = <String, Supplier>{};
+                      for (final supplier in suppliers) {
+                        // Prefer accountId (UUID) if available, otherwise use accountCode
+                        // The backend now returns account.id in the response
+                        final key = (supplier.accountId != null && supplier.accountId!.isNotEmpty)
+                            ? supplier.accountId!
+                            : (supplier.accountCode.isNotEmpty 
+                                ? supplier.accountCode 
+                                : supplier.relationshipId);
+                        
+                        if (key.isNotEmpty) {
+                          // Only add if not already present (avoid duplicates)
+                          if (!uniqueSuppliers.containsKey(key)) {
+                            uniqueSuppliers[key] = supplier;
+                          }
                         }
-                        return null;
-                      },
-                    ),
+                      }
+
+                      // Ensure selected value exists in the current list
+                      final validSelectedValue = _selectedBuyerAccountId != null &&
+                              uniqueSuppliers.containsKey(_selectedBuyerAccountId)
+                          ? _selectedBuyerAccountId
+                          : null;
+
+                      // Update state if selected value is invalid
+                      if (_selectedBuyerAccountId != validSelectedValue) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() {
+                              _selectedBuyerAccountId = validSelectedValue;
+                            });
+                          }
+                        });
+                      }
+
+                      if (uniqueSuppliers.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.errorColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
+                          child: Text(
+                            'No suppliers with valid account information',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.errorColor,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return DropdownButtonFormField<String>(
+                        value: validSelectedValue,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing12,
+                            vertical: AppTheme.spacing12,
+                          ),
+                        ),
+                        hint: Text(
+                          'Select supplier',
+                          style: AppTheme.hintText,
+                        ),
+                        items: uniqueSuppliers.entries.map((entry) {
+                          // Use the key which is already accountId (UUID) if available, otherwise accountCode
+                          // This ensures we send IDs to the backend
+                          return DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(
+                              entry.value.name,
+                              style: AppTheme.bodySmall,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedBuyerAccountId = value;
+                            _buyerNameController.clear();
+                            _buyerPhoneController.clear();
+                          });
+                        },
+                        validator: (value) {
+                          if (_buyerType == 'supplier' && value == null) {
+                            return 'Please select a supplier or provide phone/name';
+                          }
+                          return null;
+                        },
+                      );
+                    },
                     loading: () => const Center(
                       child: Padding(
                         padding: EdgeInsets.all(AppTheme.spacing16),
@@ -472,46 +584,85 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                   ),
                 if (_buyerType == 'customer')
                   customersAsync.when(
-                    data: (customers) => DropdownButtonFormField<String>(
-                      value: _selectedBuyerAccountId,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacing12,
-                          vertical: AppTheme.spacing12,
-                        ),
-                      ),
-                      hint: Text(
-                        'Select customer (optional)',
-                        style: AppTheme.hintText,
-                      ),
-                      items: [
-                        const DropdownMenuItem<String>(
-                          value: null,
-                          child: Text('None (new customer)'),
-                        ),
-                        ...customers.map((customer) {
-                          return DropdownMenuItem<String>(
-                            value: customer.accountId ?? customer.accountCode,
-                            child: Text(
-                              customer.name,
-                              style: AppTheme.bodySmall,
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedBuyerAccountId = value;
-                          if (value != null) {
-                            _buyerNameController.clear();
-                            _buyerPhoneController.clear();
+                    data: (customers) {
+                      // Filter out customers without valid account identifiers
+                      final validCustomers = customers.where((c) {
+                        final id = c.accountId ?? c.accountCode;
+                        return id != null && id.isNotEmpty;
+                      }).toList();
+
+                      // Remove duplicates by creating a map with unique values
+                      // Prefer accountId (UUID) if available, otherwise use accountCode
+                      final uniqueCustomers = <String, Customer>{};
+                      for (final customer in validCustomers) {
+                        // Use accountId (UUID) if available, otherwise accountCode
+                        final key = (customer.accountId != null && customer.accountId!.isNotEmpty)
+                            ? customer.accountId!
+                            : customer.accountCode;
+                        if (key.isNotEmpty) {
+                          uniqueCustomers[key] = customer;
+                        }
+                      }
+
+                      // Ensure selected value exists in the current list (or is null for "None")
+                      final validSelectedValue = _selectedBuyerAccountId != null &&
+                              uniqueCustomers.containsKey(_selectedBuyerAccountId)
+                          ? _selectedBuyerAccountId
+                          : null;
+
+                      // Update state if selected value is invalid
+                      if (_selectedBuyerAccountId != validSelectedValue) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() {
+                              _selectedBuyerAccountId = validSelectedValue;
+                            });
                           }
                         });
-                      },
-                    ),
+                      }
+
+                      return DropdownButtonFormField<String>(
+                        value: validSelectedValue,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing12,
+                            vertical: AppTheme.spacing12,
+                          ),
+                        ),
+                        hint: Text(
+                          'Select customer (optional)',
+                          style: AppTheme.hintText,
+                        ),
+                        items: [
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text('None (new customer)'),
+                          ),
+                          ...uniqueCustomers.entries.map((entry) {
+                            // Use the key which is already accountId (UUID) if available, otherwise accountCode
+                            return DropdownMenuItem<String>(
+                              value: entry.key,
+                              child: Text(
+                                entry.value.name,
+                                style: AppTheme.bodySmall,
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedBuyerAccountId = value;
+                            if (value != null) {
+                              _buyerNameController.clear();
+                              _buyerPhoneController.clear();
+                            }
+                          });
+                        },
+                      );
+                    },
                     loading: () => const Center(
                       child: Padding(
                         padding: EdgeInsets.all(AppTheme.spacing16),
@@ -562,7 +713,7 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                   inputFormatters: [PhoneInputFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
-                    hintText: '788606765',
+                    hintText: '788123456',
                     prefixIcon: Icon(Icons.phone_outlined, size: 20),
                   ),
                   validator: (value) {
@@ -640,12 +791,79 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
               ),
               const SizedBox(height: AppTheme.spacing16),
 
+              // Payment Status Toggle (only for suppliers)
+              if (_buyerType == 'supplier') ...[
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spacing12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                    border: Border.all(
+                      color: AppTheme.thinBorderColor,
+                      width: AppTheme.thinBorderWidth,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Payment Status',
+                              style: AppTheme.bodySmall.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimaryColor,
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacing4),
+                            Text(
+                              _isPaid
+                                  ? 'Paid - Amount will be recorded'
+                                  : 'Unpaid - Debt will be deducted from payroll',
+                              style: AppTheme.labelSmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: _isPaid,
+                        onChanged: (value) {
+                          setState(() {
+                            _isPaid = value;
+                            // If toggled to unpaid, set amount to 0
+                            // If toggled to paid, keep current amount or set to total
+                            if (!value) {
+                              _amountPaidController.text = '0';
+                            } else {
+                              final currentAmount = double.tryParse(_amountPaidController.text) ?? 0;
+                              if (currentAmount == 0) {
+                                _amountPaidController.text = _calculatedTotal.toStringAsFixed(0);
+                              }
+                            }
+                          });
+                        },
+                        activeColor: AppTheme.primaryColor,
+                        inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
+                        inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing16),
+              ],
+
               // Amount Paid Field
               TextFormField(
                 controller: _amountPaidController,
                 decoration: InputDecoration(
                   labelText: _buyerType == 'supplier'
-                      ? 'Amount Paid (can be partial) *'
+                      ? (_isPaid 
+                          ? 'Amount Paid *' 
+                          : 'Amount Paid (0 for full debt) *')
                       : 'Amount Paid (must be full) *',
                   hintText: '0',
                   prefixIcon: const Icon(Icons.payment_outlined, size: 20),
@@ -659,25 +877,50 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Amount paid is required';
                   }
-                  final paid = double.tryParse(value) ?? 0;
+                  final paid = double.tryParse(value);
+                  if (paid == null) {
+                    return 'Please enter a valid amount';
+                  }
                   if (paid < 0) {
                     return 'Amount paid cannot be negative';
                   }
                   final total = _calculatedTotal;
-                  if (_buyerType != 'supplier' && paid < total) {
-                    return 'Must pay full amount for customers/other buyers';
-                  }
-                  if (paid > total) {
-                    return 'Amount paid cannot exceed total amount';
+                  
+                  // Validation based on buyer type and payment status
+                  if (_buyerType == 'supplier') {
+                    // Suppliers: If not paid, can be 0. If paid, can be 0 to total
+                    if (_isPaid && paid > total) {
+                      return 'Amount paid cannot exceed total amount';
+                    }
+                    // If not paid, amount can be 0 (debt)
+                    // If paid, amount can be 0 to total (partial or full payment)
+                  } else {
+                    // Customers and others: Must pay full amount
+                    if (paid < total) {
+                      return 'Must pay full amount for customers/other buyers';
+                    }
+                    if (paid > total) {
+                      return 'Amount paid cannot exceed total amount';
+                    }
                   }
                   return null;
                 },
               ),
-              if (_buyerType == 'supplier')
+              if (_buyerType == 'supplier' && !_isPaid)
                 Padding(
                   padding: const EdgeInsets.only(top: AppTheme.spacing4),
                   child: Text(
-                    'Suppliers can buy on credit (debt will be deducted from payroll)',
+                    'This sale will be recorded as debt and deducted from supplier payroll',
+                    style: AppTheme.labelSmall.copyWith(
+                      color: AppTheme.warningColor,
+                    ),
+                  ),
+                ),
+              if (_buyerType == 'supplier' && _isPaid)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppTheme.spacing4),
+                  child: Text(
+                    'Suppliers can pay partial or full amount. Unpaid amount will be debt.',
                     style: AppTheme.labelSmall.copyWith(
                       color: AppTheme.textSecondaryColor,
                     ),

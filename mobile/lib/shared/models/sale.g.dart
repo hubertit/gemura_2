@@ -49,6 +49,7 @@ Map<String, dynamic> _$SaleToJson(Sale instance) {
 }
 
 SaleAccount _$SaleAccountFromJson(Map<String, dynamic> json) => SaleAccount(
+      id: json['id'] as String?,
       code: json['code'] as String?,
       name: json['name'] as String?,
       type: json['type'] as String?,
@@ -65,6 +66,7 @@ Map<String, dynamic> _$SaleAccountToJson(SaleAccount instance) {
     }
   }
 
+  writeNotNull('id', instance.id);
   writeNotNull('code', instance.code);
   writeNotNull('name', instance.name);
   writeNotNull('type', instance.type);

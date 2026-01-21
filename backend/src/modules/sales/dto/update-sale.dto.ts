@@ -6,7 +6,13 @@ export class UpdateSaleDto {
   @IsNotEmpty()
   @IsString()
   sale_id: string;
-  @ApiProperty({ required: false, description: 'Customer account code' })
+
+  @ApiProperty({ required: false, description: 'Customer account ID (UUID) - preferred method' })
+  @IsOptional()
+  @IsString()
+  customer_account_id?: string;
+
+  @ApiProperty({ required: false, description: 'Customer account code (fallback if customer_account_id not provided)' })
   @IsOptional()
   @IsString()
   customer_account_code?: string;

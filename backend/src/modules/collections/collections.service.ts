@@ -202,7 +202,7 @@ export class CollectionsService {
           customer_account_id: customerAccountId,
           quantity: quantity,
           unit_price: unitPrice,
-          status: status as any,
+          status: (status || 'accepted') as any,
           sale_at: new Date(collection_at),
           notes: notes || null,
           recorded_by: user.id,
@@ -238,7 +238,7 @@ export class CollectionsService {
           quantity: quantity,
           unit_price: unitPrice,
           total_amount: totalAmount,
-          status: status,
+          status: status || 'accepted',
           collection_at: collection_at,
           payment_status: payment_status || 'unpaid',
         },
@@ -357,12 +357,14 @@ export class CollectionsService {
       created_at: collection.created_at,
       updated_at: collection.updated_at,
       supplier_account: {
+        id: collection.supplier_account.id,
         code: collection.supplier_account.code,
         name: collection.supplier_account.name,
         type: collection.supplier_account.type,
         status: collection.supplier_account.status,
       },
       customer_account: {
+        id: collection.customer_account.id,
         code: collection.customer_account.code,
         name: collection.customer_account.name,
         type: collection.customer_account.type,
@@ -437,12 +439,14 @@ export class CollectionsService {
         created_at: collection.created_at,
         updated_at: collection.updated_at,
         supplier_account: {
+          id: collection.supplier_account.id,
           code: collection.supplier_account.code,
           name: collection.supplier_account.name,
           type: collection.supplier_account.type,
           status: collection.supplier_account.status,
         },
         customer_account: {
+          id: collection.customer_account.id,
           code: collection.customer_account.code,
           name: collection.customer_account.name,
           type: collection.customer_account.type,
@@ -618,6 +622,60 @@ export class CollectionsService {
       code: 200,
       status: 'success',
       message: 'Collection cancelled successfully.',
+    };
+  }
+
+  async deleteCollection(user: User, collectionId: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+
+    // Validate collection_id is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(collectionId)) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Invalid collection ID format. Collection ID must be a valid UUID.',
+      });
+    }
+
+    const customerAccountId = user.default_account_id;
+
+    // Check if collection exists and belongs to customer
+    const collection = await this.prisma.milkSale.findFirst({
+      where: {
+        id: collectionId,
+        customer_account_id: customerAccountId,
+        status: { not: 'deleted' },
+      },
+    });
+
+    if (!collection) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Collection not found or not authorized.',
+      });
+    }
+
+    // Soft delete by setting status to deleted
+    await this.prisma.milkSale.update({
+      where: { id: collectionId },
+      data: {
+        status: 'deleted',
+        updated_by: user.id,
+      },
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Collection deleted successfully.',
     };
   }
 }

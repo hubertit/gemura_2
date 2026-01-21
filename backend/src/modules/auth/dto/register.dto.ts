@@ -59,12 +59,13 @@ export class RegisterDto {
   password: string;
 
   @ApiProperty({
-    description: 'Account name',
+    description: 'Account name (optional, defaults to user name if not provided)',
     example: 'My Business Account',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  account_name: string;
+  account_name?: string;
 
   @ApiProperty({
     description: 'Account type',

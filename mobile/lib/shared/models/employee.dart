@@ -46,25 +46,41 @@ class Employee {
       }
     }
 
+    // Backend returns nested structure: { id, user: { id, name, email, phone, account_type }, role, permissions, status, created_at }
+    // Handle both nested structure (from backend) and flat structure (for compatibility)
+    final userData = json['user'] as Map<String, dynamic>?;
+    final accessId = json['id']?.toString() ?? json['access_id']?.toString() ?? '';
+    final userId = userData?['id']?.toString() ?? json['user_id']?.toString() ?? '';
+    final name = userData?['name']?.toString() ?? json['name']?.toString() ?? '';
+    final phone = userData?['phone']?.toString() ?? json['phone']?.toString() ?? '';
+    final email = userData?['email']?.toString() ?? json['email']?.toString();
+    final accountType = userData?['account_type']?.toString() ?? '';
+    
+    // Use account_type as code if code is not available, or use first 8 chars of user_id as fallback
+    final code = json['code']?.toString() ?? 
+                 (accountType.isNotEmpty ? accountType : (userId.length >= 8 ? userId.substring(0, 8) : userId));
+
     return Employee(
-      accessId: json['access_id']?.toString() ?? '',
-      userId: json['user_id']?.toString() ?? '',
-      code: json['code']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      phone: json['phone']?.toString() ?? '',
-      email: json['email']?.toString(),
+      accessId: accessId,
+      userId: userId,
+      code: code,
+      name: name,
+      phone: phone,
+      email: email,
       nid: json['nid']?.toString(),
       address: json['address']?.toString(),
       role: json['role']?.toString() ?? '',
       permissions: permissions,
       status: json['status']?.toString() ?? '',
-      userStatus: json['user_status']?.toString() ?? '',
+      userStatus: userData?['status']?.toString() ?? json['user_status']?.toString() ?? 'active',
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at'].toString())
           : DateTime.now(),
-      userCreatedAt: json['user_created_at'] != null 
-          ? DateTime.parse(json['user_created_at'].toString())
-          : DateTime.now(),
+      userCreatedAt: userData?['created_at'] != null
+          ? DateTime.parse(userData!['created_at'].toString())
+          : json['user_created_at'] != null
+              ? DateTime.parse(json['user_created_at'].toString())
+              : DateTime.now(),
     );
   }
 

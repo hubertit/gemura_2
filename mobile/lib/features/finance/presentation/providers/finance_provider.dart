@@ -31,11 +31,20 @@ class IncomeStatementParams {
       identical(this, other) ||
       other is IncomeStatementParams &&
           runtimeType == other.runtimeType &&
-          fromDate == other.fromDate &&
-          toDate == other.toDate;
+          fromDate.year == other.fromDate.year &&
+          fromDate.month == other.fromDate.month &&
+          fromDate.day == other.fromDate.day &&
+          toDate.year == other.toDate.year &&
+          toDate.month == other.toDate.month &&
+          toDate.day == other.toDate.day;
 
   @override
-  int get hashCode => fromDate.hashCode ^ toDate.hashCode;
+  int get hashCode => fromDate.year.hashCode ^ 
+                      fromDate.month.hashCode ^ 
+                      fromDate.day.hashCode ^
+                      toDate.year.hashCode ^ 
+                      toDate.month.hashCode ^ 
+                      toDate.day.hashCode;
 }
 
 final transactionsProvider = FutureProvider.family<List<Transaction>, TransactionsParams>(

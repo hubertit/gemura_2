@@ -4,11 +4,22 @@ import { MilkSaleStatus } from '@prisma/client';
 
 export class CreateSaleDto {
   @ApiProperty({
-    description: 'Customer account code',
-    example: 'A_XYZ789',
+    description: 'Customer account ID (UUID) - preferred method',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
   })
   @IsString()
-  customer_account_code: string;
+  @IsOptional()
+  customer_account_id?: string;
+
+  @ApiProperty({
+    description: 'Customer account code (fallback if customer_account_id not provided)',
+    example: 'A_XYZ789',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  customer_account_code?: string;
 
   @ApiProperty({
     description: 'Quantity of milk in liters',
@@ -33,9 +44,9 @@ export class CreateSaleDto {
   @ApiProperty({
     description: 'Sale status',
     enum: ['pending', 'accepted', 'rejected', 'cancelled'],
-    example: 'pending',
+    example: 'accepted',
     required: false,
-    default: 'pending',
+    default: 'accepted',
   })
   @IsEnum(['pending', 'accepted', 'rejected', 'cancelled'])
   @IsOptional()

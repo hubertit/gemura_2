@@ -9,6 +9,7 @@ class Overview {
   final String breakdownType;
   @JsonKey(name: 'chart_period')
   final String? chartPeriod;
+  @JsonKey(defaultValue: [])
   final List<OverviewBreakdown> breakdown;
   @JsonKey(name: 'recent_transactions')
   final List<OverviewTransaction>? recentTransactions;

@@ -142,9 +142,81 @@ export class SuppliersController {
     return this.suppliersService.getAllSuppliers(user);
   }
 
+  @Get('by-id/:id')
+  @ApiOperation({
+    summary: 'Get supplier details by ID',
+    description: 'Retrieve details of a specific supplier by account ID (UUID). Returns supplier information and relationship details.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Supplier account ID (UUID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Supplier fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Supplier fetched successfully.',
+      data: {
+        supplier: {
+          account_id: 'account-uuid',
+          account_code: 'A_ABC123',
+          name: 'John Doe',
+          type: 'tenant',
+          status: 'active',
+          user: {
+            id: 'user-uuid',
+            name: 'John Doe',
+            phone: '250788123456',
+            email: 'supplier@example.com',
+            nid: '1199887766554433',
+            address: 'Kigali, Rwanda',
+            account_type: 'supplier',
+          },
+          relationship: {
+            price_per_liter: 390.0,
+            average_supply_quantity: 120.5,
+            relationship_status: 'active',
+            created_at: '2025-01-04T10:00:00Z',
+            updated_at: '2025-01-04T10:00:00Z',
+          },
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Unauthorized. Invalid token.',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Invalid supplier account ID format. Must be a valid UUID.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Supplier account not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Supplier account not found.',
+    },
+  })
+  async getSupplierById(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.suppliersService.getSupplierById(user, id);
+  }
+
   @Get(':code')
   @ApiOperation({
-    summary: 'Get supplier details',
+    summary: 'Get supplier details by code',
     description: 'Retrieve details of a specific supplier by account code. Returns supplier information and relationship details.',
   })
   @ApiParam({
