@@ -318,6 +318,14 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
                   y: {
                     formatter: (value: number) => formatCurrency(value),
                   },
+                  custom: ({ series, seriesIndex, dataPointIndex, w }: any) => {
+                    const value = series[seriesIndex][dataPointIndex];
+                    return `<div class="apexcharts-tooltip-title" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px;"></div>
+                            <div class="apexcharts-tooltip-series-group" style="order: 1;">
+                              <span class="apexcharts-tooltip-text-y-label"></span>
+                              <span class="apexcharts-tooltip-text-y-value">${formatCurrency(value)}</span>
+                            </div>`;
+                  },
                 },
                 grid: {
                   strokeDashArray: 3,
