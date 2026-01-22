@@ -208,12 +208,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-sm text-gray-600 mt-1">System overview and analytics</p>
-      </div>
-
       {/* Dashboard Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8">
