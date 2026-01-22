@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -21,26 +21,43 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const LIMIT = 20; // Constant limit to avoid dependency issues
+  const hasLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
 
-  const loadUsers = useCallback(async (page: number = 1) => {
+  const loadUsers = useCallback(async (page: number = 1, searchTerm?: string) => {
+    // Prevent concurrent loads
+    if (isLoadingRef.current) {
+      console.log('Load already in progress, skipping...');
+      return;
+    }
+
     try {
+      isLoadingRef.current = true;
       setLoading(true);
       setError('');
-      const response: UsersResponse = await adminApi.getUsers(page, LIMIT, search || undefined, currentAccount?.account_id);
+      const searchValue = searchTerm !== undefined ? searchTerm : search;
+      
+      console.log('Loading users...', { page, searchValue, accountId: currentAccount?.account_id });
+      const response: UsersResponse = await adminApi.getUsers(page, LIMIT, searchValue || undefined, currentAccount?.account_id);
+      console.log('Users response:', { code: response?.code, hasData: !!response?.data, usersCount: response?.data?.users?.length });
       
       // Ensure we always set loading to false, even if response structure is unexpected
       if (response && response.code === 200 && response.data) {
         const usersArray = Array.isArray(response.data.users) ? response.data.users : [];
         const paginationData = response.data.pagination || { page: 1, limit: LIMIT, total: 0, totalPages: 0 };
         
+        console.log('Setting users:', usersArray.length, 'Setting pagination:', paginationData);
         setUsers(usersArray);
         setPagination(paginationData);
+        hasLoadedRef.current = true;
       } else {
+        console.error('Invalid response structure:', response);
         setError(response?.message || 'Failed to load users');
         setUsers([]);
         setPagination({ page: 1, limit: LIMIT, total: 0, totalPages: 0 });
       }
     } catch (err: any) {
+      console.error('Error loading users:', err);
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to load users';
       setError(errorMessage);
       setUsers([]);
@@ -48,22 +65,30 @@ export default function UsersPage() {
       useToastStore.getState().error(errorMessage);
     } finally {
       // Always set loading to false, no matter what
+      console.log('Setting loading to false');
+      isLoadingRef.current = false;
       setLoading(false);
     }
   }, [search, currentAccount?.account_id]);
 
+  // Initial load and permission check - only run once
   useEffect(() => {
     if (!canManageUsers() && !isAdmin()) {
       router.push('/dashboard');
       return;
     }
-    loadUsers(1);
-  }, [canManageUsers, isAdmin, router, loadUsers]);
+    
+    // Only load if we haven't loaded yet
+    if (!hasLoadedRef.current && !isLoadingRef.current) {
+      loadUsers(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canManageUsers, isAdmin, router]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPagination(prev => ({ ...prev, page: 1 }));
-    loadUsers(1);
+    loadUsers(1, search);
   };
 
   const handleDelete = async (userId: string) => {
