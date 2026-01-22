@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -77,10 +77,12 @@ export default function CreateUserPage() {
   });
 
   // Check permission on mount
-  if (typeof window !== 'undefined' && !canManageUsers() && !isAdmin()) {
-    router.push('/admin/users');
-    return null;
-  }
+  useEffect(() => {
+    if (!canManageUsers() && !isAdmin()) {
+      router.push('/admin/users');
+      return;
+    }
+  }, [canManageUsers, isAdmin, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
