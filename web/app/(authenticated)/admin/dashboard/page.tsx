@@ -281,7 +281,7 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Revenue Trend Chart */}
         {stats.trends && stats.trends.daily.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-2">
+          <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-3">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend (Last 30 Days)</h3>
             <Chart
               type="area"
@@ -338,7 +338,7 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
 
         {/* Sales by Status */}
         {stats.salesByStatus && stats.salesByStatus.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-2">
+          <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-1">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Sales by Status</h3>
             <Chart
               type="donut"
