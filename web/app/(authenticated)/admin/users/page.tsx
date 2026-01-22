@@ -20,34 +20,49 @@ export default function UsersPage() {
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const LIMIT = 20; // Constant limit to avoid dependency issues
 
   const loadUsers = useCallback(async (page: number = 1) => {
     try {
       setLoading(true);
-      const response: UsersResponse = await adminApi.getUsers(page, pagination.limit, search || undefined, currentAccount?.account_id);
-      if (response.code === 200) {
-        setUsers(response.data.users);
-        setPagination(response.data.pagination);
+      setError('');
+      const response: UsersResponse = await adminApi.getUsers(page, LIMIT, search || undefined, currentAccount?.account_id);
+      
+      // Ensure we always set loading to false, even if response structure is unexpected
+      if (response && response.code === 200 && response.data) {
+        const usersArray = Array.isArray(response.data.users) ? response.data.users : [];
+        const paginationData = response.data.pagination || { page: 1, limit: LIMIT, total: 0, totalPages: 0 };
+        
+        setUsers(usersArray);
+        setPagination(paginationData);
       } else {
-        setError('Failed to load users');
+        setError(response?.message || 'Failed to load users');
+        setUsers([]);
+        setPagination({ page: 1, limit: LIMIT, total: 0, totalPages: 0 });
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to load users');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to load users';
+      setError(errorMessage);
+      setUsers([]);
+      setPagination({ page: 1, limit: LIMIT, total: 0, totalPages: 0 });
+      useToastStore.getState().error(errorMessage);
     } finally {
+      // Always set loading to false, no matter what
       setLoading(false);
     }
-  }, [pagination.limit, search, currentAccount?.account_id]);
+  }, [search, currentAccount?.account_id]);
 
   useEffect(() => {
     if (!canManageUsers() && !isAdmin()) {
       router.push('/dashboard');
       return;
     }
-    loadUsers();
+    loadUsers(1);
   }, [canManageUsers, isAdmin, router, loadUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setPagination(prev => ({ ...prev, page: 1 }));
     loadUsers(1);
   };
 
@@ -186,29 +201,31 @@ export default function UsersPage() {
       />
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
+      {pagination.total > 0 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
             Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
             {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
             {pagination.total} users
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => loadUsers(pagination.page - 1)}
-              disabled={pagination.page === 1}
-              className="btn btn-secondary btn-sm"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => loadUsers(pagination.page + 1)}
-              disabled={pagination.page >= pagination.totalPages}
-              className="btn btn-secondary btn-sm"
-            >
-              Next
-            </button>
-          </div>
+          {pagination.totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => loadUsers(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className="btn btn-secondary btn-sm"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => loadUsers(pagination.page + 1)}
+                disabled={pagination.page >= pagination.totalPages}
+                className="btn btn-secondary btn-sm"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
