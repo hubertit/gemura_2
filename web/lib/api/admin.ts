@@ -110,7 +110,7 @@ export const adminApi = {
     return apiClient.get('/admin/dashboard/stats', { params });
   },
 
-  getUsers: async (page: number = 1, limit: number = 20, search?: string, accountId?: string): Promise<UsersResponse> => {
+  getUsers: async (page: number = 1, limit: number = 10, search?: string, accountId?: string): Promise<UsersResponse> => {
     const params: any = { page, limit };
     if (search) params.search = search;
     if (accountId) params.account_id = accountId;

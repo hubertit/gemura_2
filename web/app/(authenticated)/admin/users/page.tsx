@@ -18,10 +18,10 @@ export default function UsersPage() {
   const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserListItem[]>([]);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
-  const LIMIT = 20; // Constant limit to avoid dependency issues
+  const LIMIT = 10; // Constant limit to avoid dependency issues
   const hasLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
   const searchRef = useRef(search);
