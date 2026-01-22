@@ -7,6 +7,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
 import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
+import Filters, { FilterGroup, FilterLabel } from '@/app/components/Filters';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -207,35 +208,42 @@ export default function InventoryPage() {
 
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-sm p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input w-full"
-            >
-              {STATUS_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center pt-6">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={lowStockFilter}
-                onChange={(e) => setLowStockFilter(e.target.checked)}
-                className="mr-2 h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
-              />
-              <span className="text-sm text-gray-700">Show Low Stock Only</span>
-            </label>
-          </div>
-        </div>
-      </div>
+      <Filters
+        activeFilterCount={(statusFilter ? 1 : 0) + (lowStockFilter ? 1 : 0)}
+        onApply={() => loadInventory()}
+        onClear={() => {
+          setStatusFilter('');
+          setLowStockFilter(false);
+          loadInventory();
+        }}
+      >
+        <FilterGroup>
+          <FilterLabel>Status</FilterLabel>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+          >
+            {STATUS_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </FilterGroup>
+        <FilterGroup>
+          <FilterLabel>Stock Filter</FilterLabel>
+          <label className="flex items-center h-9">
+            <input
+              type="checkbox"
+              checked={lowStockFilter}
+              onChange={(e) => setLowStockFilter(e.target.checked)}
+              className="mr-2 h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700">Show Low Stock Only</span>
+          </label>
+        </FilterGroup>
+      </Filters>
 
       {/* Error Message */}
       {error && (

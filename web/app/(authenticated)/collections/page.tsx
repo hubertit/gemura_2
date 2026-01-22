@@ -7,6 +7,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { collectionsApi, Collection, CollectionsFilters } from '@/lib/api/collections';
 import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
+import Filters, { FilterGroup, FilterLabel } from '@/app/components/Filters';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faFilter, faTimes } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -24,7 +25,6 @@ export default function CollectionsPage() {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [error, setError] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<CollectionsFilters>({
     status: searchParams.get('status') || undefined,
     date_from: searchParams.get('date_from') || undefined,
@@ -67,13 +67,20 @@ export default function CollectionsPage() {
 
   const handleApplyFilters = () => {
     loadCollections();
-    setShowFilters(false);
   };
 
   const handleClearFilters = () => {
     setFilters({});
-    setShowFilters(false);
     loadCollections();
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.status) count++;
+    if (filters.date_from) count++;
+    if (filters.date_to) count++;
+    if (filters.supplier_account_code) count++;
+    return count;
   };
 
   const handleCancelCollection = async (collectionId: string) => {
@@ -197,88 +204,61 @@ export default function CollectionsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Collections</h1>
           <p className="text-sm text-gray-600 mt-1">Manage milk collections from suppliers</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="btn btn-secondary"
-          >
-            <Icon icon={faFilter} size="sm" className="mr-2" />
-            Filters
-          </button>
-          <Link href="/collections/new" className="btn btn-primary">
-            <Icon icon={faPlus} size="sm" className="mr-2" />
-            New Collection
-          </Link>
-        </div>
+        <Link href="/collections/new" className="btn btn-primary">
+          <Icon icon={faPlus} size="sm" className="mr-2" />
+          New Collection
+        </Link>
       </div>
 
-
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-gray-900">Filter Collections</h3>
-            <button
-              onClick={() => setShowFilters(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <Icon icon={faTimes} size="sm" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={filters.status || ''}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="input w-full"
-              >
-                {STATUS_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date From</label>
-              <input
-                type="date"
-                value={filters.date_from || ''}
-                onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                className="input w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date To</label>
-              <input
-                type="date"
-                value={filters.date_to || ''}
-                onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                className="input w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Supplier Code</label>
-              <input
-                type="text"
-                value={filters.supplier_account_code || ''}
-                onChange={(e) => handleFilterChange('supplier_account_code', e.target.value)}
-                className="input w-full"
-                placeholder="A_ABC123"
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-4">
-            <button onClick={handleClearFilters} className="btn btn-secondary">
-              Clear
-            </button>
-            <button onClick={handleApplyFilters} className="btn btn-primary">
-              Apply Filters
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Filters */}
+      <Filters
+        activeFilterCount={getActiveFilterCount()}
+        onApply={handleApplyFilters}
+        onClear={handleClearFilters}
+      >
+        <FilterGroup>
+          <FilterLabel>Status</FilterLabel>
+          <select
+            value={filters.status || ''}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+          >
+            {STATUS_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </FilterGroup>
+        <FilterGroup>
+          <FilterLabel>Date From</FilterLabel>
+          <input
+            type="date"
+            value={filters.date_from || ''}
+            onChange={(e) => handleFilterChange('date_from', e.target.value)}
+            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+          />
+        </FilterGroup>
+        <FilterGroup>
+          <FilterLabel>Date To</FilterLabel>
+          <input
+            type="date"
+            value={filters.date_to || ''}
+            onChange={(e) => handleFilterChange('date_to', e.target.value)}
+            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+          />
+        </FilterGroup>
+        <FilterGroup>
+          <FilterLabel>Supplier Code</FilterLabel>
+          <input
+            type="text"
+            value={filters.supplier_account_code || ''}
+            onChange={(e) => handleFilterChange('supplier_account_code', e.target.value)}
+            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+            placeholder="A_ABC123"
+          />
+        </FilterGroup>
+      </Filters>
 
       {/* Error Message */}
       {error && (

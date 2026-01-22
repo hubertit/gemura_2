@@ -8,6 +8,7 @@ import { adminApi, UserListItem, UsersResponse } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
+import Pagination from '@/app/components/Pagination';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle } from '@/app/components/Icon';
 
 export default function UsersPage() {
@@ -239,31 +240,14 @@ export default function UsersPage() {
 
       {/* Pagination */}
       {pagination.total > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-            {pagination.total} users
-          </div>
-          {pagination.totalPages > 1 && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => loadUsers(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="btn btn-secondary btn-sm"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => loadUsers(pagination.page + 1)}
-                disabled={pagination.page >= pagination.totalPages}
-                className="btn btn-secondary btn-sm"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.total}
+          pageSize={pagination.limit}
+          itemLabel="users"
+          onPageChange={(page) => loadUsers(page)}
+        />
       )}
     </div>
   );
