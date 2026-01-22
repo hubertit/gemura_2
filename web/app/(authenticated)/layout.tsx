@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore, useAuthHydrated } from '@/store/auth';
 import Sidebar from '@/app/components/Sidebar';
 import Header from '@/app/components/Header';
+import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 
 export default function AuthenticatedLayout({
   children,
@@ -72,23 +73,25 @@ export default function AuthenticatedLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
-      <Sidebar
-        isOpen={sidebarOpen}
-        collapsed={sidebarCollapsed}
-        onClose={handleSidebarClose}
-        onCollapsedChange={handleSidebarCollapsedChange}
-      />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        <Header
-          sidebarOpen={sidebarOpen}
-          sidebarCollapsed={sidebarCollapsed}
-          onMenuToggle={handleSidebarToggle}
+    <ErrorBoundary>
+      <div className="flex h-screen bg-gray-100 overflow-hidden">
+        <Sidebar
+          isOpen={sidebarOpen}
+          collapsed={sidebarCollapsed}
+          onClose={handleSidebarClose}
+          onCollapsedChange={handleSidebarCollapsedChange}
         />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+        <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+          <Header
+            sidebarOpen={sidebarOpen}
+            sidebarCollapsed={sidebarCollapsed}
+            onMenuToggle={handleSidebarToggle}
+          />
+          <main className="flex-1 overflow-y-auto p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
