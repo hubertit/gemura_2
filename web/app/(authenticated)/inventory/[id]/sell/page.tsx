@@ -7,6 +7,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem, CreateInventorySaleData } from '@/lib/api/inventory';
 import { customersApi, Customer } from '@/lib/api/customers';
 import { suppliersApi, Supplier } from '@/lib/api/suppliers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faDollarSign, faUser, faBox, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const BUYER_TYPES = [
@@ -185,7 +186,8 @@ export default function SellInventoryPage() {
       const response = await inventoryApi.sellInventoryItem(itemId, saleData);
 
       if (response.code === 200 || response.code === 201) {
-        router.push(`/inventory/${itemId}?sold=true`);
+        useToastStore.getState().success('Inventory item sold successfully!');
+        router.push(`/inventory/${itemId}`);
       } else {
         setError(response.message || 'Failed to sell inventory item');
       }

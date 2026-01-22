@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { collectionsApi, UpdateCollectionData, Collection } from '@/lib/api/collections';
+import { useToastStore } from '@/store/toast';
 import Icon, { faBox, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -106,7 +107,8 @@ export default function EditCollectionPage() {
       const response = await collectionsApi.updateCollection(finalData);
 
       if (response.code === 200) {
-        router.push(`/collections/${collectionId}?updated=true`);
+        useToastStore.getState().success('Collection updated successfully!');
+        router.push(`/collections/${collectionId}`);
       } else {
         setError(response.message || 'Failed to update collection');
       }

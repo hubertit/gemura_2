@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, UpdateInventoryData, InventoryItem } from '@/lib/api/inventory';
 import { categoriesApi, Category } from '@/lib/api/categories';
+import { useToastStore } from '@/store/toast';
 import Icon, { faWarehouse, faBox, faDollarSign, faTag, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 export default function EditInventoryPage() {
@@ -147,7 +148,8 @@ export default function EditInventoryPage() {
       const response = await inventoryApi.updateInventoryItem(itemId, finalData);
 
       if (response.code === 200) {
-        router.push(`/inventory/${itemId}?updated=true`);
+        useToastStore.getState().success('Inventory item updated successfully!');
+        router.push(`/inventory/${itemId}`);
       } else {
         setError(response.message || 'Failed to update inventory item');
       }

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { salesApi, UpdateSaleData, Sale } from '@/lib/api/sales';
 import { customersApi, Customer } from '@/lib/api/customers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -135,7 +136,8 @@ export default function EditSalePage() {
       const response = await salesApi.updateSale(finalData);
 
       if (response.code === 200) {
-        router.push(`/sales/${saleId}?updated=true`);
+        useToastStore.getState().success('Sale updated successfully!');
+        router.push(`/sales/${saleId}`);
       } else {
         setError(response.message || 'Failed to update sale');
       }

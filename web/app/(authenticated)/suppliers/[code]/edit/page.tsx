@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { suppliersApi, UpdateSupplierData, SupplierDetails } from '@/lib/api/suppliers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faDollarSign, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -90,7 +91,8 @@ export default function EditSupplierPage() {
       const response = await suppliersApi.updateSupplier(formData);
 
       if (response.code === 200) {
-        router.push(`/suppliers/${supplierCode}?updated=true`);
+        useToastStore.getState().success('Supplier updated successfully!');
+        router.push(`/suppliers/${supplierCode}`);
       } else {
         setError(response.message || 'Failed to update supplier');
       }

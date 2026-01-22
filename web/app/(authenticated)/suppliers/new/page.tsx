@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { suppliersApi, CreateSupplierData } from '@/lib/api/suppliers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faBuilding, faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 export default function CreateSupplierPage() {
@@ -91,7 +92,8 @@ export default function CreateSupplierPage() {
       const response = await suppliersApi.createSupplier(finalData);
 
       if (response.code === 200 || response.code === 201) {
-        router.push('/suppliers?created=true');
+        useToastStore.getState().success('Supplier created successfully!');
+        router.push('/suppliers');
       } else {
         setError(response.message || 'Failed to create supplier');
       }

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { customersApi, UpdateCustomerData, CustomerDetails } from '@/lib/api/customers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -123,7 +124,8 @@ export default function EditCustomerPage() {
       const response = await customersApi.updateCustomer(finalData);
 
       if (response.code === 200) {
-        router.push(`/customers/${customerCode}?updated=true`);
+        useToastStore.getState().success('Customer updated successfully!');
+        router.push(`/customers/${customerCode}`);
       } else {
         setError(response.message || 'Failed to update customer');
       }

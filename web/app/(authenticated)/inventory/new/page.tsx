@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, CreateInventoryData } from '@/lib/api/inventory';
 import { categoriesApi, Category } from '@/lib/api/categories';
+import { useToastStore } from '@/store/toast';
 import Icon, { faWarehouse, faBox, faDollarSign, faTag, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 export default function CreateInventoryPage() {
@@ -113,7 +114,8 @@ export default function CreateInventoryPage() {
       const response = await inventoryApi.createInventoryItem(finalData);
 
       if (response.code === 200 || response.code === 201) {
-        router.push('/inventory?created=true');
+        useToastStore.getState().success('Inventory item created successfully!');
+        router.push('/inventory');
       } else {
         setError(response.message || 'Failed to create inventory item');
       }

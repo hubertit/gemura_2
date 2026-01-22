@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { salesApi, CreateSaleData } from '@/lib/api/sales';
 import { customersApi, Customer } from '@/lib/api/customers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -113,12 +114,15 @@ export default function CreateSalePage() {
       const response = await salesApi.createSale(finalData);
 
       if (response.code === 200 || response.code === 201) {
-        router.push('/sales?created=true');
+        useToastStore.getState().success('Sale created successfully!');
+        router.push('/sales');
       } else {
         setError(response.message || 'Failed to create sale');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create sale. Please try again.');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create sale. Please try again.';
+      setError(errorMessage);
+      useToastStore.getState().error(errorMessage);
     } finally {
       setLoading(false);
     }

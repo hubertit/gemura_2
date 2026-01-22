@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { collectionsApi, CreateCollectionData } from '@/lib/api/collections';
 import { suppliersApi, Supplier } from '@/lib/api/suppliers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faBox, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -118,7 +119,8 @@ export default function CreateCollectionPage() {
       const response = await collectionsApi.createCollection(finalData);
 
       if (response.code === 200 || response.code === 201) {
-        router.push('/collections?created=true');
+        useToastStore.getState().success('Collection created successfully!');
+        router.push('/collections');
       } else {
         setError(response.message || 'Failed to create collection');
       }

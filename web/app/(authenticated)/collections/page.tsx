@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { collectionsApi, Collection, CollectionsFilters } from '@/lib/api/collections';
+import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faFilter, faTimes } from '@/app/components/Icon';
 
@@ -84,7 +85,7 @@ export default function CollectionsPage() {
       await collectionsApi.cancelCollection(collectionId);
       loadCollections();
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Failed to cancel collection');
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to cancel collection');
     }
   };
 
@@ -211,24 +212,6 @@ export default function CollectionsPage() {
         </div>
       </div>
 
-      {/* Success Message */}
-      {searchParams.get('created') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Collection created successfully!</p>
-          </div>
-        </div>
-      )}
-
-      {searchParams.get('updated') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Collection updated successfully!</p>
-          </div>
-        </div>
-      )}
 
       {/* Filters Panel */}
       {showFilters && (

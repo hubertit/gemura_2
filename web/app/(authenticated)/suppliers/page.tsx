@@ -157,24 +157,6 @@ export default function SuppliersPage() {
         </Link>
       </div>
 
-      {/* Success Message */}
-      {searchParams.get('created') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Supplier created successfully!</p>
-          </div>
-        </div>
-      )}
-
-      {searchParams.get('updated') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Supplier updated successfully!</p>
-          </div>
-        </div>
-      )}
 
       {/* Error Message */}
       {error && (

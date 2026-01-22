@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { accountsApi, Account } from '@/lib/api/accounts';
 import { useAuthStore } from '@/store/auth';
+import { useToastStore } from '@/store/toast';
 import Icon, { faBuilding, faUserShield, faCheckCircle, faArrowsUpDown, faArrowLeft, faSpinner, faCalendar, faTag } from '@/app/components/Icon';
 
 export default function AccountDetailsPage() {
@@ -73,7 +74,7 @@ export default function AccountDetailsPage() {
         await loadAccount();
 
         // Show success message
-        alert('Account switched successfully!');
+        useToastStore.getState().success('Account switched successfully!');
         router.push('/accounts');
       } else {
         setError(response.message || 'Failed to switch account');

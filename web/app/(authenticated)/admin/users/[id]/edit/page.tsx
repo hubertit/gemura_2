@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { adminApi, UpdateUserData } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
+import { useToastStore } from '@/store/toast';
 import Icon, { faUser, faEnvelope, faPhone, faLock, faBuilding, faUserShield, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 // Available roles and account types
@@ -195,7 +196,8 @@ export default function EditUserPage() {
       const response = await adminApi.updateUser(userId, updateData, currentAccount?.account_id);
 
       if (response.code === 200) {
-        router.push(`/admin/users/${userId}?updated=true`);
+        useToastStore.getState().success('User updated successfully!');
+        router.push(`/admin/users/${userId}`);
       } else {
         setError(response.message || 'Failed to update user');
       }

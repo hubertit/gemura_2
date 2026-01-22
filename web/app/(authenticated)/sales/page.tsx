@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { salesApi, Sale, SalesFilters } from '@/lib/api/sales';
+import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faFilter, faTimes } from '@/app/components/Icon';
 
@@ -84,7 +85,7 @@ export default function SalesPage() {
       await salesApi.cancelSale(saleId);
       loadSales();
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Failed to cancel sale');
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to cancel sale');
     }
   };
 
@@ -211,24 +212,6 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Success Message */}
-      {searchParams.get('created') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Sale created successfully!</p>
-          </div>
-        </div>
-      )}
-
-      {searchParams.get('updated') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Sale updated successfully!</p>
-          </div>
-        </div>
-      )}
 
       {/* Filters Panel */}
       {showFilters && (

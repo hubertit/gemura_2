@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { customersApi, CreateCustomerData } from '@/lib/api/customers';
+import { useToastStore } from '@/store/toast';
 import Icon, { faStore, faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
 export default function CreateCustomerPage() {
@@ -83,7 +84,8 @@ export default function CreateCustomerPage() {
       const response = await customersApi.createCustomer(finalData);
 
       if (response.code === 200 || response.code === 201) {
-        router.push('/customers?created=true');
+        useToastStore.getState().success('Customer created successfully!');
+        router.push('/customers');
       } else {
         setError(response.message || 'Failed to create customer');
       }

@@ -8,6 +8,7 @@ import {
   faCircleQuestion,
   faFont,
   faFloppyDisk,
+  faCircleInfo as faInfoCircleTemp,
 } from '@fortawesome/free-solid-svg-icons';
 
 interface IconProps {
@@ -98,6 +99,7 @@ export {
   faBuilding,
   faStore,
   faFilter,
+  faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Export aliases for convenience  
@@ -110,3 +112,4 @@ export const faNumberSign = faHashtag;
 export const faCheckSquare = faSquareCheck;
 export const faQuestionCircle = faCircleQuestion;
 export const faSave = faFloppyDisk;
+export const faInfoCircle = faInfoCircleTemp;

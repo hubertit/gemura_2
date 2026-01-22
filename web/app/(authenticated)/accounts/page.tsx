@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { usePermission } from '@/hooks/usePermission';
 import { accountsApi, Account } from '@/lib/api/accounts';
 import { useAuthStore } from '@/store/auth';
+import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Icon, { faBuilding, faUserShield, faCheckCircle, faArrowsUpDown, faSpinner, faEye } from '@/app/components/Icon';
 import Link from 'next/link';
@@ -72,7 +73,7 @@ export default function AccountsPage() {
         await loadAccounts();
 
         // Show success message
-        alert('Account switched successfully!');
+        useToastStore.getState().success('Account switched successfully!');
       } else {
         setError(response.message || 'Failed to switch account');
       }

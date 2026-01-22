@@ -77,15 +77,6 @@ export default function SupplierDetailsPage() {
 
   return (
     <div className="space-y-4">
-      {/* Success Message */}
-      {searchParams.get('updated') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Supplier updated successfully!</p>
-          </div>
-        </div>
-      )}
 
       {/* Page Header */}
       <div className="flex items-center justify-between">

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
+import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox } from '@/app/components/Icon';
 
@@ -64,7 +65,7 @@ export default function InventoryPage() {
       await inventoryApi.deleteInventoryItem(itemId);
       loadInventory();
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Failed to delete inventory item');
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to delete inventory item');
     }
   };
 
@@ -208,24 +209,6 @@ export default function InventoryPage() {
         </Link>
       </div>
 
-      {/* Success Message */}
-      {searchParams.get('created') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Inventory item created successfully!</p>
-          </div>
-        </div>
-      )}
-
-      {searchParams.get('updated') === 'true' && (
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
-          <div className="flex items-center">
-            <Icon icon={faCheckCircle} size="sm" className="text-green-600 mr-2" />
-            <p className="text-sm text-green-600">Inventory item updated successfully!</p>
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-sm p-4">

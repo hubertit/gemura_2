@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { adminApi, CreateUserData } from '@/lib/api/admin';
+import { useToastStore } from '@/store/toast';
 import { useAuthStore } from '@/store/auth';
 import Icon, { faUser, faEnvelope, faPhone, faLock, faBuilding, faUserShield, faCheckCircle, faTimes } from '@/app/components/Icon';
 
@@ -152,7 +153,8 @@ export default function CreateUserPage() {
       const response = await adminApi.createUser(userData, currentAccount?.account_id);
 
       if (response.code === 201 || response.code === 200) {
-        router.push('/admin/users?created=true');
+        useToastStore.getState().success('User created successfully!');
+        router.push('/admin/users');
       } else {
         setError(response.message || 'Failed to create user');
       }
