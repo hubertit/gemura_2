@@ -97,6 +97,7 @@ export {
   faWallet,
   faBuilding,
   faStore,
+  faFilter,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Export aliases for convenience  
