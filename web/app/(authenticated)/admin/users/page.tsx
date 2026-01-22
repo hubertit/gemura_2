@@ -23,6 +23,17 @@ export default function UsersPage() {
   const LIMIT = 20; // Constant limit to avoid dependency issues
   const hasLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
+  const searchRef = useRef(search);
+  const accountIdRef = useRef(currentAccount?.account_id);
+
+  // Keep refs in sync
+  useEffect(() => {
+    searchRef.current = search;
+  }, [search]);
+
+  useEffect(() => {
+    accountIdRef.current = currentAccount?.account_id;
+  }, [currentAccount?.account_id]);
 
   const loadUsers = useCallback(async (page: number = 1, searchTerm?: string) => {
     // Prevent concurrent loads
@@ -35,10 +46,11 @@ export default function UsersPage() {
       isLoadingRef.current = true;
       setLoading(true);
       setError('');
-      const searchValue = searchTerm !== undefined ? searchTerm : search;
+      const searchValue = searchTerm !== undefined ? searchTerm : searchRef.current;
+      const accountId = accountIdRef.current;
       
-      console.log('Loading users...', { page, searchValue, accountId: currentAccount?.account_id });
-      const response: UsersResponse = await adminApi.getUsers(page, LIMIT, searchValue || undefined, currentAccount?.account_id);
+      console.log('Loading users...', { page, searchValue, accountId });
+      const response: UsersResponse = await adminApi.getUsers(page, LIMIT, searchValue || undefined, accountId);
       console.log('Users response:', { code: response?.code, hasData: !!response?.data, usersCount: response?.data?.users?.length });
       
       // Ensure we always set loading to false, even if response structure is unexpected
@@ -69,16 +81,16 @@ export default function UsersPage() {
       isLoadingRef.current = false;
       setLoading(false);
     }
-  }, [search, currentAccount?.account_id]);
+  }, []); // No dependencies - uses refs instead
 
-  // Initial load and permission check - only run once
+  // Initial load and permission check
   useEffect(() => {
     if (!canManageUsers() && !isAdmin()) {
       router.push('/dashboard');
       return;
     }
     
-    // Only load if we haven't loaded yet
+    // Only load if we haven't loaded yet and not currently loading
     if (!hasLoadedRef.current && !isLoadingRef.current) {
       loadUsers(1);
     }
