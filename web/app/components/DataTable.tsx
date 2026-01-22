@@ -74,7 +74,7 @@ export default function DataTable<T = any>({
   return (
     <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {showRowNumbers && (
