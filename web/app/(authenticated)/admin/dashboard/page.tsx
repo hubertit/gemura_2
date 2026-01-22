@@ -14,7 +14,10 @@ import Icon, {
   faChartBar,
   faDollarSign,
 } from '@/app/components/Icon';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
+
+// Dynamically import ApexCharts to avoid SSR issues
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 type DashboardTab = 'overview' | 'financial' | 'sales' | 'collections';
 
@@ -286,16 +289,44 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
         {stats.trends && stats.trends.daily.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-sm p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend (Last 30 Days)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stats.trends.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis />
-                <Tooltip formatter={(value: number | undefined) => value ? formatCurrency(value) : ''} />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#004AAD" strokeWidth={2} name="Revenue" />
-              </LineChart>
-            </ResponsiveContainer>
+            <Chart
+              type="line"
+              height={300}
+              options={{
+                chart: {
+                  type: 'line',
+                  toolbar: { show: false },
+                  zoom: { enabled: false },
+                },
+                stroke: {
+                  curve: 'smooth',
+                  width: 2,
+                },
+                colors: ['#004AAD'],
+                xaxis: {
+                  categories: stats.trends.daily.map(d => d.label),
+                },
+                yaxis: {
+                  labels: {
+                    formatter: (value: number) => formatCurrency(value),
+                  },
+                },
+                tooltip: {
+                  y: {
+                    formatter: (value: number) => formatCurrency(value),
+                  },
+                },
+                grid: {
+                  strokeDashArray: 3,
+                },
+              }}
+              series={[
+                {
+                  name: 'Revenue',
+                  data: stats.trends.daily.map(d => d.revenue),
+                },
+              ]}
+            />
           </div>
         )}
 
@@ -303,25 +334,34 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
         {stats.salesByStatus && stats.salesByStatus.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-sm p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Sales by Status</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={stats.salesByStatus}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry: any) => `${entry.status}: ${entry.count}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="count"
-                >
-                  {stats.salesByStatus.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <Chart
+              type="donut"
+              height={300}
+              options={{
+                chart: {
+                  type: 'donut',
+                },
+                labels: stats.salesByStatus.map(s => s.status),
+                colors: COLORS,
+                legend: {
+                  position: 'bottom',
+                },
+                dataLabels: {
+                  enabled: true,
+                  formatter: (val: number, opts: any) => {
+                    const label = stats.salesByStatus![opts.seriesIndex].status;
+                    const count = stats.salesByStatus![opts.seriesIndex].count;
+                    return `${label}: ${count}`;
+                  },
+                },
+                tooltip: {
+                  y: {
+                    formatter: (val: number) => val.toString(),
+                  },
+                },
+              }}
+              series={stats.salesByStatus.map(s => s.count)}
+            />
           </div>
         )}
       </div>
@@ -427,16 +467,53 @@ function FinancialTab({ stats, formatCurrency }: { stats: DashboardStats; format
       {stats.trends && stats.trends.daily.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-sm p-4">
           <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend</h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={stats.trends.daily}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="label" />
-              <YAxis />
-              <Tooltip formatter={(value: number | undefined) => value ? formatCurrency(value) : ''} />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#004AAD" strokeWidth={2} name="Revenue (RWF)" />
-            </LineChart>
-          </ResponsiveContainer>
+          <Chart
+            type="area"
+            height={400}
+            options={{
+              chart: {
+                type: 'area',
+                toolbar: { show: true },
+                zoom: { enabled: true },
+              },
+              stroke: {
+                curve: 'smooth',
+                width: 2,
+              },
+              fill: {
+                type: 'gradient',
+                gradient: {
+                  shadeIntensity: 1,
+                  opacityFrom: 0.7,
+                  opacityTo: 0.3,
+                  stops: [0, 90, 100],
+                },
+              },
+              colors: ['#004AAD'],
+              xaxis: {
+                categories: stats.trends.daily.map(d => d.label),
+              },
+              yaxis: {
+                labels: {
+                  formatter: (value: number) => formatCurrency(value),
+                },
+              },
+              tooltip: {
+                y: {
+                  formatter: (value: number) => formatCurrency(value),
+                },
+              },
+              grid: {
+                strokeDashArray: 3,
+              },
+            }}
+            series={[
+              {
+                name: 'Revenue (RWF)',
+                data: stats.trends.daily.map(d => d.revenue),
+              },
+            ]}
+          />
         </div>
       )}
     </div>
@@ -480,31 +557,74 @@ function SalesTab({ stats, formatCurrency }: { stats: DashboardStats; formatCurr
         {stats.trends && stats.trends.daily.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-sm p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Sales Volume Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.trends.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="sales" fill="#004AAD" name="Sales (Liters)" />
-              </BarChart>
-            </ResponsiveContainer>
+            <Chart
+              type="bar"
+              height={300}
+              options={{
+                chart: {
+                  type: 'bar',
+                  toolbar: { show: false },
+                },
+                colors: ['#004AAD'],
+                xaxis: {
+                  categories: stats.trends.daily.map(d => d.label),
+                },
+                yaxis: {
+                  title: {
+                    text: 'Liters',
+                  },
+                },
+                grid: {
+                  strokeDashArray: 3,
+                },
+                dataLabels: {
+                  enabled: false,
+                },
+              }}
+              series={[
+                {
+                  name: 'Sales (Liters)',
+                  data: stats.trends.daily.map(d => d.sales),
+                },
+              ]}
+            />
           </div>
         )}
 
         {stats.salesByStatus && stats.salesByStatus.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-sm p-4">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Sales by Status</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.salesByStatus}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#10b981" name="Count" />
-              </BarChart>
-            </ResponsiveContainer>
+            <Chart
+              type="bar"
+              height={300}
+              options={{
+                chart: {
+                  type: 'bar',
+                  toolbar: { show: false },
+                },
+                colors: ['#10b981'],
+                xaxis: {
+                  categories: stats.salesByStatus.map(s => s.status),
+                },
+                yaxis: {
+                  title: {
+                    text: 'Count',
+                  },
+                },
+                grid: {
+                  strokeDashArray: 3,
+                },
+                dataLabels: {
+                  enabled: true,
+                },
+              }}
+              series={[
+                {
+                  name: 'Count',
+                  data: stats.salesByStatus.map(s => s.count),
+                },
+              ]}
+            />
           </div>
         )}
       </div>
