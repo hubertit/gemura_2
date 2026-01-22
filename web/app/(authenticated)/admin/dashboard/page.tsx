@@ -284,17 +284,26 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
           <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-3">
             <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend (Last 30 Days)</h3>
             <Chart
-              type="line"
+              type="area"
               height={300}
               options={{
                 chart: {
-                  type: 'line',
+                  type: 'area',
                   toolbar: { show: false },
                   zoom: { enabled: false },
                 },
                 stroke: {
                   curve: 'smooth',
                   width: 2,
+                },
+                fill: {
+                  type: 'gradient',
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.3,
+                    stops: [0, 90, 100],
+                  },
                 },
                 colors: ['#004AAD'],
                 xaxis: {
