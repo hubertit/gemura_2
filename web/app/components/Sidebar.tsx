@@ -12,7 +12,7 @@ import Icon, {
   faCog,
   faUserShield,
   faBars,
-  faChevronLeft,
+  faChevronRight,
   faUser,
   faClipboardList,
   faCalendar,
@@ -200,7 +200,7 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 flex-1"
+              className={`flex items-center gap-3 ${collapsed ? 'flex-1 justify-center' : 'flex-1'}`}
               onClick={handleLinkClick}
             >
               <div className="w-8 h-8 bg-transparent rounded-full flex items-center justify-center flex-shrink-0">
@@ -213,7 +213,17 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
                 </div>
               )}
             </Link>
-            {!collapsed && (
+            {collapsed ? (
+              <button
+                type="button"
+                onClick={handleCollapseToggle}
+                className="p-1.5 hover:bg-[#003d8f] rounded-sm transition-colors text-white/80 hover:text-white"
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+              >
+                <Icon icon={faChevronRight} size="sm" />
+              </button>
+            ) : (
               <button
                 type="button"
                 onClick={handleCollapseToggle}
