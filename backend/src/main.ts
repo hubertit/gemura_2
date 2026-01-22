@@ -42,34 +42,45 @@ async function bootstrap() {
   });
 
   // CORS configuration
-  const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-    : ['http://localhost:3101', 'http://localhost:3100'];
+  // Allow all origins if CORS_ORIGIN is set to '*' or in development mode
+  const allowAllOrigins = process.env.CORS_ORIGIN === '*' || process.env.NODE_ENV !== 'production';
 
-  console.log('🌐 CORS Allowed Origins:', allowedOrigins);
+  if (allowAllOrigins) {
+    console.log('🌐 CORS: Allowing all origins');
+    app.enableCors({
+      origin: true, // Allow all origins
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+      exposedHeaders: ['Content-Type', 'Authorization'],
+    });
+  } else {
+    const allowedOrigins = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+      : ['http://localhost:3101', 'http://localhost:3100'];
 
-  app.enableCors({
-    origin: (origin, callback) => {
-      if (!origin) {
-        // Allow requests without an Origin header (e.g. curl, server-to-server, health checks).
-        // Browsers always send Origin for CORS requests; enforcing Origin here can break non-browser clients.
-        return callback(null, true);
-      }
+    console.log('🌐 CORS Allowed Origins:', allowedOrigins);
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else if (allowedOrigins.includes('*')) {
-        console.warn('⚠️  CORS: Wildcard (*) is enabled - this is insecure!');
-        callback(null, true);
-      } else {
-        callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
-  });
+    app.enableCors({
+      origin: (origin, callback) => {
+        if (!origin) {
+          // Allow requests without an Origin header (e.g. curl, server-to-server, health checks).
+          // Browsers always send Origin for CORS requests; enforcing Origin here can break non-browser clients.
+          return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
+        }
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+      exposedHeaders: ['Content-Type', 'Authorization'],
+    });
+  }
 
   // Media proxy route (MUST be before API prefix to avoid /api/media)
   // Use a catch-all route for /media/*
