@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Icon, { faChevronUp, faChevronDown, faArrowsUpDown } from './Icon';
+import Icon, { faChevronUp, faChevronDown, faArrowsUpDown, faSpinner } from './Icon';
 
 export interface TableColumn<T = any> {
   key: string;
@@ -54,7 +54,7 @@ export default function DataTable<T = any>({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <Icon icon={faArrowsUpDown} className="text-[var(--primary)] animate-spin" size="lg" />
+          <Icon icon={faSpinner} spin className="text-[var(--primary)]" size="lg" />
           <p className="text-sm text-gray-600">Loading data...</p>
         </div>
       </div>

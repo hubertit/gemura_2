@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -21,15 +21,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!canManageUsers() && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
-    loadUsers();
-  }, [canManageUsers, isAdmin, router]);
-
-  const loadUsers = async (page: number = 1) => {
+  const loadUsers = useCallback(async (page: number = 1) => {
     try {
       setLoading(true);
       const response: UsersResponse = await adminApi.getUsers(page, pagination.limit, search || undefined, currentAccount?.account_id);
@@ -44,7 +36,15 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.limit, search, currentAccount?.account_id]);
+
+  useEffect(() => {
+    if (!canManageUsers() && !isAdmin()) {
+      router.push('/dashboard');
+      return;
+    }
+    loadUsers();
+  }, [canManageUsers, isAdmin, router, loadUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

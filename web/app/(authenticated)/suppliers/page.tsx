@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -16,16 +16,7 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_suppliers') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
-    loadSuppliers();
-  }, [hasPermission, isAdmin, router]);
-
-  const loadSuppliers = async () => {
+  const loadSuppliers = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -40,7 +31,16 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Check permission
+    if (!hasPermission('view_suppliers') && !isAdmin()) {
+      router.push('/dashboard');
+      return;
+    }
+    loadSuppliers();
+  }, [hasPermission, isAdmin, router, loadSuppliers]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {

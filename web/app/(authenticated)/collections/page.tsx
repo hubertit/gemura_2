@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -32,16 +32,7 @@ export default function CollectionsPage() {
     supplier_account_code: searchParams.get('supplier') || undefined,
   });
 
-  useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_collections') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
-    loadCollections();
-  }, [hasPermission, isAdmin, router]);
-
-  const loadCollections = async () => {
+  const loadCollections = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -56,7 +47,16 @@ export default function CollectionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    // Check permission
+    if (!hasPermission('view_collections') && !isAdmin()) {
+      router.push('/dashboard');
+      return;
+    }
+    loadCollections();
+  }, [hasPermission, isAdmin, router, loadCollections]);
 
   const handleFilterChange = (key: keyof CollectionsFilters, value: string | number | undefined) => {
     setFilters(prev => ({

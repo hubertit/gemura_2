@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -16,16 +16,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_customers') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
-    loadCustomers();
-  }, [hasPermission, isAdmin, router]);
-
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -40,7 +31,16 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Check permission
+    if (!hasPermission('view_customers') && !isAdmin()) {
+      router.push('/dashboard');
+      return;
+    }
+    loadCustomers();
+  }, [hasPermission, isAdmin, router, loadCustomers]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -26,16 +26,7 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
   const [lowStockFilter, setLowStockFilter] = useState<boolean>(false);
 
-  useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_inventory') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
-    loadInventory();
-  }, [hasPermission, isAdmin, router]);
-
-  const loadInventory = async () => {
+  const loadInventory = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -50,11 +41,16 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, lowStockFilter]);
 
   useEffect(() => {
+    // Check permission
+    if (!hasPermission('view_inventory') && !isAdmin()) {
+      router.push('/dashboard');
+      return;
+    }
     loadInventory();
-  }, [statusFilter, lowStockFilter]);
+  }, [hasPermission, isAdmin, router, loadInventory]);
 
   const handleDelete = async (itemId: string) => {
     if (!confirm('Are you sure you want to delete this inventory item?')) {

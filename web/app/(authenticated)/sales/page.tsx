@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
@@ -32,16 +32,7 @@ export default function SalesPage() {
     customer_account_code: searchParams.get('customer') || undefined,
   });
 
-  useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_sales') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
-    loadSales();
-  }, [hasPermission, isAdmin, router]);
-
-  const loadSales = async () => {
+  const loadSales = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -56,7 +47,16 @@ export default function SalesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    // Check permission
+    if (!hasPermission('view_sales') && !isAdmin()) {
+      router.push('/dashboard');
+      return;
+    }
+    loadSales();
+  }, [hasPermission, isAdmin, router, loadSales]);
 
   const handleFilterChange = (key: keyof SalesFilters, value: string | number | undefined) => {
     setFilters(prev => ({

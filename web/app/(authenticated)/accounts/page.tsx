@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePermission } from '@/hooks/usePermission';
 import { accountsApi, Account } from '@/lib/api/accounts';
@@ -19,11 +19,7 @@ export default function AccountsPage() {
   const [error, setError] = useState('');
   const [switching, setSwitching] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
-
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -38,7 +34,11 @@ export default function AccountsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
 
   const handleSwitchAccount = async (accountId: string) => {
     if (switching) return;
