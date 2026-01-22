@@ -509,6 +509,9 @@ function FinancialTab({ stats, formatCurrency }: { stats: DashboardStats; format
                   formatter: (value: number) => formatCurrency(value),
                 },
               },
+              dataLabels: {
+                enabled: false,
+              },
               grid: {
                 strokeDashArray: 3,
               },
