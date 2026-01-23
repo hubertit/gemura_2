@@ -78,7 +78,13 @@ class OverviewService {
       } else if (e.response?.statusCode == 404) {
         errorMessage = 'Overview service not found.';
       } else if (e.response?.statusCode == 400) {
-        errorMessage = 'Invalid date parameters. Please check your input.';
+        // Check if it's the "no default account" error
+        final backendMsg = e.response?.data?['message'] ?? '';
+        if (backendMsg.contains('default account') || backendMsg.contains('No valid default account')) {
+          errorMessage = 'No default account selected. Please select an account first.';
+        } else {
+          errorMessage = 'Invalid request. ${backendMsg.isNotEmpty ? backendMsg : "Please check your input."}';
+        }
       } else if (e.response?.statusCode == 500) {
         errorMessage = 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||

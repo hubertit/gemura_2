@@ -16,7 +16,8 @@
     "prisma:validate": "prisma validate",
     "prisma:seed": "ts-node prisma/seed.ts",
     "migrate": "ts-node src/migration/migrate.ts",
-    "migrate:selective": "ts-node src/migration/migrate-selective.ts"
+    "migrate:selective": "ts-node src/migration/migrate-selective.ts",
+    "migrate:fix-default-accounts": "ts-node src/migration/fix-default-accounts.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

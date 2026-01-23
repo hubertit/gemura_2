@@ -634,6 +634,14 @@ export class InventoryService {
           },
         });
 
+        // Set default account if user doesn't have one
+        if (!newUser.default_account_id) {
+          await this.prisma.user.update({
+            where: { id: newUser.id },
+            data: { default_account_id: newAccount.id },
+          });
+        }
+
         // Create wallet
         await this.prisma.wallet.create({
           data: {

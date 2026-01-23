@@ -79,6 +79,14 @@ export class CustomersService {
           },
         });
 
+        // Set default account if user doesn't have one
+        if (!existingUser.default_account_id) {
+          await this.prisma.user.update({
+            where: { id: existingUser.id },
+            data: { default_account_id: newAccount.id },
+          });
+        }
+
         // Create wallet for the account
         await this.prisma.wallet.create({
           data: {
@@ -141,6 +149,12 @@ export class CustomersService {
           status: 'active',
           created_by: user.id,
         },
+      });
+
+      // Set default account for new user
+      await this.prisma.user.update({
+        where: { id: newUser.id },
+        data: { default_account_id: newAccount.id },
       });
 
       // Create wallet

@@ -46,7 +46,27 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
     state = const AsyncValue.loading();
     try {
       final response = await _service.getUserAccounts();
-      state = AsyncValue.data(response);
+      
+      // Check if user has no default account set
+      final hasDefaultAccount = response.data.accounts.any((acc) => acc.isDefault);
+      final hasAccounts = response.data.accounts.isNotEmpty;
+      
+      // If user has accounts but no default account, automatically set the first one as default
+      if (hasAccounts && !hasDefaultAccount) {
+        print('⚠️ No default account found. Setting first account as default...');
+        final firstAccount = response.data.accounts.first;
+        try {
+          // Automatically switch to the first account to set it as default
+          await switchAccount(firstAccount.accountId, null);
+          print('✅ Successfully set first account as default');
+        } catch (e) {
+          print('⚠️ Failed to set default account automatically: $e');
+          // Still set the state even if switch fails
+          state = AsyncValue.data(response);
+        }
+      } else {
+        state = AsyncValue.data(response);
+      }
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
