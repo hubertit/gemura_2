@@ -196,6 +196,11 @@ export class CollectionsService {
 
     // Create milk sale (collection)
     try {
+      const totalAmount = quantity * Number(unitPrice);
+      const amountPaid = payment_status === 'paid' ? totalAmount : 0;
+      const finalPaymentStatus = payment_status || 'unpaid';
+      const paymentHistory = [];
+
       const milkSale = await this.prisma.milkSale.create({
         data: {
           supplier_account_id: supplierAccountId,
@@ -205,22 +210,36 @@ export class CollectionsService {
           status: (status || 'accepted') as any,
           sale_at: new Date(collection_at),
           notes: notes || null,
+          amount_paid: amountPaid,
+          payment_status: finalPaymentStatus,
+          payment_history: paymentHistory,
           recorded_by: user.id,
           created_by: user.id,
         },
       });
 
-      const totalAmount = quantity * Number(unitPrice);
-
-      // If payment status is "paid", create an expense transaction in finance
-      if (payment_status === 'paid' && totalAmount > 0) {
+      // Create accounting entries based on payment status
+      if (totalAmount > 0) {
         try {
-          await this.transactionsService.createTransaction(user, {
-            type: TransactionType.EXPENSE,
-            amount: totalAmount,
-            description: `Milk collection from ${supplierAccount.name} - ${quantity}L @ ${unitPrice} Frw/L`,
-            transaction_date: new Date(collection_at).toISOString().split('T')[0],
-          });
+          if (finalPaymentStatus === 'paid') {
+            // Paid: Direct to Expense and Cash
+            await this.transactionsService.createTransaction(user, {
+              type: TransactionType.EXPENSE,
+              amount: totalAmount,
+              description: `Milk collection from ${supplierAccount.name} - ${quantity}L @ ${unitPrice} Frw/L`,
+              transaction_date: new Date(collection_at).toISOString().split('T')[0],
+            });
+          } else {
+            // Unpaid: Create AP entry (DR Expense, CR AP)
+            await this.createAccountsPayableEntry(user, {
+              collection_id: milkSale.id,
+              supplier_account_id: supplierAccountId,
+              supplier_name: supplierAccount.name,
+              amount: totalAmount,
+              description: `Milk collection from ${supplierAccount.name} - ${quantity}L @ ${unitPrice} Frw/L`,
+              collection_date: new Date(collection_at),
+            });
+          }
         } catch (error) {
           // Log error but don't fail the collection creation
           console.error('Failed to create finance transaction for collection:', error);
@@ -240,7 +259,8 @@ export class CollectionsService {
           total_amount: totalAmount,
           status: status || 'accepted',
           collection_at: collection_at,
-          payment_status: payment_status || 'unpaid',
+          amount_paid: amountPaid,
+          payment_status: finalPaymentStatus,
         },
       };
     } catch (error) {
@@ -251,6 +271,252 @@ export class CollectionsService {
         error: error.message,
       });
     }
+  }
+
+  /**
+   * Create Accounts Payable journal entry for unpaid collections
+   * DR Expense, CR Accounts Payable
+   */
+  private async createAccountsPayableEntry(
+    user: User,
+    data: {
+      collection_id: string;
+      supplier_account_id: string;
+      supplier_name: string;
+      amount: number;
+      description: string;
+      collection_date: Date;
+    },
+  ) {
+    // Get user's default account
+    const defaultAccount = await this.prisma.account.findUnique({
+      where: { id: user.default_account_id },
+    });
+
+    if (!defaultAccount) {
+      throw new BadRequestException('Default account not found');
+    }
+
+    // Get or create AP account
+    const apAccountCode = `AP-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let apAccount = await this.prisma.chartOfAccount.findFirst({
+      where: {
+        code: apAccountCode,
+        account_type: 'Liability',
+        is_active: true,
+      },
+    });
+
+    if (!apAccount) {
+      apAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: apAccountCode,
+          name: `Accounts Payable - ${defaultAccount.name}`,
+          account_type: 'Liability',
+          is_active: true,
+        },
+      });
+    }
+
+    // Get or create Expense account
+    const expenseAccountCode = `EXP-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let expenseAccount = await this.prisma.chartOfAccount.findFirst({
+      where: {
+        code: expenseAccountCode,
+        account_type: 'Expense',
+        is_active: true,
+      },
+    });
+
+    if (!expenseAccount) {
+      expenseAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: expenseAccountCode,
+          name: `General Expense - ${defaultAccount.name}`,
+          account_type: 'Expense',
+          is_active: true,
+        },
+      });
+    }
+
+    // Create journal entry: DR Expense, CR AP
+    await this.prisma.accountingTransaction.create({
+      data: {
+        transaction_date: data.collection_date,
+        description: data.description,
+        total_amount: data.amount,
+        created_by: user.id,
+        entries: {
+          create: [
+            {
+              account_id: expenseAccount.id,
+              debit_amount: data.amount,
+              credit_amount: null,
+              description: `Expense: ${data.description}`,
+            },
+            {
+              account_id: apAccount.id,
+              credit_amount: data.amount,
+              debit_amount: null,
+              description: `AP: ${data.description}`,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  /**
+   * Record payment for a collection (reduces AP)
+   * DR Accounts Payable, CR Cash
+   */
+  async recordPayment(user: User, collectionId: string, paymentDto: { amount: number; payment_date?: string; notes?: string }) {
+    const collection = await this.prisma.milkSale.findFirst({
+      where: {
+        id: collectionId,
+        customer_account_id: user.default_account_id, // Verify ownership
+      },
+      include: {
+        supplier_account: true,
+      },
+    });
+
+    if (!collection) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Collection not found or you do not have permission to record payment for this collection.',
+      });
+    }
+
+    const totalAmount = Number(collection.quantity) * Number(collection.unit_price);
+    const currentPaid = Number(collection.amount_paid || 0);
+    const newPayment = Number(paymentDto.amount);
+
+    if (newPayment <= 0) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Payment amount must be greater than 0.',
+      });
+    }
+
+    const newTotalPaid = currentPaid + newPayment;
+
+    if (newTotalPaid > totalAmount) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: `Payment amount exceeds outstanding balance. Outstanding: ${totalAmount - currentPaid}`,
+      });
+    }
+
+    // Calculate payment status
+    const paymentStatus = newTotalPaid >= totalAmount ? 'paid' : newTotalPaid > 0 ? 'partial' : 'unpaid';
+
+    // Update payment history
+    const paymentHistory = (collection.payment_history as any[]) || [];
+    paymentHistory.push({
+      date: paymentDto.payment_date || new Date().toISOString(),
+      amount: newPayment,
+      notes: paymentDto.notes || null,
+    });
+
+    // Update collection
+    await this.prisma.milkSale.update({
+      where: { id: collectionId },
+      data: {
+        amount_paid: newTotalPaid,
+        payment_status: paymentStatus,
+        payment_history: paymentHistory,
+      },
+    });
+
+    // Get user's default account
+    const defaultAccount = await this.prisma.account.findUnique({
+      where: { id: user.default_account_id },
+    });
+
+    if (!defaultAccount) {
+      throw new BadRequestException('Default account not found');
+    }
+
+    // Get or create AP account
+    const apAccountCode = `AP-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let apAccount = await this.prisma.chartOfAccount.findFirst({
+      where: { 
+        code: apAccountCode, 
+        account_type: 'Liability',
+        is_active: true,
+      },
+    });
+
+    if (!apAccount) {
+      // Create AP account if it doesn't exist (e.g., if collection was created as paid initially)
+      apAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: apAccountCode,
+          name: `Accounts Payable - ${defaultAccount.name}`,
+          account_type: 'Liability',
+          is_active: true,
+        },
+      });
+    }
+
+    const cashAccountCode = `CASH-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let cashAccount = await this.prisma.chartOfAccount.findFirst({
+      where: { code: cashAccountCode, account_type: 'Asset' },
+    });
+
+    if (!cashAccount) {
+      cashAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: cashAccountCode,
+          name: `Cash - ${defaultAccount.name}`,
+          account_type: 'Asset',
+          is_active: true,
+        },
+      });
+    }
+
+    // Create journal entry: DR AP, CR Cash
+    const paymentDate = paymentDto.payment_date ? new Date(paymentDto.payment_date) : new Date();
+    await this.prisma.accountingTransaction.create({
+      data: {
+        transaction_date: paymentDate,
+        description: `Payment made to ${collection.supplier_account.name} for collection ${collectionId}${paymentDto.notes ? ` - ${paymentDto.notes}` : ''}`,
+        total_amount: newPayment,
+        created_by: user.id,
+        entries: {
+          create: [
+            {
+              account_id: apAccount.id,
+              debit_amount: newPayment,
+              credit_amount: null,
+              description: `AP reduced for collection ${collectionId}`,
+            },
+            {
+              account_id: cashAccount.id,
+              credit_amount: newPayment,
+              debit_amount: null,
+              description: `Cash paid: ${paymentDto.notes || ''}`,
+            },
+          ],
+        },
+      },
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Payment recorded successfully',
+      data: {
+        collection_id: collectionId,
+        amount_paid: newTotalPaid,
+        outstanding: totalAmount - newTotalPaid,
+        payment_status: paymentStatus,
+      },
+    };
   }
 
   async getCollections(user: User, filters?: {

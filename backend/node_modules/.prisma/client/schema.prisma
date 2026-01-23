@@ -333,6 +333,9 @@ model MilkSale {
   status              MilkSaleStatus @default(pending)
   sale_at             DateTime       @map("sale_at")
   notes               String?
+  amount_paid         Decimal        @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  payment_status      String?        @default("unpaid") @map("payment_status")
+  payment_history     Json?          @map("payment_history")
   recorded_by         String         @map("recorded_by") @db.Uuid
   created_at          DateTime       @default(now()) @map("created_at")
   updated_at          DateTime       @updatedAt @map("updated_at")
@@ -350,6 +353,7 @@ model MilkSale {
   @@index([sale_at])
   @@index([recorded_by])
   @@index([created_at])
+  @@index([payment_status])
   @@map("milk_sales")
 }
 

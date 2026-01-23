@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -69,7 +70,23 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
   // Updated to use new NestJS backend
   // Production API: http://159.198.65.38:3004/api
   // For local development (simulator/emulator): http://localhost:3004/api (use 10.0.2.2 for Android emulator)
-  static const String apiBaseUrl = 'http://159.198.65.38:3004/api';
+  // Currently set to localhost for local backend testing
+  static String get apiBaseUrl {
+    if (kDebugMode) {
+      // Detect platform for local development
+      if (Platform.isAndroid) {
+        // Android Emulator uses 10.0.2.2 to access host machine's localhost
+        return 'http://10.0.2.2:3004/api';
+      } else if (Platform.isIOS) {
+        // iOS Simulator can use localhost directly
+        return 'http://localhost:3004/api';
+      }
+      // Fallback for other platforms
+      return 'http://localhost:3004/api';
+    }
+    // Production
+    return 'http://159.198.65.38:3004/api';
+  }
   
   // Your Custom API Configuration
   static const String yourApiBaseUrl = 'https://your-api-domain.com/api';

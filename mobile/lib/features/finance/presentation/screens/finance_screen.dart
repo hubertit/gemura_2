@@ -9,6 +9,13 @@ import '../../../../shared/widgets/layout_widgets.dart';
 import '../../domain/models/transaction.dart';
 import 'all_transactions_screen.dart';
 import 'package:d_chart/d_chart.dart';
+import '../providers/receivables_provider.dart';
+import '../providers/payables_provider.dart';
+import '../widgets/ar_ap_summary_widget.dart';
+import 'receivables_list_screen.dart';
+import 'payables_list_screen.dart';
+import '../../../../shared/models/receivable.dart';
+import '../../../../shared/models/payable.dart';
 
 class FinanceScreen extends ConsumerStatefulWidget {
   const FinanceScreen({super.key});
@@ -105,6 +112,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
       ),
     );
+    final receivablesAsync = ref.watch(
+      receivablesProvider(
+        ReceivablesParams(
+          dateFrom: _fromDate.toIso8601String().split('T')[0],
+          dateTo: _toDate.toIso8601String().split('T')[0],
+        ),
+      ),
+    );
+    final payablesAsync = ref.watch(
+      payablesProvider(
+        PayablesParams(
+          dateFrom: _fromDate.toIso8601String().split('T')[0],
+          dateTo: _toDate.toIso8601String().split('T')[0],
+        ),
+      ),
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -130,14 +153,28 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ],
       ),
       body: incomeStatementAsync.when(
-        data: (incomeStatement) => _buildContent(context, incomeStatement, transactionsAsync, localizationService),
+        data: (incomeStatement) => _buildContent(
+          context,
+          incomeStatement,
+          transactionsAsync,
+          receivablesAsync,
+          payablesAsync,
+          localizationService,
+        ),
         loading: () => SkeletonLoaders.homeTabSkeleton(),
         error: (error, stack) => _buildErrorState(context, error, localizationService),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, incomeStatement, transactionsAsync, localizationService) {
+  Widget _buildContent(
+    BuildContext context,
+    incomeStatement,
+    transactionsAsync,
+    receivablesAsync,
+    payablesAsync,
+    localizationService,
+  ) {
     final revenue = incomeStatement.revenue;
     final expenses = incomeStatement.expenses;
     final netIncome = incomeStatement.netIncome;
@@ -159,6 +196,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             ),
           ),
         );
+        ref.invalidate(
+          receivablesProvider(
+            ReceivablesParams(
+              dateFrom: _fromDate.toIso8601String().split('T')[0],
+              dateTo: _toDate.toIso8601String().split('T')[0],
+            ),
+          ),
+        );
+        ref.invalidate(
+          payablesProvider(
+            PayablesParams(
+              dateFrom: _fromDate.toIso8601String().split('T')[0],
+              dateTo: _toDate.toIso8601String().split('T')[0],
+            ),
+          ),
+        );
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -168,6 +221,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           children: [
             // Date Range Card
             _buildDateRangeCard(dateFormat),
+            const SizedBox(height: AppTheme.spacing16),
+
+            // AR/AP Summary Widget
+            _buildArApSummary(receivablesAsync, payablesAsync),
             const SizedBox(height: AppTheme.spacing16),
 
             // Summary Cards - Using consistent pattern
@@ -922,6 +979,43 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildArApSummary(AsyncValue<ReceivablesSummary> receivablesAsync, AsyncValue<PayablesSummary> payablesAsync) {
+    return receivablesAsync.when(
+      data: (receivables) => payablesAsync.when(
+        data: (payables) => ArApSummaryWidget(
+          totalReceivables: receivables.totalReceivables,
+          totalPayables: payables.totalPayables,
+          onReceivablesTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReceivablesListScreen(
+                  initialFromDate: _fromDate,
+                  initialToDate: _toDate,
+                ),
+              ),
+            );
+          },
+          onPayablesTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PayablesListScreen(
+                  initialFromDate: _fromDate,
+                  initialToDate: _toDate,
+                ),
+              ),
+            );
+          },
+        ),
+        loading: () => const SizedBox.shrink(),
+        error: (_, __) => const SizedBox.shrink(),
+      ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

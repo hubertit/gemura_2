@@ -9,6 +9,7 @@ import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { CancelCollectionDto } from './dto/cancel-collection.dto';
 import { CreateRejectionReasonDto } from './dto/create-rejection-reason.dto';
 import { UpdateRejectionReasonDto } from './dto/update-rejection-reason.dto';
+import { RecordPaymentDto } from '../accounting/receivables-payables/dto/record-payment.dto';
 
 @ApiTags('Collections')
 @Controller('collections')
@@ -759,5 +760,66 @@ export class CollectionsController {
   })
   async cancelCollection(@CurrentUser() user: User, @Body() cancelDto: CancelCollectionDto) {
     return this.collectionsService.cancelCollection(user, cancelDto);
+  }
+
+  @Post(':collectionId/payment')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Record payment for a collection',
+    description: 'Records a payment against an unpaid/partial collection. Creates journal entry: DR Accounts Payable, CR Cash. Supports partial payments.',
+  })
+  @ApiParam({
+    name: 'collectionId',
+    description: 'Collection ID (MilkSale ID)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiBody({
+    type: RecordPaymentDto,
+    description: 'Payment details',
+    examples: {
+      fullPayment: {
+        summary: 'Full payment',
+        value: {
+          amount: 70000,
+          payment_date: '2025-01-23',
+          notes: 'Payment via bank transfer',
+        },
+      },
+      partialPayment: {
+        summary: 'Partial payment',
+        value: {
+          amount: 35000,
+          notes: 'First installment',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment recorded successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Payment recorded successfully',
+      data: {
+        collection_id: 'collection-uuid',
+        amount_paid: 70000,
+        outstanding: 0,
+        payment_status: 'paid',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payment amount or exceeds outstanding balance',
+  })
+  @ApiNotFoundResponse({
+    description: 'Collection not found or user does not have permission',
+  })
+  async recordPayment(
+    @CurrentUser() user: User,
+    @Param('collectionId') collectionId: string,
+    @Body() paymentDto: RecordPaymentDto,
+  ) {
+    return this.collectionsService.recordPayment(user, collectionId, paymentDto);
   }
 }

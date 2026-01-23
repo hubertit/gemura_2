@@ -8,6 +8,7 @@ import { GetSalesDto } from './dto/get-sales.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { CancelSaleDto } from './dto/cancel-sale.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { RecordPaymentDto } from '../accounting/receivables-payables/dto/record-payment.dto';
 
 @ApiTags('Sales')
 @Controller('sales')
@@ -313,5 +314,61 @@ export class SalesController {
   })
   async createSale(@CurrentUser() user: User, @Body() createDto: CreateSaleDto) {
     return this.salesService.createSale(user, createDto);
+  }
+
+  @Post(':saleId/payment')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Record payment for a sale',
+    description: 'Records a payment against an unpaid/partial sale. Creates journal entry: DR Cash, CR Accounts Receivable. Supports partial payments.',
+  })
+  @ApiBody({
+    type: RecordPaymentDto,
+    description: 'Payment details',
+    examples: {
+      fullPayment: {
+        summary: 'Full payment',
+        value: {
+          amount: 40000,
+          payment_date: '2025-01-23',
+          notes: 'Payment via mobile money',
+        },
+      },
+      partialPayment: {
+        summary: 'Partial payment',
+        value: {
+          amount: 20000,
+          notes: 'First installment',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment recorded successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Payment recorded successfully',
+      data: {
+        sale_id: 'sale-uuid',
+        amount_paid: 40000,
+        outstanding: 0,
+        payment_status: 'paid',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payment amount or exceeds outstanding balance',
+  })
+  @ApiNotFoundResponse({
+    description: 'Sale not found or user does not have permission',
+  })
+  async recordPayment(
+    @CurrentUser() user: User,
+    @Param('saleId') saleId: string,
+    @Body() paymentDto: RecordPaymentDto,
+  ) {
+    return this.salesService.recordPayment(user, saleId, paymentDto);
   }
 }

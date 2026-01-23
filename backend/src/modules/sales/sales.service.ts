@@ -341,6 +341,11 @@ export class SalesService {
 
     // Create milk sale
     try {
+      const totalAmount = quantity * finalUnitPrice;
+      const amountPaid = payment_status === 'paid' ? totalAmount : 0;
+      const finalPaymentStatus = payment_status || 'unpaid';
+      const paymentHistory = [];
+
       const milkSale = await this.prisma.milkSale.create({
         data: {
           supplier_account_id: supplierAccountId,
@@ -350,6 +355,9 @@ export class SalesService {
           status: (status || 'accepted') as any,
           sale_at: sale_at ? new Date(sale_at) : new Date(),
           notes: notes || null,
+          amount_paid: amountPaid,
+          payment_status: finalPaymentStatus,
+          payment_history: paymentHistory,
           recorded_by: user.id,
           created_by: user.id,
         },
@@ -359,17 +367,28 @@ export class SalesService {
         },
       });
 
-      const totalAmount = Number(milkSale.quantity) * Number(milkSale.unit_price);
-
-      // If payment status is "paid", create a revenue transaction in finance
-      if (payment_status === 'paid' && totalAmount > 0) {
+      // Create accounting entries based on payment status
+      if (totalAmount > 0) {
         try {
-          await this.transactionsService.createTransaction(user, {
-            type: TransactionType.REVENUE,
-            amount: totalAmount,
-            description: `Milk sale to ${customerAccount.name} - ${quantity}L @ ${finalUnitPrice} Frw/L`,
-            transaction_date: (sale_at ? new Date(sale_at) : new Date()).toISOString().split('T')[0],
-          });
+          if (finalPaymentStatus === 'paid') {
+            // Paid: Direct to Cash and Revenue
+            await this.transactionsService.createTransaction(user, {
+              type: TransactionType.REVENUE,
+              amount: totalAmount,
+              description: `Milk sale to ${customerAccount.name} - ${quantity}L @ ${finalUnitPrice} Frw/L`,
+              transaction_date: (sale_at ? new Date(sale_at) : new Date()).toISOString().split('T')[0],
+            });
+          } else {
+            // Unpaid: Create AR entry (DR AR, CR Revenue)
+            await this.createAccountsReceivableEntry(user, {
+              sale_id: milkSale.id,
+              customer_account_id: customerAccountId,
+              customer_name: customerAccount.name,
+              amount: totalAmount,
+              description: `Milk sale to ${customerAccount.name} - ${quantity}L @ ${finalUnitPrice} Frw/L`,
+              sale_date: sale_at ? new Date(sale_at) : new Date(),
+            });
+          }
         } catch (error) {
           // Log error but don't fail the sale creation
           console.error('Failed to create finance transaction for sale:', error);
@@ -388,7 +407,8 @@ export class SalesService {
           status: milkSale.status,
           sale_at: milkSale.sale_at,
           notes: milkSale.notes,
-          payment_status: payment_status || 'unpaid',
+          amount_paid: amountPaid,
+          payment_status: finalPaymentStatus,
           supplier_account: {
             id: milkSale.supplier_account.id,
             code: milkSale.supplier_account.code,
@@ -413,6 +433,252 @@ export class SalesService {
         error: error.message,
       });
     }
+  }
+
+  /**
+   * Create Accounts Receivable journal entry for unpaid sales
+   * DR Accounts Receivable, CR Revenue
+   */
+  private async createAccountsReceivableEntry(
+    user: User,
+    data: {
+      sale_id: string;
+      customer_account_id: string;
+      customer_name: string;
+      amount: number;
+      description: string;
+      sale_date: Date;
+    },
+  ) {
+    // Get user's default account
+    const defaultAccount = await this.prisma.account.findUnique({
+      where: { id: user.default_account_id },
+    });
+
+    if (!defaultAccount) {
+      throw new BadRequestException('Default account not found');
+    }
+
+    // Get or create AR account
+    const arAccountCode = `AR-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let arAccount = await this.prisma.chartOfAccount.findFirst({
+      where: {
+        code: arAccountCode,
+        account_type: 'Asset',
+        is_active: true,
+      },
+    });
+
+    if (!arAccount) {
+      arAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: arAccountCode,
+          name: `Accounts Receivable - ${defaultAccount.name}`,
+          account_type: 'Asset',
+          is_active: true,
+        },
+      });
+    }
+
+    // Get or create Revenue account
+    const revenueAccountCode = `REV-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let revenueAccount = await this.prisma.chartOfAccount.findFirst({
+      where: {
+        code: revenueAccountCode,
+        account_type: 'Revenue',
+        is_active: true,
+      },
+    });
+
+    if (!revenueAccount) {
+      revenueAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: revenueAccountCode,
+          name: `General Revenue - ${defaultAccount.name}`,
+          account_type: 'Revenue',
+          is_active: true,
+        },
+      });
+    }
+
+    // Create journal entry: DR AR, CR Revenue
+    await this.prisma.accountingTransaction.create({
+      data: {
+        transaction_date: data.sale_date,
+        description: data.description,
+        total_amount: data.amount,
+        created_by: user.id,
+        entries: {
+          create: [
+            {
+              account_id: arAccount.id,
+              debit_amount: data.amount,
+              credit_amount: null,
+              description: `AR: ${data.description}`,
+            },
+            {
+              account_id: revenueAccount.id,
+              credit_amount: data.amount,
+              debit_amount: null,
+              description: `Revenue: ${data.description}`,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  /**
+   * Record payment for a sale (reduces AR)
+   * DR Cash, CR Accounts Receivable
+   */
+  async recordPayment(user: User, saleId: string, paymentDto: { amount: number; payment_date?: string; notes?: string }) {
+    const sale = await this.prisma.milkSale.findFirst({
+      where: {
+        id: saleId,
+        supplier_account_id: user.default_account_id, // Verify ownership
+      },
+      include: {
+        customer_account: true,
+      },
+    });
+
+    if (!sale) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Sale not found or you do not have permission to record payment for this sale.',
+      });
+    }
+
+    const totalAmount = Number(sale.quantity) * Number(sale.unit_price);
+    const currentPaid = Number(sale.amount_paid || 0);
+    const newPayment = Number(paymentDto.amount);
+
+    if (newPayment <= 0) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Payment amount must be greater than 0.',
+      });
+    }
+
+    const newTotalPaid = currentPaid + newPayment;
+
+    if (newTotalPaid > totalAmount) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: `Payment amount exceeds outstanding balance. Outstanding: ${totalAmount - currentPaid}`,
+      });
+    }
+
+    // Calculate payment status
+    const paymentStatus = newTotalPaid >= totalAmount ? 'paid' : newTotalPaid > 0 ? 'partial' : 'unpaid';
+
+    // Update payment history
+    const paymentHistory = (sale.payment_history as any[]) || [];
+    paymentHistory.push({
+      date: paymentDto.payment_date || new Date().toISOString(),
+      amount: newPayment,
+      notes: paymentDto.notes || null,
+    });
+
+    // Update sale
+    await this.prisma.milkSale.update({
+      where: { id: saleId },
+      data: {
+        amount_paid: newTotalPaid,
+        payment_status: paymentStatus,
+        payment_history: paymentHistory,
+      },
+    });
+
+    // Get user's default account
+    const defaultAccount = await this.prisma.account.findUnique({
+      where: { id: user.default_account_id },
+    });
+
+    if (!defaultAccount) {
+      throw new BadRequestException('Default account not found');
+    }
+
+    // Get or create AR account
+    const arAccountCode = `AR-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let arAccount = await this.prisma.chartOfAccount.findFirst({
+      where: { 
+        code: arAccountCode, 
+        account_type: 'Asset',
+        is_active: true,
+      },
+    });
+
+    if (!arAccount) {
+      // Create AR account if it doesn't exist (e.g., if sale was created as paid initially)
+      arAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: arAccountCode,
+          name: `Accounts Receivable - ${defaultAccount.name}`,
+          account_type: 'Asset',
+          is_active: true,
+        },
+      });
+    }
+
+    const cashAccountCode = `CASH-${defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase()}`;
+    let cashAccount = await this.prisma.chartOfAccount.findFirst({
+      where: { code: cashAccountCode, account_type: 'Asset' },
+    });
+
+    if (!cashAccount) {
+      cashAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: cashAccountCode,
+          name: `Cash - ${defaultAccount.name}`,
+          account_type: 'Asset',
+          is_active: true,
+        },
+      });
+    }
+
+    // Create journal entry: DR Cash, CR AR
+    const paymentDate = paymentDto.payment_date ? new Date(paymentDto.payment_date) : new Date();
+    await this.prisma.accountingTransaction.create({
+      data: {
+        transaction_date: paymentDate,
+        description: `Payment received from ${sale.customer_account.name} for sale ${saleId}${paymentDto.notes ? ` - ${paymentDto.notes}` : ''}`,
+        total_amount: newPayment,
+        created_by: user.id,
+        entries: {
+          create: [
+            {
+              account_id: cashAccount.id,
+              debit_amount: newPayment,
+              credit_amount: null,
+              description: `Cash received: ${paymentDto.notes || ''}`,
+            },
+            {
+              account_id: arAccount.id,
+              credit_amount: newPayment,
+              debit_amount: null,
+              description: `AR reduced for sale ${saleId}`,
+            },
+          ],
+        },
+      },
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Payment recorded successfully',
+      data: {
+        sale_id: saleId,
+        amount_paid: newTotalPaid,
+        outstanding: totalAmount - newTotalPaid,
+        payment_status: paymentStatus,
+      },
+    };
   }
 }
 
