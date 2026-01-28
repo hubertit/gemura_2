@@ -17,16 +17,93 @@ export class EmployeesController {
   @Post()
   @ApiOperation({
     summary: 'Create employee',
-    description: 'Add a user as an employee to your account. Requires owner or admin role.',
+    description: 'Add a user as an employee to your default account. The user can be identified by phone, email, or account code. Requires owner or admin role. If the user doesn\'t exist, they will be created.',
   })
-  @ApiBody({ type: CreateEmployeeDto })
+  @ApiBody({
+    type: CreateEmployeeDto,
+    description: 'Employee details',
+    examples: {
+      createByPhone: {
+        summary: 'Add employee by phone',
+        value: {
+          phone: '250788123456',
+          role: 'employee',
+          permissions: ['read', 'write'],
+        },
+      },
+      createByEmail: {
+        summary: 'Add employee by email',
+        value: {
+          email: 'employee@example.com',
+          role: 'manager',
+          permissions: ['read', 'write', 'delete'],
+        },
+      },
+      createByAccountCode: {
+        summary: 'Add employee by account code',
+        value: {
+          account_code: 'A_XYZ789',
+          role: 'employee',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Employee added successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Employee added successfully.',
+      data: {
+        employee_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+        user_account_id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Jane Smith',
+        phone: '250788123456',
+        email: 'employee@example.com',
+        role: 'employee',
+        status: 'active',
+        created_at: '2025-01-28T10:00:00Z',
+      },
+    },
   })
-  @ApiBadRequestResponse({ description: 'Invalid request' })
-  @ApiForbiddenResponse({ description: 'Insufficient permissions' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - missing required fields or no default account',
+    examples: {
+      missingIdentifier: {
+        summary: 'Missing identifier',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Phone, email, or account_code is required.',
+        },
+      },
+      noDefaultAccount: {
+        summary: 'No default account',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found. Please set a default account.',
+        },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires owner or admin role',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. Owner or admin role required.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - invalid or missing token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async createEmployee(@CurrentUser() user: User, @Body() createDto: CreateEmployeeDto) {
     return this.employeesService.createEmployee(user, createDto);
   }
@@ -34,13 +111,47 @@ export class EmployeesController {
   @Get()
   @ApiOperation({
     summary: 'Get employees',
-    description: 'Get all employees for your default account.',
+    description: 'Get all employees for your default account. Returns list of employees with their roles, permissions, and status.',
   })
   @ApiResponse({
     status: 200,
     description: 'Employees fetched successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Employees fetched successfully.',
+      data: [
+        {
+          employee_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+          user_account_id: '550e8400-e29b-41d4-a716-446655440000',
+          name: 'Jane Smith',
+          phone: '250788123456',
+          email: 'employee@example.com',
+          role: 'employee',
+          permissions: ['read', 'write'],
+          status: 'active',
+          created_at: '2025-01-20T10:00:00Z',
+          updated_at: '2025-01-20T10:00:00Z',
+        },
+      ],
+    },
   })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({
+    description: 'No default account found',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - invalid or missing token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async getEmployees(@CurrentUser() user: User) {
     return this.employeesService.getEmployees(user);
   }
@@ -48,17 +159,94 @@ export class EmployeesController {
   @Put(':id/access')
   @ApiOperation({
     summary: 'Update employee access',
-    description: 'Update employee role, permissions, or status. Requires owner or admin role.',
+    description: 'Update employee role, permissions, or status. Requires owner or admin role. Can update role, permissions array, or status (active/inactive).',
   })
-  @ApiParam({ name: 'id', description: 'Employee (UserAccount) ID' })
-  @ApiBody({ type: UpdateEmployeeDto })
+  @ApiParam({
+    name: 'id',
+    description: 'Employee (UserAccount) ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
+  })
+  @ApiBody({
+    type: UpdateEmployeeDto,
+    description: 'Employee update data',
+    examples: {
+      updateRole: {
+        summary: 'Update role',
+        value: {
+          role: 'manager',
+        },
+      },
+      updatePermissions: {
+        summary: 'Update permissions',
+        value: {
+          permissions: ['read', 'write', 'delete'],
+        },
+      },
+      updateStatus: {
+        summary: 'Deactivate employee',
+        value: {
+          status: 'inactive',
+        },
+      },
+      updateAll: {
+        summary: 'Update multiple fields',
+        value: {
+          role: 'manager',
+          permissions: ['read', 'write', 'delete'],
+          status: 'active',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Employee updated successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Employee updated successfully.',
+      data: {
+        employee_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+        role: 'manager',
+        permissions: ['read', 'write', 'delete'],
+        status: 'active',
+        updated_at: '2025-01-28T10:00:00Z',
+      },
+    },
   })
-  @ApiNotFoundResponse({ description: 'Employee not found' })
-  @ApiForbiddenResponse({ description: 'Insufficient permissions' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({
+    description: 'Invalid request or no default account',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Employee not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Employee not found.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires owner or admin role',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. Owner or admin role required.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - invalid or missing token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async updateEmployee(@CurrentUser() user: User, @Param('id') id: string, @Body() updateDto: UpdateEmployeeDto) {
     return this.employeesService.updateEmployee(user, id, updateDto);
   }
@@ -66,16 +254,60 @@ export class EmployeesController {
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete employee',
-    description: 'Remove an employee from your account (soft delete). Requires owner or admin role.',
+    description: 'Remove an employee from your default account (soft delete). The employee will be deactivated but not permanently deleted. Requires owner or admin role.',
   })
-  @ApiParam({ name: 'id', description: 'Employee (UserAccount) ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'Employee (UserAccount) ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Employee removed successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Employee removed successfully.',
+      data: {
+        employee_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+        status: 'inactive',
+        deleted_at: '2025-01-28T10:00:00Z',
+      },
+    },
   })
-  @ApiNotFoundResponse({ description: 'Employee not found' })
-  @ApiForbiddenResponse({ description: 'Insufficient permissions' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiBadRequestResponse({
+    description: 'Invalid request or no default account',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'Employee not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'Employee not found.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires owner or admin role',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. Owner or admin role required.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - invalid or missing token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async deleteEmployee(@CurrentUser() user: User, @Param('id') id: string) {
     return this.employeesService.deleteEmployee(user, id);
   }

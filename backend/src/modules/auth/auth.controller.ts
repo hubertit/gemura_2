@@ -191,9 +191,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Verify authentication token',
-    description: 'Verify if a token is valid and returns user information.',
+    description: 'Verify if an authentication token is valid and returns user information. Used to check token validity and refresh user session.',
   })
-  @ApiBody({ type: VerifyTokenDto })
+  @ApiBody({
+    type: VerifyTokenDto,
+    description: 'Token to verify',
+    examples: {
+      verifyToken: {
+        summary: 'Verify token',
+        value: {
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Token is valid',
@@ -207,11 +218,26 @@ export class AuthController {
         email: 'user@example.com',
         phone: '250788123456',
         status: 'active',
+        account_type: 'mcc',
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Token is required' })
-  @ApiUnauthorizedResponse({ description: 'Token is invalid or expired' })
+  @ApiBadRequestResponse({
+    description: 'Token is required',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Token is required.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token is invalid or expired',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Invalid or expired token.',
+    },
+  })
   async verifyToken(@Body() verifyTokenDto: VerifyTokenDto) {
     return this.authService.verifyToken(verifyTokenDto);
   }
@@ -220,9 +246,26 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Request password reset',
-    description: 'Request a password reset code. Code is sent via SMS/email.',
+    description: 'Request a password reset code. The code is sent via SMS (if phone provided) or email (if email provided). The code can be used to reset the password via the reset-password endpoint.',
   })
-  @ApiBody({ type: ForgotPasswordDto })
+  @ApiBody({
+    type: ForgotPasswordDto,
+    description: 'User identifier (phone or email)',
+    examples: {
+      phoneReset: {
+        summary: 'Request reset via phone',
+        value: {
+          phone: '250788123456',
+        },
+      },
+      emailReset: {
+        summary: 'Request reset via email',
+        value: {
+          email: 'user@example.com',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Reset code sent successfully',
@@ -231,7 +274,7 @@ export class AuthController {
       status: 'success',
       message: 'Reset code sent successfully.',
       data: {
-        user_id: 1,
+        user_id: '550e8400-e29b-41d4-a716-446655440000',
         sms_sent: true,
         email_sent: false,
         contact_info: {
@@ -241,8 +284,22 @@ export class AuthController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Phone or email is required' })
-  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiBadRequestResponse({
+    description: 'Phone or email is required',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Phone or email is required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'User not found.',
+    },
+  })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto);
   }
@@ -251,9 +308,30 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reset password with code',
-    description: 'Reset user password using the reset code received via SMS/email.',
+    description: 'Reset user password using the reset code received via SMS/email. The code must be valid and not expired. After successful reset, the user can login with the new password.',
   })
-  @ApiBody({ type: ResetPasswordDto })
+  @ApiBody({
+    type: ResetPasswordDto,
+    description: 'Reset password data',
+    examples: {
+      resetWithPhone: {
+        summary: 'Reset password using phone and code',
+        value: {
+          phone: '250788123456',
+          reset_code: '123456',
+          new_password: 'NewSecurePassword123!',
+        },
+      },
+      resetWithEmail: {
+        summary: 'Reset password using email and code',
+        value: {
+          email: 'user@example.com',
+          reset_code: '123456',
+          new_password: 'NewSecurePassword123!',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Password reset successfully',
@@ -263,9 +341,30 @@ export class AuthController {
       message: 'Password has been reset successfully.',
     },
   })
-  @ApiBadRequestResponse({ description: 'Invalid request' })
-  @ApiUnauthorizedResponse({ description: 'Invalid or expired reset code' })
-  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - missing fields or invalid format',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Phone/email, reset code, and new password are required.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or expired reset code',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Invalid or expired reset code.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'User not found.',
+    },
+  })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }
@@ -273,9 +372,40 @@ export class AuthController {
   @Get('token')
   @ApiOperation({
     summary: 'Validate token (legacy compatibility)',
-    description: 'Legacy endpoint for token validation. Accepts token in query or body.',
+    description: 'Legacy endpoint for token validation. Accepts token in query parameter (?token=...) or request body. Prefer using POST /auth/verify for new implementations.',
   })
-  @ApiResponse({ status: 200, description: 'Token validation endpoint' })
+  @ApiResponse({
+    status: 200,
+    description: 'Token validation endpoint',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Token is valid.',
+      data: {
+        code: 'U_ABC123',
+        name: 'John Doe',
+        email: 'user@example.com',
+        phone: '250788123456',
+        status: 'active',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Token is required',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Token is required.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Token is invalid or expired',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Invalid or expired token.',
+    },
+  })
   async validateToken(@Req() request: any) {
     const token = request.query.token || request.body?.token;
     if (!token) {

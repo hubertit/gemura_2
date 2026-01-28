@@ -16,6 +16,11 @@ import {
   ApiBearerAuth,
   ApiQuery,
   ApiParam,
+  ApiBody,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -36,9 +41,43 @@ export class AdminController {
 
   @Get('dashboard/stats')
   @RequirePermission('dashboard.view')
-  @ApiOperation({ summary: 'Get admin dashboard statistics' })
-  @ApiResponse({ status: 200, description: 'Dashboard statistics retrieved successfully' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiOperation({
+    summary: 'Get admin dashboard statistics',
+    description: 'Retrieve comprehensive dashboard statistics for admin users. Requires dashboard.view permission. Returns aggregated data including user counts, account statistics, and system metrics.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Dashboard statistics retrieved successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Dashboard statistics retrieved successfully.',
+      data: {
+        total_users: 1250,
+        active_users: 980,
+        total_accounts: 850,
+        active_accounts: 720,
+        total_transactions: 15000,
+        recent_activity: [],
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires dashboard.view permission',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. dashboard.view permission required.',
+    },
+  })
   async getDashboardStats(
     @CurrentUser() user: User,
     @CurrentAccount() accountId: string,
@@ -48,12 +87,75 @@ export class AdminController {
 
   @Get('users')
   @RequirePermission('manage_users')
-  @ApiOperation({ summary: 'Get all users with pagination' })
-  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiOperation({
+    summary: 'Get all users with pagination',
+    description: 'Retrieve a paginated list of all users in the system. Supports search functionality. Requires manage_users permission.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 20)',
+    example: 20,
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term for filtering users by name, email, or phone',
+    example: 'John',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Users retrieved successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Users retrieved successfully.',
+      data: {
+        users: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            name: 'John Doe',
+            email: 'john@example.com',
+            phone: '250788123456',
+            account_type: 'mcc',
+            status: 'active',
+            created_at: '2025-01-20T10:00:00Z',
+          },
+        ],
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 1250,
+          total_pages: 63,
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires manage_users permission',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. manage_users permission required.',
+    },
+  })
   async getUsers(
     @CurrentUser() user: User,
     @CurrentAccount() accountId: string,
@@ -68,11 +170,68 @@ export class AdminController {
 
   @Get('users/:id')
   @RequirePermission('manage_users')
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'User retrieved successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiOperation({
+    summary: 'Get user by ID',
+    description: 'Retrieve detailed information about a specific user by their ID. Requires manage_users permission.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'User ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User retrieved successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'User retrieved successfully.',
+      data: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '250788123456',
+        account_type: 'mcc',
+        status: 'active',
+        accounts: [],
+        created_at: '2025-01-20T10:00:00Z',
+        updated_at: '2025-01-20T10:00:00Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Invalid user ID format.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires manage_users permission',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. manage_users permission required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'User not found.',
+    },
+  })
   async getUserById(
     @CurrentUser() user: User,
     @CurrentAccount() accountId: string,
@@ -83,10 +242,89 @@ export class AdminController {
 
   @Post('users')
   @RequirePermission('manage_users')
-  @ApiOperation({ summary: 'Create new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error or email/phone already exists' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiOperation({
+    summary: 'Create new user',
+    description: 'Create a new user account in the system. Requires manage_users permission. Email and phone must be unique.',
+  })
+  @ApiBody({
+    type: CreateUserDto,
+    description: 'User creation data',
+    examples: {
+      createUser: {
+        summary: 'Create new user',
+        value: {
+          name: 'Jane Smith',
+          email: 'jane@example.com',
+          phone: '250788654321',
+          password: 'SecurePassword123!',
+          account_type: 'farmer',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'User created successfully',
+    example: {
+      code: 201,
+      status: 'success',
+      message: 'User created successfully.',
+      data: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        phone: '250788654321',
+        account_type: 'farmer',
+        status: 'active',
+        created_at: '2025-01-28T10:00:00Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Validation error or email/phone already exists',
+    examples: {
+      validationError: {
+        summary: 'Validation error',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Name, email, phone, and password are required.',
+        },
+      },
+      duplicateEmail: {
+        summary: 'Email already exists',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Email already exists.',
+        },
+      },
+      duplicatePhone: {
+        summary: 'Phone already exists',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Phone number already exists.',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires manage_users permission',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. manage_users permission required.',
+    },
+  })
   async createUser(
     @CurrentUser() user: User,
     @CurrentAccount() accountId: string,
@@ -97,11 +335,90 @@ export class AdminController {
 
   @Put('users/:id')
   @RequirePermission('manage_users')
-  @ApiOperation({ summary: 'Update user' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiOperation({
+    summary: 'Update user',
+    description: 'Update user information. Requires manage_users permission. All fields are optional.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'User ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiBody({
+    type: UpdateUserDto,
+    description: 'User update data',
+    examples: {
+      updateName: {
+        summary: 'Update name',
+        value: {
+          name: 'John Doe Updated',
+        },
+      },
+      updateStatus: {
+        summary: 'Update status',
+        value: {
+          status: 'inactive',
+        },
+      },
+      updateAll: {
+        summary: 'Update multiple fields',
+        value: {
+          name: 'John Doe Updated',
+          email: 'newemail@example.com',
+          status: 'active',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'User updated successfully.',
+      data: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'John Doe Updated',
+        email: 'newemail@example.com',
+        status: 'active',
+        updated_at: '2025-01-28T10:00:00Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request or duplicate email/phone',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Email already exists.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires manage_users permission',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. manage_users permission required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'User not found.',
+    },
+  })
   async updateUser(
     @CurrentUser() user: User,
     @CurrentAccount() accountId: string,
@@ -113,11 +430,63 @@ export class AdminController {
 
   @Delete('users/:id')
   @RequirePermission('manage_users')
-  @ApiOperation({ summary: 'Delete user (soft delete)' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions' })
+  @ApiOperation({
+    summary: 'Delete user (soft delete)',
+    description: 'Soft delete a user by setting their status to inactive. The user will no longer be able to access the system but data is preserved. Requires manage_users permission.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'User ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User deleted successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'User deleted successfully.',
+      data: {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        name: 'John Doe',
+        status: 'inactive',
+        deleted_at: '2025-01-28T10:00:00Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid UUID format',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'Invalid user ID format.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires manage_users permission',
+    example: {
+      code: 403,
+      status: 'error',
+      message: 'Insufficient permissions. manage_users permission required.',
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    example: {
+      code: 404,
+      status: 'error',
+      message: 'User not found.',
+    },
+  })
   async deleteUser(
     @CurrentUser() user: User,
     @CurrentAccount() accountId: string,
