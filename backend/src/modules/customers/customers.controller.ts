@@ -86,7 +86,7 @@ export class CustomersController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'Get all customers',
-    description: 'Retrieve all active customer relationships for the authenticated user.',
+    description: 'Retrieve all active customer relationships for the authenticated user\'s default account. Returns customer information including account details, pricing, and relationship status.',
   })
   @ApiResponse({
     status: 200,
@@ -97,16 +97,16 @@ export class CustomersController {
       message: 'Customers fetched successfully.',
       data: [
         {
-          relationship_id: 'relationship-uuid',
-          code: 'U_ABC123',
-          name: 'John Doe',
+          relationship_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+          code: 'U_XYZ789',
+          name: 'KOPERATIVE KOZAMGI',
           phone: '250788123456',
           email: 'customer@example.com',
           nid: '1199887766554433',
           address: 'Kigali, Rwanda',
           account: {
-            code: 'A_ABC123',
-            name: 'John Doe',
+            code: 'A_XYZ789',
+            name: 'KOPERATIVE KOZAMGI',
           },
           price_per_liter: 400.0,
           average_supply_quantity: 120.5,
@@ -115,6 +115,14 @@ export class CustomersController {
           updated_at: '2025-01-04T10:00:00Z',
         },
       ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'No default account found',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
     },
   })
   @ApiUnauthorizedResponse({
@@ -132,12 +140,13 @@ export class CustomersController {
   @Get('by-id/:id')
   @ApiOperation({
     summary: 'Get customer details by ID',
-    description: 'Retrieve details of a specific customer by account ID (UUID). Returns customer information and relationship details.',
+    description: 'Retrieve detailed information about a specific customer by account ID (UUID). Returns customer account details, user information, and relationship data. The customer must be associated with the user\'s default account.',
   })
   @ApiParam({
     name: 'id',
     description: 'Customer account ID (UUID)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
   })
   @ApiResponse({
     status: 200,
@@ -148,14 +157,14 @@ export class CustomersController {
       message: 'Customer fetched successfully.',
       data: {
         customer: {
-          account_id: 'account-uuid',
+          account_id: '550e8400-e29b-41d4-a716-446655440000',
           account_code: 'A_XYZ789',
-          name: 'John Doe',
+          name: 'KOPERATIVE KOZAMGI',
           type: 'tenant',
           status: 'active',
           user: {
-            id: 'user-uuid',
-            name: 'John Doe',
+            id: '660e8400-e29b-41d4-a716-446655440001',
+            name: 'KOPERATIVE KOZAMGI',
             phone: '250788123456',
             email: 'customer@example.com',
             nid: '1199887766554433',
@@ -173,6 +182,27 @@ export class CustomersController {
       },
     },
   })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - no default account found or invalid UUID',
+    examples: {
+      noDefaultAccount: {
+        summary: 'No default account',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found. Please set a default account.',
+        },
+      },
+      invalidUUID: {
+        summary: 'Invalid UUID format',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Invalid account ID format.',
+        },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({
     description: 'Invalid or missing authentication token',
     example: {
@@ -181,16 +211,14 @@ export class CustomersController {
       message: 'Unauthorized. Invalid token.',
     },
   })
-  @ApiBadRequestResponse({
-    description: 'Invalid UUID format',
+  @ApiNotFoundResponse({
+    description: 'Customer not found or not associated with user\'s account',
     example: {
-      code: 400,
+      code: 404,
       status: 'error',
-      message: 'Invalid customer account ID format. Must be a valid UUID.',
+      message: 'Customer not found.',
     },
   })
-  @ApiNotFoundResponse({
-    description: 'Customer account not found',
     example: {
       code: 404,
       status: 'error',

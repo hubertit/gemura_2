@@ -1,5 +1,13 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBearerAuth, 
+  ApiQuery,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+} from '@nestjs/swagger';
 import { ReceivablesPayablesService } from './receivables-payables.service';
 import { TokenGuard } from '../../../common/guards/token.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
@@ -15,53 +23,96 @@ export class ReceivablesPayablesController {
   @Get('receivables')
   @ApiOperation({
     summary: 'Get Accounts Receivable',
-    description: 'Returns all unpaid/partial milk sales where the authenticated user is the supplier. Includes aging analysis and grouping by customer.',
+    description: 'Returns all unpaid/partial milk sales where the authenticated user is the supplier (selling to customers). Includes aging analysis, grouping by customer, and detailed invoice information. Data is scoped to the user\'s default account.',
   })
-  @ApiQuery({ name: 'customer_account_id', required: false, description: 'Filter by customer account ID' })
-  @ApiQuery({ name: 'date_from', required: false, description: 'Start date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'date_to', required: false, description: 'End date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'payment_status', required: false, description: 'Filter by payment status (unpaid, partial)' })
+  @ApiQuery({ 
+    name: 'customer_account_id', 
+    required: false, 
+    description: 'Filter by specific customer account ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
+  })
+  @ApiQuery({ 
+    name: 'date_from', 
+    required: false, 
+    description: 'Start date for filtering sales (YYYY-MM-DD format)',
+    example: '2025-01-01',
+    type: String,
+  })
+  @ApiQuery({ 
+    name: 'date_to', 
+    required: false, 
+    description: 'End date for filtering sales (YYYY-MM-DD format)',
+    example: '2025-01-31',
+    type: String,
+  })
+  @ApiQuery({ 
+    name: 'payment_status', 
+    required: false, 
+    description: 'Filter by payment status',
+    enum: ['unpaid', 'partial', 'paid'],
+    example: 'unpaid',
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Receivables fetched successfully',
-    schema: {
-      example: {
-        code: 200,
-        status: 'success',
-        message: 'Receivables fetched successfully',
-        data: {
-          total_receivables: 150000,
-          total_invoices: 5,
-          by_customer: [
-            {
-              customer: { id: '...', code: 'A_XYZ', name: 'Customer Name' },
-              total_outstanding: 100000,
-              invoice_count: 3,
-              invoices: [
-                {
-                  sale_id: '...',
-                  sale_date: '2025-01-20T10:00:00Z',
-                  quantity: 100,
-                  unit_price: 400,
-                  total_amount: 40000,
-                  amount_paid: 0,
-                  outstanding: 40000,
-                  payment_status: 'unpaid',
-                  days_outstanding: 3,
-                  aging_bucket: 'current',
-                },
-              ],
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Receivables fetched successfully',
+      data: {
+        total_receivables: 150000,
+        total_invoices: 5,
+        by_customer: [
+          {
+            customer: {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              code: 'A_XYZ789',
+              name: 'KOPERATIVE KOZAMGI',
             },
-          ],
-          aging_summary: {
-            current: 100000,
-            days_31_60: 30000,
-            days_61_90: 20000,
-            days_90_plus: 0,
+            total_outstanding: 100000,
+            invoice_count: 3,
+            invoices: [
+              {
+                sale_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+                sale_date: '2025-01-20T10:00:00Z',
+                quantity: 100,
+                unit_price: 400,
+                total_amount: 40000,
+                amount_paid: 0,
+                outstanding: 40000,
+                payment_status: 'unpaid',
+                days_outstanding: 8,
+                aging_bucket: 'current',
+              },
+            ],
           },
-          all_receivables: [],
+        ],
+        aging_summary: {
+          current: 100000,
+          days_31_60: 30000,
+          days_61_90: 20000,
+          days_90_plus: 0,
         },
+        all_receivables: [],
       },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid date format or no default account found',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
     },
   })
   async getReceivables(
@@ -82,53 +133,96 @@ export class ReceivablesPayablesController {
   @Get('payables')
   @ApiOperation({
     summary: 'Get Accounts Payable',
-    description: 'Returns all unpaid/partial milk collections where the authenticated user is the customer/collector. Includes aging analysis and grouping by supplier.',
+    description: 'Returns all unpaid/partial milk collections where the authenticated user is the customer/collector (buying from suppliers). Includes aging analysis, grouping by supplier, and detailed invoice information. Data is scoped to the user\'s default account.',
   })
-  @ApiQuery({ name: 'supplier_account_id', required: false, description: 'Filter by supplier account ID' })
-  @ApiQuery({ name: 'date_from', required: false, description: 'Start date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'date_to', required: false, description: 'End date (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'payment_status', required: false, description: 'Filter by payment status (unpaid, partial)' })
+  @ApiQuery({ 
+    name: 'supplier_account_id', 
+    required: false, 
+    description: 'Filter by specific supplier account ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
+  })
+  @ApiQuery({ 
+    name: 'date_from', 
+    required: false, 
+    description: 'Start date for filtering collections (YYYY-MM-DD format)',
+    example: '2025-01-01',
+    type: String,
+  })
+  @ApiQuery({ 
+    name: 'date_to', 
+    required: false, 
+    description: 'End date for filtering collections (YYYY-MM-DD format)',
+    example: '2025-01-31',
+    type: String,
+  })
+  @ApiQuery({ 
+    name: 'payment_status', 
+    required: false, 
+    description: 'Filter by payment status',
+    enum: ['unpaid', 'partial', 'paid'],
+    example: 'unpaid',
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Payables fetched successfully',
-    schema: {
-      example: {
-        code: 200,
-        status: 'success',
-        message: 'Payables fetched successfully',
-        data: {
-          total_payables: 200000,
-          total_invoices: 8,
-          by_supplier: [
-            {
-              supplier: { id: '...', code: 'S_ABC', name: 'Supplier Name' },
-              total_outstanding: 120000,
-              invoice_count: 4,
-              invoices: [
-                {
-                  collection_id: '...',
-                  collection_date: '2025-01-20T10:00:00Z',
-                  quantity: 200,
-                  unit_price: 350,
-                  total_amount: 70000,
-                  amount_paid: 0,
-                  outstanding: 70000,
-                  payment_status: 'unpaid',
-                  days_outstanding: 3,
-                  aging_bucket: 'current',
-                },
-              ],
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Payables fetched successfully',
+      data: {
+        total_payables: 200000,
+        total_invoices: 8,
+        by_supplier: [
+          {
+            supplier: {
+              id: '550e8400-e29b-41d4-a716-446655440000',
+              code: 'S_ABC123',
+              name: 'Jean Baptiste Uwimana',
             },
-          ],
-          aging_summary: {
-            current: 150000,
-            days_31_60: 30000,
-            days_61_90: 20000,
-            days_90_plus: 0,
+            total_outstanding: 120000,
+            invoice_count: 4,
+            invoices: [
+              {
+                collection_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+                collection_date: '2025-01-20T10:00:00Z',
+                quantity: 200,
+                unit_price: 350,
+                total_amount: 70000,
+                amount_paid: 0,
+                outstanding: 70000,
+                payment_status: 'unpaid',
+                days_outstanding: 8,
+                aging_bucket: 'current',
+              },
+            ],
           },
-          all_payables: [],
+        ],
+        aging_summary: {
+          current: 150000,
+          days_31_60: 30000,
+          days_61_90: 20000,
+          days_90_plus: 0,
         },
+        all_payables: [],
       },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid date format or no default account found',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
     },
   })
   async getPayables(

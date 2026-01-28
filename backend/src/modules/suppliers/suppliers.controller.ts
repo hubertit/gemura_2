@@ -99,7 +99,7 @@ export class SuppliersController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'Get all suppliers',
-    description: 'Retrieve all active supplier relationships for the authenticated user.',
+    description: 'Retrieve all active supplier relationships for the authenticated user\'s default account. Returns supplier information including account details, pricing, and relationship status.',
   })
   @ApiResponse({
     status: 200,
@@ -110,16 +110,16 @@ export class SuppliersController {
       message: 'Suppliers fetched successfully.',
       data: [
         {
-          relationship_id: 'relationship-uuid',
+          relationship_id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
           code: 'U_ABC123',
-          name: 'John Doe',
+          name: 'Jean Baptiste Uwimana',
           phone: '250788123456',
-          email: 'supplier@example.com',
+          email: 'jean.uwimana@example.com',
           nid: '1199887766554433',
           address: 'Kigali, Rwanda',
           account: {
             code: 'A_ABC123',
-            name: 'John Doe',
+            name: 'Jean Baptiste Uwimana',
           },
           price_per_liter: 390.0,
           average_supply_quantity: 120.5,
@@ -128,6 +128,14 @@ export class SuppliersController {
           updated_at: '2025-01-04T10:00:00Z',
         },
       ],
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'No default account found',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found. Please set a default account.',
     },
   })
   @ApiUnauthorizedResponse({
@@ -145,12 +153,13 @@ export class SuppliersController {
   @Get('by-id/:id')
   @ApiOperation({
     summary: 'Get supplier details by ID',
-    description: 'Retrieve details of a specific supplier by account ID (UUID). Returns supplier information and relationship details.',
+    description: 'Retrieve detailed information about a specific supplier by account ID (UUID). Returns supplier account details, user information, and relationship data. The supplier must be associated with the user\'s default account.',
   })
   @ApiParam({
     name: 'id',
     description: 'Supplier account ID (UUID)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: String,
   })
   @ApiResponse({
     status: 200,
@@ -161,16 +170,16 @@ export class SuppliersController {
       message: 'Supplier fetched successfully.',
       data: {
         supplier: {
-          account_id: 'account-uuid',
+          account_id: '550e8400-e29b-41d4-a716-446655440000',
           account_code: 'A_ABC123',
-          name: 'John Doe',
+          name: 'Jean Baptiste Uwimana',
           type: 'tenant',
           status: 'active',
           user: {
-            id: 'user-uuid',
-            name: 'John Doe',
+            id: '660e8400-e29b-41d4-a716-446655440001',
+            name: 'Jean Baptiste Uwimana',
             phone: '250788123456',
-            email: 'supplier@example.com',
+            email: 'jean.uwimana@example.com',
             nid: '1199887766554433',
             address: 'Kigali, Rwanda',
             account_type: 'supplier',
@@ -186,6 +195,27 @@ export class SuppliersController {
       },
     },
   })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - no default account found or invalid UUID',
+    examples: {
+      noDefaultAccount: {
+        summary: 'No default account',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found. Please set a default account.',
+        },
+      },
+      invalidUUID: {
+        summary: 'Invalid UUID format',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Invalid account ID format.',
+        },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({
     description: 'Invalid or missing authentication token',
     example: {
@@ -194,20 +224,12 @@ export class SuppliersController {
       message: 'Unauthorized. Invalid token.',
     },
   })
-  @ApiBadRequestResponse({
-    description: 'Invalid UUID format',
-    example: {
-      code: 400,
-      status: 'error',
-      message: 'Invalid supplier account ID format. Must be a valid UUID.',
-    },
-  })
   @ApiNotFoundResponse({
-    description: 'Supplier account not found',
+    description: 'Supplier not found or not associated with user\'s account',
     example: {
       code: 404,
       status: 'error',
-      message: 'Supplier account not found.',
+      message: 'Supplier not found.',
     },
   })
   async getSupplierById(@CurrentUser() user: User, @Param('id') id: string) {

@@ -390,7 +390,64 @@ export class CollectionsController {
   @Get()
   @ApiOperation({
     summary: 'Get all collections',
-    description: 'Retrieve all milk collections for the authenticated user\'s default account. Supports filtering by supplier, status, date range, quantity, and price.',
+    description: 'Retrieve all milk collections for the authenticated user\'s default account (as customer/collector buying from suppliers). Supports filtering by supplier account code, status, date range, quantity range, and price range. Data is scoped to the user\'s default account.',
+  })
+  @ApiQuery({
+    name: 'supplier_account_code',
+    required: false,
+    description: 'Filter by supplier account code',
+    example: 'A_ABC123',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    description: 'Filter by collection status',
+    enum: ['pending', 'accepted', 'rejected', 'completed', 'cancelled'],
+    example: 'accepted',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'date_from',
+    required: false,
+    description: 'Start date for filtering collections (YYYY-MM-DD format)',
+    example: '2025-01-01',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'date_to',
+    required: false,
+    description: 'End date for filtering collections (YYYY-MM-DD format)',
+    example: '2025-01-31',
+    type: String,
+  })
+  @ApiQuery({
+    name: 'quantity_min',
+    required: false,
+    description: 'Minimum quantity filter',
+    example: 50,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'quantity_max',
+    required: false,
+    description: 'Maximum quantity filter',
+    example: 200,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'price_min',
+    required: false,
+    description: 'Minimum unit price filter',
+    example: 350,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'price_max',
+    required: false,
+    description: 'Maximum unit price filter',
+    example: 450,
+    type: Number,
   })
   @ApiResponse({
     status: 200,
@@ -401,24 +458,25 @@ export class CollectionsController {
       message: 'Collections fetched successfully.',
       data: [
         {
-          id: 'collection-uuid',
+          id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
           quantity: 120.5,
           unit_price: 390.0,
           total_amount: 46995.0,
           status: 'accepted',
-          collection_at: '2025-01-04T10:00:00Z',
-          notes: 'Morning collection',
+          collection_at: '2025-01-20T10:00:00Z',
+          notes: 'Morning collection - good quality',
+          payment_status: 'unpaid',
           supplier_account: {
-            id: 'supplier-account-uuid',
+            id: '550e8400-e29b-41d4-a716-446655440000',
             code: 'A_ABC123',
-            name: 'Supplier Name',
+            name: 'Jean Baptiste Uwimana',
             type: 'tenant',
             status: 'active',
           },
           customer_account: {
-            id: 'customer-account-uuid',
+            id: '660e8400-e29b-41d4-a716-446655440001',
             code: 'A_XYZ789',
-            name: 'Customer Name',
+            name: 'KOPERATIVE KOZAMGI',
             type: 'tenant',
             status: 'active',
           },
@@ -426,11 +484,34 @@ export class CollectionsController {
       ],
     },
   })
+  @ApiBadRequestResponse({
+    description: 'Invalid request - no default account found or invalid filter values',
+    examples: {
+      noDefaultAccount: {
+        summary: 'No default account',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found. Please set a default account.',
+        },
+      },
+      invalidDate: {
+        summary: 'Invalid date format',
+        value: {
+          code: 400,
+          status: 'error',
+          message: 'Invalid date format. Use YYYY-MM-DD',
+        },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({
     description: 'Invalid or missing authentication token',
-  })
-  @ApiBadRequestResponse({
-    description: 'No default account found',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
   })
   async getCollections(@CurrentUser() user: User, @Query('supplier_account_code') supplierAccountCode?: string, @Query('status') status?: string, @Query('date_from') dateFrom?: string, @Query('date_to') dateTo?: string, @Query('quantity_min') quantityMin?: number, @Query('quantity_max') quantityMax?: number, @Query('price_min') priceMin?: number, @Query('price_max') priceMax?: number) {
     const filters: any = {};
