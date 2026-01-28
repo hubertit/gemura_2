@@ -66,25 +66,17 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
   static const int apiTimeoutSeconds = 30;
   static const int maxRetries = 3;
 
-  // Main API Configuration
-  // Updated to use new NestJS backend
-  // Production API: http://159.198.65.38:3004/api
-  // For local development (simulator/emulator): http://localhost:3004/api (use 10.0.2.2 for Android emulator)
-  // Currently set to localhost for local backend testing
+  // Main API Configuration — always production unless you switch.
+  // Production: http://159.198.65.38:3004/api
+  // To use local backend, run with: --dart-define=USE_LOCAL_API=true
   static String get apiBaseUrl {
-    if (kDebugMode) {
-      // Detect platform for local development
+    const bool useLocalApi = bool.fromEnvironment('USE_LOCAL_API', defaultValue: false);
+    if (useLocalApi) {
       if (Platform.isAndroid) {
-        // Android Emulator uses 10.0.2.2 to access host machine's localhost
         return 'http://10.0.2.2:3004/api';
-      } else if (Platform.isIOS) {
-        // iOS Simulator can use localhost directly
-        return 'http://localhost:3004/api';
       }
-      // Fallback for other platforms
       return 'http://localhost:3004/api';
     }
-    // Production
     return 'http://159.198.65.38:3004/api';
   }
   

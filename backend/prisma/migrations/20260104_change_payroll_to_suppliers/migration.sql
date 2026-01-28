@@ -51,12 +51,27 @@ CREATE INDEX IF NOT EXISTS "payroll_payslips_period_start_idx" ON "payroll_paysl
 CREATE INDEX IF NOT EXISTS "payroll_payslips_period_end_idx" ON "payroll_payslips"("period_end");
 CREATE INDEX IF NOT EXISTS "payroll_payslips_payroll_supplier_id_idx" ON "payroll_payslips"("payroll_supplier_id");
 
--- Step 6: Add foreign key constraints
-ALTER TABLE "payroll_suppliers" ADD CONSTRAINT "payroll_suppliers_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "payroll_payslips" ADD CONSTRAINT "payroll_payslips_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "payroll_payslips" ADD CONSTRAINT "payroll_payslips_payroll_supplier_id_fkey" FOREIGN KEY ("payroll_supplier_id") REFERENCES "payroll_suppliers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- Step 6: Add foreign key constraints (idempotent: only add if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_suppliers_supplier_account_id_fkey') THEN
+    ALTER TABLE "payroll_suppliers" ADD CONSTRAINT "payroll_suppliers_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_payslips_supplier_account_id_fkey') THEN
+    ALTER TABLE "payroll_payslips" ADD CONSTRAINT "payroll_payslips_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+END $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_payslips_payroll_supplier_id_fkey') THEN
+    ALTER TABLE "payroll_payslips" ADD CONSTRAINT "payroll_payslips_payroll_supplier_id_fkey" FOREIGN KEY ("payroll_supplier_id") REFERENCES "payroll_suppliers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;
 
--- Step 7: Create trigger for updated_at
+-- Step 7: Create trigger for updated_at (idempotent)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -65,6 +80,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_payroll_suppliers_updated_at ON "payroll_suppliers";
 CREATE TRIGGER update_payroll_suppliers_updated_at BEFORE UPDATE ON "payroll_suppliers"
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

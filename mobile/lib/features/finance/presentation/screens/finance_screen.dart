@@ -152,126 +152,111 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
         ],
       ),
-      body: incomeStatementAsync.when(
-        data: (incomeStatement) => _buildContent(
-          context,
-          incomeStatement,
-          transactionsAsync,
-          receivablesAsync,
-          payablesAsync,
-          localizationService,
+      // Date range + AR/AP always visible (fixes TestFlight: AR/AP hidden when income statement fails/loads).
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(
+            incomeStatementProvider(
+              IncomeStatementParams(fromDate: _fromDate, toDate: _toDate),
+            ),
+          );
+          ref.invalidate(
+            transactionsProvider(
+              TransactionsParams(
+                dateFrom: _fromDate,
+                dateTo: _toDate,
+                limit: 50,
+              ),
+            ),
+          );
+          ref.invalidate(
+            receivablesProvider(
+              ReceivablesParams(
+                dateFrom: _fromDate.toIso8601String().split('T')[0],
+                dateTo: _toDate.toIso8601String().split('T')[0],
+              ),
+            ),
+          );
+          ref.invalidate(
+            payablesProvider(
+              PayablesParams(
+                dateFrom: _fromDate.toIso8601String().split('T')[0],
+                dateTo: _toDate.toIso8601String().split('T')[0],
+              ),
+            ),
+          );
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppTheme.spacing16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDateRangeCard(DateFormat('MMM dd, yyyy')),
+              const SizedBox(height: AppTheme.spacing16),
+              _buildArApSummary(receivablesAsync, payablesAsync),
+              const SizedBox(height: AppTheme.spacing16),
+              // Income statement section rendered independently (no longer gates AR/AP or transactions).
+              incomeStatementAsync.when(
+                data: (incomeStatement) => _buildIncomeSummarySection(
+                  incomeStatement,
+                ),
+                loading: () => SkeletonLoaders.homeTabSkeleton(),
+                error: (error, stack) => _buildErrorState(context, error, localizationService),
+              ),
+              const SizedBox(height: AppTheme.spacing16),
+              // Transactions section depends only on transactionsAsync, not on income statement.
+              _buildTransactionsSection(transactionsAsync),
+            ],
+          ),
         ),
-        loading: () => SkeletonLoaders.homeTabSkeleton(),
-        error: (error, stack) => _buildErrorState(context, error, localizationService),
       ),
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    incomeStatement,
-    transactionsAsync,
-    receivablesAsync,
-    payablesAsync,
-    localizationService,
+  Widget _buildIncomeSummarySection(
+    dynamic incomeStatement,
   ) {
     final revenue = incomeStatement.revenue;
     final expenses = incomeStatement.expenses;
     final netIncome = incomeStatement.netIncome;
-    final dateFormat = DateFormat('MMM dd, yyyy');
-
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(
-          incomeStatementProvider(
-            IncomeStatementParams(fromDate: _fromDate, toDate: _toDate),
-          ),
-        );
-        ref.invalidate(
-          transactionsProvider(
-            TransactionsParams(
-              dateFrom: _fromDate,
-              dateTo: _toDate,
-              limit: 50,
-            ),
-          ),
-        );
-        ref.invalidate(
-          receivablesProvider(
-            ReceivablesParams(
-              dateFrom: _fromDate.toIso8601String().split('T')[0],
-              dateTo: _toDate.toIso8601String().split('T')[0],
-            ),
-          ),
-        );
-        ref.invalidate(
-          payablesProvider(
-            PayablesParams(
-              dateFrom: _fromDate.toIso8601String().split('T')[0],
-              dateTo: _toDate.toIso8601String().split('T')[0],
-            ),
-          ),
-        );
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppTheme.spacing16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            // Date Range Card
-            _buildDateRangeCard(dateFormat),
-            const SizedBox(height: AppTheme.spacing16),
-
-            // AR/AP Summary Widget
-            _buildArApSummary(receivablesAsync, payablesAsync),
-            const SizedBox(height: AppTheme.spacing16),
-
-            // Summary Cards - Using consistent pattern
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    label: 'Revenue',
-                    amount: revenue,
-                    color: AppTheme.successColor,
-                    icon: Icons.trending_up_rounded,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing12),
-                Expanded(
-                  child: _buildMetricCard(
-                    label: 'Expenses',
-                    amount: expenses,
-                    color: AppTheme.warningColor,
-                    icon: Icons.trending_down_rounded,
-                  ),
-                ),
-              ],
+            Expanded(
+              child: _buildMetricCard(
+                label: 'Revenue',
+                amount: revenue,
+                color: AppTheme.successColor,
+                icon: Icons.trending_up_rounded,
+              ),
             ),
-            const SizedBox(height: AppTheme.spacing12),
-            _buildMetricCard(
-              label: 'Net Income',
-              amount: netIncome,
-              color: netIncome >= 0 ? AppTheme.primaryColor : AppTheme.errorColor,
-              icon: netIncome >= 0 ? Icons.account_balance_rounded : Icons.warning_rounded,
-              isFullWidth: true,
+            const SizedBox(width: AppTheme.spacing12),
+            Expanded(
+              child: _buildMetricCard(
+                label: 'Expenses',
+                amount: expenses,
+                color: AppTheme.warningColor,
+                icon: Icons.trending_down_rounded,
+              ),
             ),
-            const SizedBox(height: AppTheme.spacing16),
-
-            // Chart Section - Using DChartComboO like home screen
-            _buildChartSection(revenue, expenses),
-            const SizedBox(height: AppTheme.spacing12),
-
-            // Breakdown Section
-            _buildBreakdownSection(revenue, expenses, netIncome),
-            const SizedBox(height: AppTheme.spacing16),
-
-            // Transactions List Section
-            _buildTransactionsSection(transactionsAsync),
           ],
         ),
-      ),
+        const SizedBox(height: AppTheme.spacing12),
+        _buildMetricCard(
+          label: 'Net Income',
+          amount: netIncome,
+          color: netIncome >= 0 ? AppTheme.primaryColor : AppTheme.errorColor,
+          icon: netIncome >= 0 ? Icons.account_balance_rounded : Icons.warning_rounded,
+          isFullWidth: true,
+        ),
+        const SizedBox(height: AppTheme.spacing16),
+        _buildChartSection(revenue, expenses),
+        const SizedBox(height: AppTheme.spacing12),
+        _buildBreakdownSection(revenue, expenses, netIncome),
+      ],
     );
   }
 
@@ -982,6 +967,25 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
+  void _retryArAp() {
+    ref.invalidate(
+      receivablesProvider(
+        ReceivablesParams(
+          dateFrom: _fromDate.toIso8601String().split('T')[0],
+          dateTo: _toDate.toIso8601String().split('T')[0],
+        ),
+      ),
+    );
+    ref.invalidate(
+      payablesProvider(
+        PayablesParams(
+          dateFrom: _fromDate.toIso8601String().split('T')[0],
+          dateTo: _toDate.toIso8601String().split('T')[0],
+        ),
+      ),
+    );
+  }
+
   Widget _buildArApSummary(AsyncValue<ReceivablesSummary> receivablesAsync, AsyncValue<PayablesSummary> payablesAsync) {
     return receivablesAsync.when(
       data: (receivables) => payablesAsync.when(
@@ -1011,11 +1015,48 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             );
           },
         ),
-        loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
+        loading: () => _buildArApPlaceholder(isLoading: true),
+        error: (_, __) => _buildArApPlaceholder(isLoading: false, onRetry: _retryArAp),
       ),
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => _buildArApPlaceholder(isLoading: true),
+      error: (_, __) => _buildArApPlaceholder(isLoading: false, onRetry: _retryArAp),
+    );
+  }
+
+  /// Shows AR/AP section when loading or on error so the section is always visible (fixes APK "missing" issue).
+  Widget _buildArApPlaceholder({required bool isLoading, VoidCallback? onRetry}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isLoading)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+            child: LinearProgressIndicator(
+              backgroundColor: AppTheme.thinBorderColor,
+              color: AppTheme.primaryColor,
+            ),
+          ),
+        ArApSummaryWidget(
+          totalReceivables: 0,
+          totalPayables: 0,
+          onReceivablesTap: isLoading ? null : (onRetry ?? () {}),
+          onPayablesTap: isLoading ? null : (onRetry ?? () {}),
+        ),
+        if (!isLoading && onRetry != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacing8),
+            child: GestureDetector(
+              onTap: onRetry,
+              child: Text(
+                'Couldn\'t load. Tap the cards above to retry.',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.warningColor,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

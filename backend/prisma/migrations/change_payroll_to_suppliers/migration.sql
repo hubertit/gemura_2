@@ -40,9 +40,19 @@ CREATE INDEX IF NOT EXISTS "payroll_payslips_supplier_account_id_idx" ON "payrol
 CREATE INDEX IF NOT EXISTS "payroll_payslips_period_start_idx" ON "payroll_payslips"("period_start");
 CREATE INDEX IF NOT EXISTS "payroll_payslips_period_end_idx" ON "payroll_payslips"("period_end");
 
--- Step 6: Add foreign key constraints
-ALTER TABLE "payroll_suppliers" ADD CONSTRAINT "payroll_suppliers_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "payroll_payslips" ADD CONSTRAINT "payroll_payslips_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- Step 6: Add foreign key constraints (idempotent: only add if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_suppliers_supplier_account_id_fkey') THEN
+    ALTER TABLE "payroll_suppliers" ADD CONSTRAINT "payroll_suppliers_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'payroll_payslips_supplier_account_id_fkey') THEN
+    ALTER TABLE "payroll_payslips" ADD CONSTRAINT "payroll_payslips_supplier_account_id_fkey" FOREIGN KEY ("supplier_account_id") REFERENCES "accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
+END $$;
 
 -- Step 7: Drop old employee-related columns (commented out for safety - uncomment after verifying)
 -- ALTER TABLE "payroll_payslips" DROP COLUMN IF EXISTS "employee_id";
