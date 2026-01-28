@@ -8,26 +8,49 @@ Welcome to the Gemura project documentation. This directory contains all project
 docs/
 ├── README.md                    # This file - documentation index
 ├── project/                     # Project overview and status
+│   ├── README.md
+│   ├── PROJECT_STRUCTURE.md
+│   ├── PROJECT_ORGANIZATION.md
 │   ├── IMPLEMENTATION_STATUS.md
-│   └── PROJECT_ORGANIZATION.md
+│   ├── MODULES_AND_FEATURES.md
+│   ├── NEXT_STEPS.md
+│   └── status/                  # Status reports
+│       ├── ORGANIZATION_COMPLETE.md
+│       └── PROJECT_DOCUMENTATION_COMPLETE.md
+├── backend/                     # Backend documentation
+│   ├── README.md
+│   ├── SWAGGER_DOCUMENTATION_STANDARDS.md
+│   ├── API_DOCUMENTATION_STATUS.md
+│   ├── DOCUMENTATION_ROADMAP.md
+│   ├── analysis/                # Backend analysis docs
+│   ├── modules/                 # Module-specific docs
+│   └── features/                # Feature plans
+│       └── INVENTORY_SALES_FEATURE_PLAN.md
 ├── architecture/                # System architecture docs
+│   └── README.md
 ├── deployment/                  # Deployment guides and procedures
 │   ├── README.md
-│   ├── FINAL_DEPLOYMENT_INSTRUCTIONS.md
 │   ├── DEPLOYMENT_GUIDE.md
+│   ├── FINAL_DEPLOYMENT_INSTRUCTIONS.md
 │   ├── DEPLOYMENT_OPTIMIZATION.md
-│   └── AUTOMATIC_DEPLOYMENT.md
+│   ├── AUTOMATIC_DEPLOYMENT.md
+│   └── ...
 ├── api/                        # API documentation
 │   ├── README.md
+│   ├── API_ARCHITECTURE.md
 │   ├── APP_FLOW_DOCUMENTATION.md
-│   └── REMAINING_ENDPOINTS.md
+│   └── ...
 ├── mobile/                     # Mobile app documentation
+│   ├── README.md
 │   ├── MOBILE_APP_INTEGRATION.md
-│   └── API_ENDPOINT_MIGRATION.md
+│   ├── ACCOUNT_SWITCHING_DATA_REFRESH.md
+│   └── ...
 ├── testing/                    # Test results and reports
-│   └── README.md
+│   ├── README.md
+│   └── ...
 ├── migration/                  # Data migration guides
-│   └── README.md
+│   ├── README.md
+│   └── ...
 └── archive/                    # Archived/outdated docs
     ├── deployment/
     └── testing/

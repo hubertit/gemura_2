@@ -1,46 +1,36 @@
 # Project Documentation
 
-Project overview, status, and organization information.
+Project overview, structure, status, and organization information.
 
-## 📄 Documents
+## 📚 Documentation
 
-- **[PROJECT_ORGANIZATION.md](./PROJECT_ORGANIZATION.md)** - Project structure and organization
+### Structure & Organization
+- **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Complete project structure and organization guide
+- **[PROJECT_ORGANIZATION.md](./PROJECT_ORGANIZATION.md)** - Project organization details
+- **[MODULES_AND_FEATURES.md](./MODULES_AND_FEATURES.md)** - Modules and features overview
+
+### Status & Progress
 - **[IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)** - Current implementation status
+- **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Next steps and roadmap
+- **[status/ORGANIZATION_COMPLETE.md](./status/ORGANIZATION_COMPLETE.md)** - Organization completion status
+- **[status/PROJECT_DOCUMENTATION_COMPLETE.md](./status/PROJECT_DOCUMENTATION_COMPLETE.md)** - Documentation completion status
 
-## 📊 Project Status
+## 🎯 Quick Links
 
-### Implementation Progress
-See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed status.
+- **Project Structure**: [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)
+- **Implementation Status**: [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md)
+- **Next Steps**: [NEXT_STEPS.md](./NEXT_STEPS.md)
 
-**Summary:**
-- ✅ Core modules implemented
-- ✅ API endpoints functional
-- ✅ Mobile app integrated
-- 🚧 Additional features in progress
+## 📋 File Naming Conventions
 
-### Project Structure
-See [PROJECT_ORGANIZATION.md](./PROJECT_ORGANIZATION.md) for complete structure.
-
-## 🏗️ Architecture
-
-### Technology Stack
-- **Backend:** NestJS (TypeScript)
-- **Database:** PostgreSQL (via Prisma)
-- **Mobile:** Flutter (Dart)
-- **Deployment:** Docker & Docker Compose
-
-### Project Organization
-- `/backend` - NestJS backend API
-- `/mobile` - Flutter mobile application
-- `/docs` - Project documentation
-- `/scripts` - Deployment and utility scripts
-
-## 🔗 Related Documentation
-
-- [Deployment Guide](../deployment/README.md)
-- [API Documentation](../api/README.md)
-- [Mobile Integration](../mobile/MOBILE_APP_INTEGRATION.md)
+All documentation files follow consistent naming:
+- `README.md` - Directory index/overview
+- `*_STRUCTURE.md` - Structure documentation
+- `*_STATUS.md` - Status reports
+- `*_PLAN.md` - Implementation plans
+- `*_GUIDE.md` - How-to guides
+- `*_RESULTS.md` - Test/execution results
 
 ---
 
-**Last Updated:** January 18, 2026
+**Last Updated:** January 28, 2026
