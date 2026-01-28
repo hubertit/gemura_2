@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Put, Body, UseGuards, Param, Query, HttpCode, Res } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { Response } from 'express';
 import { PayrollRunsService } from './payroll-runs.service';
 import { TokenGuard } from '../../../common/guards/token.guard';
@@ -18,9 +18,45 @@ export class PayrollRunsController {
   constructor(private readonly payrollRunsService: PayrollRunsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create payroll run' })
-  @ApiBody({ type: CreatePayrollRunDto })
-  @ApiResponse({ status: 200, description: 'Run created successfully' })
+  @ApiOperation({
+    summary: 'Create payroll run',
+    description: 'Create a new payroll run for processing supplier payments. The run will be associated with the user\'s default account.',
+  })
+  @ApiBody({
+    type: CreatePayrollRunDto,
+    description: 'Payroll run creation data',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Run created successfully',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Payroll run created successfully.',
+      data: {
+        id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e',
+        period_id: '550e8400-e29b-41d4-a716-446655440000',
+        status: 'pending',
+        created_at: '2025-01-28T10:00:00Z',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request or no default account',
+    example: {
+      code: 400,
+      status: 'error',
+      message: 'No valid default account found.',
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - invalid or missing token',
+    example: {
+      code: 401,
+      status: 'error',
+      message: 'Access denied. Token is required.',
+    },
+  })
   async createRun(@CurrentUser() user: User, @Body() createDto: CreatePayrollRunDto) {
     return this.payrollRunsService.createRun(user, createDto);
   }
