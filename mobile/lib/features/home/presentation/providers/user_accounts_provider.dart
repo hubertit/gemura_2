@@ -5,11 +5,17 @@ import '../../../../shared/models/user_accounts.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../providers/overview_provider.dart';
+import '../providers/home_wallet_display_cache.dart';
 import '../../../collection/presentation/providers/collections_provider.dart';
 import '../../../suppliers/presentation/providers/suppliers_provider.dart';
 import '../../../customers/presentation/providers/customers_provider.dart';
 import '../../../loans/presentation/providers/loans_provider.dart';
 import '../../../savings/presentation/providers/savings_provider.dart';
+import '../../../finance/presentation/providers/finance_provider.dart';
+import '../../../finance/presentation/providers/receivables_provider.dart';
+import '../../../finance/presentation/providers/payables_provider.dart';
+import '../../../sales/presentation/providers/sales_provider.dart';
+import '../../../inventory/presentation/providers/inventory_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
 
 final userAccountsServiceProvider = Provider<UserAccountsService>((ref) {
@@ -85,6 +91,15 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
       
       if (response.code == 200) {
         print('✅ Account switch API successful');
+        
+        // Clear home wallet display cache IMMEDIATELY when account switches
+        // This prevents stale cached values from being displayed
+        try {
+          _ref.read(homeWalletDisplayAmountProvider.notifier).state = null;
+          print('✅ Home wallet display cache cleared immediately on account switch');
+        } catch (e) {
+          print('⚠️ Failed to clear home wallet display cache: $e');
+        }
         
         // Always refetch accounts to ensure we have the latest list (including any newly added accounts)
         // This ensures accounts like Gahengeri appear if they were recently added
@@ -194,6 +209,55 @@ class UserAccountsNotifier extends StateNotifier<AsyncValue<UserAccountsResponse
           print('✅ Savings invalidated');
         } catch (e) {
           print('⚠️ Failed to invalidate savings: $e');
+        }
+        
+        // Refresh finance-related data (income statement, transactions, receivables, payables)
+        // These are family providers, so invalidating the provider invalidates all instances
+        try {
+          _ref.invalidate(incomeStatementProvider);
+          print('✅ Income statement provider invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate income statement provider: $e');
+        }
+        
+        try {
+          _ref.invalidate(transactionsProvider);
+          print('✅ Transactions provider invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate transactions provider: $e');
+        }
+        
+        try {
+          _ref.invalidate(receivablesProvider);
+          print('✅ Receivables provider invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate receivables provider: $e');
+        }
+        
+        try {
+          _ref.invalidate(payablesProvider);
+          print('✅ Payables provider invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate payables provider: $e');
+        }
+        
+        // Refresh sales data (uses default account)
+        try {
+          _ref.invalidate(salesProvider);
+          _ref.invalidate(filteredSalesProvider); // Family provider - invalidates all instances
+          print('✅ Sales providers invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate sales providers: $e');
+        }
+        
+        // Refresh inventory data (uses default account)
+        try {
+          _ref.invalidate(inventoryProvider); // Family provider - invalidates all instances
+          _ref.invalidate(inventoryStatsProvider);
+          _ref.invalidate(inventoryItemProvider); // Family provider - invalidates all instances
+          print('✅ Inventory providers invalidated');
+        } catch (e) {
+          print('⚠️ Failed to invalidate inventory providers: $e');
         }
         
         // Refresh notifications data

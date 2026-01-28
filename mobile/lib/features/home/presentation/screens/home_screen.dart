@@ -1094,6 +1094,11 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
 
                     // Show only one wallet card on home screen with net profit (current month); use cached amount so it doesn't load from 0.
                     final wallet = wallets.first;
+                    
+                    // Watch user accounts to trigger rebuild when account switches
+                    // This ensures the widget rebuilds when account changes, which will trigger incomeStatementProvider to refetch
+                    ref.watch(userAccountsNotifierProvider);
+                    
                     final now = DateTime.now();
                     final startOfMonth = DateTime(now.year, now.month, 1);
                     final incomeStatementAsync = ref.watch(
