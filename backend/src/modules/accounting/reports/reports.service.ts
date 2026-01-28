@@ -56,18 +56,51 @@ export class ReportsService {
     const from = new Date(fromDate);
     const to = new Date(toDate);
 
-    const transactions = await this.prisma.accountingTransaction.findMany({
-      where: {
-        transaction_date: { gte: from, lte: to },
-      },
-      include: {
-        entries: {
-          include: {
-            account: true,
+    // Scope to user's default account: only include transactions that use chart of accounts
+    // belonging to this account (CASH-*, REV-*, EXP-* with account prefix, same as transactions module).
+    let accountScopedChartIds: string[] = [];
+    if (user.default_account_id) {
+      const defaultAccount = await this.prisma.account.findUnique({
+        where: { id: user.default_account_id },
+      });
+      if (defaultAccount) {
+        const prefix = defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase();
+        const accountCharts = await this.prisma.chartOfAccount.findMany({
+          where: {
+            is_active: true,
+            OR: [
+              { code: { startsWith: `CASH-${prefix}` } },
+              { code: { startsWith: `REV-${prefix}` } },
+              { code: { startsWith: `EXP-${prefix}` } },
+            ],
           },
-        },
-      },
-    });
+          select: { id: true },
+        });
+        accountScopedChartIds = accountCharts.map((c) => c.id);
+      }
+    }
+
+    // If no default account or no chart accounts for it, return zeros (do not show global totals).
+    const transactions =
+      accountScopedChartIds.length === 0
+        ? []
+        : await this.prisma.accountingTransaction.findMany({
+            where: {
+              transaction_date: { gte: from, lte: to },
+              entries: {
+                some: {
+                  account_id: { in: accountScopedChartIds },
+                },
+              },
+            },
+            include: {
+              entries: {
+                include: {
+                  account: true,
+                },
+              },
+            },
+          });
 
     const revenue = transactions
       .flatMap((t) => t.entries)

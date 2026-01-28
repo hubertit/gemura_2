@@ -153,8 +153,8 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3004;
-  await app.listen(port);
-  console.log(`🚀 Gemura API running on http://localhost:${port}`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Gemura API running on http://0.0.0.0:${port}`);
   console.log(`📚 API Docs: http://localhost:${port}/api/docs`);
 }
 bootstrap();

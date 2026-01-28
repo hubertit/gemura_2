@@ -35,3 +35,7 @@
 - Backend: Feature-based modules in `backend/src/modules/`
 - Mobile: Feature-based modules in `mobile/lib/features/`
 - Shared code in appropriate common/shared directories
+
+## Task Completion
+
+- On completion of each task (especially when touching mobile code), run `flutter analyze` from the `mobile/` directory and fix any new **errors** or **warnings** introduced. Inform the user of the analyze result.

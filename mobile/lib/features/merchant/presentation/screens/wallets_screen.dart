@@ -1206,15 +1206,20 @@ class WalletCard extends StatefulWidget {
   final Function(bool)? onShowBalanceChanged;
   final Function(bool)? onMakeDefaultChanged;
   final bool showBalance;
-  
+  /// When set, show this label and amount instead of "Balance" and wallet.balance (e.g. "Net profit").
+  final String? displayLabel;
+  final double? displayAmount;
+
   const WalletCard({
-    super.key, 
-    required this.wallet, 
+    super.key,
+    required this.wallet,
     this.onTap,
     this.isInDetailsScreen = false,
     this.onShowBalanceChanged,
     this.onMakeDefaultChanged,
     this.showBalance = true,
+    this.displayLabel,
+    this.displayAmount,
   });
 
   @override
@@ -1249,13 +1254,14 @@ class _WalletCardState extends State<WalletCard> {
     return formatter.format(amount);
   }
 
+  static const double _cardRadius = 20.0;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: widget.onTap ??
           () {
             if (widget.isInDetailsScreen) {
-              // Show bottom sheet with wallet details
               showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.transparent,
@@ -1263,7 +1269,6 @@ class _WalletCardState extends State<WalletCard> {
                 builder: (context) => _WalletDetailsSheet(wallet: widget.wallet),
               );
             } else {
-              // Navigate to details screen
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => WalletDetailsScreen(wallet: widget.wallet),
@@ -1271,19 +1276,19 @@ class _WalletCardState extends State<WalletCard> {
               );
             }
           },
-      borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+      borderRadius: BorderRadius.circular(_cardRadius),
       child: Container(
         margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
-        padding: const EdgeInsets.symmetric(
-            vertical: 14, horizontal: AppTheme.spacing16),
+        height: 180,
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+          borderRadius: BorderRadius.circular(_cardRadius),
           gradient: widget.wallet.status == 'inactive'
               ? null
               : LinearGradient(
                   colors: [
                     getCardColor(),
-                    AppTheme.primaryColor.withOpacity(0.7),
+                    AppTheme.primaryColor.withOpacity(0.75),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -1292,20 +1297,26 @@ class _WalletCardState extends State<WalletCard> {
           border: Border.all(
               color: widget.wallet.status == 'inactive'
                   ? AppTheme.thinBorderColor
-                  : Colors.transparent,
-              width: AppTheme.thinBorderWidth),
+                  : Colors.white.withOpacity(0.15),
+              width: 1),
           boxShadow: [
-            if (widget.wallet.status != 'inactive')
+            if (widget.wallet.status != 'inactive') ...[
               BoxShadow(
-                color: AppTheme.primaryColor.withOpacity(0.08),
-                blurRadius: 16,
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: AppTheme.primaryColor.withOpacity(0.2),
+                blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
+            ],
           ],
         ),
-        child: widget.isInDetailsScreen 
-          ? _buildSimplifiedCard()
-          : _buildFullCard(),
+        child: widget.isInDetailsScreen
+            ? _buildSimplifiedCard()
+            : _buildFullCard(),
       ),
     );
   }
@@ -1315,253 +1326,224 @@ class _WalletCardState extends State<WalletCard> {
   }
 
   Widget _buildFullCard() {
+    final isCompactCard = widget.displayLabel != null;
+    final labelText = widget.displayLabel ??
+        (widget.wallet.isDefault &&
+                widget.wallet.balance != 250000.0 &&
+                widget.wallet.balance != 350000.0 &&
+                widget.wallet.balance != 1200000.0 &&
+                widget.wallet.balance != 0.0
+            ? 'Net Profit'
+            : 'Balance');
+    final amount = widget.displayAmount ?? widget.wallet.balance;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.account_balance_wallet_rounded,
-                    color: getTextColor(), size: 28),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(widget.wallet.name,
-                    style: AppTheme.titleMedium
-                        .copyWith(color: getTextColor())),
-              ],
-            ),
-            Row(
-              children: [
-                if (widget.wallet.isDefault)
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(8),
+        if (!isCompactCard)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.wallet.isDefault)
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.22),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star, color: Colors.amber, size: 14),
+                          const SizedBox(width: 4),
+                          Text('Default',
+                              style: AppTheme.badge.copyWith(
+                                  color: getTextColor(),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700)),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 2),
-                        Text('Default',
-                            style: AppTheme.badge.copyWith(
-                                color: getTextColor(),
-                                fontWeight: FontWeight.w700)),
-                      ],
+                  if (widget.wallet.targetAmount != null)
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.22),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.savings, color: getTextColor(), size: 16),
                     ),
-                  ),
-                if (widget.wallet.targetAmount != null)
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(8),
+                  if (!widget.wallet.isDefault &&
+                      widget.onMakeDefaultChanged != null) ...[
+                    const SizedBox(width: 8),
+                    Text('Default',
+                        style: AppTheme.bodySmall.copyWith(
+                            color: getTextColor(), fontSize: 11)),
+                    Switch(
+                      value: widget.wallet.isDefault,
+                      onChanged: (val) {
+                        if (val) widget.onMakeDefaultChanged!(val);
+                      },
+                      activeColor: AppTheme.primaryColor,
+                      inactiveThumbColor:
+                          AppTheme.errorColor.withOpacity(0.7),
+                      inactiveTrackColor:
+                          AppTheme.errorColor.withOpacity(0.3),
                     ),
-                    child: Icon(Icons.savings, color: getTextColor(), size: 16),
-                  ),
-              ],
-            ),
-           if (!widget.wallet.isDefault && widget.onMakeDefaultChanged != null)
-             Row(
-               children: [
-                 Text('Default', style: AppTheme.bodySmall.copyWith(color: getTextColor())),
-                 Switch(
-                   value: widget.wallet.isDefault,
-                   onChanged: (val) {
-                     if (val) widget.onMakeDefaultChanged!(val);
-                   },
-                   activeColor: AppTheme.primaryColor,
-                   inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
-                   inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
-                 ),
-               ],
-             ),
+                  ],
+                ],
+              ),
           ],
         ),
-        const SizedBox(height: AppTheme.spacing8),
-        // Show "Net Profit" for default wallet when balance is from finance module
-        // We detect this by checking if balance is not one of the mock values
-        // and if it's the default wallet (which gets updated with net profit on home screen)
+        SizedBox(height: isCompactCard ? 0 : 24),
         Text(
-            widget.wallet.isDefault && 
-            widget.wallet.balance != 250000.0 && 
-            widget.wallet.balance != 350000.0 &&
-            widget.wallet.balance != 1200000.0 &&
-            widget.wallet.balance != 0.0
-                ? 'Net Profit'
-                : 'Balance',
-            style: AppTheme.bodySmall
-                .copyWith(color: getTextColor().withOpacity(0.85))),
+          labelText.toUpperCase(),
+          style: AppTheme.bodySmall.copyWith(
+            color: getTextColor().withOpacity(0.9),
+            fontSize: 11,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               widget.showBalance
-                  ? '${formatAmount(widget.wallet.balance)} ${widget.wallet.currency}'
-                  : '••••••',
+                  ? '${formatAmount(amount)} ${widget.wallet.currency}'
+                  : '•••••• ••••••',
               style: AppTheme.titleMedium.copyWith(
-                  color: getBalanceColor(),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
+                color: getBalanceColor(),
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             IconButton(
               icon: Icon(
-                  widget.showBalance
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                  color: getBalanceColor(),
-                  size: 20),
+                widget.showBalance
+                    ? Icons.visibility_rounded
+                    : Icons.visibility_off_rounded,
+                color: getBalanceColor().withOpacity(0.9),
+                size: 22,
+              ),
               onPressed: () {
                 if (widget.onShowBalanceChanged != null) {
                   widget.onShowBalanceChanged!(!widget.showBalance);
                 }
               },
-              tooltip: widget.showBalance ? 'Hide Balance' : 'Show Balance',
+              tooltip:
+                  widget.showBalance ? 'Hide' : 'Show',
               padding: EdgeInsets.zero,
-              constraints: BoxConstraints(),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             ),
           ],
         ),
-        const SizedBox(height: AppTheme.spacing8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
+        const SizedBox(height: 20),
+        Text(
+          widget.wallet.name,
+          style: AppTheme.bodySmall.copyWith(
+            color: getTextColor().withOpacity(0.9),
+            fontSize: 13,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (!isCompactCard) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
                 widget.wallet.type == 'joint'
                     ? 'Joint Wallet'
-                    : 'Individual Wallet',
-                style: AppTheme.bodySmall
-                    .copyWith(color: getTextColor().withOpacity(0.85))),
-            if (widget.wallet.type == 'joint')
-              Flexible(
-                child: Text(
-                  'Owners: ${widget.wallet.owners.join(", ")}',
-                  style: AppTheme.bodySmall
-                      .copyWith(color: getTextColor().withOpacity(0.7)),
-                  overflow: TextOverflow.ellipsis,
-                ),
+                    : 'Individual',
+                style: AppTheme.bodySmall.copyWith(
+                    color: getTextColor().withOpacity(0.75),
+                    fontSize: 11),
               ),
-          ],
-        ),
+              if (widget.wallet.type == 'joint')
+                Flexible(
+                  child: Text(
+                    'Owners: ${widget.wallet.owners.join(", ")}',
+                    style: AppTheme.bodySmall.copyWith(
+                        color: getTextColor().withOpacity(0.7),
+                        fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildSimplifiedCard() {
+    final labelText = widget.displayLabel ??
+        (widget.wallet.isDefault &&
+                widget.wallet.balance != 250000.0 &&
+                widget.wallet.balance != 350000.0 &&
+                widget.wallet.balance != 1200000.0 &&
+                widget.wallet.balance != 0.0
+            ? 'Net Profit'
+            : 'Balance');
+    final amount = widget.displayAmount ?? widget.wallet.balance;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.account_balance_wallet_rounded,
-                    color: getTextColor(), size: 28),
-                const SizedBox(width: AppTheme.spacing8),
-                Text(widget.wallet.name,
-                    style: AppTheme.titleMedium
-                        .copyWith(color: getTextColor())),
-              ],
-            ),
-            Row(
-              children: [
-                if (widget.wallet.isDefault)
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 2),
-                        Text('Default',
-                            style: AppTheme.badge.copyWith(
-                                color: getTextColor(),
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ),
-                if (widget.wallet.targetAmount != null)
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.savings, color: getTextColor(), size: 16),
-                  ),
-              ],
-            ),
-           if (!widget.wallet.isDefault && widget.onMakeDefaultChanged != null)
-             Row(
-               children: [
-                 Text('Default', style: AppTheme.bodySmall.copyWith(color: getTextColor())),
-                 Switch(
-                   value: widget.wallet.isDefault,
-                   onChanged: (val) {
-                     if (val) widget.onMakeDefaultChanged!(val);
-                   },
-                   activeColor: AppTheme.primaryColor,
-                   inactiveThumbColor: AppTheme.errorColor.withOpacity(0.7),
-                   inactiveTrackColor: AppTheme.errorColor.withOpacity(0.3),
-                 ),
-               ],
-             ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacing8),
-        // Show "Net Profit" for default wallet when balance is from finance module
+        Text(widget.wallet.name,
+            style: AppTheme.titleSmall.copyWith(color: getTextColor()),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 16),
         Text(
-            widget.wallet.isDefault && 
-            widget.wallet.balance != 250000.0 && 
-            widget.wallet.balance != 350000.0 &&
-            widget.wallet.balance != 1200000.0 &&
-            widget.wallet.balance != 0.0
-                ? 'Net Profit'
-                : 'Balance',
-            style: AppTheme.bodySmall
-                .copyWith(color: getTextColor().withOpacity(0.85))),
+          labelText.toUpperCase(),
+          style: AppTheme.bodySmall.copyWith(
+            color: getTextColor().withOpacity(0.9),
+            fontSize: 10,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 4),
         Row(
           children: [
             Text(
               widget.showBalance
-                  ? '${formatAmount(widget.wallet.balance)} ${widget.wallet.currency}'
+                  ? '${formatAmount(amount)} ${widget.wallet.currency}'
                   : '••••••',
               style: AppTheme.titleMedium.copyWith(
                   color: getBalanceColor(),
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             IconButton(
               icon: Icon(
                   widget.showBalance
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                  color: getBalanceColor(),
+                      ? Icons.visibility_rounded
+                      : Icons.visibility_off_rounded,
+                  color: getBalanceColor().withOpacity(0.9),
                   size: 20),
               onPressed: () {
                 if (widget.onShowBalanceChanged != null) {
                   widget.onShowBalanceChanged!(!widget.showBalance);
                 }
               },
-              tooltip: widget.showBalance ? 'Hide Balance' : 'Show Balance',
+              tooltip: widget.showBalance ? 'Hide' : 'Show',
               padding: EdgeInsets.zero,
-              constraints: BoxConstraints(),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
           ],
         ),
-        
-
-        
         const SizedBox(height: AppTheme.spacing8),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,

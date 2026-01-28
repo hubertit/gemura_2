@@ -32,6 +32,7 @@ import '../../../sales/presentation/screens/record_sale_screen.dart';
 import '../../../account_access/presentation/screens/manage_account_access_screen.dart';
 import '../../../agent_reports/presentation/screens/agent_report_screen.dart';
 import '../providers/overview_provider.dart';
+import '../providers/home_wallet_display_cache.dart';
 import '../../../../shared/models/user_accounts.dart';
 import '../providers/user_accounts_provider.dart';
 import '../../../../core/providers/notification_provider.dart';
@@ -52,7 +53,6 @@ import '../../../payroll/presentation/screens/payroll_screen.dart';
 import '../../../inventory/presentation/screens/inventory_list_screen.dart';
 import '../../../inventory/presentation/providers/inventory_provider.dart';
 import '../../../merchant/presentation/screens/wallets_screen.dart';
-import '../../../merchant/presentation/screens/transactions_screen.dart';
 import '../../../merchant/presentation/providers/wallets_provider.dart';
 import '../../../finance/presentation/providers/finance_provider.dart';
 
@@ -818,7 +818,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
     return text[0].toUpperCase() + text.substring(1);
   }
 
-  // Dynamic mock wallets as fallback for home screen - uses current account name
+  // Single wallet as fallback for home screen - uses current account name
   List<Wallet> getHomeWallets(String? accountName) => [
     Wallet(
       id: 'WALLET-1',
@@ -830,35 +830,6 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
       createdAt: DateTime.now().subtract(const Duration(days: 120)),
       owners: ['You'],
       isDefault: true,
-    ),
-    // Temporarily hidden - Joint Ikofi
-    // Wallet(
-    //   id: 'WALLET-2',
-    //   name: 'Joint Ikofi',
-    //   balance: 1200000,
-    //   currency: 'RWF',
-    //   type: 'joint',
-    //   status: 'active',
-    //   createdAt: DateTime.now().subtract(const Duration(days: 60)),
-    //   owners: ['You', 'Alice', 'Eric'],
-    //   isDefault: false,
-    //   description: 'Joint savings for family expenses',
-    //   targetAmount: 2000000,
-    //   targetDate: DateTime.now().add(const Duration(days: 180)),
-    // ),
-    Wallet(
-      id: 'WALLET-3',
-      name: 'Vacation Fund',
-      balance: 350000,
-      currency: 'RWF',
-      type: 'individual',
-      status: 'inactive',
-      createdAt: DateTime.now().subtract(const Duration(days: 200)),
-      owners: ['You'],
-      isDefault: false,
-      description: 'Vacation savings',
-      targetAmount: 500000,
-      targetDate: DateTime.now().add(const Duration(days: 90)),
     ),
   ];
 
@@ -1096,7 +1067,7 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                       print('⚠️ Could not get account name for wallet: $e');
                     }
                     final wallets = apiWallets.isNotEmpty ? apiWallets : getHomeWallets(accountName);
-                    
+
                     if (wallets.isEmpty) {
                       return SizedBox(
                         height: 200,
@@ -1120,73 +1091,40 @@ class _DashboardTabState extends ConsumerState<_DashboardTab> {
                         ),
                       );
                     }
-                    
-                    // Fetch net profit from finance and update the default wallet balance
-                    // Use same date range as finance screen (last 30 days) to match displayed net profit
-                    // Use memoized dates to prevent repeated API calls
-                    _ensureDateRangeIsCurrent();
-                    
-                    // Use a separate Consumer for income statement to avoid rebuild loops
-                    return Consumer(
-                      builder: (context, ref, child) {
-                        final incomeStatementAsync = ref.watch(
-                          incomeStatementProvider(
-                            IncomeStatementParams(fromDate: _incomeStatementFromDate, toDate: _incomeStatementToDate),
-                          ),
-                        );
-                        
-                        // Update wallets with net profit for the default wallet (or first wallet if no default)
-                        final updatedWallets = incomeStatementAsync.when(
-                          data: (incomeStatement) {
-                            if (wallets.isEmpty) return wallets;
-                            // Find default wallet, or use first wallet
-                            final defaultWalletIndex = wallets.indexWhere((w) => w.isDefault);
-                            final walletIndex = defaultWalletIndex >= 0 ? defaultWalletIndex : 0;
-                            final updatedWalletsList = List<Wallet>.from(wallets);
-                            // Update the wallet balance with net profit from finance
-                            updatedWalletsList[walletIndex] = updatedWalletsList[walletIndex].copyWith(
-                              balance: incomeStatement.netIncome,
-                            );
-                            return updatedWalletsList;
-                          },
-                          loading: () => wallets,
-                          error: (error, stackTrace) {
-                            // On error, log it but still show wallets
-                            print('⚠️ Failed to fetch net profit for wallet balance: $error');
-                            return wallets;
-                          },
-                        );
-                        
-                        return SizedBox(
-                          height: 180, // Increased height to match wallet card natural height
-                          child: PageView.builder(
-                            itemCount: updatedWallets.length,
-                            controller: PageController(viewportFraction: 0.92),
-                            itemBuilder: (context, index) {
-                              final isFirst = index == 0;
-                              final isLast = index == updatedWallets.length - 1;
-                              return Padding(
-                                padding: EdgeInsets.only(
-                                  left: isFirst ? 0 : AppTheme.spacing8,
-                                  right: isLast ? 0 : AppTheme.spacing8,
-                                ),
-                                child: WalletCard(
-                                  wallet: updatedWallets[index], 
-                                  showBalance: _walletBalanceVisibility[updatedWallets[index].id] ?? true,
-                                  onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(updatedWallets[index].id, showBalance),
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => TransactionsScreen(wallet: updatedWallets[index]),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                        );
+
+                    // Show only one wallet card on home screen with net profit (current month); use cached amount so it doesn't load from 0.
+                    final wallet = wallets.first;
+                    final now = DateTime.now();
+                    final startOfMonth = DateTime(now.year, now.month, 1);
+                    final incomeStatementAsync = ref.watch(
+                      incomeStatementProvider(
+                        IncomeStatementParams(fromDate: startOfMonth, toDate: now),
+                      ),
+                    );
+                    final netProfit = incomeStatementAsync.valueOrNull?.netIncome;
+                    final cachedAmount = ref.watch(homeWalletDisplayAmountProvider);
+                    ref.listen(
+                      incomeStatementProvider(
+                        IncomeStatementParams(fromDate: startOfMonth, toDate: now),
+                      ),
+                      (prev, next) {
+                        final value = next.valueOrNull?.netIncome;
+                        if (value != null) {
+                          ref.read(homeWalletDisplayAmountProvider.notifier).state = value;
+                        }
                       },
+                    );
+                    final displayAmount = netProfit ?? cachedAmount;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+                      child: WalletCard(
+                        wallet: wallet,
+                        showBalance: _walletBalanceVisibility[wallet.id] ?? true,
+                        onShowBalanceChanged: (showBalance) => _onBalanceVisibilityChanged(wallet.id, showBalance),
+                        onTap: () {}, // Do not open any screen (no mock transactions)
+                        displayLabel: displayAmount != null ? 'Net profit' : null,
+                        displayAmount: displayAmount,
+                      ),
                     );
                   },
                 );

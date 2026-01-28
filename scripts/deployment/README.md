@@ -154,3 +154,19 @@ Check logs:
 ```bash
 ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.yml logs'
 ```
+
+### Health endpoint not reachable (`http://159.198.65.38:3004/api/health`)
+
+1. **Run the diagnostic on the server** (after SSH):
+   ```bash
+   ssh root@159.198.65.38
+   cd /opt/gemura && bash scripts/deployment/check-backend-on-server.sh
+   ```
+   This shows container status, port 3004, backend logs, and whether the health check works from localhost.
+
+2. **Open firewall** if the diagnostic shows the backend is up on the server but you still can’t reach it from outside:
+   ```bash
+   ssh root@159.198.65.38 'ufw allow 3004/tcp && ufw reload'
+   ```
+
+3. **Redeploy** so the backend binds to `0.0.0.0` (required in Docker): run `./scripts/deployment/deploy-to-server.sh` again after the code change in `backend/src/main.ts`.

@@ -68,6 +68,25 @@ sshpass -p "$SERVER_PASS" scp -o StrictHostKeyChecking=no /tmp/gemura-deploy.tar
 sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && tar -xzf /tmp/gemura-deploy.tar.gz && rm /tmp/gemura-deploy.tar.gz"
 rm /tmp/gemura-deploy.tar.gz
 
+# Step 1.5: Ensure Docker is running on server (e.g. after reboot)
+echo ""
+echo "🐳 Step 1.5: Ensuring Docker is running on server..."
+if ! sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker info" &>/dev/null; then
+    echo "   Docker not running. Attempting to start..."
+    sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "systemctl start docker 2>/dev/null || service docker start 2>/dev/null || true"
+    sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "systemctl enable docker 2>/dev/null || true"
+    sleep 5
+    if ! sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker info" &>/dev/null; then
+        echo ""
+        echo "❌ Cannot connect to Docker on $SERVER_IP. Please on the server run:"
+        echo "   systemctl start docker"
+        echo "   systemctl enable docker   # start on boot"
+        echo ""
+        exit 1
+    fi
+fi
+echo "   ✅ Docker is running"
+
 # Step 2: Setup DevLabs PostgreSQL (if not already running)
 echo ""
 echo "🗄️  Step 2: Setting up DevLabs PostgreSQL..."
@@ -78,6 +97,12 @@ cd /opt/gemura
 export POSTGRES_USER=devslab_admin
 export POSTGRES_PASSWORD=devslab_secure_password_2024
 export POSTGRES_PORT=5433
+
+# Clean up devslab-postgres if it is stuck/marked for removal
+if docker ps -a --format '{{.Names}} {{.Status}}' | grep -q '^devslab-postgres .*Removal'; then
+  echo "   ⚠️  devslab-postgres is marked for removal. Forcing cleanup..."
+  docker rm -f devslab-postgres 2>/dev/null || true
+fi
 
 # Check if DevLabs PostgreSQL is already running
 if docker ps | grep -q devslab-postgres; then
@@ -96,26 +121,43 @@ else
         echo "   ✅ DevLabs PostgreSQL is running"
     else
         echo "   ❌ Failed to start PostgreSQL"
-        docker logs devslab-postgres
+        docker logs devslab-postgres || true
         exit 1
     fi
 fi
 
-# Create Gemura database
-echo "   Creating Gemura database..."
+# Create Gemura database and ensure all shared DBs exist (single source of truth)
+echo "   Creating/ensuring shared databases on devslab-postgres..."
 docker exec -i devslab-postgres psql -U devslab_admin -d postgres << 'EOF'
--- Create Gemura database if not exists
-SELECT 'CREATE DATABASE gemura_db'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'gemura_db')\gexec
-
--- Grant privileges to devslab_admin (already has access)
+-- Create each DB if not exists so all apps use the same latest data
+SELECT 'CREATE DATABASE gemura_db'     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'gemura_db')     \gexec
+SELECT 'CREATE DATABASE resolveit_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'resolveit_db') \gexec
+SELECT 'CREATE DATABASE orchestrate_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'orchestrate_db') \gexec
+SELECT 'CREATE DATABASE ihuzo_finance'  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ihuzo_finance')  \gexec
+SELECT 'CREATE DATABASE zoea_events'    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'zoea_events')    \gexec
+SELECT 'CREATE DATABASE refuel'         WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'refuel')         \gexec
 GRANT ALL PRIVILEGES ON DATABASE gemura_db TO devslab_admin;
-
--- List databases
+GRANT ALL PRIVILEGES ON DATABASE resolveit_db TO devslab_admin;
+GRANT ALL PRIVILEGES ON DATABASE orchestrate_db TO devslab_admin;
+GRANT ALL PRIVILEGES ON DATABASE ihuzo_finance TO devslab_admin;
+GRANT ALL PRIVILEGES ON DATABASE zoea_events TO devslab_admin;
+GRANT ALL PRIVILEGES ON DATABASE refuel TO devslab_admin;
 \l
 EOF
 
-echo "   ✅ Gemura database created"
+echo "   ✅ Shared databases ensured"
+
+# Step 2.5: Single source of truth — ensure no stray Postgres, then capture latest
+for c in pg-source devslab-postgres-temp; do
+  if docker ps -a --format '{{.Names}}' | grep -qx "$c"; then
+    echo "   Stopping $c so only devslab-postgres holds latest data..."
+    docker stop "$c" 2>/dev/null || true
+    docker rm "$c" 2>/dev/null || true
+  fi
+done
+echo "   Backing up all DBs from devslab-postgres (latest snapshot)..."
+mkdir -p /opt/gemura/backups
+bash /opt/gemura/scripts/deployment/backup-all-databases.sh 2>/dev/null || echo "   (backup script skipped if not found)"
 ENDSSH
 
 # Step 3: Build and start Gemura
@@ -165,15 +207,15 @@ docker compose -f docker-compose.gemura.yml --env-file .env.devlabs up -d --forc
 # Wait for services to start and verify health
 echo ""
 echo "   ⏳ Waiting for backend to be ready..."
-for i in {1..12}; do
+for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
   if curl -s http://localhost:3004/api/health > /dev/null 2>&1; then
     echo "   ✅ Backend is healthy!"
     break
   fi
-  if [ $i -eq 12 ]; then
+  if [ \$i -eq 12 ]; then
     echo "   ⚠️  Backend may still be starting (check logs if needed)"
   else
-    echo "   ⏳ Attempt $i/12..."
+    echo "   ⏳ Attempt \$i/12..."
     sleep 5
   fi
 done
