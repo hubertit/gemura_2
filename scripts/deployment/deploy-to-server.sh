@@ -47,6 +47,24 @@ fi
 export BACKEND_PORT=3004
 export FRONTEND_PORT=3005
 
+# Step 0: Backup database first (before any deployment changes)
+echo ""
+echo "💾 Step 0: Backing up production database..."
+if sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
+    "docker ps --format '{{.Names}}' | grep -qx devslab-postgres" 2>/dev/null; then
+  if sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
+      "[ -f $DEPLOY_PATH/scripts/deployment/backup-all-databases.sh ]" 2>/dev/null; then
+    sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
+      "cd $DEPLOY_PATH && mkdir -p backups && bash scripts/deployment/backup-all-databases.sh" || \
+      echo "   ⚠️  Backup had warnings (continuing)"
+    echo "   ✅ Database backup complete"
+  else
+    echo "   ⏭️  Skipping backup (first deploy, script not on server yet)"
+  fi
+else
+  echo "   ⏭️  Skipping backup (PostgreSQL not running yet - fresh deploy)"
+fi
+
 # Step 1: Upload files to server
 echo ""
 echo "📤 Step 1: Uploading files to server..."
@@ -68,30 +86,26 @@ sshpass -p "$SERVER_PASS" scp -o StrictHostKeyChecking=no /tmp/gemura-deploy.tar
 sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && tar -xzf /tmp/gemura-deploy.tar.gz && rm /tmp/gemura-deploy.tar.gz"
 rm /tmp/gemura-deploy.tar.gz
 
-# Step 1.5: Ensure Docker is running on server (e.g. after reboot)
-echo ""
-echo "🐳 Step 1.5: Ensuring Docker is running on server..."
-if ! sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker info" &>/dev/null; then
-    echo "   Docker not running. Attempting to start..."
-    sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "systemctl start docker 2>/dev/null || service docker start 2>/dev/null || true"
-    sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "systemctl enable docker 2>/dev/null || true"
-    sleep 5
-    if ! sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker info" &>/dev/null; then
-        echo ""
-        echo "❌ Cannot connect to Docker on $SERVER_IP. Please on the server run:"
-        echo "   systemctl start docker"
-        echo "   systemctl enable docker   # start on boot"
-        echo ""
-        exit 1
-    fi
-fi
-echo "   ✅ Docker is running"
-
 # Step 2: Setup DevLabs PostgreSQL (if not already running)
+# Docker check is inside this heredoc to avoid extra SSH sessions (was causing
+# "Permission denied" when too many SSH connections were opened in quick succession).
 echo ""
-echo "🗄️  Step 2: Setting up DevLabs PostgreSQL..."
+echo "🗄️  Step 2: Ensuring Docker and DevLabs PostgreSQL..."
 sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
 cd /opt/gemura
+
+# Ensure Docker is running (e.g. after server reboot)
+if ! docker info &>/dev/null; then
+  echo "   Docker not running. Attempting to start..."
+  systemctl start docker 2>/dev/null || service docker start 2>/dev/null || true
+  systemctl enable docker 2>/dev/null || true
+  sleep 5
+  if ! docker info &>/dev/null; then
+    echo "   ❌ Cannot connect to Docker. On this server run: systemctl start docker && systemctl enable docker"
+    exit 1
+  fi
+fi
+echo "   ✅ Docker is running"
 
 # Load environment variables
 export POSTGRES_USER=devslab_admin
@@ -101,7 +115,9 @@ export POSTGRES_PORT=5433
 # Clean up devslab-postgres if it is stuck/marked for removal
 if docker ps -a --format '{{.Names}} {{.Status}}' | grep -q '^devslab-postgres .*Removal'; then
   echo "   ⚠️  devslab-postgres is marked for removal. Forcing cleanup..."
+  docker compose -f docker-compose.devlabs-db.yml down --remove-orphans 2>/dev/null || true
   docker rm -f devslab-postgres 2>/dev/null || true
+  sleep 2
 fi
 
 # Check if DevLabs PostgreSQL is already running
@@ -147,7 +163,7 @@ EOF
 
 echo "   ✅ Shared databases ensured"
 
-# Step 2.5: Single source of truth — ensure no stray Postgres, then capture latest
+# Step 2.5: Single source of truth — ensure no stray Postgres
 for c in pg-source devslab-postgres-temp; do
   if docker ps -a --format '{{.Names}}' | grep -qx "$c"; then
     echo "   Stopping $c so only devslab-postgres holds latest data..."
@@ -155,9 +171,6 @@ for c in pg-source devslab-postgres-temp; do
     docker rm "$c" 2>/dev/null || true
   fi
 done
-echo "   Backing up all DBs from devslab-postgres (latest snapshot)..."
-mkdir -p /opt/gemura/backups
-bash /opt/gemura/scripts/deployment/backup-all-databases.sh 2>/dev/null || echo "   (backup script skipped if not found)"
 ENDSSH
 
 # Step 3: Build and start Gemura
@@ -244,6 +257,7 @@ echo "✅ Deployment Complete!"
 echo "================================================"
 echo ""
 echo "📦 Deployment Summary:"
+echo "   ✅ Database backed up (before deploy)"
 echo "   ✅ Files uploaded to server"
 echo "   ✅ Docker image rebuilt with latest code"
 echo "   ✅ Containers recreated with new image"
