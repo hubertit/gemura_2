@@ -7,7 +7,8 @@ import '../providers/payables_provider.dart';
 
 class RecordPaymentScreen extends ConsumerStatefulWidget {
   final String type; // 'receivable' or 'payable'
-  final String saleId; // For receivable
+  final String saleId; // For receivable (MilkSale or InventorySale ID)
+  final String source; // For receivable: 'milk_sale' or 'inventory_sale'
   final String collectionId; // For payable
   final String customerName; // For receivable
   final String supplierName; // For payable
@@ -18,6 +19,7 @@ class RecordPaymentScreen extends ConsumerStatefulWidget {
     super.key,
     required this.type,
     this.saleId = '',
+    this.source = 'milk_sale',
     this.collectionId = '',
     this.customerName = '',
     this.supplierName = '',
@@ -122,6 +124,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         await service.recordPayment(
           saleId: widget.saleId,
           amount: amount,
+          source: widget.source,
           paymentDate: _selectedDate.toIso8601String().split('T')[0],
           notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         );

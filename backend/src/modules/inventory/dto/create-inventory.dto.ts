@@ -1,13 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsBoolean, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsBoolean, Min, ValidateIf } from 'class-validator';
 
 export class CreateInventoryDto {
-  @ApiProperty({ description: 'Product name', example: 'Fresh Milk 1L' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({
+    description: 'Predefined inventory item UUID. When provided, name/description are taken from the item. Either name or inventory_item_id is required.',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsOptional()
   @IsString()
-  name: string;
+  inventory_item_id?: string;
 
-  @ApiProperty({ description: 'Product description', example: 'Fresh whole milk', required: false })
+  @ApiPropertyOptional({
+    description: 'Product name. Required when inventory_item_id is not provided; ignored when inventory_item_id is set.',
+    example: 'Fresh Milk 1L',
+  })
+  @ValidateIf((o) => !o.inventory_item_id)
+  @IsNotEmpty({ message: 'Either name or inventory_item_id is required.' })
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ description: 'Product description', example: 'Fresh whole milk' })
   @IsOptional()
   @IsString()
   description?: string;

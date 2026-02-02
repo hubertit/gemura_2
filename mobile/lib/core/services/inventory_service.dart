@@ -167,9 +167,51 @@ class InventoryService {
     }
   }
 
-  /// Create inventory item
+  /// Get predefined inventory item categories (for selection when adding inventory).
+  Future<List<Map<String, dynamic>>> getInventoryItemCategories() async {
+    try {
+      final response = await _dio.get('/inventory-items/categories');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map && data['code'] == 200 && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data'] as List);
+        }
+      }
+      return [];
+    } on DioException catch (_) {
+      return [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Get predefined inventory items grouped by category (for selection when adding inventory).
+  /// Returns { categories: [ { id, name, items: [ { id, name, code?, unit? } ] } ] }
+  Future<Map<String, dynamic>> getInventoryItemsGroupedByCategory() async {
+    try {
+      final response = await _dio.get(
+        '/inventory-items',
+        queryParameters: {'group_by_category': 'true'},
+      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map && data['code'] == 200 && data['data'] is Map) {
+          return Map<String, dynamic>.from(data['data'] as Map);
+        }
+      }
+      return {'categories': []};
+    } on DioException catch (_) {
+      return {'categories': []};
+    } catch (_) {
+      return {'categories': []};
+    }
+  }
+
+  /// Create inventory item.
+  /// Either [inventoryItemId] (predefined item) or [name] must be provided.
   Future<Map<String, dynamic>> createInventoryItem({
-    required String name,
+    String? inventoryItemId,
+    String? name,
     String? description,
     required double price,
     int stockQuantity = 0,
@@ -177,21 +219,23 @@ class InventoryService {
     List<String>? categoryIds,
     bool isListedInMarketplace = false,
   }) async {
+    if (inventoryItemId == null && (name == null || name.trim().isEmpty)) {
+      throw Exception('Either select an item type or enter a name');
+    }
     try {
-      final response = await _dio.post(
-        '/inventory',
-        data: {
-          'name': name,
-          if (description != null && description.isNotEmpty)
-            'description': description,
-          'price': price,
-          'stock_quantity': stockQuantity,
-          if (minStockLevel != null) 'min_stock_level': minStockLevel,
-          if (categoryIds != null && categoryIds.isNotEmpty)
-            'category_ids': categoryIds,
-          'is_listed_in_marketplace': isListedInMarketplace,
-        },
-      );
+      final Map<String, dynamic> payload = {
+        if (inventoryItemId != null) 'inventory_item_id': inventoryItemId,
+        if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+        if (description != null && description.isNotEmpty)
+          'description': description,
+        'price': price,
+        'stock_quantity': stockQuantity,
+        if (minStockLevel != null) 'min_stock_level': minStockLevel,
+        if (categoryIds != null && categoryIds.isNotEmpty)
+          'category_ids': categoryIds,
+        'is_listed_in_marketplace': isListedInMarketplace,
+      };
+      final response = await _dio.post('/inventory', data: payload);
 
       // Accept both 200 (OK) and 201 (Created) as success
       // Backend should return 200, but handle 201 defensively

@@ -72,8 +72,17 @@ export class PayrollRunsService {
   }
 
   async getRuns(user: User, periodId?: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found.',
+      });
+    }
+    const where: any = { created_by: user.id };
+    if (periodId) where.period_id = periodId;
     const runs = await this.prisma.payrollRun.findMany({
-      where: periodId ? { period_id: periodId } : {},
+      where,
       include: {
         period: true,
         payslips: {
@@ -128,6 +137,13 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
+    if (run.created_by && run.created_by !== user.id) {
+      throw new BadRequestException({
+        code: 403,
+        status: 'error',
+        message: 'You do not have permission to update this payroll run.',
+      });
+    }
 
     const updated = await this.prisma.payrollRun.update({
       where: { id: runId },
@@ -168,6 +184,13 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
+    if (run.created_by && run.created_by !== user.id) {
+      throw new BadRequestException({
+        code: 403,
+        status: 'error',
+        message: 'You do not have permission to process this payroll run.',
+      });
+    }
 
     // Determine date range for milk sales
     const endDate = run.period_end || new Date();
@@ -193,19 +216,7 @@ export class PayrollRunsService {
       const supplierEndDate = run.period_end || new Date();
       const supplierStartDate = run.period_start || new Date(supplierEndDate.getTime() - supplierPaymentTerms * 24 * 60 * 60 * 1000);
 
-      // Get unpaid milk sales for this supplier within the date range
-      // Milk sales that haven't been paid (not in any paid payslip)
-      const paidMilkSaleIds = await this.prisma.payrollPayslip.findMany({
-        where: {
-          supplier_account_id: payrollSupplier.supplier_account_id,
-          status: 'paid',
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      // Get milk sales for this supplier
+      // Get milk sales for this supplier - exclude already paid (in paid payslips)
       const milkSales = await this.prisma.milkSale.findMany({
         where: {
           supplier_account_id: payrollSupplier.supplier_account_id,
@@ -214,6 +225,8 @@ export class PayrollRunsService {
             gte: supplierStartDate,
             lte: supplierEndDate,
           },
+          status: { not: 'deleted' },
+          payment_status: { not: 'paid' },
         },
         orderBy: {
           sale_at: 'asc',
@@ -229,15 +242,30 @@ export class PayrollRunsService {
         return sum + Number(sale.quantity) * Number(sale.unit_price);
       }, 0);
 
-      // Get deductions for this supplier (fees, etc.)
-      // Note: SupplierDeduction table has been removed as it was not used by the mobile app
-      // Deductions are now calculated as 0 (no deductions feature in current implementation)
-      const deductions: any[] = [];
-      const totalDeductions = 0;
-      const netAmount = grossAmount - totalDeductions;
+      // Get supplier's unpaid inventory debt (InventorySales where supplier bought on debt)
+      const inventoryDebtSales = await this.prisma.inventorySale.findMany({
+        where: {
+          buyer_account_id: payrollSupplier.supplier_account_id,
+          buyer_type: 'supplier',
+          payment_status: { not: 'paid' },
+          product: {
+            account_id: user.default_account_id,
+          },
+        },
+        orderBy: { sale_date: 'asc' },
+      });
 
-      if (netAmount <= 0) {
-        continue; // Skip if net amount is zero or negative
+      const totalInventoryDebt = inventoryDebtSales.reduce((sum, sale) => {
+        const total = Number(sale.total_amount);
+        const paid = Number(sale.amount_paid || 0);
+        return sum + (total - paid);
+      }, 0);
+
+      const totalDeductions = Math.min(grossAmount, totalInventoryDebt);
+      const netAmount = Math.max(0, grossAmount - totalDeductions);
+
+      if (netAmount <= 0 && grossAmount <= 0) {
+        continue;
       }
 
       // Create payslip
@@ -254,6 +282,27 @@ export class PayrollRunsService {
           status: 'generated',
         },
       });
+
+      // Create PayrollDeduction records for inventory debt settlement tracking
+      if (inventoryDebtSales.length > 0 && totalDeductions > 0) {
+        let remainingToAllocate = totalDeductions;
+        for (const invSale of inventoryDebtSales) {
+          if (remainingToAllocate <= 0) break;
+          const outstanding = Number(invSale.total_amount) - Number(invSale.amount_paid || 0);
+          if (outstanding <= 0) continue;
+          const deductAmount = Math.min(remainingToAllocate, outstanding);
+          remainingToAllocate -= deductAmount;
+          await this.prisma.payrollDeduction.create({
+            data: {
+              payslip_id: payslip.id,
+              deduction_type: 'inventory_debt',
+              amount: deductAmount,
+              description: `Inventory debt - Sale ${invSale.id.substring(0, 8)}`,
+              inventory_sale_id: invSale.id,
+            },
+          });
+        }
+      }
 
       totalAmount += netAmount;
       payslipsCreated.push({
@@ -420,9 +469,8 @@ export class PayrollRunsService {
             gte: startDate,
             lte: endDate,
           },
-          status: {
-            not: 'deleted', // Exclude deleted sales, include all others
-          },
+          status: { not: 'deleted' },
+          payment_status: { not: 'paid' },
         },
         orderBy: {
           sale_at: 'asc',
@@ -463,11 +511,31 @@ export class PayrollRunsService {
         return sum + Number(sale.quantity) * Number(sale.unit_price);
       }, 0);
 
-      const totalDeductions = 0;
-      const netAmount = grossAmount - totalDeductions;
+      // Get supplier's unpaid inventory debt (InventorySales where supplier bought on debt)
+      const inventoryDebtSales = await this.prisma.inventorySale.findMany({
+        where: {
+          buyer_account_id: payrollSupplier.supplier_account_id,
+          buyer_type: 'supplier',
+          payment_status: { not: 'paid' },
+          product: {
+            account_id: user.default_account_id,
+          },
+        },
+        orderBy: { sale_date: 'asc' },
+      });
 
-      if (netAmount <= 0) {
-        continue; // Skip if net amount is zero or negative
+      const totalInventoryDebt = inventoryDebtSales.reduce((sum, sale) => {
+        const total = Number(sale.total_amount);
+        const paid = Number(sale.amount_paid || 0);
+        return sum + (total - paid);
+      }, 0);
+
+      // Can only deduct up to gross (can't deduct more than we owe them)
+      const totalDeductions = Math.min(grossAmount, totalInventoryDebt);
+      const netAmount = Math.max(0, grossAmount - totalDeductions);
+
+      if (netAmount <= 0 && grossAmount <= 0) {
+        continue; // Skip if no milk sales and no payout
       }
 
       // Create payslip
@@ -486,13 +554,37 @@ export class PayrollRunsService {
         },
       });
 
+      // Create PayrollDeduction records - allocate deductions across inventory sales (oldest first)
+      if (inventoryDebtSales.length > 0 && totalDeductions > 0) {
+        let remainingToAllocate = totalDeductions;
+        for (const invSale of inventoryDebtSales) {
+          if (remainingToAllocate <= 0) break;
+          const outstanding = Number(invSale.total_amount) - Number(invSale.amount_paid || 0);
+          if (outstanding <= 0) continue;
+          const deductAmount = Math.min(remainingToAllocate, outstanding);
+          remainingToAllocate -= deductAmount;
+          await this.prisma.payrollDeduction.create({
+            data: {
+              payslip_id: payslip.id,
+              deduction_type: 'inventory_debt',
+              amount: deductAmount,
+              description: `Inventory debt - Sale ${invSale.id.substring(0, 8)}`,
+              inventory_sale_id: invSale.id,
+            },
+          });
+        }
+      }
+
       totalAmount += netAmount;
+      const remainingDebt = Math.max(0, totalInventoryDebt - totalDeductions);
       payslipsCreated.push({
         supplier: payrollSupplier.supplier_account?.name || 'Unknown',
         supplier_code: payrollSupplier.supplier_account?.code || 'Unknown',
         net_amount: netAmount,
         gross_amount: grossAmount,
         milk_sales_count: milkSales.length,
+        inventory_debt_deducted: totalDeductions,
+        remaining_debt: remainingDebt > 0 ? remainingDebt : undefined,
       });
     }
 
@@ -570,6 +662,13 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
+    if (run.created_by && run.created_by !== user.id) {
+      throw new BadRequestException({
+        code: 403,
+        status: 'error',
+        message: 'You do not have permission to mark this payroll run as paid.',
+      });
+    }
 
     const paymentDate = markPaidDto.payment_date 
       ? new Date(markPaidDto.payment_date) 
@@ -595,17 +694,68 @@ export class PayrollRunsService {
         });
       }
 
-      // Update payslip status
-      await this.prisma.payrollPayslip.update({
-        where: { id: payslip.id },
-        data: {
-          status: 'paid',
-          payment_date: paymentDate,
-          paid_by: user.id,
-        },
+      await this.prisma.$transaction(async (tx) => {
+        await tx.payrollPayslip.update({
+          where: { id: payslip.id },
+          data: {
+            status: 'paid',
+            payment_date: paymentDate,
+            paid_by: user.id,
+          },
+        });
+
+        const inventoryDeductions = await tx.payrollDeduction.findMany({
+          where: {
+            payslip_id: payslip.id,
+            deduction_type: 'inventory_debt',
+            inventory_sale_id: { not: null },
+          },
+        });
+        for (const ded of inventoryDeductions) {
+          if (ded.inventory_sale_id) {
+            const invSale = await tx.inventorySale.findUnique({
+              where: { id: ded.inventory_sale_id },
+            });
+            if (invSale) {
+              const newAmountPaid = Number(invSale.amount_paid || 0) + Number(ded.amount);
+              const total = Number(invSale.total_amount);
+              const paymentStatus = newAmountPaid >= total ? 'paid' : 'partial';
+              await tx.inventorySale.update({
+                where: { id: invSale.id },
+                data: {
+                  amount_paid: newAmountPaid,
+                  payment_status: paymentStatus,
+                },
+              });
+            }
+          }
+        }
+
+        const milkSalesToSettle = await tx.milkSale.findMany({
+          where: {
+            supplier_account_id: payslip.supplier_account_id,
+            customer_account_id: user.default_account_id,
+            sale_at: {
+              gte: payslip.period_start,
+              lte: payslip.period_end,
+            },
+            status: { not: 'deleted' },
+            payment_status: { not: 'paid' },
+          },
+        });
+        for (const milkSale of milkSalesToSettle) {
+          const totalAmount = Number(milkSale.quantity) * Number(milkSale.unit_price);
+          await tx.milkSale.update({
+            where: { id: milkSale.id },
+            data: {
+              amount_paid: totalAmount,
+              payment_status: 'paid',
+            },
+          });
+        }
       });
 
-      // Create expense transaction in finance
+      // Create expense transaction in finance (outside tx - don't rollback payroll if finance fails)
       const netAmount = Number(payslip.net_amount);
       if (netAmount > 0) {
         try {
@@ -648,20 +798,72 @@ export class PayrollRunsService {
     let totalPaid = 0;
     const updatedPayslips = [];
 
-    // Update all unpaid payslips
+    // Update all unpaid payslips (each payslip in its own transaction for atomicity)
     for (const payslip of unpaidPayslips) {
       const netAmount = Number(payslip.net_amount);
-      
-      await this.prisma.payrollPayslip.update({
-        where: { id: payslip.id },
-        data: {
-          status: 'paid',
-          payment_date: paymentDate,
-          paid_by: user.id,
-        },
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.payrollPayslip.update({
+          where: { id: payslip.id },
+          data: {
+            status: 'paid',
+            payment_date: paymentDate,
+            paid_by: user.id,
+          },
+        });
+
+        const inventoryDeductions = await tx.payrollDeduction.findMany({
+          where: {
+            payslip_id: payslip.id,
+            deduction_type: 'inventory_debt',
+            inventory_sale_id: { not: null },
+          },
+        });
+        for (const ded of inventoryDeductions) {
+          if (ded.inventory_sale_id) {
+            const invSale = await tx.inventorySale.findUnique({
+              where: { id: ded.inventory_sale_id },
+            });
+            if (invSale) {
+              const newAmountPaid = Number(invSale.amount_paid || 0) + Number(ded.amount);
+              const total = Number(invSale.total_amount);
+              const paymentStatus = newAmountPaid >= total ? 'paid' : 'partial';
+              await tx.inventorySale.update({
+                where: { id: invSale.id },
+                data: {
+                  amount_paid: newAmountPaid,
+                  payment_status: paymentStatus,
+                },
+              });
+            }
+          }
+        }
+
+        const milkSalesToSettle = await tx.milkSale.findMany({
+          where: {
+            supplier_account_id: payslip.supplier_account_id,
+            customer_account_id: user.default_account_id,
+            sale_at: {
+              gte: payslip.period_start,
+              lte: payslip.period_end,
+            },
+            status: { not: 'deleted' },
+            payment_status: { not: 'paid' },
+          },
+        });
+        for (const milkSale of milkSalesToSettle) {
+          const totalAmount = Number(milkSale.quantity) * Number(milkSale.unit_price);
+          await tx.milkSale.update({
+            where: { id: milkSale.id },
+            data: {
+              amount_paid: totalAmount,
+              payment_status: 'paid',
+            },
+          });
+        }
       });
 
-      // Create expense transaction for each payslip
+      // Create expense transaction for each payslip (outside tx)
       if (netAmount > 0) {
         try {
           await this.transactionsService.createTransaction(user, {
@@ -729,6 +931,13 @@ export class PayrollRunsService {
         code: 404,
         status: 'error',
         message: 'Payroll run not found.',
+      });
+    }
+    if (run.created_by && run.created_by !== user.id) {
+      throw new BadRequestException({
+        code: 403,
+        status: 'error',
+        message: 'You do not have permission to export this payroll run.',
       });
     }
 

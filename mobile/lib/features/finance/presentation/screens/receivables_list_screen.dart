@@ -86,7 +86,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Accounts Receivable'),
+        title: const Text('Receivables'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),
@@ -630,6 +630,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen> {
         builder: (context) => RecordPaymentScreen(
           type: 'receivable',
           saleId: rec.saleId,
+          source: rec.source,
           customerName: rec.customer.name,
           outstanding: rec.outstanding,
           onSuccess: () {

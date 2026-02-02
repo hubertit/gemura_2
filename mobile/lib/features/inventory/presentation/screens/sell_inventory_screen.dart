@@ -3,11 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/utils/phone_validator.dart';
 import '../../../../shared/utils/rwandan_phone_input_formatter.dart';
 import '../providers/inventory_provider.dart';
-import '../../../../core/services/inventory_service.dart';
 import '../../../../features/customers/presentation/providers/customers_provider.dart';
 import '../../../../features/suppliers/presentation/providers/suppliers_provider.dart';
 import '../../../../shared/models/customer.dart';
@@ -40,7 +38,6 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
   void initState() {
     super.initState();
     final price = (widget.item['price'] as num?) ?? 0;
-    final stockQuantity = widget.item['stock_quantity'] ?? 0;
     _quantityController.text = '1';
     _amountPaidController.text = price.toString();
   }
@@ -468,98 +465,67 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                         );
                       }
 
-                      // Create a map with unique values, using accountId (UUID) as primary key
-                      // This ensures we send IDs to the backend instead of codes
-                      final uniqueSuppliers = <String, Supplier>{};
-                      for (final supplier in suppliers) {
-                        // Prefer accountId (UUID) if available, otherwise use accountCode
-                        // The backend now returns account.id in the response
-                        final key = (supplier.accountId != null && supplier.accountId!.isNotEmpty)
-                            ? supplier.accountId!
-                            : (supplier.accountCode.isNotEmpty 
-                                ? supplier.accountCode 
-                                : supplier.relationshipId);
-                        
-                        if (key.isNotEmpty) {
-                          // Only add if not already present (avoid duplicates)
-                          if (!uniqueSuppliers.containsKey(key)) {
-                            uniqueSuppliers[key] = supplier;
+                      // Get selected supplier for display
+                      Supplier? selectedSupplier;
+                      if (_selectedBuyerAccountId != null) {
+                        for (final supplier in suppliers) {
+                          final key = (supplier.accountId != null && supplier.accountId!.isNotEmpty)
+                              ? supplier.accountId!
+                              : (supplier.accountCode.isNotEmpty 
+                                  ? supplier.accountCode 
+                                  : supplier.relationshipId);
+                          if (key == _selectedBuyerAccountId) {
+                            selectedSupplier = supplier;
+                            break;
                           }
                         }
                       }
 
-                      // Ensure selected value exists in the current list
-                      final validSelectedValue = _selectedBuyerAccountId != null &&
-                              uniqueSuppliers.containsKey(_selectedBuyerAccountId)
-                          ? _selectedBuyerAccountId
-                          : null;
-
-                      // Update state if selected value is invalid
-                      if (_selectedBuyerAccountId != validSelectedValue) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            setState(() {
-                              _selectedBuyerAccountId = validSelectedValue;
-                            });
-                          }
-                        });
-                      }
-
-                      if (uniqueSuppliers.isEmpty) {
-                        return Container(
+                      return InkWell(
+                        onTap: () => _showSupplierSelectionDialog(suppliersAsync),
+                        child: Container(
                           padding: const EdgeInsets.all(AppTheme.spacing12),
                           decoration: BoxDecoration(
-                            color: AppTheme.errorColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                            border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                           ),
-                          child: Text(
-                            'No suppliers with valid account information',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.errorColor,
-                            ),
-                          ),
-                        );
-                      }
-
-                      return DropdownButtonFormField<String>(
-                        value: validSelectedValue,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.spacing12,
-                            vertical: AppTheme.spacing12,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.person, color: AppTheme.textSecondaryColor),
+                              const SizedBox(width: AppTheme.spacing12),
+                              Expanded(
+                                child: selectedSupplier == null
+                                    ? Text(
+                                        'Select supplier',
+                                        style: AppTheme.bodySmall.copyWith(
+                                          color: AppTheme.textHintColor,
+                                        ),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            selectedSupplier.name,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (selectedSupplier.phone.isNotEmpty)
+                                            Text(
+                                              selectedSupplier.phone,
+                                              style: AppTheme.bodySmall.copyWith(
+                                                color: AppTheme.textSecondaryColor,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                              ),
+                              const Icon(Icons.arrow_drop_down, color: AppTheme.textSecondaryColor),
+                            ],
                           ),
                         ),
-                        hint: Text(
-                          'Select supplier',
-                          style: AppTheme.hintText,
-                        ),
-                        items: uniqueSuppliers.entries.map((entry) {
-                          // Use the key which is already accountId (UUID) if available, otherwise accountCode
-                          // This ensures we send IDs to the backend
-                          return DropdownMenuItem<String>(
-                            value: entry.key,
-                            child: Text(
-                              entry.value.name,
-                              style: AppTheme.bodySmall,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedBuyerAccountId = value;
-                            _buyerNameController.clear();
-                            _buyerPhoneController.clear();
-                          });
-                        },
-                        validator: (value) {
-                          if (_buyerType == 'supplier' && value == null) {
-                            return 'Please select a supplier or provide phone/name';
-                          }
-                          return null;
-                        },
                       );
                     },
                     loading: () => const Center(
@@ -585,82 +551,65 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                 if (_buyerType == 'customer')
                   customersAsync.when(
                     data: (customers) {
-                      // Filter out customers without valid account identifiers
-                      final validCustomers = customers.where((c) {
-                        final id = c.accountId ?? c.accountCode;
-                        return id != null && id.isNotEmpty;
-                      }).toList();
-
-                      // Remove duplicates by creating a map with unique values
-                      // Prefer accountId (UUID) if available, otherwise use accountCode
-                      final uniqueCustomers = <String, Customer>{};
-                      for (final customer in validCustomers) {
-                        // Use accountId (UUID) if available, otherwise accountCode
-                        final key = (customer.accountId != null && customer.accountId!.isNotEmpty)
-                            ? customer.accountId!
-                            : customer.accountCode;
-                        if (key.isNotEmpty) {
-                          uniqueCustomers[key] = customer;
+                      // Get selected customer for display
+                      Customer? selectedCustomer;
+                      if (_selectedBuyerAccountId != null) {
+                        for (final customer in customers) {
+                          final key = (customer.accountId != null && customer.accountId!.isNotEmpty)
+                              ? customer.accountId!
+                              : customer.accountCode;
+                          if (key == _selectedBuyerAccountId) {
+                            selectedCustomer = customer;
+                            break;
+                          }
                         }
                       }
 
-                      // Ensure selected value exists in the current list (or is null for "None")
-                      final validSelectedValue = _selectedBuyerAccountId != null &&
-                              uniqueCustomers.containsKey(_selectedBuyerAccountId)
-                          ? _selectedBuyerAccountId
-                          : null;
-
-                      // Update state if selected value is invalid
-                      if (_selectedBuyerAccountId != validSelectedValue) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            setState(() {
-                              _selectedBuyerAccountId = validSelectedValue;
-                            });
-                          }
-                        });
-                      }
-
-                      return DropdownButtonFormField<String>(
-                        value: validSelectedValue,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                      return InkWell(
+                        onTap: () => _showCustomerSelectionDialog(customersAsync),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.spacing12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceColor,
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                            border: Border.all(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppTheme.spacing12,
-                            vertical: AppTheme.spacing12,
-                          ),
-                        ),
-                        hint: Text(
-                          'Select customer (optional)',
-                          style: AppTheme.hintText,
-                        ),
-                        items: [
-                          const DropdownMenuItem<String>(
-                            value: null,
-                            child: Text('None (new customer)'),
-                          ),
-                          ...uniqueCustomers.entries.map((entry) {
-                            // Use the key which is already accountId (UUID) if available, otherwise accountCode
-                            return DropdownMenuItem<String>(
-                              value: entry.key,
-                              child: Text(
-                                entry.value.name,
-                                style: AppTheme.bodySmall,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.business, color: AppTheme.textSecondaryColor),
+                              const SizedBox(width: AppTheme.spacing12),
+                              Expanded(
+                                child: selectedCustomer == null
+                                    ? Text(
+                                        'Select customer (optional)',
+                                        style: AppTheme.bodySmall.copyWith(
+                                          color: AppTheme.textHintColor,
+                                        ),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            selectedCustomer.name,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (selectedCustomer.phone.isNotEmpty)
+                                            Text(
+                                              selectedCustomer.phone,
+                                              style: AppTheme.bodySmall.copyWith(
+                                                color: AppTheme.textSecondaryColor,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                               ),
-                            );
-                          }).toList(),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedBuyerAccountId = value;
-                            if (value != null) {
-                              _buyerNameController.clear();
-                              _buyerPhoneController.clear();
-                            }
-                          });
-                        },
+                              const Icon(Icons.arrow_drop_down, color: AppTheme.textSecondaryColor),
+                            ],
+                          ),
+                        ),
                       );
                     },
                     loading: () => const Center(
@@ -991,6 +940,462 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showSupplierSelectionDialog(AsyncValue<List<Supplier>> suppliersAsync) {
+    final searchController = TextEditingController();
+    List<Supplier> suppliers = [];
+    List<Supplier> filteredSuppliers = [];
+
+    suppliersAsync.when(
+      data: (suppliersList) {
+        suppliers = suppliersList;
+        filteredSuppliers = suppliersList;
+      },
+      loading: () {
+        suppliers = [];
+        filteredSuppliers = [];
+      },
+      error: (_, __) {
+        suppliers = [];
+        filteredSuppliers = [];
+      },
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: AppTheme.surfaceColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(AppTheme.spacing20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Row(
+                    children: [
+                      Icon(Icons.person, color: AppTheme.primaryColor, size: 20),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        'Select Supplier',
+                        style: AppTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: AppTheme.textSecondaryColor),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  // Search field
+                  TextField(
+                    controller: searchController,
+                    style: AppTheme.bodySmall,
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, phone, or address...',
+                      hintStyle: AppTheme.hintText,
+                      prefixIcon: Icon(Icons.search, size: 18, color: AppTheme.textSecondaryColor),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        borderSide: BorderSide(color: AppTheme.primaryColor, width: 1),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing8,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        if (value.isEmpty) {
+                          filteredSuppliers = suppliers;
+                        } else {
+                          final query = value.toLowerCase();
+                          filteredSuppliers = suppliers.where((supplier) {
+                            return supplier.name.toLowerCase().contains(query) ||
+                                supplier.phone.toLowerCase().contains(query) ||
+                                (supplier.address?.toLowerCase().contains(query) ?? false);
+                          }).toList();
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  // Supplier list
+                  SizedBox(
+                    height: 300,
+                    child: suppliersAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      error: (error, stack) => Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondaryColor),
+                            const SizedBox(height: AppTheme.spacing8),
+                            Text(
+                              'Failed to load suppliers',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      data: (_) {
+                        // Initialize filtered suppliers if empty
+                        if (filteredSuppliers.isEmpty && suppliers.isNotEmpty) {
+                          filteredSuppliers = suppliers;
+                        }
+                        
+                        return filteredSuppliers.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
+                                    const SizedBox(height: AppTheme.spacing8),
+                                    Text(
+                                      'No suppliers found',
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.textSecondaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: filteredSuppliers.length,
+                                itemBuilder: (context, index) {
+                                  final supplier = filteredSuppliers[index];
+                                  // Create key for supplier (accountId or accountCode)
+                                  final key = (supplier.accountId != null && supplier.accountId!.isNotEmpty)
+                                      ? supplier.accountId!
+                                      : (supplier.accountCode.isNotEmpty 
+                                          ? supplier.accountCode 
+                                          : supplier.relationshipId);
+                                  
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                                      child: Text(
+                                        supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : 'S',
+                                        style: TextStyle(
+                                          color: AppTheme.primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      supplier.name,
+                                      style: AppTheme.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (supplier.phone.isNotEmpty)
+                                          Text(
+                                            supplier.phone,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              color: AppTheme.textSecondaryColor,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        if (supplier.address != null && supplier.address!.isNotEmpty)
+                                          Text(
+                                            supplier.address!,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              color: AppTheme.textSecondaryColor,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedBuyerAccountId = key;
+                                        _buyerNameController.clear();
+                                        _buyerPhoneController.clear();
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
+                                },
+                              );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Cancel',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showCustomerSelectionDialog(AsyncValue<List<Customer>> customersAsync) {
+    final searchController = TextEditingController();
+    List<Customer> filteredCustomers = [];
+
+    customersAsync.when(
+      data: (customersList) {
+        filteredCustomers = customersList;
+      },
+      loading: () {
+        filteredCustomers = [];
+      },
+      error: (_, __) {
+        filteredCustomers = [];
+      },
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            backgroundColor: AppTheme.surfaceColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Row(
+                    children: [
+                      Icon(Icons.business, color: AppTheme.primaryColor, size: 20),
+                      const SizedBox(width: AppTheme.spacing8),
+                      Text(
+                        'Select Customer',
+                        style: AppTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: Icon(Icons.close, color: AppTheme.textSecondaryColor),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spacing12),
+                  // Search field
+                  TextField(
+                    controller: searchController,
+                    style: AppTheme.bodySmall,
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, phone, or address...',
+                      hintStyle: AppTheme.hintText,
+                      prefixIcon: Icon(Icons.search, size: 18, color: AppTheme.textSecondaryColor),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                        borderSide: BorderSide(color: AppTheme.primaryColor, width: 1),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacing12,
+                        vertical: AppTheme.spacing8,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        customersAsync.when(
+                          data: (customersList) {
+                            if (value.isEmpty) {
+                              filteredCustomers = customersList;
+                            } else {
+                              final query = value.toLowerCase();
+                              filteredCustomers = customersList.where((customer) {
+                                return customer.name.toLowerCase().contains(query) ||
+                                    customer.phone.toLowerCase().contains(query) ||
+                                    (customer.address?.toLowerCase().contains(query) ?? false);
+                              }).toList();
+                            }
+                          },
+                          loading: () => filteredCustomers = [],
+                          error: (error, stack) => filteredCustomers = [],
+                        );
+                      });
+                    },
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  // Customer list
+                  SizedBox(
+                    height: 300,
+                    child: customersAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      error: (error, stack) => Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 48, color: AppTheme.textSecondaryColor),
+                            const SizedBox(height: AppTheme.spacing8),
+                            Text(
+                              'Failed to load customers',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      data: (customersList) {
+                        // Initialize filtered customers if empty
+                        if (filteredCustomers.isEmpty && customersList.isNotEmpty) {
+                          filteredCustomers = customersList;
+                        }
+                        
+                        return filteredCustomers.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
+                                    const SizedBox(height: AppTheme.spacing8),
+                                    Text(
+                                      'No customers found',
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.textSecondaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: filteredCustomers.length,
+                                itemBuilder: (context, index) {
+                                  final customer = filteredCustomers[index];
+                                  // Create key for customer (accountId or accountCode)
+                                  final key = (customer.accountId != null && customer.accountId!.isNotEmpty)
+                                      ? customer.accountId!
+                                      : customer.accountCode;
+                                  
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                                      child: Text(
+                                        customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'C',
+                                        style: TextStyle(
+                                          color: AppTheme.primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      customer.name,
+                                      style: AppTheme.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (customer.phone.isNotEmpty)
+                                          Text(
+                                            customer.phone,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              color: AppTheme.textSecondaryColor,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        if (customer.address != null && customer.address!.isNotEmpty)
+                                          Text(
+                                            customer.address!,
+                                            style: AppTheme.bodySmall.copyWith(
+                                              color: AppTheme.textSecondaryColor,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedBuyerAccountId = key;
+                                        _buyerNameController.clear();
+                                        _buyerPhoneController.clear();
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
+                                },
+                              );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spacing16),
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Cancel',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

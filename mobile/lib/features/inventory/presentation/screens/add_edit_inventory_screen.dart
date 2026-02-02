@@ -24,6 +24,10 @@ class _AddEditInventoryScreenState
   final _stockQuantityController = TextEditingController();
   final _minStockLevelController = TextEditingController();
 
+  /// For Add mode: selected predefined item (id + name).
+  String? _selectedInventoryItemId;
+  String? _selectedInventoryItemName;
+
   bool _isListedInMarketplace = false;
   bool _isSubmitting = false;
 
@@ -58,6 +62,14 @@ class _AddEditInventoryScreenState
       return;
     }
 
+    final isEdit = widget.item != null;
+    if (!isEdit && _selectedInventoryItemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.errorSnackBar(message: 'Please select an item type'),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -65,8 +77,7 @@ class _AddEditInventoryScreenState
     try {
       final inventoryService = ref.read(inventoryServiceProvider);
 
-      if (widget.item != null) {
-        // Update existing item
+      if (isEdit) {
         await inventoryService.updateInventoryItem(
           id: widget.item!['id'],
           name: _nameController.text.trim(),
@@ -81,9 +92,11 @@ class _AddEditInventoryScreenState
           isListedInMarketplace: _isListedInMarketplace,
         );
       } else {
-        // Create new item
         await inventoryService.createInventoryItem(
-          name: _nameController.text.trim(),
+          inventoryItemId: _selectedInventoryItemId,
+          name: _selectedInventoryItemId != null
+              ? null
+              : _nameController.text.trim(),
           description: _descriptionController.text.trim().isEmpty
               ? null
               : _descriptionController.text.trim(),
@@ -99,13 +112,12 @@ class _AddEditInventoryScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           AppTheme.successSnackBar(
-            message: widget.item != null
+            message: isEdit
                 ? 'Inventory item updated successfully'
                 : 'Inventory item created successfully',
           ),
         );
 
-        // Refresh providers to get updated data
         // ignore: unused_result
         ref.refresh(inventoryProvider(InventoryFilters()));
         // ignore: unused_result
@@ -131,9 +143,35 @@ class _AddEditInventoryScreenState
     }
   }
 
+  void _showItemPicker(BuildContext context, Map<String, dynamic> grouped) {
+    final categories =
+        (grouped['categories'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return _ItemPickerSheet(
+          categories: categories,
+          onSelect: (id, name) {
+            setState(() {
+              _selectedInventoryItemId = id;
+              _selectedInventoryItemName = name;
+            });
+            Navigator.of(ctx).pop();
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.item != null;
+    final groupedAsync = ref.watch(predefinedInventoryItemsProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
@@ -152,22 +190,127 @@ class _AddEditInventoryScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Name Field
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Item Name *',
-                  hintText: 'e.g., Fresh Milk 1L',
+              if (isEdit) ...[
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Item Name *',
+                    hintText: 'e.g., Fresh Milk 1L',
+                  ),
+                  textCapitalization: TextCapitalization.words,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Item name is required';
+                    }
+                    return null;
+                  },
                 ),
-                textCapitalization: TextCapitalization.words,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Item name is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing16),
+                const SizedBox(height: AppTheme.spacing16),
+              ] else ...[
+                // Add mode: select from predefined list
+                groupedAsync.when(
+                  data: (grouped) {
+                    final categories = grouped['categories'] as List<dynamic>? ?? [];
+                    final hasItems = categories.isNotEmpty;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        InkWell(
+                          onTap: hasItems
+                              ? () => _showItemPicker(context, grouped)
+                              : null,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.borderRadius8),
+                          child: Container(
+                            padding: const EdgeInsets.all(AppTheme.spacing16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceColor,
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.borderRadius8),
+                              border: Border.all(
+                                color: _selectedInventoryItemId != null
+                                    ? AppTheme.primaryColor
+                                    : AppTheme.thinBorderColor,
+                                width: AppTheme.thinBorderWidth,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  color: _selectedInventoryItemId != null
+                                      ? AppTheme.primaryColor
+                                      : AppTheme.textHintColor,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: AppTheme.spacing12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Item type *',
+                                        style: AppTheme.labelSmall.copyWith(
+                                          color: AppTheme.textSecondaryColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppTheme.spacing4),
+                                      Text(
+                                        _selectedInventoryItemName ??
+                                            (hasItems
+                                                ? 'Tap to select'
+                                                : 'No items loaded'),
+                                        style: AppTheme.bodyMedium.copyWith(
+                                          color: _selectedInventoryItemName != null
+                                              ? AppTheme.textPrimaryColor
+                                              : AppTheme.textHintColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (hasItems)
+                                  const Icon(
+                                    Icons.arrow_drop_down,
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (!hasItems)
+                          Padding(
+                            padding: const EdgeInsets.only(top: AppTheme.spacing8),
+                            child: Text(
+                              'Item list could not be loaded. Check your connection.',
+                              style: AppTheme.labelSmall.copyWith(
+                                color: AppTheme.textSecondaryColor,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: AppTheme.spacing16),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox(
+                    height: 56,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (_, __) => Container(
+                    padding: const EdgeInsets.all(AppTheme.spacing16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor,
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadius8),
+                      border: Border.all(color: AppTheme.thinBorderColor),
+                    ),
+                    child: const Text(
+                      'Could not load item list. Try again later.',
+                      style: AppTheme.bodySmall,
+                    ),
+                  ),
+                ),
+              ],
 
               // Description Field
               TextFormField(
@@ -176,7 +319,7 @@ class _AddEditInventoryScreenState
                   labelText: 'Description',
                   hintText: 'Optional description',
                 ),
-                maxLines: 3,
+                maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
               const SizedBox(height: AppTheme.spacing16),
@@ -237,7 +380,6 @@ class _AddEditInventoryScreenState
                 decoration: const InputDecoration(
                   labelText: 'Min Stock Level (Optional)',
                   hintText: 'Alert when stock reaches this level',
-                  helperText: 'Leave empty to disable low stock alerts',
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
@@ -307,7 +449,6 @@ class _AddEditInventoryScreenState
               ),
               const SizedBox(height: AppTheme.spacing24),
 
-              // Submit Button
               PrimaryButton(
                 label: isEdit ? 'Update Item' : 'Create Item',
                 onPressed: _isSubmitting ? null : _submitForm,
@@ -317,6 +458,190 @@ class _AddEditInventoryScreenState
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Two-step item picker: tap category first, then see items with search.
+class _ItemPickerSheet extends StatefulWidget {
+  final List<Map<String, dynamic>> categories;
+  final void Function(String id, String name) onSelect;
+
+  const _ItemPickerSheet({
+    required this.categories,
+    required this.onSelect,
+  });
+
+  @override
+  State<_ItemPickerSheet> createState() => _ItemPickerSheetState();
+}
+
+class _ItemPickerSheetState extends State<_ItemPickerSheet> {
+  Map<String, dynamic>? _selectedCategory;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> get _items {
+    if (_selectedCategory == null) return [];
+    final list =
+        (_selectedCategory!['items'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+    if (_searchQuery.trim().isEmpty) return list;
+    final q = _searchQuery.trim().toLowerCase();
+    return list.where((item) {
+      final name = (item['name'] as String? ?? '').toLowerCase();
+      return name.contains(q);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, scrollController) {
+        if (_selectedCategory == null) {
+          // Step 1: show categories
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.spacing16),
+                child: Text(
+                  'Select category',
+                  style: AppTheme.titleMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: widget.categories.length,
+                  itemBuilder: (_, index) {
+                    final cat = widget.categories[index];
+                    final name = cat['name'] as String? ?? 'Category';
+                    final items =
+                        (cat['items'] as List<dynamic>?)?.length ?? 0;
+                    return ListTile(
+                      title: Text(name),
+                      subtitle: Text('$items items'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = cat;
+                          _searchQuery = '';
+                          _searchController.clear();
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Step 2: show items in selected category with search
+        final items = _items;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing16,
+                vertical: AppTheme.spacing8,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory = null;
+                        _searchQuery = '';
+                        _searchController.clear();
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: Text(
+                      _selectedCategory!['name'] as String? ?? 'Items',
+                      style: AppTheme.titleMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppTheme.spacing16,
+                0,
+                AppTheme.spacing16,
+                AppTheme.spacing8,
+              ),
+              child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search by name...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadius8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacing12,
+                      vertical: AppTheme.spacing12,
+                    ),
+                  ),
+                  textCapitalization: TextCapitalization.none,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+            const Divider(height: 1),
+            Expanded(
+              child: items.isEmpty
+                  ? Center(
+                      child: Text(
+                        _searchQuery.trim().isEmpty
+                            ? 'No items in this category'
+                            : 'No items match "$_searchQuery"',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: items.length,
+                      itemBuilder: (_, index) {
+                        final item = items[index];
+                        final id = item['id'] as String? ?? '';
+                        final name = item['name'] as String? ?? '';
+                        final unit = item['unit'] as String?;
+                        final label = unit != null && unit.isNotEmpty
+                            ? '$name ($unit)'
+                            : name;
+                        return ListTile(
+                          title: Text(label),
+                          onTap: () => widget.onSelect(id, name),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

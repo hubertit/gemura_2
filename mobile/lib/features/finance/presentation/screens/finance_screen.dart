@@ -201,7 +201,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 data: (incomeStatement) => _buildIncomeSummarySection(
                   incomeStatement,
                 ),
-                loading: () => SkeletonLoaders.homeTabSkeleton(),
+                loading: () => SkeletonLoaders.financeIncomeStatementSkeleton(),
                 error: (error, stack) => _buildErrorState(context, error, localizationService),
               ),
               const SizedBox(height: AppTheme.spacing16),

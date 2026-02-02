@@ -4,6 +4,7 @@ import '../config/app_config.dart';
 import '../../shared/models/registration_request.dart';
 import 'secure_storage_service.dart';
 import 'authenticated_dio_service.dart';
+import 'conversation_storage_service.dart';
 
 class AuthService {
   final Dio _dio;
@@ -184,6 +185,7 @@ class AuthService {
     await SecureStorageService.removeUserData();
     await SecureStorageService.removeLoginState();
     await SecureStorageService.clearAllCachedData();
+    await ConversationStorageService.clearConversation();
     AuthenticatedDioService.clearInstance();
   }
 

@@ -15,8 +15,8 @@ COPY prisma ./prisma/
 # (matches ResolveIt deployment behavior)
 RUN npm ci --legacy-peer-deps
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client (limit memory to avoid OOM on low-RAM servers)
+RUN NODE_OPTIONS=--max-old-space-size=384 npx prisma generate
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -37,14 +37,11 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# Copy necessary files
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/prisma ./prisma
-
-# Set ownership
-RUN chown -R nestjs:nodejs /app
+# Copy necessary files with ownership (avoids slow chown -R on large node_modules)
+COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
 
 USER nestjs
 

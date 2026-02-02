@@ -219,12 +219,6 @@ export class CustomersController {
       message: 'Customer not found.',
     },
   })
-    example: {
-      code: 404,
-      status: 'error',
-      message: 'Customer account not found.',
-    },
-  })
   async getCustomerById(@CurrentUser() user: User, @Param('id') id: string) {
     return this.customersService.getCustomerById(user, id);
   }

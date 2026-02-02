@@ -51,7 +51,7 @@ export class ReportsController {
         liabilities: [
           {
             code: 'PAY-ACC001',
-            name: 'Accounts Payable',
+            name: 'Payables',
             balance: 500000,
           },
         ],

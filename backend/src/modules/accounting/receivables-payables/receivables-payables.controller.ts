@@ -1,14 +1,16 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { 
   ApiTags, 
   ApiOperation, 
   ApiResponse, 
   ApiBearerAuth, 
   ApiQuery,
+  ApiParam,
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { ReceivablesPayablesService } from './receivables-payables.service';
+import { RecordPaymentDto } from './dto/record-payment.dto';
 import { TokenGuard } from '../../../common/guards/token.guard';
 import { CurrentUser } from '../../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
@@ -22,7 +24,7 @@ export class ReceivablesPayablesController {
 
   @Get('receivables')
   @ApiOperation({
-    summary: 'Get Accounts Receivable',
+    summary: 'Get Receivables',
     description: 'Returns all unpaid/partial milk sales where the authenticated user is the supplier (selling to customers). Includes aging analysis, grouping by customer, and detailed invoice information. Data is scoped to the user\'s default account.',
   })
   @ApiQuery({ 
@@ -132,7 +134,7 @@ export class ReceivablesPayablesController {
 
   @Get('payables')
   @ApiOperation({
-    summary: 'Get Accounts Payable',
+    summary: 'Get Payables',
     description: 'Returns all unpaid/partial milk collections where the authenticated user is the customer/collector (buying from suppliers). Includes aging analysis, grouping by supplier, and detailed invoice information. Data is scoped to the user\'s default account.',
   })
   @ApiQuery({ 
@@ -238,5 +240,26 @@ export class ReceivablesPayablesController {
       date_to: dateTo,
       payment_status: paymentStatus,
     });
+  }
+
+  @Post('receivables/inventory/:inventorySaleId/payment')
+  @ApiOperation({
+    summary: 'Record payment for inventory receivable',
+    description: 'Record a direct payment against an InventorySale receivable (supplier debt). Use when a supplier pays off their inventory debt directly, not via payroll deduction. Updates Receivables automatically.',
+  })
+  @ApiParam({ name: 'inventorySaleId', description: 'Inventory sale ID (receivable)' })
+  @ApiResponse({ status: 200, description: 'Payment recorded successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid amount or exceeds outstanding' })
+  @ApiUnauthorizedResponse({ description: 'Access denied' })
+  async recordPaymentForReceivable(
+    @CurrentUser() user: User,
+    @Param('inventorySaleId') inventorySaleId: string,
+    @Body() paymentDto: RecordPaymentDto,
+  ) {
+    return this.receivablesPayablesService.recordPaymentForReceivable(
+      user,
+      inventorySaleId,
+      paymentDto,
+    );
   }
 }

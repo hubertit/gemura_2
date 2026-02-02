@@ -27,7 +27,7 @@ class ArApSummaryWidget extends StatelessWidget {
       children: [
         Expanded(
           child: _buildSummaryCard(
-            label: 'Accounts Receivable',
+            label: 'Receivables',
             amount: totalReceivables ?? 0.0,
             color: AppTheme.successColor,
             icon: Icons.arrow_downward_rounded,
@@ -37,7 +37,7 @@ class ArApSummaryWidget extends StatelessWidget {
         const SizedBox(width: AppTheme.spacing12),
         Expanded(
           child: _buildSummaryCard(
-            label: 'Accounts Payable',
+            label: 'Payables',
             amount: totalPayables ?? 0.0,
             color: AppTheme.warningColor,
             icon: Icons.arrow_upward_rounded,

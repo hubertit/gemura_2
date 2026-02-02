@@ -86,7 +86,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('Accounts Payable'),
+        title: const Text('Payables'),
         backgroundColor: AppTheme.surfaceColor,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textPrimaryColor),

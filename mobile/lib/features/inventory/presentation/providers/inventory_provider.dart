@@ -36,6 +36,14 @@ final inventoryItemProvider =
   return await inventoryService.getInventoryItem(id);
 });
 
+/// Predefined inventory items grouped by category (for "Add item" selection).
+/// Data shape: { categories: [ { id, name, items: [ { id, name, code?, unit? } ] } ] }
+final predefinedInventoryItemsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
+  final inventoryService = ref.read(inventoryServiceProvider);
+  return await inventoryService.getInventoryItemsGroupedByCategory();
+});
+
 class InventoryFilters {
   final String? status;
   final bool? lowStock;

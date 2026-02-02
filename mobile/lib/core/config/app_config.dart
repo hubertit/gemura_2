@@ -66,16 +66,20 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
   static const int apiTimeoutSeconds = 30;
   static const int maxRetries = 3;
 
-  // Main API Configuration — always production unless you switch.
-  // Production: http://159.198.65.38:3004/api
-  // To use local backend, run with: --dart-define=USE_LOCAL_API=true
+  // Main API Configuration — remote by default.
+  // Remote: http://159.198.65.38:3004/api
+  // To use local backend: flutter run --dart-define=USE_LOCAL_API=true
+  // TEMPORARY: Set defaultValue to true for local testing. Revert to false when done.
+  // For physical device: set localApiHost to your Mac's IP (e.g. '192.168.1.100')
+  static const String localApiHost = '127.0.0.1'; // Use Mac's LAN IP for physical device
+  static const int localApiPort = 3004;
   static String get apiBaseUrl {
-    const bool useLocalApi = bool.fromEnvironment('USE_LOCAL_API', defaultValue: false);
+    const bool useLocalApi = bool.fromEnvironment('USE_LOCAL_API', defaultValue: true);
     if (useLocalApi) {
       if (Platform.isAndroid) {
-        return 'http://10.0.2.2:3004/api';
+        return 'http://10.0.2.2:$localApiPort/api';
       }
-      return 'http://localhost:3004/api';
+      return 'http://$localApiHost:$localApiPort/api';
     }
     return 'http://159.198.65.38:3004/api';
   }

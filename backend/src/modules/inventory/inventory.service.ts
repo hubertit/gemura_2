@@ -147,6 +147,34 @@ export class InventoryService {
       });
     }
 
+    let name: string;
+    let description: string | null = createDto.description ?? null;
+    let inventory_item_id: string | null = null;
+
+    if (createDto.inventory_item_id) {
+      const inventoryItem = await this.prisma.inventoryItem.findFirst({
+        where: { id: createDto.inventory_item_id, is_active: true },
+      });
+      if (!inventoryItem) {
+        throw new NotFoundException({
+          code: 404,
+          status: 'error',
+          message: 'Predefined inventory item not found or inactive.',
+        });
+      }
+      name = inventoryItem.name;
+      description = inventoryItem.description ?? description;
+      inventory_item_id = inventoryItem.id; // link product to predefined item
+    } else if (createDto.name) {
+      name = createDto.name;
+    } else {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Either name or inventory_item_id is required.',
+      });
+    }
+
     // Determine status based on stock
     let status: 'active' | 'inactive' | 'out_of_stock' = 'active';
     if ((createDto.stock_quantity || 0) === 0) {
@@ -155,13 +183,14 @@ export class InventoryService {
 
     const product = await this.prisma.product.create({
       data: {
-        name: createDto.name,
-        description: createDto.description,
+        name,
+        description,
         price: createDto.price,
         stock_quantity: createDto.stock_quantity || 0,
         min_stock_level: createDto.min_stock_level || null,
         status: status as any,
         account_id: user.default_account_id,
+        inventory_item_id,
         is_listed_in_marketplace: createDto.is_listed_in_marketplace || false,
         created_by: user.id,
         updated_by: user.id,

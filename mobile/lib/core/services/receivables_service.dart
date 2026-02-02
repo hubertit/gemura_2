@@ -49,10 +49,13 @@ class ReceivablesService {
     }
   }
 
-  /// Record payment for a sale
+  /// Record payment for a receivable.
+  /// [saleId] is the MilkSale ID or InventorySale ID depending on [source].
+  /// [source] must be 'milk_sale' (use /sales/:id/payment) or 'inventory_sale' (use /accounting/receivables/inventory/:id/payment).
   Future<Map<String, dynamic>> recordPayment({
     required String saleId,
     required double amount,
+    String source = 'milk_sale',
     String? paymentDate,
     String? notes,
   }) async {
@@ -62,11 +65,15 @@ class ReceivablesService {
         throw Exception('No authentication token available');
       }
 
-      print('💰 Recording payment for sale: $saleId');
-      print('🌐 API URL: ${AppConfig.apiBaseUrl}/sales/$saleId/payment');
+      final String path = source == 'inventory_sale'
+          ? '/accounting/receivables/inventory/$saleId/payment'
+          : '/sales/$saleId/payment';
+
+      print('💰 Recording payment for ${source == 'inventory_sale' ? 'inventory receivable' : 'milk sale'}: $saleId');
+      print('🌐 API URL: ${AppConfig.apiBaseUrl}$path');
 
       final response = await AuthenticatedDioService.instance.post(
-        '/sales/$saleId/payment',
+        path,
         data: {
           'amount': amount,
           if (paymentDate != null) 'payment_date': paymentDate,
@@ -102,7 +109,7 @@ class ReceivablesService {
         case 403:
           return Exception('Access denied. You don\'t have permission.');
         case 404:
-          return Exception('Sale not found.');
+          return Exception('Receivable not found.');
         case 400:
           final message = data['message'] ?? 'Invalid request';
           return Exception(message);

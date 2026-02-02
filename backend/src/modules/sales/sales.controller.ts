@@ -441,7 +441,7 @@ export class SalesController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'Record payment for a sale',
-    description: 'Records a payment against an unpaid/partial sale. Creates journal entry: DR Cash, CR Accounts Receivable. Supports partial payments.',
+    description: 'Records a payment against an unpaid/partial sale. Creates journal entry: DR Cash, CR Receivable. Supports partial payments.',
   })
   @ApiBody({
     type: RecordPaymentDto,

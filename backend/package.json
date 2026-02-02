@@ -15,6 +15,7 @@
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
     "prisma:seed": "ts-node prisma/seed.ts",
+    "seed:inventory-items": "ts-node prisma/seed-inventory-items.ts",
     "migrate": "ts-node src/migration/migrate.ts",
     "migrate:selective": "ts-node src/migration/migrate-selective.ts",
     "migrate:fix-default-accounts": "ts-node src/migration/fix-default-accounts.ts"

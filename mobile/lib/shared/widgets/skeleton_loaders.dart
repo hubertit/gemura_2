@@ -1479,6 +1479,244 @@ class SkeletonLoaders {
     );
   }
 
+  /// Finance screen – income statement section skeleton.
+  /// Matches: Revenue/Expenses row, Net Income card, Revenue vs Expenses chart, Financial Breakdown card.
+  static Widget financeIncomeStatementSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Row: Revenue + Expenses metric cards (matches _buildMetricCard)
+          Row(
+            children: [
+              Expanded(
+                child: _financeMetricCardSkeleton(),
+              ),
+              const SizedBox(width: AppTheme.spacing12),
+              Expanded(
+                child: _financeMetricCardSkeleton(),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          // Full-width Net Income metric card
+          _financeMetricCardSkeleton(isFullWidth: true),
+          const SizedBox(height: AppTheme.spacing16),
+          // Chart section: "Revenue vs Expenses" (matches _buildChartSection)
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacing12),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              border: Border.all(
+                color: AppTheme.thinBorderColor,
+                width: AppTheme.thinBorderWidth,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 180,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing12),
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                // Legend rows
+                Row(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    Container(
+                      width: 60,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      width: 40,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                Row(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing8),
+                    Container(
+                      width: 60,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      width: 40,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+          // Breakdown section: "Financial Breakdown" (matches _buildBreakdownSection)
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spacing12),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+              border: Border.all(
+                color: AppTheme.thinBorderColor,
+                width: AppTheme.thinBorderWidth,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 160,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spacing12),
+                _financeBreakdownRowSkeleton(),
+                const SizedBox(height: AppTheme.spacing12),
+                const Divider(height: 1),
+                const SizedBox(height: AppTheme.spacing12),
+                _financeBreakdownRowSkeleton(),
+                const SizedBox(height: AppTheme.spacing12),
+                const Divider(height: 1),
+                const SizedBox(height: AppTheme.spacing12),
+                _financeBreakdownRowSkeleton(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _financeMetricCardSkeleton({bool isFullWidth = false}) {
+    return Container(
+      width: isFullWidth ? double.infinity : null,
+      padding: const EdgeInsets.all(AppTheme.spacing12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+        border: Border.all(
+          color: AppTheme.thinBorderColor,
+          width: AppTheme.thinBorderWidth,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                ),
+              ),
+              const SizedBox(width: AppTheme.spacing8),
+              Expanded(
+                child: Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          Container(
+            width: 100,
+            height: 18,
+            decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _financeBreakdownRowSkeleton() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+          width: 100,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.grey[400],
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        Container(
+          width: 80,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.grey[400],
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ],
+    );
+  }
+
   // Product Card Skeleton for Grid Layout
   static Widget productCardSkeleton() {
     return Shimmer.fromColors(

@@ -41,10 +41,8 @@ gemura2/
 │   ├── 📂 scripts/                  # Backend scripts
 │   │   └── ...                     # Utility scripts
 │   │
-│   ├── 📂 docs/                     # Backend documentation
-│   │   └── 📂 analysis/            # Analysis docs
-│   │
-│   └── 📂 v1/                       # Legacy PHP code (for reference)
+│   └── 📂 docs/                     # Backend documentation
+│       └── 📂 analysis/            # Analysis docs
 │
 ├── 📂 mobile/                       # Flutter Mobile App
 │   ├── 📄 pubspec.yaml              # Flutter dependencies

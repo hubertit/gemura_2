@@ -1,5 +1,8 @@
 class Receivable {
   final String saleId;
+  /// Source of receivable: 'milk_sale' (milk collections) or 'inventory_sale' (inventory sold to suppliers on debt).
+  /// Determines which API endpoint to use when recording payment.
+  final String source;
   final CustomerInfo customer;
   final DateTime saleDate;
   final double quantity;
@@ -14,6 +17,7 @@ class Receivable {
 
   Receivable({
     required this.saleId,
+    this.source = 'milk_sale',
     required this.customer,
     required this.saleDate,
     required this.quantity,
@@ -30,6 +34,7 @@ class Receivable {
   factory Receivable.fromJson(Map<String, dynamic> json) {
     return Receivable(
       saleId: json['sale_id'] as String,
+      source: json['source'] as String? ?? 'milk_sale',
       customer: CustomerInfo.fromJson(json['customer'] as Map<String, dynamic>),
       saleDate: DateTime.parse(json['sale_date'] as String),
       quantity: (json['quantity'] as num).toDouble(),

@@ -847,7 +847,7 @@ export class CollectionsController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'Record payment for a collection',
-    description: 'Records a payment against an unpaid/partial collection. Creates journal entry: DR Accounts Payable, CR Cash. Supports partial payments.',
+    description: 'Records a payment against an unpaid/partial collection. Creates journal entry: DR Payable, CR Cash. Supports partial payments.',
   })
   @ApiParam({
     name: 'collectionId',
