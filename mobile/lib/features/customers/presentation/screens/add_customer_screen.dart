@@ -450,30 +450,33 @@ class _ContactPickerSheetState extends State<_ContactPickerSheet> {
             // Contacts list
             Expanded(
               child: _filteredContacts.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
-                            size: 64,
-                            color: AppTheme.textHintColor,
-                          ),
-                          const SizedBox(height: AppTheme.spacing16),
-                          Text(
-                            _searchQuery.isEmpty 
-                                ? 'No contacts found'
-                                : 'No contacts match "${_searchQuery}"',
-                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
-                          ),
-                          if (_searchQuery.isNotEmpty) ...[
-                            const SizedBox(height: AppTheme.spacing8),
-                            Text(
-                              'Try a different search term',
-                              style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off,
+                              size: 64,
+                              color: AppTheme.textHintColor,
                             ),
+                            const SizedBox(height: AppTheme.spacing16),
+                            Text(
+                              _searchQuery.isEmpty 
+                                  ? 'No contacts found'
+                                  : 'No contacts match "${_searchQuery}"',
+                              style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondaryColor),
+                            ),
+                            if (_searchQuery.isNotEmpty) ...[
+                              const SizedBox(height: AppTheme.spacing8),
+                              Text(
+                                'Try a different search term',
+                                style: AppTheme.bodySmall.copyWith(color: AppTheme.textHintColor),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     )
                   : ListView.builder(

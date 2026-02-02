@@ -572,13 +572,15 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                         final completedGoals = ref.watch(completedSavingsGoalsProvider);
                         
                         if (activeGoals.isEmpty && completedGoals.isEmpty) {
-                          return Container(
-                            padding: const EdgeInsets.all(AppTheme.spacing16),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
-                            ),
-                            child: Column(
+                          return SizedBox(
+                            width: double.infinity,
+                            child: Container(
+                              padding: const EdgeInsets.all(AppTheme.spacing16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                              ),
+                              child: Column(
                               children: [
                                 Icon(
                                   Icons.savings_outlined,
@@ -631,6 +633,7 @@ class _WalletDetailsScreenState extends ConsumerState<WalletDetailsScreen> {
                                 ),
                               ],
                             ),
+                          ),
                           );
                         }
                         

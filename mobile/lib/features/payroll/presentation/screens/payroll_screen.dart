@@ -222,27 +222,33 @@ class _PayrollScreenState extends ConsumerState<PayrollScreen> {
                     child: CircularProgressIndicator(),
                   ),
                 ),
-                error: (error, stack) => Padding(
-                  padding: const EdgeInsets.all(AppTheme.spacing12),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.error_outline, color: AppTheme.errorColor, size: 40),
-                      const SizedBox(height: AppTheme.spacing8),
-                      Text(
-                        'Error loading suppliers',
-                        style: AppTheme.bodySmall.copyWith(color: AppTheme.errorColor),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                error: (error, stack) => SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.spacing12),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.error_outline, color: AppTheme.errorColor, size: 40),
+                        const SizedBox(height: AppTheme.spacing8),
+                        Text(
+                          'Error loading suppliers',
+                          style: AppTheme.bodySmall.copyWith(color: AppTheme.errorColor),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 data: (suppliers) {
                   if (suppliers.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(AppTheme.spacing12),
-                      child: Text(
-                        'No suppliers available',
-                        style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
+                    return SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.spacing12),
+                        child: Text(
+                          'No suppliers available',
+                          style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondaryColor),
+                        ),
                       ),
                     );
                   }

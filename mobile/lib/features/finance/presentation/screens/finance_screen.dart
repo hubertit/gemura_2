@@ -817,26 +817,28 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildEmptyTransactionsState() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-        border: Border.all(
-          color: AppTheme.thinBorderColor,
-          width: AppTheme.thinBorderWidth,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 40,
-            color: AppTheme.textSecondaryColor.withOpacity(0.5),
+    return SizedBox(
+      width: double.infinity,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacing16),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+          border: Border.all(
+            color: AppTheme.thinBorderColor,
+            width: AppTheme.thinBorderWidth,
           ),
-          const SizedBox(height: AppTheme.spacing12),
-          Text(
-            'No transactions found',
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 40,
+              color: AppTheme.textSecondaryColor.withOpacity(0.5),
+            ),
+            const SizedBox(height: AppTheme.spacing12),
+            Text(
+              'No transactions found',
             style: AppTheme.bodySmall.copyWith(
               color: AppTheme.textSecondaryColor,
               fontWeight: FontWeight.w600,
@@ -851,6 +853,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             textAlign: TextAlign.center,
           ),
         ],
+        ),
       ),
     );
   }

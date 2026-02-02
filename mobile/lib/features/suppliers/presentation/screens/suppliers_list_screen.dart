@@ -401,8 +401,10 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
   }
 
   Widget _buildEmptyState([bool isSearch = false]) {
-    return Center(
-      child: Column(
+    return SizedBox(
+      width: double.infinity,
+      child: Center(
+        child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
@@ -491,6 +493,7 @@ class _SuppliersListScreenState extends ConsumerState<SuppliersListScreen> {
               ),
             ),
         ],
+        ),
       ),
     );
   }

@@ -450,16 +450,19 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                   suppliersAsync.when(
                     data: (suppliers) {
                       if (suppliers.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(AppTheme.spacing12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.warningColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
-                          ),
-                          child: Text(
-                            'No suppliers available',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.warningColor,
+                        return SizedBox(
+                          width: double.infinity,
+                          child: Container(
+                            padding: const EdgeInsets.all(AppTheme.spacing12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.warningColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            ),
+                            child: Text(
+                              'No suppliers available',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.warningColor,
+                              ),
                             ),
                           ),
                         );
@@ -1297,19 +1300,22 @@ class _SellInventoryScreenState extends ConsumerState<SellInventoryScreen> {
                         }
                         
                         return filteredCustomers.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
-                                    const SizedBox(height: AppTheme.spacing8),
-                                    Text(
-                                      'No customers found',
-                                      style: AppTheme.bodySmall.copyWith(
-                                        color: AppTheme.textSecondaryColor,
+                            ? SizedBox(
+                                width: double.infinity,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
+                                      const SizedBox(height: AppTheme.spacing8),
+                                      Text(
+                                        'No customers found',
+                                        style: AppTheme.bodySmall.copyWith(
+                                          color: AppTheme.textSecondaryColor,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               )
                             : ListView.builder(

@@ -247,12 +247,44 @@ export class TransactionsService {
         const revenueEntry = t.entries.find((e) => e.account.account_type === 'Revenue' && e.credit_amount);
         const expenseEntry = t.entries.find((e) => e.account.account_type === 'Expense' && e.debit_amount);
 
-        if (!revenueEntry && !expenseEntry) return null;
+        // Receivable payment: DR Cash, CR AR (Asset) - money received
+        const arPaymentEntry = t.entries.find(
+          (e) =>
+            e.account.account_type === 'Asset' &&
+            e.account.code?.startsWith('AR-') &&
+            e.credit_amount,
+        );
+        // Payable payment: DR AP (Liability), CR Cash - money paid
+        const apPaymentEntry = t.entries.find(
+          (e) =>
+            e.account.account_type === 'Liability' &&
+            e.account.code?.startsWith('AP-') &&
+            e.debit_amount,
+        );
 
-        const type = revenueEntry ? TransactionType.REVENUE : TransactionType.EXPENSE;
-        const amount = revenueEntry
-          ? Number(revenueEntry.credit_amount)
-          : Number(expenseEntry.debit_amount);
+        let type: TransactionType;
+        let amount: number;
+        let categoryAccount: string;
+
+        if (revenueEntry) {
+          type = TransactionType.REVENUE;
+          amount = Number(revenueEntry.credit_amount);
+          categoryAccount = revenueEntry.account.name;
+        } else if (expenseEntry) {
+          type = TransactionType.EXPENSE;
+          amount = Number(expenseEntry.debit_amount);
+          categoryAccount = expenseEntry.account.name;
+        } else if (arPaymentEntry) {
+          type = TransactionType.REVENUE;
+          amount = Number(arPaymentEntry.credit_amount);
+          categoryAccount = arPaymentEntry.account.name;
+        } else if (apPaymentEntry) {
+          type = TransactionType.EXPENSE;
+          amount = Number(apPaymentEntry.debit_amount);
+          categoryAccount = apPaymentEntry.account.name;
+        } else {
+          return null;
+        }
 
         // Apply type filter if provided
         if (filters?.type && filters.type !== type) return null;
@@ -263,9 +295,7 @@ export class TransactionsService {
           amount,
           description: t.description,
           transaction_date: t.transaction_date,
-          category_account: revenueEntry
-            ? revenueEntry.account.name
-            : expenseEntry!.account.name,
+          category_account: categoryAccount,
         };
       })
       .filter((t) => t !== null);
@@ -318,19 +348,46 @@ export class TransactionsService {
     // Determine type
     const revenueEntry = transaction.entries.find((e) => e.account.account_type === 'Revenue' && e.credit_amount);
     const expenseEntry = transaction.entries.find((e) => e.account.account_type === 'Expense' && e.debit_amount);
+    const arPaymentEntry = transaction.entries.find(
+      (e) =>
+        e.account.account_type === 'Asset' &&
+        e.account.code?.startsWith('AR-') &&
+        e.credit_amount,
+    );
+    const apPaymentEntry = transaction.entries.find(
+      (e) =>
+        e.account.account_type === 'Liability' &&
+        e.account.code?.startsWith('AP-') &&
+        e.debit_amount,
+    );
 
-    if (!revenueEntry && !expenseEntry) {
+    let type: TransactionType;
+    let amount: number;
+    let categoryAccount: string;
+
+    if (revenueEntry) {
+      type = TransactionType.REVENUE;
+      amount = Number(revenueEntry.credit_amount);
+      categoryAccount = revenueEntry.account.name;
+    } else if (expenseEntry) {
+      type = TransactionType.EXPENSE;
+      amount = Number(expenseEntry.debit_amount);
+      categoryAccount = expenseEntry.account.name;
+    } else if (arPaymentEntry) {
+      type = TransactionType.REVENUE;
+      amount = Number(arPaymentEntry.credit_amount);
+      categoryAccount = arPaymentEntry.account.name;
+    } else if (apPaymentEntry) {
+      type = TransactionType.EXPENSE;
+      amount = Number(apPaymentEntry.debit_amount);
+      categoryAccount = apPaymentEntry.account.name;
+    } else {
       throw new BadRequestException({
         code: 400,
         status: 'error',
         message: 'Invalid transaction type.',
       });
     }
-
-    const type = revenueEntry ? TransactionType.REVENUE : TransactionType.EXPENSE;
-    const amount = revenueEntry
-      ? Number(revenueEntry.credit_amount)
-      : Number(expenseEntry.debit_amount);
 
     return {
       code: 200,
@@ -342,9 +399,7 @@ export class TransactionsService {
         amount,
         description: transaction.description,
         transaction_date: transaction.transaction_date,
-        category_account: revenueEntry
-          ? revenueEntry.account.name
-          : expenseEntry.account.name,
+        category_account: categoryAccount,
         cash_account: transaction.entries.find((e) => e.account.account_type === 'Asset')?.account.name,
         entries: transaction.entries.map((e) => ({
           account_name: e.account.name,

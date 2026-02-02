@@ -650,19 +650,22 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
                   SizedBox(
                     height: 300,
                     child: filteredSuppliers.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
-                                const SizedBox(height: AppTheme.spacing8),
-                                Text(
-                                  'No suppliers found',
-                                  style: AppTheme.bodySmall.copyWith(
-                                    color: AppTheme.textSecondaryColor,
+                        ? SizedBox(
+                            width: double.infinity,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.search_off, size: 48, color: AppTheme.textSecondaryColor),
+                                  const SizedBox(height: AppTheme.spacing8),
+                                  Text(
+                                    'No suppliers found',
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textSecondaryColor,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           )
                         : ListView.builder(

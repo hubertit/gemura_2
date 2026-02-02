@@ -2,10 +2,15 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { RecordPaymentDto } from './dto/record-payment.dto';
+import { TransactionsService } from '../transactions/transactions.service';
+import { TransactionType } from '../transactions/dto/create-transaction.dto';
 
 @Injectable()
 export class ReceivablesPayablesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private transactionsService: TransactionsService,
+  ) {}
 
   /**
    * Get all Receivables (unpaid sales where user is supplier)
@@ -418,6 +423,21 @@ export class ReceivablesPayablesService {
         payment_status: paymentStatus,
       },
     });
+
+    // Create revenue transaction (so it appears in transactions as revenue)
+    const buyerName = invSale.buyer_account?.name || invSale.buyer_name || 'Supplier';
+    const paymentDate = paymentDto.payment_date || new Date().toISOString().split('T')[0];
+    try {
+      await this.transactionsService.createTransaction(user, {
+        type: TransactionType.REVENUE,
+        amount: newPayment,
+        description: `Payment received from ${buyerName} for inventory sale${paymentDto.notes ? ` - ${paymentDto.notes}` : ''}`,
+        transaction_date: paymentDate,
+      });
+    } catch (error) {
+      // Log but don't fail - payment was recorded on InventorySale
+      console.error('Failed to create finance transaction for inventory receivable payment:', error);
+    }
 
     return {
       code: 200,

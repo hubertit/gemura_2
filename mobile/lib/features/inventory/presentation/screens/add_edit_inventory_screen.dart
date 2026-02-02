@@ -611,13 +611,16 @@ class _ItemPickerSheetState extends State<_ItemPickerSheet> {
             const Divider(height: 1),
             Expanded(
               child: items.isEmpty
-                  ? Center(
-                      child: Text(
-                        _searchQuery.trim().isEmpty
-                            ? 'No items in this category'
-                            : 'No items match "$_searchQuery"',
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: AppTheme.textSecondaryColor,
+                  ? SizedBox(
+                      width: double.infinity,
+                      child: Center(
+                        child: Text(
+                          _searchQuery.trim().isEmpty
+                              ? 'No items in this category'
+                              : 'No items match "$_searchQuery"',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.textSecondaryColor,
+                          ),
                         ),
                       ),
                     )
