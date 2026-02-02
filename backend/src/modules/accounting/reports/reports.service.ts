@@ -102,15 +102,37 @@ export class ReportsService {
             },
           });
 
-    const revenue = transactions
+    // Revenue: direct Revenue account credits + AR payment (DR Cash, CR AR) - money received
+    const revenueFromAccounts = transactions
       .flatMap((t) => t.entries)
       .filter((e) => e.account.account_type === 'Revenue')
       .reduce((sum, e) => sum + (Number(e.credit_amount) || 0), 0);
+    const revenueFromArPayments = transactions
+      .flatMap((t) => t.entries)
+      .filter(
+        (e) =>
+          e.account.account_type === 'Asset' &&
+          e.account.code?.startsWith('AR-') &&
+          e.credit_amount,
+      )
+      .reduce((sum, e) => sum + (Number(e.credit_amount) || 0), 0);
+    const revenue = revenueFromAccounts + revenueFromArPayments;
 
-    const expenses = transactions
+    // Expenses: direct Expense account debits + AP payment (DR AP, CR Cash) - money paid
+    const expensesFromAccounts = transactions
       .flatMap((t) => t.entries)
       .filter((e) => e.account.account_type === 'Expense')
       .reduce((sum, e) => sum + (Number(e.debit_amount) || 0), 0);
+    const expensesFromApPayments = transactions
+      .flatMap((t) => t.entries)
+      .filter(
+        (e) =>
+          e.account.account_type === 'Liability' &&
+          e.account.code?.startsWith('AP-') &&
+          e.debit_amount,
+      )
+      .reduce((sum, e) => sum + (Number(e.debit_amount) || 0), 0);
+    const expenses = expensesFromAccounts + expensesFromApPayments;
 
     return {
       code: 200,
