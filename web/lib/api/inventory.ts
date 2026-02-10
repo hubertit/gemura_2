@@ -88,6 +88,26 @@ export interface InventoryStatsResponse {
   data: InventoryStats;
 }
 
+export interface ValuationOverTimePoint {
+  date: string;
+  total_value: number;
+  total_quantity: number;
+}
+
+export interface TopItemByValue {
+  id: string;
+  name: string;
+  price: number;
+  stock_quantity: number;
+  stock_value: number;
+}
+
+export interface StockMovementPoint {
+  date: string;
+  stock_in: number;
+  stock_out: number;
+}
+
 export const inventoryApi = {
   getInventory: async (accountId?: string, status?: string, lowStock?: boolean): Promise<InventoryResponse> => {
     const params = new URLSearchParams();
@@ -102,6 +122,37 @@ export const inventoryApi = {
     if (accountId) params.append('account_id', accountId);
     const url = params.toString() ? `/inventory/stats?${params.toString()}` : '/inventory/stats';
     return apiClient.get(url);
+  },
+
+  getValuationOverTime: async (
+    dateFrom: string,
+    dateTo: string,
+    accountId?: string
+  ): Promise<{ code: number; data: { series: ValuationOverTimePoint[] } }> => {
+    const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+    if (accountId) params.append('account_id', accountId);
+    return apiClient.get(`/inventory/stats/valuation-over-time?${params.toString()}`);
+  },
+
+  getTopByValue: async (
+    limit?: number,
+    accountId?: string
+  ): Promise<{ code: number; data: { items: TopItemByValue[] } }> => {
+    const params = new URLSearchParams();
+    if (limit != null) params.append('limit', String(limit));
+    if (accountId) params.append('account_id', accountId);
+    const q = params.toString();
+    return apiClient.get(q ? `/inventory/stats/top-by-value?${q}` : '/inventory/stats/top-by-value');
+  },
+
+  getStockMovement: async (
+    dateFrom: string,
+    dateTo: string,
+    accountId?: string
+  ): Promise<{ code: number; data: { series: StockMovementPoint[] } }> => {
+    const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+    if (accountId) params.append('account_id', accountId);
+    return apiClient.get(`/inventory/stats/stock-movement?${params.toString()}`);
   },
 
   getInventoryItem: async (id: string, accountId?: string): Promise<InventoryItemResponse> => {

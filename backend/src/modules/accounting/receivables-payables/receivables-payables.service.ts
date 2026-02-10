@@ -203,12 +203,12 @@ export class ReceivablesPayablesService {
       return acc;
     }, {} as Record<string, any>);
 
-    // Calculate aging summary
+    // Calculate aging summary (ensure numbers for JSON / chart)
     const agingSummary = {
-      current: receivables.filter((r) => r.days_outstanding <= 30).reduce((sum, r) => sum + r.outstanding, 0),
-      days_31_60: receivables.filter((r) => r.days_outstanding > 30 && r.days_outstanding <= 60).reduce((sum, r) => sum + r.outstanding, 0),
-      days_61_90: receivables.filter((r) => r.days_outstanding > 60 && r.days_outstanding <= 90).reduce((sum, r) => sum + r.outstanding, 0),
-      days_90_plus: receivables.filter((r) => r.days_outstanding > 90).reduce((sum, r) => sum + r.outstanding, 0),
+      current: Number(receivables.filter((r) => r.days_outstanding <= 30).reduce((sum, r) => sum + r.outstanding, 0)),
+      days_31_60: Number(receivables.filter((r) => r.days_outstanding > 30 && r.days_outstanding <= 60).reduce((sum, r) => sum + r.outstanding, 0)),
+      days_61_90: Number(receivables.filter((r) => r.days_outstanding > 60 && r.days_outstanding <= 90).reduce((sum, r) => sum + r.outstanding, 0)),
+      days_90_plus: Number(receivables.filter((r) => r.days_outstanding > 90).reduce((sum, r) => sum + r.outstanding, 0)),
     };
 
     return {
@@ -332,12 +332,12 @@ export class ReceivablesPayablesService {
       return acc;
     }, {} as Record<string, any>);
 
-    // Calculate aging summary
+    // Calculate aging summary (ensure numbers for JSON / chart)
     const agingSummary = {
-      current: payables.filter((p) => p.days_outstanding <= 30).reduce((sum, p) => sum + p.outstanding, 0),
-      days_31_60: payables.filter((p) => p.days_outstanding > 30 && p.days_outstanding <= 60).reduce((sum, p) => sum + p.outstanding, 0),
-      days_61_90: payables.filter((p) => p.days_outstanding > 60 && p.days_outstanding <= 90).reduce((sum, p) => sum + p.outstanding, 0),
-      days_90_plus: payables.filter((p) => p.days_outstanding > 90).reduce((sum, p) => sum + p.outstanding, 0),
+      current: Number(payables.filter((p) => p.days_outstanding <= 30).reduce((sum, p) => sum + p.outstanding, 0)),
+      days_31_60: Number(payables.filter((p) => p.days_outstanding > 30 && p.days_outstanding <= 60).reduce((sum, p) => sum + p.outstanding, 0)),
+      days_61_90: Number(payables.filter((p) => p.days_outstanding > 60 && p.days_outstanding <= 90).reduce((sum, p) => sum + p.outstanding, 0)),
+      days_90_plus: Number(payables.filter((p) => p.days_outstanding > 90).reduce((sum, p) => sum + p.outstanding, 0)),
     };
 
     return {

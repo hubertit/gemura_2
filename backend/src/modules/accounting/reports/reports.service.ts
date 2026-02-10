@@ -179,5 +179,154 @@ export class ReportsService {
       },
     };
   }
+
+  /**
+   * Revenue and expenses grouped by day for the date range (for charts).
+   */
+  async getRevenueExpensesOverTime(user: User, fromDate: string, toDate: string) {
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+
+    let accountScopedChartIds: string[] = [];
+    if (user.default_account_id) {
+      const defaultAccount = await this.prisma.account.findUnique({
+        where: { id: user.default_account_id },
+      });
+      if (defaultAccount) {
+        const prefix = defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase();
+        const accountCharts = await this.prisma.chartOfAccount.findMany({
+          where: {
+            is_active: true,
+            OR: [
+              { code: { startsWith: `CASH-${prefix}` } },
+              { code: { startsWith: `REV-${prefix}` } },
+              { code: { startsWith: `EXP-${prefix}` } },
+            ],
+          },
+          select: { id: true, account_type: true, code: true },
+        });
+        accountScopedChartIds = accountCharts.map((c) => c.id);
+      }
+    }
+
+    const transactions =
+      accountScopedChartIds.length === 0
+        ? []
+        : await this.prisma.accountingTransaction.findMany({
+            where: {
+              transaction_date: { gte: from, lte: to },
+              entries: {
+                some: { account_id: { in: accountScopedChartIds } },
+              },
+            },
+            include: {
+              entries: {
+                include: { account: true },
+              },
+            },
+          });
+
+    const byDate: Record<
+      string,
+      { revenue: number; expenses: number }
+    > = {};
+    for (const t of transactions) {
+      const d = t.transaction_date.toISOString().slice(0, 10);
+      if (!byDate[d]) byDate[d] = { revenue: 0, expenses: 0 };
+      for (const e of t.entries) {
+        if (!accountScopedChartIds.includes(e.account_id)) continue;
+        const acc = e.account;
+        if (acc.account_type === 'Revenue') {
+          byDate[d].revenue += Number(e.credit_amount) || 0;
+        } else if (acc.account_type === 'Asset' && acc.code?.startsWith('AR-') && e.credit_amount) {
+          byDate[d].revenue += Number(e.credit_amount) || 0;
+        } else if (acc.account_type === 'Expense') {
+          byDate[d].expenses += Number(e.debit_amount) || 0;
+        } else if (acc.account_type === 'Liability' && acc.code?.startsWith('AP-') && e.debit_amount) {
+          byDate[d].expenses += Number(e.debit_amount) || 0;
+        }
+      }
+    }
+    const series = Object.entries(byDate)
+      .map(([date, v]) => ({ date, revenue: v.revenue, expenses: v.expenses }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Revenue and expenses over time.',
+      data: { series },
+    };
+  }
+
+  /**
+   * Expense grouped by category (chart of account name) for the date range.
+   */
+  async getExpenseByCategory(user: User, fromDate: string, toDate: string) {
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59, 999);
+
+    let accountScopedChartIds: string[] = [];
+    if (user.default_account_id) {
+      const defaultAccount = await this.prisma.account.findUnique({
+        where: { id: user.default_account_id },
+      });
+      if (defaultAccount) {
+        const prefix = defaultAccount.code || defaultAccount.id.substring(0, 8).toUpperCase();
+        const accountCharts = await this.prisma.chartOfAccount.findMany({
+          where: {
+            is_active: true,
+            account_type: 'Expense',
+            code: { startsWith: `EXP-${prefix}` },
+          },
+          select: { id: true, name: true },
+        });
+        accountScopedChartIds = accountCharts.map((c) => c.id);
+      }
+    }
+
+    const transactions =
+      accountScopedChartIds.length === 0
+        ? []
+        : await this.prisma.accountingTransaction.findMany({
+            where: {
+              transaction_date: { gte: from, lte: to },
+              entries: {
+                some: {
+                  account_id: { in: accountScopedChartIds },
+                  debit_amount: { not: null },
+                },
+              },
+            },
+            include: {
+              entries: {
+                where: { account_id: { in: accountScopedChartIds } },
+                include: { account: true },
+              },
+            },
+          });
+
+    const byCategory: Record<string, number> = {};
+    for (const t of transactions) {
+      for (const e of t.entries) {
+        if (e.account.account_type !== 'Expense') continue;
+        const name = e.account.name || 'Other';
+        byCategory[name] = (byCategory[name] || 0) + (Number(e.debit_amount) || 0);
+      }
+    }
+    const series = Object.entries(byCategory).map(([category_name, amount]) => ({
+      category_name,
+      amount,
+    }));
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Expense by category.',
+      data: { series },
+    };
+  }
 }
 

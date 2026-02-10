@@ -134,6 +134,46 @@ export class InventoryController {
     return this.inventoryService.getInventoryStats(user, accountId);
   }
 
+  @Get('stats/valuation-over-time')
+  @ApiOperation({ summary: 'Get inventory valuation over time' })
+  @ApiQuery({ name: 'date_from', required: true, description: 'Start date YYYY-MM-DD' })
+  @ApiQuery({ name: 'date_to', required: true, description: 'End date YYYY-MM-DD' })
+  @ApiResponse({ status: 200, description: 'Valuation series (current snapshot if no history)' })
+  async getValuationOverTime(
+    @CurrentUser() user: User,
+    @Query('date_from') dateFrom: string,
+    @Query('date_to') dateTo: string,
+    @Query('account_id') accountId?: string,
+  ) {
+    return this.inventoryService.getValuationOverTime(user, dateFrom, dateTo, accountId);
+  }
+
+  @Get('stats/top-by-value')
+  @ApiOperation({ summary: 'Get top inventory items by stock value' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Max items (default 10)', example: '10' })
+  @ApiResponse({ status: 200, description: 'Top items by value' })
+  async getTopByValue(
+    @CurrentUser() user: User,
+    @Query('limit') limit?: string,
+    @Query('account_id') accountId?: string,
+  ) {
+    return this.inventoryService.getTopByValue(user, limit ? parseInt(limit, 10) : 10, accountId);
+  }
+
+  @Get('stats/stock-movement')
+  @ApiOperation({ summary: 'Get stock movement (in/out) by date' })
+  @ApiQuery({ name: 'date_from', required: true, description: 'Start date YYYY-MM-DD' })
+  @ApiQuery({ name: 'date_to', required: true, description: 'End date YYYY-MM-DD' })
+  @ApiResponse({ status: 200, description: 'Stock movement series' })
+  async getStockMovement(
+    @CurrentUser() user: User,
+    @Query('date_from') dateFrom: string,
+    @Query('date_to') dateTo: string,
+    @Query('account_id') accountId?: string,
+  ) {
+    return this.inventoryService.getStockMovement(user, dateFrom, dateTo, accountId);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get inventory item by ID',

@@ -177,5 +177,37 @@ export class ReportsController {
   async getTrialBalance(@CurrentUser() user: User, @Query('as_of_date') asOfDate?: string) {
     return this.reportsService.getTrialBalance(user, asOfDate);
   }
+
+  @Get('revenue-expenses-over-time')
+  @ApiOperation({
+    summary: 'Get revenue and expenses by day',
+    description: 'Time series of daily revenue and expenses for charts. Scoped to user default account.',
+  })
+  @ApiQuery({ name: 'from_date', required: true, example: '2025-01-01' })
+  @ApiQuery({ name: 'to_date', required: true, example: '2025-01-31' })
+  @ApiResponse({ status: 200, description: 'Series of { date, revenue, expenses }' })
+  async getRevenueExpensesOverTime(
+    @CurrentUser() user: User,
+    @Query('from_date') fromDate: string,
+    @Query('to_date') toDate: string,
+  ) {
+    return this.reportsService.getRevenueExpensesOverTime(user, fromDate, toDate);
+  }
+
+  @Get('expense-by-category')
+  @ApiOperation({
+    summary: 'Get expense grouped by category',
+    description: 'Expense totals by chart of account (category) for the date range. Scoped to user default account.',
+  })
+  @ApiQuery({ name: 'from_date', required: true, example: '2025-01-01' })
+  @ApiQuery({ name: 'to_date', required: true, example: '2025-01-31' })
+  @ApiResponse({ status: 200, description: 'Series of { category_name, amount }' })
+  async getExpenseByCategory(
+    @CurrentUser() user: User,
+    @Query('from_date') fromDate: string,
+    @Query('to_date') toDate: string,
+  ) {
+    return this.reportsService.getExpenseByCategory(user, fromDate, toDate);
+  }
 }
 

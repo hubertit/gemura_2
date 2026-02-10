@@ -1,0 +1,31 @@
+### Dashboard chart APIs – test with valid token and date range
+### Replace {token} and optionally {baseUrl}. Default baseUrl = http://localhost:3004/api
+
+@baseUrl = http://localhost:3004/api
+@token = your-auth-token-here
+@from = 2025-01-01
+@to = 2025-01-31
+
+### Inventory: valuation over time
+GET {{baseUrl}}/inventory/stats/valuation-over-time?date_from={{from}}&date_to={{to}}
+Authorization: Bearer {{token}}
+
+### Inventory: top items by value
+GET {{baseUrl}}/inventory/stats/top-by-value?limit=10
+Authorization: Bearer {{token}}
+
+### Inventory: stock movement
+GET {{baseUrl}}/inventory/stats/stock-movement?date_from={{from}}&date_to={{to}}
+Authorization: Bearer {{token}}
+
+### Accounting: revenue & expenses over time
+GET {{baseUrl}}/accounting/reports/revenue-expenses-over-time?from_date={{from}}&to_date={{to}}
+Authorization: Bearer {{token}}
+
+### Accounting: expense by category
+GET {{baseUrl}}/accounting/reports/expense-by-category?from_date={{from}}&to_date={{to}}
+Authorization: Bearer {{token}}
+
+### Inventory stats (includes total_stock_value, total_stock_quantity)
+GET {{baseUrl}}/inventory/stats
+Authorization: Bearer {{token}}

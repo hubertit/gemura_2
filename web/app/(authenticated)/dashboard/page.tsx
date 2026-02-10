@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth';
 import { isAdminAccount } from '@/lib/config/nav.config';
 import { statsApi, OverviewResponse } from '@/lib/api/stats';
 import { accountingApi } from '@/lib/api/accounting';
+import { inventoryApi, type InventoryStats, type ValuationOverTimePoint, type TopItemByValue, type StockMovementPoint } from '@/lib/api/inventory';
 import { useToastStore } from '@/store/toast';
 import Icon, {
   faBuilding,
@@ -98,6 +99,24 @@ export default function Dashboard() {
   const [recordDate, setRecordDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [recordSubmitting, setRecordSubmitting] = useState(false);
 
+  type DashboardTab = 'overview' | 'sales' | 'collections' | 'inventory' | 'finance';
+  const [dashboardTab, setDashboardTab] = useState<DashboardTab>('overview');
+  const [inventoryStats, setInventoryStats] = useState<InventoryStats | null>(null);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [inventoryValuationSeries, setInventoryValuationSeries] = useState<ValuationOverTimePoint[]>([]);
+  const [inventoryTopByValue, setInventoryTopByValue] = useState<TopItemByValue[]>([]);
+  const [inventoryStockMovement, setInventoryStockMovement] = useState<StockMovementPoint[]>([]);
+  const [financeData, setFinanceData] = useState<{
+    income: { revenue: number; expenses: number; net_income: number } | null;
+    receivables: number;
+    payables: number;
+    receivablesAging: { current: number; days_31_60: number; days_61_90: number; days_90_plus: number } | null;
+    payablesAging: { current: number; days_31_60: number; days_61_90: number; days_90_plus: number } | null;
+  }>({ income: null, receivables: 0, payables: 0, receivablesAging: null, payablesAging: null });
+  const [financeLoading, setFinanceLoading] = useState(false);
+  const [financeRevenueExpensesSeries, setFinanceRevenueExpensesSeries] = useState<{ date: string; revenue: number; expenses: number }[]>([]);
+  const [financeExpenseByCategory, setFinanceExpenseByCategory] = useState<{ category_name: string; amount: number }[]>([]);
+
   const dateRange = useMemo(
     () => getPeriodRange(period, customFrom || undefined, customTo || undefined),
     [period, customFrom, customTo],
@@ -107,7 +126,7 @@ export default function Dashboard() {
   useEffect(() => {
     const t = setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
     return () => clearTimeout(t);
-  }, [chartTab]);
+  }, [chartTab, dashboardTab]);
 
   useEffect(() => {
     if (isAdminAccount(accountType)) {
@@ -144,8 +163,86 @@ export default function Dashboard() {
     };
   }, [accountType, currentAccount?.account_id, router, dateRange.date_from, dateRange.date_to, refreshKey]);
 
+  // Load inventory stats and chart data when Inventory tab is selected
+  useEffect(() => {
+    if (dashboardTab !== 'inventory' || !currentAccount?.account_id) return;
+    let cancelled = false;
+    setInventoryLoading(true);
+    const from = dateRange.date_from;
+    const to = dateRange.date_to;
+    Promise.all([
+      inventoryApi.getInventoryStats(currentAccount.account_id),
+      inventoryApi.getValuationOverTime(from, to, currentAccount.account_id),
+      inventoryApi.getTopByValue(10, currentAccount.account_id),
+      inventoryApi.getStockMovement(from, to, currentAccount.account_id),
+    ])
+      .then(([statsRes, valRes, topRes, movRes]) => {
+        if (cancelled) return;
+        if (statsRes.code === 200 && statsRes.data) setInventoryStats(statsRes.data);
+        if (valRes.code === 200 && valRes.data?.series) setInventoryValuationSeries(valRes.data.series);
+        if (topRes.code === 200 && topRes.data?.items) setInventoryTopByValue(topRes.data.items);
+        if (movRes.code === 200 && movRes.data?.series) setInventoryStockMovement(movRes.data.series);
+      })
+      .catch(() => {
+        if (!cancelled) setInventoryStats(null);
+        if (!cancelled) setInventoryValuationSeries([]);
+        if (!cancelled) setInventoryTopByValue([]);
+        if (!cancelled) setInventoryStockMovement([]);
+      })
+      .finally(() => { if (!cancelled) setInventoryLoading(false); });
+    return () => { cancelled = true; };
+  }, [dashboardTab, currentAccount?.account_id, dateRange.date_from, dateRange.date_to]);
+
+  // Load finance summary when Finance tab is selected
+  useEffect(() => {
+    if (dashboardTab !== 'finance' || !currentAccount?.account_id) return;
+    let cancelled = false;
+    setFinanceLoading(true);
+    const from = dateRange.date_from;
+    const to = dateRange.date_to;
+    Promise.all([
+      accountingApi.getIncomeStatement(from, to),
+      accountingApi.getReceivables(),
+      accountingApi.getPayables(),
+      accountingApi.getRevenueExpensesOverTime(from, to),
+      accountingApi.getExpenseByCategory(from, to),
+    ])
+      .then(([income, recv, pay, revExp, expCat]) => {
+        if (cancelled) return;
+        setFinanceData({
+          income: { revenue: income.revenue, expenses: income.expenses, net_income: income.net_income },
+          receivables: recv.total_receivables ?? 0,
+          payables: pay.total_payables ?? 0,
+          receivablesAging: recv.aging_summary ?? null,
+          payablesAging: pay.aging_summary ?? null,
+        });
+        setFinanceRevenueExpensesSeries(revExp?.series ?? []);
+        setFinanceExpenseByCategory(expCat?.series ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setFinanceData({ income: null, receivables: 0, payables: 0, receivablesAging: null, payablesAging: null });
+        if (!cancelled) setFinanceRevenueExpensesSeries([]);
+        if (!cancelled) setFinanceExpenseByCategory([]);
+      })
+      .finally(() => { if (!cancelled) setFinanceLoading(false); });
+    return () => { cancelled = true; };
+  }, [dashboardTab, currentAccount?.account_id, dateRange.date_from, dateRange.date_to]);
+
   const formatCurrency = (amount: number) => {
-    return `RF ${new Intl.NumberFormat('en-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)}`;
+    const n = Number(amount);
+    if (Number.isNaN(n)) return 'RF 0';
+    return `RF ${new Intl.NumberFormat('en-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)}`;
+  };
+
+  /** Normalize aging summary from API (may use snake_case or mixed types) to numbers for charts. */
+  const agingToNumbers = (aging: Record<string, unknown> | null): [number, number, number, number] => {
+    if (!aging || typeof aging !== 'object') return [0, 0, 0, 0];
+    return [
+      Number(aging.current) || 0,
+      Number(aging.days_31_60) || 0,
+      Number(aging.days_61_90) || 0,
+      Number(aging.days_90_plus) || 0,
+    ];
   };
 
   const closeQuickActionAndRefresh = () => {
@@ -220,10 +317,40 @@ export default function Dashboard() {
         : 'Custom range'
       : `${dateRange.date_from} – ${dateRange.date_to}`;
 
+  const tabs: { id: DashboardTab; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'sales', label: 'Sales' },
+    { id: 'collections', label: 'Collections' },
+    { id: 'inventory', label: 'Inventory' },
+    { id: 'finance', label: 'Finance' },
+  ];
+
   return (
     <div className="-mt-1 space-y-4">
-      <div className="flex items-center justify-between gap-2 py-0.5">
-        <h1 className="text-2xl font-bold text-gray-900 leading-tight">Dashboard</h1>
+      {/* Header with tabs (resolveITpro style: single row, border-bottom, underline active tab) */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-3 pb-3 border-b-2 border-gray-200">
+        <div className="flex-shrink-0">
+          <h1 className="text-2xl font-semibold text-gray-900 leading-tight">Dashboard</h1>
+        </div>
+        <div className="flex flex-1 min-w-0 gap-1 overflow-x-auto">
+          {tabs.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setDashboardTab(id)}
+              className={`
+                flex items-center gap-1.5 py-2 px-4 rounded-t border-b-2 border-transparent
+                text-[13px] font-medium whitespace-nowrap transition-all duration-200
+                ${dashboardTab === id
+                  ? 'text-[var(--primary)] border-b-2 border-[var(--primary)] bg-[var(--primary)]/5 font-semibold'
+                  : 'text-gray-500 border-b-2 border-transparent bg-transparent hover:text-[var(--primary)] hover:bg-[var(--primary)]/5'
+                }
+              `}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="relative flex-shrink-0">
           <select
             value={period}
@@ -265,6 +392,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Overview tab */}
+      {dashboardTab === 'overview' && (
+        <>
       {/* Summary cards - same data as mobile */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -584,6 +714,423 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+        </>
+      )}
+
+      {/* Sales tab */}
+      {dashboardTab === 'sales' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard label="Sales value" value={formatCurrency(summary.sales.value)} subtitle={`${periodLabel}`} icon={faReceipt} href="/sales" {...GREEN_ICON} />
+            <StatCard label="Volume (L)" value={summary.sales.liters.toFixed(1)} subtitle={`${summary.sales.transactions} transactions`} icon={faBox} href="/sales" {...BLUE_ICON} />
+            <StatCard label="Transactions" value={String(summary.sales.transactions)} subtitle="Milk sales" icon={faReceipt} href="/sales" {...GREEN_ICON} />
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Sales over time</h3>
+            {!hasBreakdown ? (
+              <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">No time series data yet.</div>
+            ) : (
+              <Chart
+                type="area"
+                height={280}
+                options={{
+                  chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                  stroke: { curve: 'smooth', width: 2 },
+                  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
+                  colors: ['#059669'],
+                  xaxis: { categories: breakdownSlice.map((d) => d.date) },
+                  yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                  tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                  dataLabels: { enabled: false },
+                  grid: { strokeDashArray: 3 },
+                }}
+                series={[{ name: 'Sales', data: breakdownSlice.map((d) => d.sales.value) }]}
+              />
+            )}
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900">Recent sales</h3>
+              <Link href="/sales" className="text-xs text-[var(--primary)] hover:text-[#003d8f] flex items-center gap-1">View All <Icon icon={faArrowRight} size="xs" /></Link>
+            </div>
+            <div className="p-4">
+              {recent_transactions.filter((t) => t.type === 'sale').length === 0 ? (
+                <p className="text-sm text-gray-500 py-4">No recent sales.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Date</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Customer</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Qty</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recent_transactions.filter((t) => t.type === 'sale').map((tx) => (
+                        <tr key={tx.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-2 px-3 text-gray-600">{new Date(tx.transaction_at).toLocaleDateString()}</td>
+                          <td className="py-2 px-3 text-gray-900">{tx.customer_account?.name ?? tx.customer_account?.code ?? '—'}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{tx.quantity} L</td>
+                          <td className="py-2 px-3 text-right font-medium text-gray-900">{formatCurrency(tx.total_amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Collections tab */}
+      {dashboardTab === 'collections' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard label="Collections value" value={formatCurrency(summary.collection.value)} subtitle={periodLabel} icon={faBox} href="/collections" {...BLUE_ICON} />
+            <StatCard label="Volume (L)" value={summary.collection.liters.toFixed(1)} subtitle={`${summary.collection.transactions} transactions`} icon={faBox} href="/collections" {...BLUE_ICON} />
+            <StatCard label="Transactions" value={String(summary.collection.transactions)} subtitle="Milk collections" icon={faReceipt} href="/collections" {...BLUE_ICON} />
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Collections over time</h3>
+            {!hasBreakdown ? (
+              <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">No time series data yet.</div>
+            ) : (
+              <Chart
+                type="area"
+                height={280}
+                options={{
+                  chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                  stroke: { curve: 'smooth', width: 2 },
+                  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
+                  colors: ['#004AAD'],
+                  xaxis: { categories: breakdownSlice.map((d) => d.date) },
+                  yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                  tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                  dataLabels: { enabled: false },
+                  grid: { strokeDashArray: 3 },
+                }}
+                series={[{ name: 'Collections', data: breakdownSlice.map((d) => d.collection.value) }]}
+              />
+            )}
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900">Recent collections</h3>
+              <Link href="/collections" className="text-xs text-[var(--primary)] hover:text-[#003d8f] flex items-center gap-1">View All <Icon icon={faArrowRight} size="xs" /></Link>
+            </div>
+            <div className="p-4">
+              {recent_transactions.filter((t) => t.type === 'collection').length === 0 ? (
+                <p className="text-sm text-gray-500 py-4">No recent collections.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Date</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Supplier</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Qty</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recent_transactions.filter((t) => t.type === 'collection').map((tx) => (
+                        <tr key={tx.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-2 px-3 text-gray-600">{new Date(tx.transaction_at).toLocaleDateString()}</td>
+                          <td className="py-2 px-3 text-gray-900">{tx.supplier_account?.name ?? tx.supplier_account?.code ?? '—'}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{tx.quantity} L</td>
+                          <td className="py-2 px-3 text-right font-medium text-gray-900">{formatCurrency(tx.total_amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inventory tab */}
+      {dashboardTab === 'inventory' && (
+        <div className="space-y-4">
+          {inventoryLoading ? (
+            <div className="flex items-center justify-center py-12"><div className="text-center"><div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" /><p className="text-sm text-gray-600">Loading inventory...</p></div></div>
+          ) : inventoryStats ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard label="Total items" value={String(inventoryStats.total_items)} subtitle="All inventory" icon={faWarehouse} href="/inventory" {...BLUE_ICON} />
+                <StatCard label="Active" value={String(inventoryStats.active_items)} subtitle="Listed" icon={faBox} href="/inventory" {...GREEN_ICON} />
+                <StatCard label="Out of stock" value={String(inventoryStats.out_of_stock_items)} subtitle="Need restock" icon={faWarehouse} href="/inventory" {...(inventoryStats.out_of_stock_items > 0 ? { iconBgColor: '#fef2f2', iconColor: '#b91c1c' } : BLUE_ICON)} />
+                <StatCard label="Low stock" value={String(inventoryStats.low_stock_items)} subtitle="Below minimum" icon={faWarehouse} href="/inventory" {...(inventoryStats.low_stock_items > 0 ? { iconBgColor: '#fef3c7', iconColor: '#b45309' } : BLUE_ICON)} />
+              </div>
+              {(inventoryStats.total_stock_value != null && inventoryStats.total_stock_value > 0) && (
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Stock value</h3>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(inventoryStats.total_stock_value)}</p>
+                  {inventoryStats.total_stock_quantity != null && <p className="text-sm text-gray-500 mt-1">Total quantity: {inventoryStats.total_stock_quantity}</p>}
+                </div>
+              )}
+
+              {/* Inventory charts row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Items by status</h3>
+                  {inventoryStats.total_items === 0 ? (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No items yet.</div>
+                  ) : (
+                    <Chart
+                      type="donut"
+                      height={260}
+                      options={{
+                        chart: { type: 'donut', fontFamily: 'inherit' },
+                        labels: ['Active', 'Out of stock', 'Low stock'],
+                        colors: ['#059669', '#b91c1c', '#b45309'],
+                        legend: { position: 'bottom', fontSize: '12px' },
+                        dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                      }}
+                      series={[inventoryStats.active_items, inventoryStats.out_of_stock_items, inventoryStats.low_stock_items]}
+                    />
+                  )}
+                </div>
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Stock value over time</h3>
+                  {inventoryValuationSeries.length === 0 ? (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No valuation data for this period.</div>
+                  ) : (
+                    <Chart
+                      type="area"
+                      height={260}
+                      options={{
+                        chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                        stroke: { curve: 'smooth', width: 2 },
+                        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
+                        colors: ['#004AAD'],
+                        xaxis: { categories: inventoryValuationSeries.map((d) => d.date) },
+                        yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                        tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                        dataLabels: { enabled: false },
+                        grid: { strokeDashArray: 3 },
+                      }}
+                      series={[{ name: 'Stock value', data: inventoryValuationSeries.map((d) => d.total_value) }]}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Stock movement (in / out)</h3>
+                  {inventoryStockMovement.length === 0 ? (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No movement data for this period.</div>
+                  ) : (
+                    <Chart
+                      type="bar"
+                      height={260}
+                      options={{
+                        chart: { type: 'bar', toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '70%', horizontal: false } },
+                        colors: ['#059669', '#b91c1c'],
+                        xaxis: { categories: inventoryStockMovement.map((d) => d.date) },
+                        yaxis: { labels: { formatter: (v: number) => String(Math.round(v)) } },
+                        dataLabels: { enabled: false },
+                        grid: { strokeDashArray: 3 },
+                        legend: { position: 'top' },
+                      }}
+                      series={[
+                        { name: 'Stock in', data: inventoryStockMovement.map((d) => d.stock_in) },
+                        { name: 'Stock out', data: inventoryStockMovement.map((d) => d.stock_out) },
+                      ]}
+                    />
+                  )}
+                </div>
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Top items by value</h3>
+                  {inventoryTopByValue.length === 0 ? (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No items.</div>
+                  ) : (
+                    <Chart
+                      type="bar"
+                      height={260}
+                      options={{
+                        chart: { type: 'bar', toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
+                        colors: ['#004AAD'],
+                        xaxis: {
+                          categories: inventoryTopByValue.map((i) => (i.name.length > 25 ? i.name.slice(0, 25) + '…' : i.name)),
+                          labels: { formatter: (v: number) => formatCurrency(v) },
+                        },
+                        yaxis: { labels: { maxWidth: 140 } },
+                        tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                        dataLabels: { enabled: false },
+                        grid: { strokeDashArray: 3 },
+                      }}
+                      series={[{ name: 'Stock value', data: inventoryTopByValue.map((i) => i.stock_value) }]}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center justify-between">
+                <span className="text-sm text-gray-600">Manage inventory</span>
+                <Link href="/inventory" className="text-sm font-medium text-[var(--primary)] hover:text-[#003d8f] flex items-center gap-1">Go to Inventory <Icon icon={faArrowRight} size="xs" /></Link>
+              </div>
+            </>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-sm p-6 text-center text-gray-600">Unable to load inventory stats.</div>
+          )}
+        </div>
+      )}
+
+      {/* Finance tab */}
+      {dashboardTab === 'finance' && (
+        <div className="space-y-4">
+          {financeLoading ? (
+            <div className="flex items-center justify-center py-12"><div className="text-center"><div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" /><p className="text-sm text-gray-600">Loading finance...</p></div></div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {financeData.income && (
+                  <>
+                    <StatCard label="Revenue" value={formatCurrency(financeData.income.revenue)} subtitle={periodLabel} icon={faChartLine} href="/finance" {...GREEN_ICON} />
+                    <StatCard label="Expenses" value={formatCurrency(financeData.income.expenses)} subtitle={periodLabel} icon={faDollarSign} href="/finance" {...{ iconBgColor: '#fef2f2', iconColor: '#b91c1c' }} />
+                    <StatCard label="Net income" value={formatCurrency(financeData.income.net_income)} subtitle={periodLabel} icon={faChartLine} href="/finance" {...(financeData.income.net_income >= 0 ? GREEN_ICON : { iconBgColor: '#fef2f2', iconColor: '#b91c1c' })} />
+                  </>
+                )}
+                <StatCard label="Receivables" value={formatCurrency(financeData.receivables)} subtitle="Outstanding" icon={faDollarSign} href="/finance/receivables" {...BLUE_ICON} />
+                <StatCard label="Payables" value={formatCurrency(financeData.payables)} subtitle="Outstanding" icon={faDollarSign} href="/finance/payables" {...{ iconBgColor: '#fef2f2', iconColor: '#b91c1c' }} />
+              </div>
+              {financeData.income && (financeData.income.revenue > 0 || financeData.income.expenses > 0) && (
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue vs expenses</h3>
+                  <Chart
+                    type="donut"
+                    height={240}
+                    options={{
+                      chart: { type: 'donut', fontFamily: 'inherit' },
+                      labels: ['Revenue', 'Expenses'],
+                      colors: ['#059669', '#b91c1c'],
+                      legend: { position: 'bottom' },
+                      dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                    }}
+                    series={[financeData.income.revenue, financeData.income.expenses]}
+                  />
+                </div>
+              )}
+
+              {/* Finance charts: aging + placeholders */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Receivables aging</h3>
+                  {financeData.receivablesAging && (() => { const nums = agingToNumbers(financeData.receivablesAging as Record<string, unknown>); return nums[0] > 0 || nums[1] > 0 || nums[2] > 0 || nums[3] > 0; })() ? (
+                    <Chart
+                      type="bar"
+                      height={260}
+                      options={{
+                        chart: { type: 'bar', toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
+                        colors: ['#004AAD'],
+                        xaxis: {
+                          categories: ['Current', '31–60 days', '61–90 days', '90+ days'],
+                          labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },
+                        },
+                        yaxis: { labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) } },
+                        tooltip: { y: { formatter: (v: number) => formatCurrency(Number(v)) } },
+                        dataLabels: { enabled: false },
+                        grid: { strokeDashArray: 3 },
+                      }}
+                      series={[{ name: 'Amount', data: agingToNumbers(financeData.receivablesAging as Record<string, unknown>) }]}
+                    />
+                  ) : (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No receivables aging data.</div>
+                  )}
+                </div>
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Payables aging</h3>
+                  {financeData.payablesAging && (() => { const nums = agingToNumbers(financeData.payablesAging as Record<string, unknown>); return nums[0] > 0 || nums[1] > 0 || nums[2] > 0 || nums[3] > 0; })() ? (
+                    <Chart
+                      type="bar"
+                      height={260}
+                      options={{
+                        chart: { type: 'bar', toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
+                        colors: ['#b91c1c'],
+                        xaxis: {
+                          categories: ['Current', '31–60 days', '61–90 days', '90+ days'],
+                          labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },
+                        },
+                        yaxis: { labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) } },
+                        tooltip: { y: { formatter: (v: number) => formatCurrency(Number(v)) } },
+                        dataLabels: { enabled: false },
+                        grid: { strokeDashArray: 3 },
+                      }}
+                      series={[{ name: 'Amount', data: agingToNumbers(financeData.payablesAging as Record<string, unknown>) }]}
+                    />
+                  ) : (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No payables aging data.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue & expenses over time</h3>
+                  {financeRevenueExpensesSeries.length === 0 ? (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No data for this period.</div>
+                  ) : (
+                    <Chart
+                      type="area"
+                      height={260}
+                      options={{
+                        chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                        stroke: { curve: 'smooth', width: 2 },
+                        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
+                        colors: ['#059669', '#b91c1c'],
+                        xaxis: { categories: financeRevenueExpensesSeries.map((d) => d.date) },
+                        yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                        tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                        dataLabels: { enabled: false },
+                        grid: { strokeDashArray: 3 },
+                        legend: { position: 'top' },
+                      }}
+                      series={[
+                        { name: 'Revenue', data: financeRevenueExpensesSeries.map((d) => d.revenue) },
+                        { name: 'Expenses', data: financeRevenueExpensesSeries.map((d) => d.expenses) },
+                      ]}
+                    />
+                  )}
+                </div>
+                <div className="bg-white border border-gray-200 rounded-sm p-6">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4">Expense by category</h3>
+                  {financeExpenseByCategory.length === 0 ? (
+                    <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No expense data for this period.</div>
+                  ) : (
+                    <Chart
+                      type="donut"
+                      height={260}
+                      options={{
+                        chart: { type: 'donut', fontFamily: 'inherit' },
+                        labels: financeExpenseByCategory.map((c) => c.category_name),
+                        colors: ['#b91c1c', '#dc2626', '#ef4444', '#f87171', '#fca5a5'],
+                        legend: { position: 'bottom', fontSize: '12px' },
+                        dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                      }}
+                      series={financeExpenseByCategory.map((c) => c.amount)}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center justify-between">
+                <span className="text-sm text-gray-600">Full reports & transactions</span>
+                <Link href="/finance" className="text-sm font-medium text-[var(--primary)] hover:text-[#003d8f] flex items-center gap-1">Go to Finance <Icon icon={faArrowRight} size="xs" /></Link>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Quick action modals */}
       <Modal

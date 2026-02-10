@@ -552,7 +552,7 @@ export class InventoryService {
       accountId = user.default_account_id;
     }
 
-    const [totalItems, activeItems, outOfStockItems, listedItems, lowStockItems] = await Promise.all([
+    const [totalItems, activeItems, outOfStockItems, listedItems, lowStockItems, valueAgg] = await Promise.all([
       this.prisma.product.count({
         where: { account_id: accountId, status: { not: 'inactive' } },
       }),
@@ -563,18 +563,17 @@ export class InventoryService {
         where: { account_id: accountId, status: 'out_of_stock' },
       }),
       this.prisma.product.count({
-        where: { 
-          account_id: accountId, 
+        where: {
+          account_id: accountId,
           is_listed_in_marketplace: true,
-          status: { not: 'inactive' }, // Exclude deleted/inactive items
+          status: { not: 'inactive' },
         },
       }),
-      // Count low stock items (fetch and filter in memory, excluding inactive items)
       (async () => {
         const allProducts = await this.prisma.product.findMany({
-          where: { 
+          where: {
             account_id: accountId,
-            status: { not: 'inactive' }, // Exclude deleted/inactive items
+            status: { not: 'inactive' },
           },
           select: { stock_quantity: true, min_stock_level: true },
         });
@@ -585,7 +584,21 @@ export class InventoryService {
           return p.stock_quantity <= 0;
         }).length;
       })(),
+      this.prisma.product.aggregate({
+        where: { account_id: accountId, status: { not: 'inactive' } },
+        _sum: { stock_quantity: true },
+      }),
     ]);
+
+    const productsForValue = await this.prisma.product.findMany({
+      where: { account_id: accountId, status: { not: 'inactive' } },
+      select: { price: true, stock_quantity: true },
+    });
+    const totalStockValue = productsForValue.reduce(
+      (sum, p) => sum + Number(p.price) * p.stock_quantity,
+      0
+    );
+    const totalStockQuantity = valueAgg._sum.stock_quantity ?? 0;
 
     return {
       code: 200,
@@ -597,8 +610,121 @@ export class InventoryService {
         out_of_stock_items: outOfStockItems,
         listed_in_marketplace: listedItems,
         low_stock_items: lowStockItems,
+        total_stock_value: Math.round(totalStockValue),
+        total_stock_quantity: totalStockQuantity,
       },
     };
+  }
+
+  /**
+   * Valuation over time: returns daily snapshots. Without a snapshot table we return
+   * current value as single point (date = today).
+   */
+  async getValuationOverTime(
+    user: User,
+    dateFrom: string,
+    dateTo: string,
+    accountIdParam?: string,
+  ) {
+    const accountId = await this.resolveAccountId(user, accountIdParam);
+    const products = await this.prisma.product.findMany({
+      where: { account_id: accountId, status: { not: 'inactive' } },
+      select: { price: true, stock_quantity: true },
+    });
+    const totalValue = products.reduce((s, p) => s + Number(p.price) * p.stock_quantity, 0);
+    const totalQty = products.reduce((s, p) => s + p.stock_quantity, 0);
+    const today = new Date().toISOString().slice(0, 10);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Valuation over time (current snapshot; historical API can be added).',
+      data: {
+        series: [{ date: today, total_value: Math.round(totalValue), total_quantity: totalQty }],
+      },
+    };
+  }
+
+  /**
+   * Top products by stock value (price * quantity), limit N.
+   */
+  async getTopByValue(user: User, limit: number, accountIdParam?: string) {
+    const accountId = await this.resolveAccountId(user, accountIdParam);
+    const products = await this.prisma.product.findMany({
+      where: { account_id: accountId, status: { not: 'inactive' } },
+      select: { id: true, name: true, price: true, stock_quantity: true },
+      orderBy: { updated_at: 'desc' },
+    });
+    const withValue = products
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        stock_quantity: p.stock_quantity,
+        stock_value: Number(p.price) * p.stock_quantity,
+      }))
+      .sort((a, b) => b.stock_value - a.stock_value)
+      .slice(0, limit);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Top items by value.',
+      data: { items: withValue },
+    };
+  }
+
+  /**
+   * Stock movement: stock out (sales) by date. Stock in not tracked in schema yet.
+   */
+  async getStockMovement(user: User, dateFrom: string, dateTo: string, accountIdParam?: string) {
+    const accountId = await this.resolveAccountId(user, accountIdParam);
+    const from = new Date(dateFrom);
+    const to = new Date(dateTo);
+    to.setHours(23, 59, 59, 999);
+    const sales = await this.prisma.inventorySale.findMany({
+      where: {
+        product: { account_id: accountId },
+        sale_date: { gte: from, lte: to },
+      },
+      select: { sale_date: true, quantity: true },
+    });
+    const byDate = sales.reduce((acc, s) => {
+      const d = s.sale_date.toISOString().slice(0, 10);
+      if (!acc[d]) acc[d] = { date: d, stock_in: 0, stock_out: 0 };
+      acc[d].stock_out += Number(s.quantity);
+      return acc;
+    }, {} as Record<string, { date: string; stock_in: number; stock_out: number }>);
+    const series = Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Stock movement (out from sales).',
+      data: { series },
+    };
+  }
+
+  private async resolveAccountId(user: User, accountIdParam?: string): Promise<string> {
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: { user_id: user.id, account_id: accountIdParam, status: 'active' },
+        include: { account: true },
+      });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      return accountIdParam;
+    }
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found.',
+      });
+    }
+    return user.default_account_id;
   }
 
   async sellInventoryItem(user: User, productId: string, createSaleDto: CreateInventorySaleDto) {

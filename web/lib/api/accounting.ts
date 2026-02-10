@@ -9,6 +9,19 @@ export interface IncomeStatement {
   net_income: number;
 }
 
+/** One point in revenue/expenses over time */
+export interface RevenueExpensesOverTimePoint {
+  date: string;
+  revenue: number;
+  expenses: number;
+}
+
+/** One category in expense-by-category */
+export interface ExpenseByCategoryPoint {
+  category_name: string;
+  amount: number;
+}
+
 /** Single revenue/expense transaction */
 export interface AccountingTransaction {
   id: string;
@@ -182,6 +195,26 @@ export const accountingApi = {
     if (params?.payment_status) q.payment_status = params.payment_status;
     const res = await apiClient.get('/accounting/payables', { params: q });
     return unwrap<PayablesSummary>(res);
+  },
+
+  getRevenueExpensesOverTime: async (
+    fromDate: string,
+    toDate: string
+  ): Promise<{ series: RevenueExpensesOverTimePoint[] }> => {
+    const res = await apiClient.get('/accounting/reports/revenue-expenses-over-time', {
+      params: { from_date: fromDate, to_date: toDate },
+    });
+    return unwrap<{ series: RevenueExpensesOverTimePoint[] }>(res);
+  },
+
+  getExpenseByCategory: async (
+    fromDate: string,
+    toDate: string
+  ): Promise<{ series: ExpenseByCategoryPoint[] }> => {
+    const res = await apiClient.get('/accounting/reports/expense-by-category', {
+      params: { from_date: fromDate, to_date: toDate },
+    });
+    return unwrap<{ series: ExpenseByCategoryPoint[] }>(res);
   },
 
   /** Record payment for an inventory sale receivable. */
