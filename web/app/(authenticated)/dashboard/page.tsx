@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { isAdminAccount } from '@/lib/config/nav.config';
 import { statsApi, OverviewResponse } from '@/lib/api/stats';
+import { accountingApi } from '@/lib/api/accounting';
+import { useToastStore } from '@/store/toast';
 import Icon, {
   faBuilding,
   faStore,
@@ -13,8 +15,19 @@ import Icon, {
   faReceipt,
   faPlus,
   faArrowRight,
+  faWarehouse,
+  faClipboardList,
+  faChartLine,
+  faDollarSign,
+  faSpinner,
 } from '@/app/components/Icon';
 import StatCard from '@/app/components/StatCard';
+import Modal from '@/app/components/Modal';
+import CreateSaleForm from '../sales/CreateSaleForm';
+import CreateCollectionForm from '../collections/CreateCollectionForm';
+import CreateCustomerForm from '../customers/CreateCustomerForm';
+import CreateSupplierForm from '../suppliers/CreateSupplierForm';
+import CreateInventoryForm from '../inventory/CreateInventoryForm';
 import dynamic from 'next/dynamic';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -76,6 +89,14 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodKey>('quarter');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+  type QuickActionModal = 'sale' | 'collection' | 'customer' | 'supplier' | 'inventory' | 'transaction' | null;
+  const [quickActionModal, setQuickActionModal] = useState<QuickActionModal>(null);
+  const [recordType, setRecordType] = useState<'revenue' | 'expense'>('revenue');
+  const [recordAmount, setRecordAmount] = useState('');
+  const [recordDescription, setRecordDescription] = useState('');
+  const [recordDate, setRecordDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [recordSubmitting, setRecordSubmitting] = useState(false);
 
   const dateRange = useMemo(
     () => getPeriodRange(period, customFrom || undefined, customTo || undefined),
@@ -121,10 +142,46 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [accountType, currentAccount?.account_id, router, dateRange.date_from, dateRange.date_to]);
+  }, [accountType, currentAccount?.account_id, router, dateRange.date_from, dateRange.date_to, refreshKey]);
 
   const formatCurrency = (amount: number) => {
     return `RF ${new Intl.NumberFormat('en-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)}`;
+  };
+
+  const closeQuickActionAndRefresh = () => {
+    setQuickActionModal(null);
+    setRefreshKey((k) => k + 1);
+  };
+
+  const handleRecordTransactionSubmit = async () => {
+    const amount = Number(recordAmount);
+    if (!recordDescription.trim() || Number.isNaN(amount) || amount <= 0) {
+      useToastStore.getState().error('Enter a valid amount and description');
+      return;
+    }
+    setRecordSubmitting(true);
+    try {
+      await accountingApi.createTransaction({
+        type: recordType,
+        amount,
+        description: recordDescription.trim(),
+        transaction_date: recordDate,
+      });
+      useToastStore.getState().success(`${recordType === 'revenue' ? 'Revenue' : 'Expense'} recorded`);
+      setQuickActionModal(null);
+      setRecordAmount('');
+      setRecordDescription('');
+      setRecordDate(new Date().toISOString().slice(0, 10));
+      setRefreshKey((k) => k + 1);
+    } catch (e: unknown) {
+      const msg =
+        (e as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ??
+        (e as Error)?.message ??
+        'Failed to record';
+      useToastStore.getState().error(msg);
+    } finally {
+      setRecordSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -435,39 +492,225 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="p-4">
-            <div className="space-y-2">
-              <Link
-                href="/sales/new"
-                className="flex items-center gap-2 px-4 py-2.5 bg-[var(--primary)] text-white rounded-sm hover:bg-[#003d8f] transition-colors text-sm font-medium"
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setQuickActionModal('sale')}
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-center transition-colors hover:bg-[var(--primary)] hover:text-white"
               >
-                <Icon icon={faReceipt} size="sm" />
-                <span>New Sale</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-[var(--primary)] text-white group-hover:bg-white group-hover:text-[var(--primary)] transition-colors">
+                  <Icon icon={faReceipt} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900 group-hover:text-white transition-colors">New Sale</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickActionModal('collection')}
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faBox} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">New Collection</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickActionModal('supplier')}
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faBuilding} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Add Supplier</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickActionModal('customer')}
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faStore} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Add Customer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickActionModal('inventory')}
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faWarehouse} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Add Inventory</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickActionModal('transaction')}
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faChartLine} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Record Transaction</span>
+              </button>
+              <Link
+                href="/payroll"
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 no-underline"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faClipboardList} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Payroll</span>
               </Link>
               <Link
-                href="/collections/new"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-gray-50 transition-colors text-sm font-medium"
+                href="/finance"
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 no-underline"
               >
-                <Icon icon={faBox} size="sm" />
-                <span>New Collection</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faChartLine} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Finance</span>
               </Link>
               <Link
-                href="/suppliers/new"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-gray-50 transition-colors text-sm font-medium"
+                href="/accounts"
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 no-underline"
               >
-                <Icon icon={faBuilding} size="sm" />
-                <span>Add Supplier</span>
-              </Link>
-              <Link
-                href="/customers/new"
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-sm hover:bg-gray-50 transition-colors text-sm font-medium"
-              >
-                <Icon icon={faStore} size="sm" />
-                <span>Add Customer</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faDollarSign} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Accounts</span>
               </Link>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Quick action modals */}
+      <Modal
+        open={quickActionModal === 'sale'}
+        onClose={() => setQuickActionModal(null)}
+        title="New Sale"
+        maxWidth="max-w-xl"
+      >
+        <CreateSaleForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+      </Modal>
+      <Modal
+        open={quickActionModal === 'collection'}
+        onClose={() => setQuickActionModal(null)}
+        title="New Collection"
+        maxWidth="max-w-xl"
+      >
+        <CreateCollectionForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+      </Modal>
+      <Modal
+        open={quickActionModal === 'customer'}
+        onClose={() => setQuickActionModal(null)}
+        title="Add Customer"
+        maxWidth="max-w-lg"
+      >
+        <CreateCustomerForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+      </Modal>
+      <Modal
+        open={quickActionModal === 'supplier'}
+        onClose={() => setQuickActionModal(null)}
+        title="Add Supplier"
+        maxWidth="max-w-lg"
+      >
+        <CreateSupplierForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+      </Modal>
+      <Modal
+        open={quickActionModal === 'inventory'}
+        onClose={() => setQuickActionModal(null)}
+        title="Add Inventory Item"
+        maxWidth="max-w-xl"
+      >
+        <CreateInventoryForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+      </Modal>
+      <Modal
+        open={quickActionModal === 'transaction'}
+        onClose={() => !recordSubmitting && setQuickActionModal(null)}
+        title="Record Transaction"
+        maxWidth="max-w-md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setQuickActionModal(null)}
+              className="btn btn-secondary"
+              disabled={recordSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleRecordTransactionSubmit}
+              className="btn btn-primary"
+              disabled={recordSubmitting}
+            >
+              {recordSubmitting ? <Icon icon={faSpinner} spin size="sm" className="mr-2" /> : null}
+              Record
+            </button>
+          </div>
+        }
+      >
+        {quickActionModal === 'transaction' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Type</label>
+              <div className="mt-1 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRecordType('revenue')}
+                  className={`flex-1 rounded border px-3 py-2 text-sm font-medium ${
+                    recordType === 'revenue' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-white text-gray-600'
+                  }`}
+                >
+                  Revenue
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRecordType('expense')}
+                  className={`flex-1 rounded border px-3 py-2 text-sm font-medium ${
+                    recordType === 'expense' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 bg-white text-gray-600'
+                  }`}
+                >
+                  Expense
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Amount (RWF)</label>
+              <input
+                type="number"
+                min={1}
+                value={recordAmount}
+                onChange={(e) => setRecordAmount(e.target.value)}
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <input
+                type="text"
+                value={recordDescription}
+                onChange={(e) => setRecordDescription(e.target.value)}
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                placeholder="e.g. Milk sales"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date</label>
+              <input
+                type="date"
+                value={recordDate}
+                onChange={(e) => setRecordDate(e.target.value)}
+                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

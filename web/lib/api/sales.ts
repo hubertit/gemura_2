@@ -112,4 +112,12 @@ export const salesApi = {
       data: { sale_id: saleId },
     });
   },
+
+  /** Record payment for a sale (reduces receivables). Milk sales only; use accounting receivables for inventory. */
+  recordPayment: async (
+    saleId: string,
+    data: { amount: number; payment_date?: string; notes?: string }
+  ): Promise<{ code: number; status: string; message: string; data?: { payment_status: string } }> => {
+    return apiClient.post(`/sales/${saleId}/payment`, data);
+  },
 };

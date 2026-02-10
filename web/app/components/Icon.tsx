@@ -52,6 +52,8 @@ export {
   faChevronRight,
   faArrowRight,
   faArrowLeft,
+  faArrowDown,
+  faArrowUp,
   faCheck,
   faEdit,
   faTrash,
@@ -100,6 +102,7 @@ export {
   faStore,
   faFilter,
   faTriangleExclamation,
+  faArrowsRotate,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Export aliases for convenience  

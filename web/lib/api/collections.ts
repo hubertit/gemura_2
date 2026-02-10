@@ -110,4 +110,12 @@ export const collectionsApi = {
       data: { collection_id: collectionId },
     });
   },
+
+  /** Record payment for a collection (reduces payables). */
+  recordPayment: async (
+    collectionId: string,
+    data: { amount: number; payment_date?: string; notes?: string }
+  ): Promise<{ code: number; status: string; message: string; data?: { payment_status: string } }> => {
+    return apiClient.post(`/collections/${collectionId}/payment`, data);
+  },
 };
