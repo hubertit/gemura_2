@@ -233,10 +233,6 @@ export default function CustomerDetailsPage() {
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link href={`/customers/${customerId}/edit`} className="btn btn-primary w-full justify-center">
-                  <Icon icon={faEdit} size="sm" className="mr-2" />
-                  Edit Customer
-                </Link>
                 <Link href="/customers" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List

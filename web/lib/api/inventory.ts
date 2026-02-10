@@ -24,12 +24,14 @@ export interface InventoryStats {
   active_items: number;
   out_of_stock_items: number;
   low_stock_items: number;
-  total_stock_value: number;
-  total_stock_quantity: number;
+  listed_in_marketplace?: number;
+  total_stock_value?: number;
+  total_stock_quantity?: number;
 }
 
 export interface CreateInventoryData {
-  name: string;
+  inventory_item_id?: string;
+  name?: string;
   description?: string;
   price: number;
   stock_quantity?: number;
@@ -95,12 +97,18 @@ export const inventoryApi = {
     return apiClient.get(`/inventory?${params.toString()}`);
   },
 
-  getInventoryStats: async (): Promise<InventoryStatsResponse> => {
-    return apiClient.get('/inventory/stats');
+  getInventoryStats: async (accountId?: string): Promise<InventoryStatsResponse> => {
+    const params = new URLSearchParams();
+    if (accountId) params.append('account_id', accountId);
+    const url = params.toString() ? `/inventory/stats?${params.toString()}` : '/inventory/stats';
+    return apiClient.get(url);
   },
 
-  getInventoryItem: async (id: string): Promise<InventoryItemResponse> => {
-    return apiClient.get(`/inventory/${id}`);
+  getInventoryItem: async (id: string, accountId?: string): Promise<InventoryItemResponse> => {
+    const params = new URLSearchParams();
+    if (accountId) params.append('account_id', accountId);
+    const url = params.toString() ? `/inventory/${id}?${params.toString()}` : `/inventory/${id}`;
+    return apiClient.get(url);
   },
 
   createInventoryItem: async (data: CreateInventoryData): Promise<InventoryItemResponse> => {

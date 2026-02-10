@@ -282,25 +282,6 @@ export default function AccountDetailsPage() {
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                {!account.is_default && (
-                  <button
-                    onClick={handleSwitchAccount}
-                    disabled={switching}
-                    className="btn btn-primary w-full justify-center"
-                  >
-                    {switching ? (
-                      <>
-                        <Icon icon={faSpinner} size="sm" spin className="mr-2" />
-                        Switching...
-                      </>
-                    ) : (
-                      <>
-                        <Icon icon={faArrowsUpDown} size="sm" className="mr-2" />
-                        Switch to This Account
-                      </>
-                    )}
-                  </button>
-                )}
                 <Link href="/accounts" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List

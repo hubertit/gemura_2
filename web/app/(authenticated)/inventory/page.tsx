@@ -4,14 +4,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
-import { useToastStore } from '@/store/toast';
 import { useAuthStore } from '@/store/auth';
+import { useToastStore } from '@/store/toast';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import type { TableColumn } from '@/app/components/DataTable';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
 import CreateInventoryForm from './CreateInventoryForm';
-import Icon, { faPlus, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox, faTriangleExclamation, faCircleXmark } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -29,16 +29,25 @@ export default function InventoryPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
   const [lowStockFilter, setLowStockFilter] = useState<boolean>(false);
+  const [stats, setStats] = useState<{ total_items: number; active_items: number; out_of_stock_items: number; low_stock_items: number; listed_in_marketplace?: number } | null>(null);
 
   const loadInventory = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await inventoryApi.getInventory(currentAccount?.account_id, statusFilter || undefined, lowStockFilter);
-      if (response.code === 200) {
-        setInventory(response.data || []);
+      const [listRes, statsRes] = await Promise.all([
+        inventoryApi.getInventory(currentAccount?.account_id, statusFilter || undefined, lowStockFilter),
+        currentAccount?.account_id ? inventoryApi.getInventoryStats(currentAccount.account_id).catch(() => null) : Promise.resolve(null),
+      ]);
+      if (listRes.code === 200) {
+        setInventory(listRes.data || []);
       } else {
-        setError(response.message || 'Failed to load inventory');
+        setError(listRes.message || 'Failed to load inventory');
+      }
+      if (statsRes?.code === 200 && statsRes.data) {
+        setStats(statsRes.data);
+      } else {
+        setStats(null);
       }
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to load inventory');
@@ -174,8 +183,42 @@ export default function InventoryPage() {
         />
       </Modal>
 
+      {/* Stats cards */}
+      {stats && currentAccount && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-gray-400">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Items</span>
+              <Icon icon={faBox} className="text-gray-400" size="sm" />
+            </div>
+            <p className="text-3xl font-bold text-gray-900 tabular-nums">{stats.total_items}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-green-500">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active</span>
+              <Icon icon={faCheckCircle} className="text-green-500" size="sm" />
+            </div>
+            <p className="text-3xl font-bold text-green-600 tabular-nums">{stats.active_items}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-amber-500">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Low Stock</span>
+              <Icon icon={faTriangleExclamation} className="text-amber-500" size="sm" />
+            </div>
+            <p className="text-3xl font-bold text-amber-600 tabular-nums">{stats.low_stock_items}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-red-500">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Out of Stock</span>
+              <Icon icon={faCircleXmark} className="text-red-500" size="sm" />
+            </div>
+            <p className="text-3xl font-bold text-red-600 tabular-nums">{stats.out_of_stock_items}</p>
+          </div>
+        </div>
+      )}
+
       {/* Filters (admin/users style) */}
-      <FilterBar>
+      <FilterBar alignItems="center">
         <FilterBarGroup label="Status">
           <select
             value={statusFilter}
@@ -190,7 +233,7 @@ export default function InventoryPage() {
           </select>
         </FilterBarGroup>
         <FilterBarGroup label="Stock">
-          <label className="flex items-center h-9 min-h-[2.25rem]">
+          <label className="flex items-center h-9 min-h-[2.25rem] cursor-pointer">
             <input
               type="checkbox"
               checked={lowStockFilter}

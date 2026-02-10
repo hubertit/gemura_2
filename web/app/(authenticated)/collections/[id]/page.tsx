@@ -251,22 +251,9 @@ export default function CollectionDetailsPage() {
 
           {/* Sidebar */}
           <div className="space-y-4">
-            {/* Quick Actions */}
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                {collection.status !== 'cancelled' && collection.status !== 'deleted' && (
-                  <>
-                    <Link href={`/collections/${collectionId}/edit`} className="btn btn-primary w-full justify-center">
-                      <Icon icon={faEdit} size="sm" className="mr-2" />
-                      Edit Collection
-                    </Link>
-                    <button type="button" onClick={handleCancel} disabled={cancelling} className="btn w-full justify-center bg-red-600 hover:bg-red-700 text-white border-0">
-                      <Icon icon={faTrash} size="sm" className="mr-2" />
-                      {cancelling ? 'Cancelling...' : 'Cancel Collection'}
-                    </button>
-                  </>
-                )}
                 <Link href="/collections" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List

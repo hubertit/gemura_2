@@ -275,18 +275,6 @@ export default function UserDetailsPage() {
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link href={`/admin/users/${userId}/edit`} className="btn btn-primary w-full justify-center">
-                  <Icon icon={faEdit} size="sm" className="mr-2" />
-                  Edit User
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-200 rounded hover:bg-red-50 transition-colors"
-                >
-                  <Icon icon={faTrash} size="sm" />
-                  Delete User
-                </button>
                 <Link href="/admin/users" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List

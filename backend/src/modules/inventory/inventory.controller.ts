@@ -130,8 +130,8 @@ export class InventoryController {
       message: 'Access denied. Token is required.',
     },
   })
-  async getInventoryStats(@CurrentUser() user: User) {
-    return this.inventoryService.getInventoryStats(user);
+  async getInventoryStats(@CurrentUser() user: User, @Query('account_id') accountId?: string) {
+    return this.inventoryService.getInventoryStats(user, accountId);
   }
 
   @Get(':id')
@@ -192,8 +192,8 @@ export class InventoryController {
       message: 'Inventory item not found.',
     },
   })
-  async getInventoryItem(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.inventoryService.getInventoryItem(user, id);
+  async getInventoryItem(@CurrentUser() user: User, @Param('id') id: string, @Query('account_id') accountId?: string) {
+    return this.inventoryService.getInventoryItem(user, id, accountId);
   }
 
   @Post()

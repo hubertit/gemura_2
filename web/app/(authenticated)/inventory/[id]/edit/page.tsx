@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, UpdateInventoryData, InventoryItem } from '@/lib/api/inventory';
 import { categoriesApi, Category } from '@/lib/api/categories';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faWarehouse, faBox, faDollarSign, faTag, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
@@ -13,6 +14,7 @@ export default function EditInventoryPage() {
   const router = useRouter();
   const params = useParams();
   const itemId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,15 +40,15 @@ export default function EditInventoryPage() {
       return;
     }
     Promise.all([loadItem(), loadCategories()]);
-    // Only re-run when item changes; hasPermission/isAdmin are stable in behavior
+    // Only re-run when item or account changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemId]);
+  }, [itemId, currentAccount?.account_id]);
 
   const loadItem = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await inventoryApi.getInventoryItem(itemId);
+      const response = await inventoryApi.getInventoryItem(itemId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         const itemData = response.data;
         setItem(itemData);
@@ -56,8 +58,8 @@ export default function EditInventoryPage() {
           price: Number(itemData.price),
           stock_quantity: Number(itemData.stock_quantity),
           min_stock_level: itemData.min_stock_level || 0,
-          category_ids: itemData.categories.map(c => c.id),
-          selectedCategories: itemData.categories.map(c => c.id),
+          category_ids: (itemData.categories || []).map((c: { id: string }) => c.id),
+          selectedCategories: (itemData.categories || []).map((c: { id: string }) => c.id),
           status: itemData.status,
           is_listed_in_marketplace: itemData.is_listed_in_marketplace,
         });

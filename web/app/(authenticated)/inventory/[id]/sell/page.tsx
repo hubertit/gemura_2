@@ -7,6 +7,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem, CreateInventorySaleData } from '@/lib/api/inventory';
 import { customersApi, Customer } from '@/lib/api/customers';
 import { suppliersApi, Supplier } from '@/lib/api/suppliers';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faDollarSign, faUser, faBox, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
@@ -26,6 +27,7 @@ export default function SellInventoryPage() {
   const router = useRouter();
   const params = useParams();
   const itemId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,15 +55,15 @@ export default function SellInventoryPage() {
       return;
     }
     Promise.all([loadItem(), loadBuyers()]);
-    // Only re-run when item changes; hasPermission/isAdmin are stable in behavior
+    // Only re-run when item or account changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemId]);
+  }, [itemId, currentAccount?.account_id]);
 
   const loadItem = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await inventoryApi.getInventoryItem(itemId);
+      const response = await inventoryApi.getInventoryItem(itemId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         const itemData = response.data;
         setItem(itemData);
@@ -83,8 +85,8 @@ export default function SellInventoryPage() {
     try {
       setLoadingBuyers(true);
       const [customersRes, suppliersRes] = await Promise.all([
-        customersApi.getAllCustomers().catch(() => ({ code: 200, data: [] })),
-        suppliersApi.getAllSuppliers().catch(() => ({ code: 200, data: [] })),
+        customersApi.getAllCustomers(currentAccount?.account_id).catch(() => ({ code: 200, data: [] })),
+        suppliersApi.getAllSuppliers(currentAccount?.account_id).catch(() => ({ code: 200, data: [] })),
       ]);
       if (customersRes.code === 200) {
         setCustomers(customersRes.data || []);
@@ -179,9 +181,10 @@ export default function SellInventoryPage() {
 
     try {
       const { buyer_account_code, ...finalData } = formData;
+      // Backend accepts either account id or account code in buyer_account_id
       const saleData: CreateInventorySaleData = {
         ...finalData,
-        buyer_account_id: buyer_account_code ? undefined : finalData.buyer_account_id,
+        buyer_account_id: finalData.buyer_account_id || buyer_account_code || undefined,
         sale_date: finalData.sale_date ? new Date(finalData.sale_date).toISOString() : undefined,
       };
 

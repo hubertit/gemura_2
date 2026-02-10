@@ -116,7 +116,7 @@ export function FilterBarExport<T extends Record<string, unknown>>({
         type="button"
         onClick={handleExport}
         disabled={disabled || data.length === 0}
-        className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <Icon icon={faDownload} size="sm" />
         Export CSV
@@ -126,9 +126,17 @@ export function FilterBarExport<T extends Record<string, unknown>>({
 }
 
 /** ResolveIT-style horizontal filter bar: white box, flex wrap, label above each control. */
-export default function FilterBar({ children }: { children: ReactNode }) {
+export default function FilterBar({
+  children,
+  alignItems = 'end',
+}: {
+  children: ReactNode;
+  alignItems?: 'center' | 'end';
+}) {
   return (
-    <div className="flex flex-wrap gap-3 md:gap-4 p-3 md:p-4 bg-white border border-gray-200 rounded mb-4 items-end">
+    <div
+      className={`flex flex-wrap gap-3 md:gap-4 p-3 md:p-4 bg-white border border-gray-200 rounded mb-4 ${alignItems === 'center' ? 'items-center' : 'items-end'}`}
+    >
       {children}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { inventoryApi, CreateInventoryData } from '@/lib/api/inventory';
+import { inventoryItemsApi, type PredefinedCategoryGroup } from '@/lib/api/inventory-items';
 import { categoriesApi, Category } from '@/lib/api/categories';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
@@ -14,9 +15,12 @@ interface CreateInventoryFormProps {
 export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInventoryFormProps) {
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingPredefined, setLoadingPredefined] = useState(true);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [predefinedGrouped, setPredefinedGrouped] = useState<PredefinedCategoryGroup[]>([]);
   const [formData, setFormData] = useState<CreateInventoryData & { selectedCategories: string[] }>({
+    inventory_item_id: undefined,
     name: '',
     description: '',
     price: 0,
@@ -32,6 +36,16 @@ export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInven
     categoriesApi.getCategories().then((res) => {
       if (!cancelled && res.code === 200) setCategories(res.data || []);
     }).finally(() => { if (!cancelled) setLoadingCategories(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    inventoryItemsApi.getGroupedByCategory().then((res) => {
+      if (!cancelled && res.code === 200 && res.data?.categories) {
+        setPredefinedGrouped(res.data.categories);
+      }
+    }).catch(() => {}).finally(() => { if (!cancelled) setLoadingPredefined(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -54,11 +68,25 @@ export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInven
   };
 
   const validateForm = (): boolean => {
-    if (!formData.name.trim()) { setError('Product name is required'); return false; }
+    if (!formData.inventory_item_id && !formData.name?.trim()) { setError('Select a predefined item type or enter a product name'); return false; }
     if (formData.price < 0) { setError('Price must be >= 0'); return false; }
     if (formData.stock_quantity != null && formData.stock_quantity < 0) { setError('Stock quantity cannot be negative'); return false; }
     if (formData.min_stock_level != null && formData.min_stock_level < 0) { setError('Minimum stock level cannot be negative'); return false; }
     return true;
+  };
+
+  const handlePredefinedSelect = (itemId: string, itemName: string, itemDescription?: string | null) => {
+    if (!itemId) {
+      setFormData(prev => ({ ...prev, inventory_item_id: undefined, name: prev.name || '' }));
+      return;
+    }
+    setFormData(prev => ({
+      ...prev,
+      inventory_item_id: itemId,
+      name: itemName,
+      description: itemDescription || prev.description || '',
+    }));
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +95,12 @@ export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInven
     if (!validateForm()) return;
     setLoading(true);
     try {
-      const { selectedCategories, ...finalData } = formData;
+      const { selectedCategories, ...rest } = formData;
+      const finalData: CreateInventoryData = {
+        ...rest,
+        name: rest.name?.trim() || undefined,
+        description: rest.description?.trim() || undefined,
+      };
       const response = await inventoryApi.createInventoryItem(finalData);
       if (response.code === 200 || response.code === 201) {
         useToastStore.getState().success('Inventory item created successfully!');
@@ -85,10 +118,51 @@ export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInven
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">{error}</div>}
+
+      {predefinedGrouped.length > 0 && (
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Predefined item type (optional)</label>
+          {loadingPredefined ? (
+            <div className="input w-full flex items-center text-gray-500"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading...</div>
+          ) : (
+            <select
+              value={formData.inventory_item_id || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) {
+                  handlePredefinedSelect('', '');
+                  return;
+                }
+                for (const cat of predefinedGrouped) {
+                  const item = cat.items.find(i => i.id === val);
+                  if (item) {
+                    handlePredefinedSelect(item.id, item.name, item.description);
+                    return;
+                  }
+                }
+              }}
+              className="input w-full"
+              disabled={loading}
+            >
+              <option value="">— Custom / enter name below —</option>
+              {predefinedGrouped.map(cat => (
+                <optgroup key={cat.id} label={cat.name}>
+                  {cat.items.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}{item.unit ? ` (${item.unit})` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label htmlFor="inv-name" className="block text-sm font-medium text-gray-700 mb-1">Product name <span className="text-red-500">*</span></label>
-          <input id="inv-name" name="name" type="text" required value={formData.name} onChange={handleChange} className="input w-full" placeholder="Product name" disabled={loading} />
+          <label htmlFor="inv-name" className="block text-sm font-medium text-gray-700 mb-1">Product name {!formData.inventory_item_id ? <span className="text-red-500">*</span> : null}</label>
+          <input id="inv-name" name="name" type="text" value={formData.name ?? ''} onChange={handleChange} className="input w-full" placeholder="Product name or select from list above" disabled={loading} />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="inv-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>

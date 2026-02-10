@@ -107,19 +107,41 @@ export class InventoryService {
     };
   }
 
-  async getInventoryItem(user: User, productId: string) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found.',
+  async getInventoryItem(user: User, productId: string, accountIdParam?: string) {
+    let accountId: string;
+
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
       });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      accountId = accountIdParam;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found.',
+        });
+      }
+      accountId = user.default_account_id;
     }
 
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
-        account_id: user.default_account_id,
+        account_id: accountId,
       },
       include: {
         categories: { include: { category: true } },
@@ -499,28 +521,50 @@ export class InventoryService {
     };
   }
 
-  async getInventoryStats(user: User) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found.',
+  async getInventoryStats(user: User, accountIdParam?: string) {
+    let accountId: string;
+
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
       });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      accountId = accountIdParam;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found.',
+        });
+      }
+      accountId = user.default_account_id;
     }
 
     const [totalItems, activeItems, outOfStockItems, listedItems, lowStockItems] = await Promise.all([
       this.prisma.product.count({
-        where: { account_id: user.default_account_id, status: { not: 'inactive' } },
+        where: { account_id: accountId, status: { not: 'inactive' } },
       }),
       this.prisma.product.count({
-        where: { account_id: user.default_account_id, status: 'active' },
+        where: { account_id: accountId, status: 'active' },
       }),
       this.prisma.product.count({
-        where: { account_id: user.default_account_id, status: 'out_of_stock' },
+        where: { account_id: accountId, status: 'out_of_stock' },
       }),
       this.prisma.product.count({
         where: { 
-          account_id: user.default_account_id, 
+          account_id: accountId, 
           is_listed_in_marketplace: true,
           status: { not: 'inactive' }, // Exclude deleted/inactive items
         },
@@ -529,7 +573,7 @@ export class InventoryService {
       (async () => {
         const allProducts = await this.prisma.product.findMany({
           where: { 
-            account_id: user.default_account_id,
+            account_id: accountId,
             status: { not: 'inactive' }, // Exclude deleted/inactive items
           },
           select: { stock_quantity: true, min_stock_level: true },

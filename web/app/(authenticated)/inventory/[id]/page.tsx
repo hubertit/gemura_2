@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faWarehouse, faBox, faDollarSign, faTag, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar, faTrash } from '@/app/components/Icon';
 
@@ -13,11 +14,13 @@ export default function InventoryItemDetailsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const itemId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [togglingListing, setTogglingListing] = useState(false);
 
   const handleDelete = async () => {
     if (!item || !confirm('Are you sure you want to delete this inventory item? This cannot be undone.')) return;
@@ -33,21 +36,36 @@ export default function InventoryItemDetailsPage() {
     }
   };
 
+  const handleToggleListing = async () => {
+    if (!item) return;
+    try {
+      setTogglingListing(true);
+      await inventoryApi.toggleMarketplaceListing(item.id, !item.is_listed_in_marketplace);
+      useToastStore.getState().success(item.is_listed_in_marketplace ? 'Removed from marketplace' : 'Listed on marketplace');
+      const response = await inventoryApi.getInventoryItem(itemId, currentAccount?.account_id);
+      if (response.code === 200 && response.data) setItem(response.data);
+    } catch (err: any) {
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to update listing');
+    } finally {
+      setTogglingListing(false);
+    }
+  };
+
   useEffect(() => {
     if (!hasPermission('view_inventory') && !isAdmin()) {
       router.push('/inventory');
       return;
     }
     loadItem();
-    // Only re-run when item changes; hasPermission/isAdmin are stable in behavior
+    // Only re-run when item or account changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemId]);
+  }, [itemId, currentAccount?.account_id]);
 
   const loadItem = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await inventoryApi.getInventoryItem(itemId);
+      const response = await inventoryApi.getInventoryItem(itemId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         setItem(response.data);
       } else {
@@ -268,13 +286,23 @@ export default function InventoryItemDetailsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Marketplace</label>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    item.is_listed_in_marketplace 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {item.is_listed_in_marketplace ? 'Listed' : 'Not Listed'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      item.is_listed_in_marketplace 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {item.is_listed_in_marketplace ? 'Listed' : 'Not Listed'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleToggleListing}
+                      disabled={togglingListing}
+                      className="text-xs text-[var(--primary)] hover:underline disabled:opacity-50"
+                    >
+                      {togglingListing ? 'Updating...' : (item.is_listed_in_marketplace ? 'Remove from marketplace' : 'List on marketplace')}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,18 +311,6 @@ export default function InventoryItemDetailsPage() {
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link href={`/inventory/${itemId}/sell`} className="btn btn-primary w-full justify-center">
-                  <Icon icon={faDollarSign} size="sm" className="mr-2" />
-                  Sell Item
-                </Link>
-                <Link href={`/inventory/${itemId}/edit`} className="btn btn-secondary w-full justify-center">
-                  <Icon icon={faEdit} size="sm" className="mr-2" />
-                  Edit Item
-                </Link>
-                <button type="button" onClick={handleDelete} disabled={deleting} className="btn w-full justify-center bg-red-600 hover:bg-red-700 text-white border-0">
-                  <Icon icon={faTrash} size="sm" className="mr-2" />
-                  {deleting ? 'Deleting...' : 'Delete Item'}
-                </button>
                 <Link href="/inventory" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List
