@@ -75,8 +75,8 @@ export interface SupplierResponse {
 }
 
 export const suppliersApi = {
-  getAllSuppliers: async (): Promise<SuppliersResponse> => {
-    return apiClient.post('/suppliers/get', {});
+  getAllSuppliers: async (accountId?: string): Promise<SuppliersResponse> => {
+    return apiClient.post('/suppliers/get', accountId ? { account_id: accountId } : {});
   },
 
   getSupplierById: async (id: string): Promise<SupplierResponse> => {

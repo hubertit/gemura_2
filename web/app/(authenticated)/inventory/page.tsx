@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
 import { useToastStore } from '@/store/toast';
-import DataTable, { TableColumn } from '@/app/components/DataTable';
-import Filters, { FilterGroup, FilterLabel } from '@/app/components/Filters';
+import { useAuthStore } from '@/store/auth';
+import DataTableWithPagination from '@/app/components/DataTableWithPagination';
+import type { TableColumn } from '@/app/components/DataTable';
+import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
+import Modal from '@/app/components/Modal';
+import CreateInventoryForm from './CreateInventoryForm';
 import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
@@ -18,12 +21,12 @@ const STATUS_OPTIONS = [
 ];
 
 export default function InventoryPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { hasPermission, isAdmin } = usePermission();
+  const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [error, setError] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
   const [lowStockFilter, setLowStockFilter] = useState<boolean>(false);
 
@@ -31,27 +34,22 @@ export default function InventoryPage() {
     try {
       setLoading(true);
       setError('');
-      const response = await inventoryApi.getInventory(statusFilter || undefined, lowStockFilter);
+      const response = await inventoryApi.getInventory(currentAccount?.account_id, statusFilter || undefined, lowStockFilter);
       if (response.code === 200) {
         setInventory(response.data || []);
       } else {
         setError(response.message || 'Failed to load inventory');
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load inventory');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to load inventory');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, lowStockFilter]);
+  }, [currentAccount?.account_id, statusFilter, lowStockFilter]);
 
   useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_inventory') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
     loadInventory();
-  }, [hasPermission, isAdmin, router, loadInventory]);
+  }, [loadInventory]);
 
   const handleDelete = async (itemId: string) => {
     if (!confirm('Are you sure you want to delete this inventory item?')) {
@@ -199,29 +197,26 @@ export default function InventoryPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
         </div>
-        <Link href="/inventory/new" className="btn btn-primary">
+        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />
           Add Item
-        </Link>
+        </button>
       </div>
 
+      <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Add inventory item" maxWidth="max-w-xl">
+        <CreateInventoryForm
+          onSuccess={() => { setCreateModalOpen(false); loadInventory(); }}
+          onCancel={() => setCreateModalOpen(false)}
+        />
+      </Modal>
 
-      {/* Filters */}
-      <Filters
-        activeFilterCount={(statusFilter ? 1 : 0) + (lowStockFilter ? 1 : 0)}
-        onApply={() => loadInventory()}
-        onClear={() => {
-          setStatusFilter('');
-          setLowStockFilter(false);
-          loadInventory();
-        }}
-      >
-        <FilterGroup>
-          <FilterLabel>Status</FilterLabel>
+      {/* Filters (admin/users style) */}
+      <FilterBar>
+        <FilterBarGroup label="Status">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           >
             {STATUS_OPTIONS.map(option => (
               <option key={option.value} value={option.value}>
@@ -229,20 +224,37 @@ export default function InventoryPage() {
               </option>
             ))}
           </select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>Stock Filter</FilterLabel>
-          <label className="flex items-center h-9">
+        </FilterBarGroup>
+        <FilterBarGroup label="Stock">
+          <label className="flex items-center h-9 min-h-[2.25rem]">
             <input
               type="checkbox"
               checked={lowStockFilter}
               onChange={(e) => setLowStockFilter(e.target.checked)}
               className="mr-2 h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
             />
-            <span className="text-sm text-gray-700">Show Low Stock Only</span>
+            <span className="text-sm text-gray-700">Low stock only</span>
           </label>
-        </FilterGroup>
-      </Filters>
+        </FilterBarGroup>
+        <FilterBarActions
+          onClear={() => {
+            setStatusFilter('');
+            setLowStockFilter(false);
+          }}
+        />
+        <FilterBarExport<InventoryItem>
+          data={inventory}
+          exportFilename="inventory"
+          exportColumns={[
+            { key: 'name', label: 'Name' },
+            { key: 'description', label: 'Description', getValue: (r) => r.description ?? '' },
+            { key: 'price', label: 'Price', getValue: (r) => String(r.price ?? '') },
+            { key: 'stock_quantity', label: 'Stock', getValue: (r) => String(r.stock_quantity ?? '') },
+            { key: 'status', label: 'Status' },
+          ]}
+          disabled={loading}
+        />
+      </FilterBar>
 
       {/* Error Message */}
       {error && (
@@ -252,44 +264,13 @@ export default function InventoryPage() {
       )}
 
       {/* Inventory Table */}
-      <DataTable
+      <DataTableWithPagination<InventoryItem>
         data={inventory}
         columns={columns}
         loading={loading}
-        emptyMessage="No inventory items found"
+        emptyMessage={currentAccount ? 'No inventory items for this account' : 'Select an account to view inventory'}
+        itemLabel="items"
       />
-
-      {/* Summary */}
-      {inventory.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Items</p>
-              <p className="text-lg font-semibold text-gray-900">{inventory.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Stock</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {inventory.reduce((sum, item) => sum + Number(item.stock_quantity), 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Low Stock Items</p>
-              <p className="text-lg font-semibold text-red-600">
-                {inventory.filter(item => isLowStock(item)).length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Value</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {formatCurrency(
-                  inventory.reduce((sum, item) => sum + (Number(item.price) * Number(item.stock_quantity)), 0)
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

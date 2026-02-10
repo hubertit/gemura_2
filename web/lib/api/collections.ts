@@ -74,8 +74,9 @@ export interface CollectionResponse {
 }
 
 export const collectionsApi = {
-  getCollections: async (filters?: CollectionsFilters): Promise<CollectionsResponse> => {
+  getCollections: async (filters?: CollectionsFilters, accountId?: string): Promise<CollectionsResponse> => {
     const params = new URLSearchParams();
+    if (accountId) params.append('account_id', accountId);
     if (filters?.supplier_account_code) params.append('supplier_account_code', filters.supplier_account_code);
     if (filters?.status) params.append('status', filters.status);
     if (filters?.date_from) params.append('date_from', filters.date_from);

@@ -80,8 +80,8 @@ export interface CustomerResponse {
 }
 
 export const customersApi = {
-  getAllCustomers: async (): Promise<CustomersResponse> => {
-    return apiClient.post('/customers/get', {});
+  getAllCustomers: async (accountId?: string): Promise<CustomersResponse> => {
+    return apiClient.post('/customers/get', accountId ? { account_id: accountId } : {});
   },
 
   getCustomerById: async (id: string): Promise<CustomerResponse> => {

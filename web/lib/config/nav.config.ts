@@ -1,12 +1,10 @@
 /**
- * Navigation menu configuration by account type and role.
+ * Navigation: admin vs user is based on account type (active/default account).
  *
- * Backend sends:
- * - account_type: from Account.type (tenant | branch) OR from User.account_type (mcc, supplier, etc.) depending on API
- * - role: from UserAccount.role (owner, admin, manager, collector, supplier, customer, agent, viewer)
+ * - account_type === 'admin' (Account.type) → admin menu and features only.
+ * - Else → user menu and features; what they see is based on role + permissions (unchanged).
  *
- * We treat tenant/branch as "business" accounts (MCC-like). User-level types mcc/owner/agent also = business.
- * External: supplier, customer, farmer (when API sends User.account_type per account).
+ * Backend sends account_type from Account.type (tenant | branch | admin) and role from UserAccount.role.
  */
 
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -25,7 +23,10 @@ import {
   faChartBar,
 } from '@/app/components/Icon';
 
-/** Account.type from API (tenant/branch) + User.account_type (mcc, owner, agent) — show business menus */
+/** Account type that sees only admin menu/features */
+export const ADMIN_ACCOUNT_TYPE = 'admin' as const;
+
+/** Account types that see user/operations menu (filtered by role + permissions) */
 export const BUSINESS_ACCOUNT_TYPES = ['mcc', 'owner', 'agent', 'tenant', 'branch'] as const;
 export const ADMIN_ROLES = ['owner', 'admin'] as const;
 export const OPERATIONS_ROLES = ['manager', 'collector', 'viewer', 'employee', 'agent'] as const;
@@ -87,6 +88,11 @@ export const EXTERNAL_CUSTOMER_NAV_ITEMS: NavItem[] = [
   { icon: faDollarSign, label: 'Accounts', href: '/accounts', section: 'external_customer' },
   { icon: faCog, label: 'Settings', href: '/settings', section: 'external_customer' },
 ];
+
+/** True when current account is admin type → admin menu only */
+export function isAdminAccount(accountType: string): boolean {
+  return (accountType || '').toLowerCase() === ADMIN_ACCOUNT_TYPE;
+}
 
 export function isBusinessAccount(accountType: string): boolean {
   const t = (accountType || '').toLowerCase();

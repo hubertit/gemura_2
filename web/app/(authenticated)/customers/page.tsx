@@ -1,46 +1,78 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePermission } from '@/hooks/usePermission';
 import { customersApi, Customer } from '@/lib/api/customers';
-import DataTable, { TableColumn } from '@/app/components/DataTable';
+import { useAuthStore } from '@/store/auth';
+import DataTableWithPagination from '@/app/components/DataTableWithPagination';
+import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
+import type { TableColumn } from '@/app/components/DataTable';
+import Modal from '@/app/components/Modal';
+import CreateCustomerForm from './CreateCustomerForm';
 import Icon, { faPlus, faEdit, faEye, faCheckCircle, faStore, faPhone, faEnvelope, faDollarSign } from '@/app/components/Icon';
 
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+];
+
 export default function CustomersPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { hasPermission, isAdmin } = usePermission();
+  const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [error, setError] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const loadCustomers = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await customersApi.getAllCustomers();
+      const response = await customersApi.getAllCustomers(currentAccount?.account_id);
       if (response.code === 200) {
         setCustomers(response.data || []);
       } else {
         setError(response.message || 'Failed to load customers');
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load customers');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to load customers');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentAccount?.account_id]);
 
   useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_customers') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
     loadCustomers();
-  }, [hasPermission, isAdmin, router, loadCustomers]);
+  }, [loadCustomers]);
+
+  const filteredCustomers = useMemo(() => {
+    let list = customers;
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (c) =>
+          (c.name && c.name.toLowerCase().includes(q)) ||
+          (c.code && c.code.toLowerCase().includes(q)) ||
+          (c.phone && c.phone.includes(q)) ||
+          (c.email && c.email.toLowerCase().includes(q)) ||
+          (c.account?.code && c.account.code.toLowerCase().includes(q)) ||
+          (c.account?.name && c.account.name.toLowerCase().includes(q))
+      );
+    }
+    if (statusFilter) {
+      list = list.filter((c) => c.relationship_status === statusFilter);
+    }
+    return list;
+  }, [customers, search, statusFilter]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {
@@ -150,12 +182,56 @@ export default function CustomersPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
         </div>
-        <Link href="/customers/new" className="btn btn-primary">
+        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />
           Add Customer
-        </Link>
+        </button>
       </div>
 
+      <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Add Customer" maxWidth="max-w-lg">
+        <CreateCustomerForm
+          onSuccess={() => {
+            setCreateModalOpen(false);
+            loadCustomers();
+          }}
+          onCancel={() => setCreateModalOpen(false)}
+        />
+      </Modal>
+
+      <FilterBar>
+        <FilterBarSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by name, code, phone, email..."
+        />
+        <FilterBarGroup label="Status">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value || 'all'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </FilterBarGroup>
+        <FilterBarActions onClear={clearFilters} />
+        <FilterBarExport<Customer>
+          data={filteredCustomers}
+          exportFilename="customers"
+          exportColumns={[
+            { key: 'name', label: 'Name' },
+            { key: 'code', label: 'Code' },
+            { key: 'phone', label: 'Phone' },
+            { key: 'email', label: 'Email', getValue: (r) => r.email ?? '' },
+            { key: 'price_per_liter', label: 'Price/Liter', getValue: (r) => r.price_per_liter != null ? String(r.price_per_liter) : '' },
+            { key: 'relationship_status', label: 'Status' },
+          ]}
+          disabled={loading}
+        />
+      </FilterBar>
 
       {/* Error Message */}
       {error && (
@@ -165,43 +241,13 @@ export default function CustomersPage() {
       )}
 
       {/* Customers Table */}
-      <DataTable
-        data={customers}
+      <DataTableWithPagination<Customer>
+        data={filteredCustomers}
         columns={columns}
         loading={loading}
-        emptyMessage="No customers found"
+        emptyMessage={currentAccount ? (filteredCustomers.length === 0 && customers.length > 0 ? 'No customers match the filters' : 'No customers for this account') : 'Select an account to view customers'}
+        itemLabel="customers"
       />
-
-      {/* Summary */}
-      {customers.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Customers</p>
-              <p className="text-lg font-semibold text-gray-900">{customers.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Active Customers</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {customers.filter(c => c.relationship_status === 'active').length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Average Price/Liter</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {customers.filter(c => c.price_per_liter).length > 0
-                  ? formatCurrency(
-                      customers
-                        .filter(c => c.price_per_liter)
-                        .reduce((sum, c) => sum + (c.price_per_liter || 0), 0) /
-                      customers.filter(c => c.price_per_liter).length
-                    )
-                  : 'N/A'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

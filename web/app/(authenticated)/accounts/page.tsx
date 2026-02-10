@@ -1,19 +1,17 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { usePermission } from '@/hooks/usePermission';
 import { accountsApi, Account } from '@/lib/api/accounts';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
-import DataTable, { TableColumn } from '@/app/components/DataTable';
+import DataTableWithPagination from '@/app/components/DataTableWithPagination';
+import type { TableColumn } from '@/app/components/DataTable';
+import FilterBar, { FilterBarExport } from '@/app/components/FilterBar';
 import Icon, { faBuilding, faUserShield, faCheckCircle, faArrowsUpDown, faSpinner, faEye } from '@/app/components/Icon';
 import Link from 'next/link';
 
 export default function AccountsPage() {
-  const router = useRouter();
-  const { hasPermission, isAdmin } = usePermission();
-  const { setCurrentAccount, setUser } = useAuthStore();
+  const { setCurrentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [error, setError] = useState('');
@@ -29,8 +27,8 @@ export default function AccountsPage() {
       } else {
         setError(response.message || 'Failed to load accounts');
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load accounts');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to load accounts');
     } finally {
       setLoading(false);
     }
@@ -77,8 +75,8 @@ export default function AccountsPage() {
       } else {
         setError(response.message || 'Failed to switch account');
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to switch account. Please try again.');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to switch account. Please try again.');
     } finally {
       setSwitching(null);
     }
@@ -180,6 +178,21 @@ export default function AccountsPage() {
         </div>
       </div>
 
+      <FilterBar>
+        <FilterBarExport<Account>
+          data={accounts}
+          exportFilename="accounts"
+          exportColumns={[
+            { key: 'account_name', label: 'Account Name' },
+            { key: 'account_code', label: 'Code' },
+            { key: 'account_type', label: 'Type' },
+            { key: 'role', label: 'Role' },
+            { key: 'account_status', label: 'Status' },
+          ]}
+          disabled={loading}
+        />
+      </FilterBar>
+
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-sm p-4">
@@ -188,36 +201,13 @@ export default function AccountsPage() {
       )}
 
       {/* Accounts Table */}
-      <DataTable
+      <DataTableWithPagination<Account>
         data={accounts}
         columns={columns}
         loading={loading}
         emptyMessage="No accounts found"
+        itemLabel="accounts"
       />
-
-      {/* Summary */}
-      {accounts.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Accounts</p>
-              <p className="text-lg font-semibold text-gray-900">{accounts.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Default Account</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {accounts.find(acc => acc.is_default)?.account_name || 'None'}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Active Accounts</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {accounts.filter(acc => acc.account_status === 'active').length}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

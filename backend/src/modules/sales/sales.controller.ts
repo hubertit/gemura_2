@@ -127,7 +127,7 @@ export class SalesController {
     },
   })
   async getSales(@CurrentUser() user: User, @Body() getSalesDto: GetSalesDto) {
-    return this.salesService.getSales(user, getSalesDto.filters);
+    return this.salesService.getSales(user, getSalesDto.filters, getSalesDto.account_id);
   }
 
   @Put('update')

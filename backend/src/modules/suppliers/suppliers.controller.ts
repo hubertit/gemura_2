@@ -146,8 +146,8 @@ export class SuppliersController {
       message: 'Unauthorized. Invalid token.',
     },
   })
-  async getAllSuppliers(@CurrentUser() user: User) {
-    return this.suppliersService.getAllSuppliers(user);
+  async getAllSuppliers(@CurrentUser() user: User, @Body('account_id') accountId?: string) {
+    return this.suppliersService.getAllSuppliers(user, accountId);
   }
 
   @Get('by-id/:id')

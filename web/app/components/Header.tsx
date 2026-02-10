@@ -13,6 +13,8 @@ import Icon, {
   faRightFromBracket,
   faChevronDown,
   faSpinner,
+  faBuilding,
+  faCheck,
 } from './Icon';
 
 interface HeaderProps {
@@ -29,23 +31,23 @@ export default function Header({
   onSidebarToggle,
 }: HeaderProps) {
   const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user, logout, accounts, currentAccount, setCurrentAccount } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [accountSwitcherOpen, setAccountSwitcherOpen] = useState(false);
   const [userName, setUserName] = useState('User');
-  const [userRole, setUserRole] = useState('User');
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const accountSwitcherRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
       setUserName(`${user.firstName} ${user.lastName}`);
-      setUserRole(user.role || 'User');
     }
   }, [user]);
 
@@ -61,16 +63,19 @@ export default function Header({
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setSearchOpen(false);
       }
+      if (accountSwitcherRef.current && !accountSwitcherRef.current.contains(event.target as Node)) {
+        setAccountSwitcherOpen(false);
+      }
     };
 
-    if (userMenuOpen || notificationsOpen || searchOpen) {
+    if (userMenuOpen || notificationsOpen || searchOpen || accountSwitcherOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [userMenuOpen, notificationsOpen, searchOpen]);
+  }, [userMenuOpen, notificationsOpen, searchOpen, accountSwitcherOpen]);
 
   const handleLogout = () => {
     logout();
@@ -116,6 +121,90 @@ export default function Header({
 
         {/* Spacer */}
         <div className="flex-1"></div>
+
+        {/* Account Switcher */}
+        {accounts.length > 0 && (
+          <div className="relative flex-shrink-0" ref={accountSwitcherRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setAccountSwitcherOpen(!accountSwitcherOpen);
+                setUserMenuOpen(false);
+                setNotificationsOpen(false);
+              }}
+              className="flex items-center gap-2.5 min-w-0 max-w-[220px] sm:max-w-[260px] px-3.5 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all duration-200 group"
+              aria-label="Switch account"
+              aria-expanded={accountSwitcherOpen}
+            >
+              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
+                <Icon icon={faBuilding} size="sm" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {currentAccount?.account_name || 'Select account'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {currentAccount
+                    ? `${currentAccount.account_code} · ${(currentAccount.account_type || '').toLowerCase()}`
+                    : ''}
+                </p>
+              </div>
+              <Icon
+                icon={faChevronDown}
+                className={`flex-shrink-0 text-gray-400 transition-transform duration-200 ${accountSwitcherOpen ? 'rotate-180' : ''}`}
+                size="sm"
+              />
+            </button>
+
+            {accountSwitcherOpen && (
+              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-xl border border-gray-200 shadow-lg shadow-gray-200/50 py-2 z-[1000]">
+                <div className="px-3 pb-2 mb-2 border-b border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Switch account</p>
+                </div>
+                <ul className="max-h-[280px] overflow-y-auto">
+                  {accounts.map((account) => {
+                    const isActive = currentAccount?.account_id === account.account_id;
+                    return (
+                      <li key={account.account_id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentAccount(account);
+                            setAccountSwitcherOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors rounded-lg mx-2 ${
+                            isActive
+                              ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
+                              : 'hover:bg-gray-50 text-gray-700'
+                          }`}
+                        >
+                          <div
+                            className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                              isActive ? 'bg-[var(--primary)]/20' : 'bg-gray-100'
+                            }`}
+                          >
+                            <Icon icon={faBuilding} size="sm" className={isActive ? 'text-[var(--primary)]' : 'text-gray-500'} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-semibold truncate ${isActive ? 'text-[var(--primary)]' : 'text-gray-900'}`}>
+                              {account.account_name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {account.account_code} · {(account.account_type || '').toLowerCase()}
+                            </p>
+                          </div>
+                          {isActive && (
+                            <Icon icon={faCheck} className="flex-shrink-0 text-[var(--primary)]" size="sm" />
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Right Actions */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -191,7 +280,9 @@ export default function Header({
           <div className="relative flex items-center gap-3" ref={userMenuRef}>
             <div className="hidden sm:block text-right">
               <p className="text-sm font-semibold text-gray-900 m-0 leading-tight">{userName}</p>
-              <p className="text-xs text-gray-500 m-0 leading-tight capitalize">{userRole}</p>
+              <p className="text-xs text-gray-500 m-0 leading-tight capitalize">
+                {currentAccount ? (currentAccount.role || '').toLowerCase() : '—'}
+              </p>
             </div>
             <button
               onClick={() => {

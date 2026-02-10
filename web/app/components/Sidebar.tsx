@@ -13,6 +13,7 @@ import {
   OPERATIONS_NAV_ITEMS,
   EXTERNAL_SUPPLIER_NAV_ITEMS,
   EXTERNAL_CUSTOMER_NAV_ITEMS,
+  isAdminAccount,
   isBusinessAccount,
   isAdminRole,
   isOperationsRole,
@@ -46,12 +47,12 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
     }
   }, [user, currentAccount]);
 
-  // Build menu items by account type and role (one section per user)
+  // Build menu by account type first; then role/permissions for user (non-admin) accounts
   const menuItems = useMemo(() => {
     const items: NavItem[] = [];
 
-    // Admin section: owner/admin on business account (mcc, owner, agent)
-    if (isAdminRole(role) && isBusinessAccount(accountType)) {
+    // Admin account type → admin menu and features only
+    if (isAdminAccount(accountType)) {
       ADMIN_NAV_ITEMS.forEach((item) => {
         if (item.href === '/admin/users' && !canManageUsers() && !isAdmin()) return;
         items.push(item);
@@ -59,8 +60,18 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
       return items;
     }
 
-    // Operations section: manager, collector, viewer, employee on business account
+    // User accounts: menu by role and permissions (active/default account)
+    // Operations: business account types, filter by role/permissions
     if (isOperationsRole(role) && isBusinessAccount(accountType)) {
+      OPERATIONS_NAV_ITEMS.forEach((item) => {
+        if (item.requiresPermission && !hasPermission(item.requiresPermission)) return;
+        items.push(item);
+      });
+      return items;
+    }
+
+    // Owner/admin role on non-admin account (tenant/branch etc.) → operations menu by permissions
+    if (isAdminRole(role) && isBusinessAccount(accountType)) {
       OPERATIONS_NAV_ITEMS.forEach((item) => {
         if (item.requiresPermission && !hasPermission(item.requiresPermission)) return;
         items.push(item);
@@ -80,7 +91,7 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
       return items;
     }
 
-    // Fallback: tenant/branch with unrecognized role (e.g. supplier/customer in DB) — show operations so user can work
+    // Fallback: business account type, unknown role — show operations by permissions
     if (isBusinessAccount(accountType)) {
       OPERATIONS_NAV_ITEMS.forEach((item) => {
         if (item.requiresPermission && !hasPermission(item.requiresPermission) && !isAdmin()) return;

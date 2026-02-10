@@ -73,8 +73,11 @@ export interface SaleResponse {
 }
 
 export const salesApi = {
-  getSales: async (filters?: SalesFilters): Promise<SalesResponse> => {
-    return apiClient.post('/sales/sales', { filters: filters || {} });
+  getSales: async (filters?: SalesFilters, accountId?: string): Promise<SalesResponse> => {
+    return apiClient.post('/sales/sales', {
+      filters: filters || {},
+      ...(accountId && { account_id: accountId }),
+    });
   },
 
   getSaleById: async (saleId: string): Promise<SaleResponse> => {

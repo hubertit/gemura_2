@@ -1,7 +1,14 @@
 'use client';
 
 import { ReactNode } from 'react';
-import Icon, { faSearch, faTimes } from './Icon';
+import Icon, { faSearch, faTimes, faDownload, faCheck } from './Icon';
+import { exportToCsv } from '@/lib/utils/export-csv';
+
+export interface ExportColumn<T = unknown> {
+  key: string;
+  label: string;
+  getValue?: (row: T) => string;
+}
 
 /** Single filter group: label + control, aligned with others (ResolveIT-style). */
 export function FilterBarGroup({
@@ -65,6 +72,54 @@ export function FilterBarActions({ onClear }: { onClear: () => void }) {
       >
         <Icon icon={faTimes} size="sm" />
         Clear
+      </button>
+    </div>
+  );
+}
+
+/** Apply filters button for the filter bar. */
+export function FilterBarApply({ onApply }: { onApply: () => void }) {
+  return (
+    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-0 basis-full sm:basis-auto">
+      <label className="text-sm font-medium text-gray-700 invisible select-none">Apply</label>
+      <button
+        type="button"
+        onClick={onApply}
+        className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium bg-[var(--primary)] text-white border-0 rounded hover:opacity-90 transition-colors"
+      >
+        <Icon icon={faCheck} size="sm" />
+        Apply
+      </button>
+    </div>
+  );
+}
+
+/** Export CSV button for the filter bar. */
+export function FilterBarExport<T extends Record<string, unknown>>({
+  data,
+  exportFilename,
+  exportColumns,
+  disabled = false,
+}: {
+  data: T[];
+  exportFilename: string;
+  exportColumns: ExportColumn<T>[];
+  disabled?: boolean;
+}) {
+  const handleExport = () => {
+    exportToCsv(data, exportColumns, exportFilename);
+  };
+  return (
+    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-0 basis-full sm:basis-auto">
+      <label className="text-sm font-medium text-gray-700 invisible select-none">Export</label>
+      <button
+        type="button"
+        onClick={handleExport}
+        disabled={disabled || data.length === 0}
+        className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <Icon icon={faDownload} size="sm" />
+        Export CSV
       </button>
     </div>
   );

@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePermission } from '@/hooks/usePermission';
 import { salesApi, Sale, SalesFilters } from '@/lib/api/sales';
 import { useToastStore } from '@/store/toast';
-import DataTable, { TableColumn } from '@/app/components/DataTable';
-import Filters, { FilterGroup, FilterLabel } from '@/app/components/Filters';
-import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faFilter, faTimes } from '@/app/components/Icon';
+import { useAuthStore } from '@/store/auth';
+import DataTableWithPagination from '@/app/components/DataTableWithPagination';
+import type { TableColumn } from '@/app/components/DataTable';
+import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarApply, FilterBarExport } from '@/app/components/FilterBar';
+import Modal from '@/app/components/Modal';
+import CreateSaleForm from './CreateSaleForm';
+import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -19,12 +22,12 @@ const STATUS_OPTIONS = [
 ];
 
 export default function SalesPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { hasPermission, isAdmin } = usePermission();
+  const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [sales, setSales] = useState<Sale[]>([]);
   const [error, setError] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [filters, setFilters] = useState<SalesFilters>({
     status: searchParams.get('status') || undefined,
     date_from: searchParams.get('date_from') || undefined,
@@ -36,27 +39,22 @@ export default function SalesPage() {
     try {
       setLoading(true);
       setError('');
-      const response = await salesApi.getSales(filters);
+      const response = await salesApi.getSales(filters, currentAccount?.account_id);
       if (response.code === 200) {
         setSales(response.data || []);
       } else {
         setError(response.message || 'Failed to load sales');
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load sales');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to load sales');
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentAccount?.account_id]);
 
   useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_sales') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
     loadSales();
-  }, [hasPermission, isAdmin, router, loadSales]);
+  }, [loadSales]);
 
   const handleFilterChange = (key: keyof SalesFilters, value: string | number | undefined) => {
     setFilters(prev => ({
@@ -72,15 +70,6 @@ export default function SalesPage() {
   const handleClearFilters = () => {
     setFilters({});
     loadSales();
-  };
-
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (filters.status) count++;
-    if (filters.date_from) count++;
-    if (filters.date_to) count++;
-    if (filters.customer_account_code) count++;
-    return count;
   };
 
   const handleCancelSale = async (saleId: string) => {
@@ -203,24 +192,26 @@ export default function SalesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Sales</h1>
         </div>
-        <Link href="/sales/new" className="btn btn-primary">
+        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />
           New Sale
-        </Link>
+        </button>
       </div>
 
-      {/* Filters */}
-      <Filters
-        activeFilterCount={getActiveFilterCount()}
-        onApply={handleApplyFilters}
-        onClear={handleClearFilters}
-      >
-        <FilterGroup>
-          <FilterLabel>Status</FilterLabel>
+      <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="New Sale" maxWidth="max-w-xl">
+        <CreateSaleForm
+          onSuccess={() => { setCreateModalOpen(false); loadSales(); }}
+          onCancel={() => setCreateModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Filters (admin/users style) */}
+      <FilterBar>
+        <FilterBarGroup label="Status">
           <select
             value={filters.status || ''}
             onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           >
             {STATUS_OPTIONS.map(option => (
               <option key={option.value} value={option.value}>
@@ -228,36 +219,48 @@ export default function SalesPage() {
               </option>
             ))}
           </select>
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>Date From</FilterLabel>
+        </FilterBarGroup>
+        <FilterBarGroup label="Date From">
           <input
             type="date"
             value={filters.date_from || ''}
             onChange={(e) => handleFilterChange('date_from', e.target.value)}
-            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>Date To</FilterLabel>
+        </FilterBarGroup>
+        <FilterBarGroup label="Date To">
           <input
             type="date"
             value={filters.date_to || ''}
             onChange={(e) => handleFilterChange('date_to', e.target.value)}
-            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
-        </FilterGroup>
-        <FilterGroup>
-          <FilterLabel>Customer Code</FilterLabel>
+        </FilterBarGroup>
+        <FilterBarGroup label="Customer Code">
           <input
             type="text"
             value={filters.customer_account_code || ''}
             onChange={(e) => handleFilterChange('customer_account_code', e.target.value)}
-            className="px-2.5 py-[0.4375rem] border border-gray-300 rounded text-[0.8125rem] text-gray-700 bg-white h-9 w-full focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
             placeholder="A_XYZ789"
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
-        </FilterGroup>
-      </Filters>
+        </FilterBarGroup>
+        <FilterBarActions onClear={handleClearFilters} />
+        <FilterBarApply onApply={handleApplyFilters} />
+        <FilterBarExport<Sale>
+          data={sales}
+          exportFilename="sales"
+          exportColumns={[
+            { key: 'sale_at', label: 'Date', getValue: (r) => new Date(r.sale_at).toLocaleDateString() },
+            { key: 'customer_account', label: 'Customer', getValue: (r) => r.customer_account?.name ?? '' },
+            { key: 'quantity', label: 'Quantity (L)', getValue: (r) => String(Number(r.quantity).toFixed(2)) },
+            { key: 'unit_price', label: 'Unit Price', getValue: (r) => String(r.unit_price ?? '') },
+            { key: 'total_amount', label: 'Total', getValue: (r) => String(r.total_amount ?? '') },
+            { key: 'status', label: 'Status', getValue: (r) => String(r.status ?? '') },
+          ]}
+          disabled={loading}
+        />
+      </FilterBar>
 
       {/* Error Message */}
       {error && (
@@ -267,36 +270,13 @@ export default function SalesPage() {
       )}
 
       {/* Sales Table */}
-      <DataTable
+      <DataTableWithPagination<Sale>
         data={sales}
         columns={columns}
         loading={loading}
-        emptyMessage="No sales found"
+        emptyMessage={currentAccount ? 'No sales for this account' : 'Select an account to view sales'}
+        itemLabel="sales"
       />
-
-      {/* Summary */}
-      {sales.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Sales</p>
-              <p className="text-lg font-semibold text-gray-900">{sales.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Quantity</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {sales.reduce((sum, sale) => sum + Number(sale.quantity), 0).toFixed(2)}L
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {formatCurrency(sales.reduce((sum, sale) => sum + Number(sale.total_amount), 0))}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

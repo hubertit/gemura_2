@@ -1,46 +1,78 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePermission } from '@/hooks/usePermission';
 import { suppliersApi, Supplier } from '@/lib/api/suppliers';
-import DataTable, { TableColumn } from '@/app/components/DataTable';
+import { useAuthStore } from '@/store/auth';
+import DataTableWithPagination from '@/app/components/DataTableWithPagination';
+import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
+import type { TableColumn } from '@/app/components/DataTable';
+import Modal from '@/app/components/Modal';
+import CreateSupplierForm from './CreateSupplierForm';
 import Icon, { faPlus, faEdit, faEye, faCheckCircle, faBuilding, faPhone, faEnvelope, faDollarSign } from '@/app/components/Icon';
 
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Statuses' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+];
+
 export default function SuppliersPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { hasPermission, isAdmin } = usePermission();
+  const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [error, setError] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const loadSuppliers = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await suppliersApi.getAllSuppliers();
+      const response = await suppliersApi.getAllSuppliers(currentAccount?.account_id);
       if (response.code === 200) {
         setSuppliers(response.data || []);
       } else {
         setError(response.message || 'Failed to load suppliers');
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load suppliers');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message || (err as { message?: string })?.message || 'Failed to load suppliers');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentAccount?.account_id]);
 
   useEffect(() => {
-    // Check permission
-    if (!hasPermission('view_suppliers') && !isAdmin()) {
-      router.push('/dashboard');
-      return;
-    }
     loadSuppliers();
-  }, [hasPermission, isAdmin, router, loadSuppliers]);
+  }, [loadSuppliers]);
+
+  const filteredSuppliers = useMemo(() => {
+    let list = suppliers;
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (s) =>
+          (s.name && s.name.toLowerCase().includes(q)) ||
+          (s.code && s.code.toLowerCase().includes(q)) ||
+          (s.phone && s.phone.includes(q)) ||
+          (s.email && s.email.toLowerCase().includes(q)) ||
+          (s.account?.code && s.account.code.toLowerCase().includes(q)) ||
+          (s.account?.name && s.account.name.toLowerCase().includes(q))
+      );
+    }
+    if (statusFilter) {
+      list = list.filter((s) => s.relationship_status === statusFilter);
+    }
+    return list;
+  }, [suppliers, search, statusFilter]);
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {
@@ -150,12 +182,56 @@ export default function SuppliersPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
         </div>
-        <Link href="/suppliers/new" className="btn btn-primary">
+        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />
           Add Supplier
-        </Link>
+        </button>
       </div>
 
+      <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Add Supplier" maxWidth="max-w-lg">
+        <CreateSupplierForm
+          onSuccess={() => {
+            setCreateModalOpen(false);
+            loadSuppliers();
+          }}
+          onCancel={() => setCreateModalOpen(false)}
+        />
+      </Modal>
+
+      <FilterBar>
+        <FilterBarSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by name, code, phone, email..."
+        />
+        <FilterBarGroup label="Status">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value || 'all'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </FilterBarGroup>
+        <FilterBarActions onClear={clearFilters} />
+        <FilterBarExport<Supplier>
+          data={filteredSuppliers}
+          exportFilename="suppliers"
+          exportColumns={[
+            { key: 'name', label: 'Name' },
+            { key: 'code', label: 'Code' },
+            { key: 'phone', label: 'Phone' },
+            { key: 'email', label: 'Email', getValue: (r) => r.email ?? '' },
+            { key: 'price_per_liter', label: 'Price/Liter', getValue: (r) => r.price_per_liter != null ? String(r.price_per_liter) : '' },
+            { key: 'relationship_status', label: 'Status' },
+          ]}
+          disabled={loading}
+        />
+      </FilterBar>
 
       {/* Error Message */}
       {error && (
@@ -165,43 +241,13 @@ export default function SuppliersPage() {
       )}
 
       {/* Suppliers Table */}
-      <DataTable
-        data={suppliers}
+      <DataTableWithPagination<Supplier>
+        data={filteredSuppliers}
         columns={columns}
         loading={loading}
-        emptyMessage="No suppliers found"
+        emptyMessage={currentAccount ? (filteredSuppliers.length === 0 && suppliers.length > 0 ? 'No suppliers match the filters' : 'No suppliers for this account') : 'Select an account to view suppliers'}
+        itemLabel="suppliers"
       />
-
-      {/* Summary */}
-      {suppliers.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Suppliers</p>
-              <p className="text-lg font-semibold text-gray-900">{suppliers.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Active Suppliers</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {suppliers.filter(s => s.relationship_status === 'active').length}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Average Price/Liter</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {suppliers.filter(s => s.price_per_liter).length > 0
-                  ? formatCurrency(
-                      suppliers
-                        .filter(s => s.price_per_liter)
-                        .reduce((sum, s) => sum + (s.price_per_liter || 0), 0) /
-                      suppliers.filter(s => s.price_per_liter).length
-                    )
-                  : 'N/A'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

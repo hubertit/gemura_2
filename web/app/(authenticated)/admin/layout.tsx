@@ -3,10 +3,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
-import { isAdminRole, isBusinessAccount } from '@/lib/config/nav.config';
+import { isAdminAccount } from '@/lib/config/nav.config';
 
 /**
- * Protects /admin/* routes: only admin roles on business accounts can access.
+ * Protects /admin/* routes: only current account with account_type === 'admin' can access.
  * Others are redirected to /dashboard.
  */
 export default function AdminLayout({
@@ -16,18 +16,15 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const { currentAccount } = useAuthStore();
-  const role = currentAccount?.role ?? '';
   const accountType = currentAccount?.account_type ?? '';
 
   useEffect(() => {
-    const allowed = isAdminRole(role) && isBusinessAccount(accountType);
-    if (!allowed) {
+    if (!isAdminAccount(accountType)) {
       router.replace('/dashboard');
     }
-  }, [role, accountType, router]);
+  }, [accountType, router]);
 
-  const allowed = isAdminRole(role) && isBusinessAccount(accountType);
-  if (!allowed) {
+  if (!isAdminAccount(accountType)) {
     return (
       <div className="flex items-center justify-center p-8">
         <p className="text-gray-500">Redirecting...</p>

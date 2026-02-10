@@ -528,16 +528,36 @@ export class CollectionsService {
     quantity_max?: number;
     price_min?: number;
     price_max?: number;
-  }) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found. Please set a default account.',
-      });
-    }
+  }, accountIdParam?: string) {
+    let customerAccountId: string;
 
-    const customerAccountId = user.default_account_id;
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
+      });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      customerAccountId = accountIdParam;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found. Please set a default account.',
+        });
+      }
+      customerAccountId = user.default_account_id;
+    }
 
     // Build query with filters
     const where: any = {

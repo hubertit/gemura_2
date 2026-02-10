@@ -18,17 +18,39 @@ export class InventoryService {
     private transactionsService: TransactionsService,
   ) {}
 
-  async getInventory(user: User, filters?: { status?: string; low_stock?: boolean }) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found.',
+  async getInventory(user: User, filters?: { status?: string; low_stock?: boolean }, accountIdParam?: string) {
+    let accountId: string;
+
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
       });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      accountId = accountIdParam;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found.',
+        });
+      }
+      accountId = user.default_account_id;
     }
 
     const where: any = {
-      account_id: user.default_account_id,
+      account_id: accountId,
     };
 
     // By default, exclude inactive items (soft-deleted items)

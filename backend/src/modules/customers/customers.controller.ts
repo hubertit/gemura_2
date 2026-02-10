@@ -133,8 +133,8 @@ export class CustomersController {
       message: 'Unauthorized. Invalid token.',
     },
   })
-  async getAllCustomers(@CurrentUser() user: User) {
-    return this.customersService.getAllCustomers(user);
+  async getAllCustomers(@CurrentUser() user: User, @Body('account_id') accountId?: string) {
+    return this.customersService.getAllCustomers(user, accountId);
   }
 
   @Get('by-id/:id')

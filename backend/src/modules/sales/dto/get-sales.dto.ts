@@ -47,5 +47,10 @@ export class GetSalesDto {
   @ApiProperty({ type: SalesFiltersDto, required: false })
   @IsOptional()
   filters?: SalesFiltersDto;
+
+  @ApiProperty({ required: false, description: 'Scope list to this account (must have access). Defaults to user default account.' })
+  @IsOptional()
+  @IsString()
+  account_id?: string;
 }
 

@@ -87,8 +87,9 @@ export interface InventoryStatsResponse {
 }
 
 export const inventoryApi = {
-  getInventory: async (status?: string, lowStock?: boolean): Promise<InventoryResponse> => {
+  getInventory: async (accountId?: string, status?: string, lowStock?: boolean): Promise<InventoryResponse> => {
     const params = new URLSearchParams();
+    if (accountId) params.append('account_id', accountId);
     if (status) params.append('status', status);
     if (lowStock) params.append('low_stock', 'true');
     return apiClient.get(`/inventory?${params.toString()}`);

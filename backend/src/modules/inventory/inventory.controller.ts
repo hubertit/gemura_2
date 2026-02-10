@@ -79,13 +79,14 @@ export class InventoryController {
   })
   async getInventory(
     @CurrentUser() user: User,
+    @Query('account_id') accountId?: string,
     @Query('status') status?: string,
     @Query('low_stock') lowStock?: string,
   ) {
     return this.inventoryService.getInventory(user, {
       status,
       low_stock: lowStock === 'true',
-    });
+    }, accountId);
   }
 
   @Get('stats')

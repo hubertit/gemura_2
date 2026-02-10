@@ -513,7 +513,7 @@ export class CollectionsController {
       message: 'Access denied. Token is required.',
     },
   })
-  async getCollections(@CurrentUser() user: User, @Query('supplier_account_code') supplierAccountCode?: string, @Query('status') status?: string, @Query('date_from') dateFrom?: string, @Query('date_to') dateTo?: string, @Query('quantity_min') quantityMin?: number, @Query('quantity_max') quantityMax?: number, @Query('price_min') priceMin?: number, @Query('price_max') priceMax?: number) {
+  async getCollections(@CurrentUser() user: User, @Query('account_id') accountId?: string, @Query('supplier_account_code') supplierAccountCode?: string, @Query('status') status?: string, @Query('date_from') dateFrom?: string, @Query('date_to') dateTo?: string, @Query('quantity_min') quantityMin?: number, @Query('quantity_max') quantityMax?: number, @Query('price_min') priceMin?: number, @Query('price_max') priceMax?: number) {
     const filters: any = {};
     if (supplierAccountCode) filters.supplier_account_code = supplierAccountCode;
     if (status) filters.status = status;
@@ -523,7 +523,7 @@ export class CollectionsController {
     if (quantityMax !== undefined) filters.quantity_max = quantityMax;
     if (priceMin !== undefined) filters.price_min = priceMin;
     if (priceMax !== undefined) filters.price_max = priceMax;
-    return this.collectionsService.getCollections(user, Object.keys(filters).length > 0 ? filters : undefined);
+    return this.collectionsService.getCollections(user, Object.keys(filters).length > 0 ? filters : undefined, accountId);
   }
 
   @Post('create')
