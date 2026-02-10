@@ -1,0 +1,96 @@
+### Bulk import & template – test with Hubert's account
+### 1) Login with Hubert's phone (250788606765) to get token, then run template/bulk requests.
+### Replace {password} with Hubert's password (seed uses Pass123 for 250788606765).
+
+@baseUrl = http://localhost:3004/api
+@token = your-auth-token-here
+
+### --- Login (Hubert: phone 250788606765) ---
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "250788606765",
+  "password": "{{password}}"
+}
+
+### After login, copy "data.token" from response into @token above, then run below.
+
+### --- Customers: download CSV template ---
+GET {{baseUrl}}/customers/template
+Authorization: Bearer {{token}}
+
+### --- Suppliers: download CSV template ---
+GET {{baseUrl}}/suppliers/template
+Authorization: Bearer {{token}}
+
+### --- Customers: bulk create (2 rows) ---
+POST {{baseUrl}}/customers/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rows": [
+    { "name": "Bulk Customer One", "phone": "250788111111", "price_per_liter": 400 },
+    { "name": "Bulk Customer Two", "phone": "250788222222", "email": "bulk2@example.com" }
+  ]
+}
+
+### --- Suppliers: bulk create (2 rows) ---
+POST {{baseUrl}}/suppliers/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rows": [
+    { "name": "Bulk Supplier One", "phone": "250788333333", "price_per_liter": 390 },
+    { "name": "Bulk Supplier Two", "phone": "250788444444", "price_per_liter": 400, "email": "bulksup2@example.com" }
+  ]
+}
+
+### --- Inventory: download template ---
+GET {{baseUrl}}/inventory/template
+Authorization: Bearer {{token}}
+
+### --- Inventory: bulk create (2 rows) ---
+POST {{baseUrl}}/inventory/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rows": [
+    { "name": "Bulk Item One", "description": "Test product", "price": 500, "stock_quantity": 50, "min_stock_level": 10 },
+    { "name": "Bulk Item Two", "price": 800, "stock_quantity": 20 }
+  ]
+}
+
+### --- Sales: download template ---
+GET {{baseUrl}}/sales/template
+Authorization: Bearer {{token}}
+
+### --- Sales: bulk create (1 row; use real customer_account_code) ---
+POST {{baseUrl}}/sales/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rows": [
+    { "customer_account_code": "A_XYZ789", "quantity": 50, "unit_price": 400, "sale_at": "2025-01-15", "payment_status": "unpaid" }
+  ]
+}
+
+### --- Collections: download template ---
+GET {{baseUrl}}/collections/template
+Authorization: Bearer {{token}}
+
+### --- Collections: bulk create (1 row; use real supplier_account_code) ---
+POST {{baseUrl}}/collections/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rows": [
+    { "supplier_account_code": "A_ABC123", "quantity": 80, "collection_at": "2025-01-15 10:00:00", "payment_status": "unpaid" }
+  ]
+}

@@ -24,6 +24,7 @@ import Icon, {
 } from '@/app/components/Icon';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
+import { DashboardSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from '../sales/CreateSaleForm';
 import CreateCollectionForm from '../collections/CreateCollectionForm';
 import CreateCustomerForm from '../customers/CreateCustomerForm';
@@ -282,14 +283,7 @@ export default function Dashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

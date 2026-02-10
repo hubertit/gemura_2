@@ -8,6 +8,7 @@ import { collectionsApi, UpdateCollectionData, Collection } from '@/lib/api/coll
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faBox, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -124,14 +125,7 @@ export default function EditCollectionPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading collection data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   return (

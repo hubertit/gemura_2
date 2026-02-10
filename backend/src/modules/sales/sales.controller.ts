@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Body, UseGuards, Query, Param, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Query, Param, HttpCode, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Response } from 'express';
 import { SalesService } from './sales.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
@@ -8,6 +9,7 @@ import { GetSalesDto } from './dto/get-sales.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 import { CancelSaleDto } from './dto/cancel-sale.dto';
 import { CreateSaleDto } from './dto/create-sale.dto';
+import { BulkCreateSalesDto } from './dto/bulk-create-sales.dto';
 import { RecordPaymentDto } from '../accounting/receivables-payables/dto/record-payment.dto';
 
 @ApiTags('Sales')
@@ -435,6 +437,55 @@ export class SalesController {
   })
   async createSale(@CurrentUser() user: User, @Body() createDto: CreateSaleDto) {
     return this.salesService.createSale(user, createDto);
+  }
+
+  @Get('template')
+  @ApiOperation({
+    summary: 'Download sales CSV template',
+    description: 'Returns a CSV file with header row and one example row for bulk import.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV template file',
+    headers: {
+      'Content-Disposition': { description: 'attachment; filename="sales-template.csv"', schema: { type: 'string' } },
+      'Content-Type': { description: 'text/csv; charset=utf-8', schema: { type: 'string' } },
+    },
+  })
+  async getTemplate(@Res() res: Response) {
+    const csv =
+      'customer_account_code,quantity,unit_price,sale_at,notes,payment_status\n' +
+      'A_XYZ789,120.5,390,2025-01-15,Morning delivery,unpaid';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="sales-template.csv"');
+    res.send(csv);
+  }
+
+  @Post('bulk')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Bulk create sales',
+    description: 'Create multiple milk sales from an array. Returns success count and per-row errors.',
+  })
+  @ApiBody({ type: BulkCreateSalesDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk import result',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: { success: 2, failed: 0, errors: [] },
+    },
+  })
+  async bulkCreateSales(@CurrentUser() user: User, @Body() body: BulkCreateSalesDto) {
+    const result = await this.salesService.bulkCreateSales(user, body.rows);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: result,
+    };
   }
 
   @Post(':saleId/payment')

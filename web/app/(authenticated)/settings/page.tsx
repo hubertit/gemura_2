@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Icon, { faCog, faUser, faLock, faEnvelope, faPhone, faSpinner, faCheckCircle } from '@/app/components/Icon';
+import { SkeletonBar } from '@/app/components/SkeletonLoader';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import { profileApi, UpdateProfilePayload } from '@/lib/api/profile';
@@ -88,9 +89,17 @@ export default function SettingsPage() {
         </div>
         <div className="p-6">
           {loading ? (
-            <div className="flex items-center gap-2 text-gray-500">
-              <Icon icon={faSpinner} className="animate-spin" size="sm" />
-              <span>Loading profile...</span>
+            <div className="max-w-md space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <SkeletonBar className="h-4 w-20 mb-1.5" />
+                  <SkeletonBar className="h-10 w-full rounded-sm" />
+                </div>
+              ))}
+              <div className="flex gap-2 pt-2">
+                <SkeletonBar className="h-10 w-24 rounded-sm" />
+                <SkeletonBar className="h-10 w-20 rounded-sm" />
+              </div>
             </div>
           ) : (
             <form onSubmit={handleProfileSubmit} className="max-w-md space-y-4">

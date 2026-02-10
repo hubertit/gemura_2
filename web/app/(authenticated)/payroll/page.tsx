@@ -7,6 +7,7 @@ import { suppliersApi, Supplier } from '@/lib/api/suppliers';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faClipboardList, faCalendar, faCheckCircle, faClock, faSpinner } from '@/app/components/Icon';
+import { SkeletonBar } from '@/app/components/SkeletonLoader';
 
 export default function PayrollPage() {
   const { currentAccount } = useAuthStore();
@@ -138,8 +139,14 @@ export default function PayrollPage() {
       <div className="bg-white border border-gray-200 rounded-sm p-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-3">Select Suppliers</h2>
         {loadingSuppliers ? (
-          <div className="flex items-center justify-center py-8">
-            <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)]" />
+          <div className="border border-gray-200 rounded-sm max-h-64 overflow-hidden">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2.5 border-b border-gray-100 last:border-0">
+                <div className="w-4 h-4 rounded border border-gray-200 skeleton-shimmer bg-gray-200" />
+                <SkeletonBar className="h-4 flex-1 max-w-[200px]" />
+                <SkeletonBar className="h-3 w-12" />
+              </div>
+            ))}
           </div>
         ) : suppliers.length === 0 ? (
           <p className="text-sm text-gray-500 py-4">No suppliers available for this account.</p>

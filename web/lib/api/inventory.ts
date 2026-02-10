@@ -166,6 +166,28 @@ export const inventoryApi = {
     return apiClient.post('/inventory', data);
   },
 
+  downloadTemplate: async (): Promise<void> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('gemura-auth-token') : null;
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
+    const res = await fetch(`${baseURL}/inventory/template`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to download template');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inventory-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  bulkCreate: async (
+    rows: CreateInventoryData[],
+  ): Promise<{ code: number; data: { success: number; failed: number; errors: { row: number; phone: string; message: string }[] } }> => {
+    return apiClient.post('/inventory/bulk', { rows });
+  },
+
   updateInventoryItem: async (id: string, data: UpdateInventoryData): Promise<InventoryItemResponse> => {
     return apiClient.put(`/inventory/${id}`, data);
   },

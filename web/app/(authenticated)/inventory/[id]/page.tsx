@@ -8,6 +8,7 @@ import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faWarehouse, faBox, faDollarSign, faTag, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar, faTrash } from '@/app/components/Icon';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function InventoryItemDetailsPage() {
   const router = useRouter();
@@ -94,14 +95,7 @@ export default function InventoryItemDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading inventory item data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error && !item) {

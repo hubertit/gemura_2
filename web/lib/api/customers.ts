@@ -100,4 +100,28 @@ export const customersApi = {
   updateCustomer: async (data: UpdateCustomerData): Promise<CustomerResponse> => {
     return apiClient.put('/customers/update', data);
   },
+
+  /** Download customers CSV template (triggers file download in browser). */
+  downloadTemplate: async (): Promise<void> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('gemura-auth-token') : null;
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
+    const res = await fetch(`${baseURL}/customers/template`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to download template');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'customers-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  /** Bulk create or update customers. Returns { success, failed, errors }. */
+  bulkCreate: async (
+    rows: CreateCustomerData[],
+  ): Promise<{ code: number; data: { success: number; failed: number; errors: { row: number; phone: string; message: string }[] } }> => {
+    return apiClient.post('/customers/bulk', { rows });
+  },
 };

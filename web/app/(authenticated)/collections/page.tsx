@@ -8,10 +8,12 @@ import { useToastStore } from '@/store/toast';
 import { useAuthStore } from '@/store/auth';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import type { TableColumn } from '@/app/components/DataTable';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarApply, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
+import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateCollectionForm from './CreateCollectionForm';
-import Icon, { faPlus, faEye, faCheckCircle } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faFile } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -28,6 +30,7 @@ export default function CollectionsPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [error, setError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [filters, setFilters] = useState<CollectionsFilters>({
     status: searchParams.get('status') || undefined,
     date_from: searchParams.get('date_from') || undefined,
@@ -152,6 +155,10 @@ export default function CollectionsPage() {
     },
   ];
 
+  if (loading) {
+    return <ListPageSkeleton title="Collections" filterFields={4} tableRows={10} tableCols={6} />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -159,11 +166,49 @@ export default function CollectionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Collections</h1>
         </div>
-        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
-          <Icon icon={faPlus} size="sm" className="mr-2" />
-          New Collection
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setBulkImportOpen(true)} className="btn btn-secondary">
+            <Icon icon={faFile} size="sm" className="mr-2" />
+            Bulk import
+          </button>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); collectionsApi.downloadTemplate().catch(() => {}); }}
+            className="btn btn-secondary"
+          >
+            Download template
+          </a>
+          <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
+            <Icon icon={faPlus} size="sm" className="mr-2" />
+            New Collection
+          </button>
+        </div>
       </div>
+
+      <BulkImportModal
+        open={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        title="Collections"
+        columns={[
+          { key: 'supplier_account_code', label: 'Supplier account code', required: true },
+          { key: 'quantity', label: 'Quantity (L)', required: true },
+          { key: 'status', label: 'Status (pending/accepted/rejected/cancelled)' },
+          { key: 'collection_at', label: 'Collection date/time', required: true },
+          { key: 'notes', label: 'Notes' },
+          { key: 'payment_status', label: 'Payment status (paid/unpaid)' },
+        ]}
+        onDownloadTemplate={() => collectionsApi.downloadTemplate()}
+        onBulkCreate={(rows) => collectionsApi.bulkCreate(rows as import('@/lib/api/collections').CreateCollectionData[]).then((r) => r.data)}
+        mapRow={(row) => ({
+          supplier_account_code: row.supplier_account_code || '',
+          quantity: Number(row.quantity) || 0,
+          status: row.status || undefined,
+          collection_at: row.collection_at || new Date().toISOString().slice(0, 19).replace('T', ' '),
+          notes: row.notes || undefined,
+          payment_status: (row.payment_status as 'paid' | 'unpaid') || undefined,
+        })}
+        onSuccess={loadCollections}
+      />
 
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="New Collection" maxWidth="max-w-xl">
         <CreateCollectionForm

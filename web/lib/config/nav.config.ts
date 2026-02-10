@@ -20,7 +20,6 @@ import {
   faStore,
   faWarehouse,
   faDollarSign,
-  faChartBar,
   faChartLine,
   faClipboardList,
 } from '@/app/components/Icon';
@@ -71,7 +70,6 @@ export const OPERATIONS_NAV_ITEMS: NavItem[] = [
   { icon: faClipboardList, label: 'Payroll', href: '/payroll', section: 'operations' },
   { icon: faChartLine, label: 'Finance', href: '/finance', section: 'operations' },
   { icon: faDollarSign, label: 'Accounts', href: '/accounts', section: 'operations' },
-  { icon: faChartBar, label: 'Analytics', href: '/analytics', section: 'operations', requiresPermission: 'view_analytics' },
   { icon: faCog, label: 'Settings', href: '/settings', section: 'operations' },
 ];
 

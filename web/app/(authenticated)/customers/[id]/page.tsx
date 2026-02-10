@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { customersApi, CustomerDetails } from '@/lib/api/customers';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import Icon, { faStore, faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faEdit, faArrowLeft, faSpinner, faCalendar, faBuilding } from '@/app/components/Icon';
 
 export default function CustomerDetailsPage() {
@@ -52,14 +53,7 @@ export default function CustomerDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading customer data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error && !customer) {

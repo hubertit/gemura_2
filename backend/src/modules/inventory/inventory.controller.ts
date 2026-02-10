@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Response } from 'express';
 import { InventoryService } from './inventory.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
@@ -9,6 +10,7 @@ import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 import { ToggleListingDto } from './dto/toggle-listing.dto';
 import { CreateInventorySaleDto } from './dto/create-inventory-sale.dto';
+import { BulkCreateInventoryDto } from './dto/bulk-create-inventory.dto';
 
 @ApiTags('Inventory')
 @Controller('inventory')
@@ -94,51 +96,91 @@ export class InventoryController {
     summary: 'Get inventory statistics',
     description: 'Retrieve aggregated statistics about inventory for the user\'s default account including total items, stock levels, low stock alerts, and value summaries.',
   })
+  @ApiQuery({
+    name: 'account_id',
+    required: false,
+    description: 'Account UUID. If omitted, uses the authenticated user\'s default account.',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   @ApiResponse({
     status: 200,
     description: 'Inventory statistics retrieved successfully',
-    example: {
-      code: 200,
-      status: 'success',
-      message: 'Inventory statistics retrieved successfully.',
-      data: {
-        total_items: 25,
-        active_items: 20,
-        inactive_items: 3,
-        out_of_stock_items: 2,
-        low_stock_items: 5,
-        total_quantity: 1250,
-        total_value: 1000000,
-        low_stock_value: 150000,
-        categories: ['Dairy', 'Beverages', 'Snacks'],
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Inventory statistics retrieved successfully.',
+        data: {
+          total_items: 25,
+          active_items: 20,
+          out_of_stock_items: 2,
+          listed_in_marketplace: 15,
+          low_stock_items: 5,
+          total_stock_value: 1250000,
+          total_stock_quantity: 1250,
+        },
       },
     },
   })
   @ApiBadRequestResponse({
-    description: 'No default account found',
-    example: {
-      code: 400,
-      status: 'error',
-      message: 'No valid default account found. Please set a default account.',
-    },
+    description: 'No default account found or account access denied',
+    schema: { example: { code: 400, status: 'error', message: 'No valid default account found. Please set a default account.' } },
   })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized - invalid or missing token',
-    example: {
-      code: 401,
-      status: 'error',
-      message: 'Access denied. Token is required.',
-    },
+    schema: { example: { code: 401, status: 'error', message: 'Access denied. Token is required.' } },
   })
   async getInventoryStats(@CurrentUser() user: User, @Query('account_id') accountId?: string) {
     return this.inventoryService.getInventoryStats(user, accountId);
   }
 
   @Get('stats/valuation-over-time')
-  @ApiOperation({ summary: 'Get inventory valuation over time' })
-  @ApiQuery({ name: 'date_from', required: true, description: 'Start date YYYY-MM-DD' })
-  @ApiQuery({ name: 'date_to', required: true, description: 'End date YYYY-MM-DD' })
-  @ApiResponse({ status: 200, description: 'Valuation series (current snapshot if no history)' })
+  @ApiOperation({
+    summary: 'Get inventory valuation over time',
+    description: 'Returns stock valuation (total value and quantity) for the account. Currently returns a single snapshot (as of today); historical series can be added when daily snapshots are stored. Used by the dashboard "Stock value over time" chart.',
+  })
+  @ApiQuery({
+    name: 'date_from',
+    required: true,
+    description: 'Start of the period (YYYY-MM-DD). Used for future historical series.',
+    example: '2025-01-01',
+  })
+  @ApiQuery({
+    name: 'date_to',
+    required: true,
+    description: 'End of the period (YYYY-MM-DD).',
+    example: '2025-01-31',
+  })
+  @ApiQuery({
+    name: 'account_id',
+    required: false,
+    description: 'Account UUID. If omitted, uses the authenticated user\'s default account.',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Valuation series (one or more points: date, total_value, total_quantity)',
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Valuation over time (current snapshot; historical API can be added).',
+        data: {
+          series: [
+            { date: '2025-01-31', total_value: 1250000, total_quantity: 1250 },
+          ],
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Missing date params or invalid account',
+    schema: { example: { code: 400, status: 'error', message: 'No valid default account found.' } },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing token',
+    schema: { example: { code: 401, status: 'error', message: 'Access denied. Token is required.' } },
+  })
   async getValuationOverTime(
     @CurrentUser() user: User,
     @Query('date_from') dateFrom: string,
@@ -149,9 +191,47 @@ export class InventoryController {
   }
 
   @Get('stats/top-by-value')
-  @ApiOperation({ summary: 'Get top inventory items by stock value' })
-  @ApiQuery({ name: 'limit', required: false, description: 'Max items (default 10)', example: '10' })
-  @ApiResponse({ status: 200, description: 'Top items by value' })
+  @ApiOperation({
+    summary: 'Get top inventory items by stock value',
+    description: 'Returns inventory items sorted by stock value (price × quantity) descending. Used by the dashboard "Top items by value" chart. Only includes non-inactive items.',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Maximum number of items to return. Default: 10.',
+    example: '10',
+  })
+  @ApiQuery({
+    name: 'account_id',
+    required: false,
+    description: 'Account UUID. If omitted, uses the authenticated user\'s default account.',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of top items with id, name, price, stock_quantity, stock_value',
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Top items by value.',
+        data: {
+          items: [
+            { id: 'cb9ad42f-12dc-401e-9ac9-05585b9b311e', name: 'Fresh Milk 500ml', price: 800, stock_quantity: 150, stock_value: 120000 },
+            { id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', name: 'Yogurt 250ml', price: 500, stock_quantity: 80, stock_value: 40000 },
+          ],
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid account or limit',
+    schema: { example: { code: 400, status: 'error', message: 'No valid default account found.' } },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing token',
+    schema: { example: { code: 401, status: 'error', message: 'Access denied. Token is required.' } },
+  })
   async getTopByValue(
     @CurrentUser() user: User,
     @Query('limit') limit?: string,
@@ -161,10 +241,53 @@ export class InventoryController {
   }
 
   @Get('stats/stock-movement')
-  @ApiOperation({ summary: 'Get stock movement (in/out) by date' })
-  @ApiQuery({ name: 'date_from', required: true, description: 'Start date YYYY-MM-DD' })
-  @ApiQuery({ name: 'date_to', required: true, description: 'End date YYYY-MM-DD' })
-  @ApiResponse({ status: 200, description: 'Stock movement series' })
+  @ApiOperation({
+    summary: 'Get stock movement (in/out) by date',
+    description: 'Returns daily stock movement: stock_out is aggregated from inventory sales; stock_in is reserved for future use (e.g. stock receipts). Used by the dashboard "Stock movement" chart. Scoped to the account\'s products.',
+  })
+  @ApiQuery({
+    name: 'date_from',
+    required: true,
+    description: 'Start date of the period (YYYY-MM-DD).',
+    example: '2025-01-01',
+  })
+  @ApiQuery({
+    name: 'date_to',
+    required: true,
+    description: 'End date of the period (YYYY-MM-DD).',
+    example: '2025-01-31',
+  })
+  @ApiQuery({
+    name: 'account_id',
+    required: false,
+    description: 'Account UUID. If omitted, uses the authenticated user\'s default account.',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Series of { date, stock_in, stock_out } per day',
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Stock movement (out from sales).',
+        data: {
+          series: [
+            { date: '2025-01-15', stock_in: 0, stock_out: 25 },
+            { date: '2025-01-18', stock_in: 0, stock_out: 10 },
+          ],
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Missing date params or invalid account',
+    schema: { example: { code: 400, status: 'error', message: 'No valid default account found.' } },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing token',
+    schema: { example: { code: 401, status: 'error', message: 'Access denied. Token is required.' } },
+  })
   async getStockMovement(
     @CurrentUser() user: User,
     @Query('date_from') dateFrom: string,
@@ -172,6 +295,28 @@ export class InventoryController {
     @Query('account_id') accountId?: string,
   ) {
     return this.inventoryService.getStockMovement(user, dateFrom, dateTo, accountId);
+  }
+
+  @Get('template')
+  @ApiOperation({
+    summary: 'Download inventory CSV template',
+    description: 'Returns a CSV file with header row and one example row for bulk import.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV template file',
+    headers: {
+      'Content-Disposition': { description: 'attachment; filename="inventory-template.csv"', schema: { type: 'string' } },
+      'Content-Type': { description: 'text/csv; charset=utf-8', schema: { type: 'string' } },
+    },
+  })
+  async getTemplate(@Res() res: Response) {
+    const csv =
+      'name,description,price,stock_quantity,min_stock_level\n' +
+      'Fresh Milk 500ml,Fresh pasteurized milk,800,100,50';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="inventory-template.csv"');
+    res.send(csv);
   }
 
   @Get(':id')
@@ -322,6 +467,32 @@ export class InventoryController {
   })
   async createInventoryItem(@CurrentUser() user: User, @Body() createDto: CreateInventoryDto) {
     return this.inventoryService.createInventoryItem(user, createDto);
+  }
+
+  @Post('bulk')
+  @ApiOperation({
+    summary: 'Bulk create inventory items',
+    description: 'Create multiple inventory items from an array. Returns success count and per-row errors.',
+  })
+  @ApiBody({ type: BulkCreateInventoryDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk import result',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: { success: 2, failed: 0, errors: [] },
+    },
+  })
+  async bulkCreateInventoryItems(@CurrentUser() user: User, @Body() body: BulkCreateInventoryDto) {
+    const result = await this.inventoryService.bulkCreateInventoryItems(user, body.rows);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: result,
+    };
   }
 
   @Put(':id')

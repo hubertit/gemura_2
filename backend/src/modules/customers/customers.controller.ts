@@ -1,11 +1,13 @@
-import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, HttpCode, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CustomersService } from './customers.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { BulkCreateCustomersDto } from './dto/bulk-create-customers.dto';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -80,6 +82,60 @@ export class CustomersController {
   })
   async createCustomer(@CurrentUser() user: User, @Body() createDto: CreateCustomerDto) {
     return this.customersService.createCustomer(user, createDto);
+  }
+
+  @Get('template')
+  @ApiOperation({
+    summary: 'Download customers CSV template',
+    description: 'Returns a CSV file with header row and one example row for bulk import.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV template file',
+    headers: {
+      'Content-Disposition': {
+        description: 'attachment; filename="customers-template.csv"',
+        schema: { type: 'string' },
+      },
+      'Content-Type': {
+        description: 'text/csv; charset=utf-8',
+        schema: { type: 'string' },
+      },
+    },
+  })
+  async getTemplate(@Res() res: Response) {
+    const csv =
+      'name,phone,email,nid,address,price_per_liter\n' +
+      'Example Customer,250788123456,customer@example.com,1199887766554433,Kigali Rwanda,400';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="customers-template.csv"');
+    res.send(csv);
+  }
+
+  @Post('bulk')
+  @ApiOperation({
+    summary: 'Bulk create or update customers',
+    description: 'Create or update multiple customers from an array. Each row uses the same validation as single create. Returns success count and per-row errors.',
+  })
+  @ApiBody({ type: BulkCreateCustomersDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk import result',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: { success: 2, failed: 0, errors: [] },
+    },
+  })
+  async bulkCreateCustomers(@CurrentUser() user: User, @Body() body: BulkCreateCustomersDto) {
+    const result = await this.customersService.bulkCreateCustomers(user, body.rows);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: result,
+    };
   }
 
   @Post('get')

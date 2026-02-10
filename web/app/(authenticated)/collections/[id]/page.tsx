@@ -8,6 +8,7 @@ import { collectionsApi, Collection } from '@/lib/api/collections';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faBox, faUser, faDollarSign, faCalendar, faFileAlt, faEdit, faArrowLeft, faSpinner, faCheckCircle, faBuilding, faTrash } from '@/app/components/Icon';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function CollectionDetailsPage() {
   const router = useRouter();
@@ -71,14 +72,7 @@ export default function CollectionDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading collection data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error && !collection) {

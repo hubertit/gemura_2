@@ -13,6 +13,7 @@ import Icon, {
   faCheckCircle,
 } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 function formatDate(str: string): string {
   try {
@@ -159,9 +160,7 @@ export default function FinancePayablesPage() {
       )}
 
       {loading && !summary ? (
-        <div className="flex justify-center py-12">
-          <Icon icon={faSpinner} size="2x" className="animate-spin text-gray-400" />
-        </div>
+        <ListPageSkeleton title="Payables" filterFields={2} tableRows={10} tableCols={5} />
       ) : summary ? (
         <>
           {/* Summary card */}

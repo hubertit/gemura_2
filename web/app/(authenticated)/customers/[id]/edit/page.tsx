@@ -7,6 +7,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { customersApi, UpdateCustomerData, CustomerDetails } from '@/lib/api/customers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -139,14 +140,7 @@ export default function EditCustomerPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading customer data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   return (

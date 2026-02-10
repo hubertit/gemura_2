@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { suppliersApi, SupplierDetails } from '@/lib/api/suppliers';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import Icon, { faBuilding, faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faEdit, faArrowLeft, faSpinner, faCalendar } from '@/app/components/Icon';
 
 export default function SupplierDetailsPage() {
@@ -52,14 +53,7 @@ export default function SupplierDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading supplier data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error && !supplier) {

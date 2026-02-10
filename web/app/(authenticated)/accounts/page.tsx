@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import type { TableColumn } from '@/app/components/DataTable';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import FilterBar, { FilterBarExport } from '@/app/components/FilterBar';
 import Icon, { faBuilding, faUserShield, faCheckCircle, faArrowsUpDown, faSpinner, faEye } from '@/app/components/Icon';
 import Link from 'next/link';
@@ -168,6 +169,10 @@ export default function AccountsPage() {
       ),
     },
   ];
+
+  if (loading) {
+    return <ListPageSkeleton title="Accounts" filterFields={0} tableRows={10} tableCols={4} />;
+  }
 
   return (
     <div className="space-y-4">

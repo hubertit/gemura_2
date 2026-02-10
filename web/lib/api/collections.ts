@@ -97,6 +97,28 @@ export const collectionsApi = {
     return response as CollectionResponse;
   },
 
+  downloadTemplate: async (): Promise<void> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('gemura-auth-token') : null;
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
+    const res = await fetch(`${baseURL}/collections/template`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to download template');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'collections-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  bulkCreate: async (
+    rows: CreateCollectionData[],
+  ): Promise<{ code: number; data: { success: number; failed: number; errors: { row: number; phone: string; message: string }[] } }> => {
+    return apiClient.post('/collections/bulk', { rows });
+  },
+
   createCollection: async (data: CreateCollectionData): Promise<CollectionResponse> => {
     return apiClient.post('/collections/create', data);
   },

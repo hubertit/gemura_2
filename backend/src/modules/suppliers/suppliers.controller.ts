@@ -1,11 +1,13 @@
-import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query, HttpCode, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
 import { SuppliersService } from './suppliers.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { BulkCreateSuppliersDto } from './dto/bulk-create-suppliers.dto';
 
 @ApiTags('Suppliers')
 @Controller('suppliers')
@@ -93,6 +95,54 @@ export class SuppliersController {
   })
   async createSupplier(@CurrentUser() user: User, @Body() createDto: CreateSupplierDto) {
     return this.suppliersService.createOrUpdateSupplier(user, createDto);
+  }
+
+  @Get('template')
+  @ApiOperation({
+    summary: 'Download suppliers CSV template',
+    description: 'Returns a CSV file with header row and one example row for bulk import.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV template file',
+    headers: {
+      'Content-Disposition': { description: 'attachment; filename="suppliers-template.csv"', schema: { type: 'string' } },
+      'Content-Type': { description: 'text/csv; charset=utf-8', schema: { type: 'string' } },
+    },
+  })
+  async getTemplate(@Res() res: Response) {
+    const csv =
+      'name,phone,price_per_liter,email,nid,address\n' +
+      'Example Supplier,250788123456,390,supplier@example.com,1199887766554433,Kigali Rwanda';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="suppliers-template.csv"');
+    res.send(csv);
+  }
+
+  @Post('bulk')
+  @ApiOperation({
+    summary: 'Bulk create or update suppliers',
+    description: 'Create or update multiple suppliers from an array. Returns success count and per-row errors.',
+  })
+  @ApiBody({ type: BulkCreateSuppliersDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk import result',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: { success: 2, failed: 0, errors: [] },
+    },
+  })
+  async bulkCreateSuppliers(@CurrentUser() user: User, @Body() body: BulkCreateSuppliersDto) {
+    const result = await this.suppliersService.bulkCreateSuppliers(user, body.rows);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: result,
+    };
   }
 
   @Post('get')

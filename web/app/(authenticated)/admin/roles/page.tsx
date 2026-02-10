@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { adminApi, type RoleItem } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
-import Icon, { faLock, faChevronDown, faChevronUp, faSpinner } from '@/app/components/Icon';
+import Icon, { faLock, faChevronDown, faChevronUp } from '@/app/components/Icon';
 import FilterBar, { FilterBarSearch } from '@/app/components/FilterBar';
+import { TableSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function AdminRolesPage() {
   const router = useRouter();
@@ -111,9 +112,8 @@ export default function AdminRolesPage() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <Icon icon={faSpinner} spin className="text-[var(--primary)]" size="lg" />
-            <p className="text-sm text-gray-600">Loading roles...</p>
+          <div className="p-4">
+            <TableSkeleton rows={8} cols={4} showRowNumbers={false} />
           </div>
         ) : (
           <div className="overflow-x-auto">

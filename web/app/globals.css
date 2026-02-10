@@ -450,6 +450,23 @@ html {
   box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.2);
 }
 
+/* Skeleton shimmer animation */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f3f4f6 0%,
+    #e5e7eb 20%,
+    #f3f4f6 40%,
+    #f3f4f6 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,

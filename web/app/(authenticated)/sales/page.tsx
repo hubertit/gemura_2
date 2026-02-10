@@ -10,8 +10,10 @@ import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import type { TableColumn } from '@/app/components/DataTable';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarApply, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
+import BulkImportModal from '@/app/components/BulkImportModal';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from './CreateSaleForm';
-import Icon, { faPlus, faEye, faCheckCircle } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faFile } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -28,6 +30,7 @@ export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [error, setError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [filters, setFilters] = useState<SalesFilters>({
     status: searchParams.get('status') || undefined,
     date_from: searchParams.get('date_from') || undefined,
@@ -152,6 +155,10 @@ export default function SalesPage() {
     },
   ];
 
+  if (loading) {
+    return <ListPageSkeleton title="Sales" filterFields={4} tableRows={10} tableCols={5} />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -159,11 +166,49 @@ export default function SalesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Sales</h1>
         </div>
-        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
-          <Icon icon={faPlus} size="sm" className="mr-2" />
-          New Sale
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setBulkImportOpen(true)} className="btn btn-secondary">
+            <Icon icon={faFile} size="sm" className="mr-2" />
+            Bulk import
+          </button>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); salesApi.downloadTemplate().catch(() => {}); }}
+            className="btn btn-secondary"
+          >
+            Download template
+          </a>
+          <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
+            <Icon icon={faPlus} size="sm" className="mr-2" />
+            New Sale
+          </button>
+        </div>
       </div>
+
+      <BulkImportModal
+        open={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        title="Sales"
+        columns={[
+          { key: 'customer_account_code', label: 'Customer account code', required: true },
+          { key: 'quantity', label: 'Quantity (L)', required: true },
+          { key: 'unit_price', label: 'Unit price' },
+          { key: 'sale_at', label: 'Sale date (YYYY-MM-DD)' },
+          { key: 'notes', label: 'Notes' },
+          { key: 'payment_status', label: 'Payment status (paid/unpaid)' },
+        ]}
+        onDownloadTemplate={() => salesApi.downloadTemplate()}
+        onBulkCreate={(rows) => salesApi.bulkCreate(rows as import('@/lib/api/sales').CreateSaleData[]).then((r) => r.data)}
+        mapRow={(row) => ({
+          customer_account_code: row.customer_account_code || undefined,
+          quantity: Number(row.quantity) || 0,
+          unit_price: row.unit_price ? Number(row.unit_price) : undefined,
+          sale_at: row.sale_at || undefined,
+          notes: row.notes || undefined,
+          payment_status: (row.payment_status as 'paid' | 'unpaid') || undefined,
+        })}
+        onSuccess={loadSales}
+      />
 
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="New Sale" maxWidth="max-w-xl">
         <CreateSaleForm

@@ -18,6 +18,7 @@ datasource db {
 enum AccountType {
   tenant
   branch
+  admin
 }
 
 enum AccountStatus {

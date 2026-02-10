@@ -273,6 +273,35 @@ export class CollectionsService {
     }
   }
 
+  async bulkCreateCollections(
+    user: User,
+    rows: CreateCollectionDto[],
+  ): Promise<{
+    success: number;
+    failed: number;
+    errors: { row: number; phone: string; message: string }[];
+  }> {
+    const errors: { row: number; phone: string; message: string }[] = [];
+    let success = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const identifier = row.supplier_account_code || '(no supplier)';
+      try {
+        await this.createCollection(user, row);
+        success++;
+      } catch (e: unknown) {
+        const message =
+          (e as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (e as Error)?.message ||
+          'Unknown error';
+        errors.push({ row: i + 1, phone: identifier, message });
+      }
+    }
+
+    return { success, failed: errors.length, errors };
+  }
+
   /**
    * Create Accounts Payable journal entry for unpaid collections
    * DR Expense, CR Accounts Payable

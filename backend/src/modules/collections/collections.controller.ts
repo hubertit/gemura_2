@@ -1,10 +1,12 @@
-import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query, HttpCode } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query, HttpCode, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CollectionsService } from './collections.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { CreateCollectionDto } from './dto/create-collection.dto';
+import { BulkCreateCollectionsDto } from './dto/bulk-create-collections.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { CancelCollectionDto } from './dto/cancel-collection.dto';
 import { CreateRejectionReasonDto } from './dto/create-rejection-reason.dto';
@@ -623,6 +625,55 @@ export class CollectionsController {
   })
   async createCollection(@CurrentUser() user: User, @Body() createDto: CreateCollectionDto) {
     return this.collectionsService.createCollection(user, createDto);
+  }
+
+  @Get('template')
+  @ApiOperation({
+    summary: 'Download collections CSV template',
+    description: 'Returns a CSV file with header row and one example row for bulk import.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV template file',
+    headers: {
+      'Content-Disposition': { description: 'attachment; filename="collections-template.csv"', schema: { type: 'string' } },
+      'Content-Type': { description: 'text/csv; charset=utf-8', schema: { type: 'string' } },
+    },
+  })
+  async getTemplate(@Res() res: Response) {
+    const csv =
+      'supplier_account_code,quantity,status,collection_at,notes,payment_status\n' +
+      'A_ABC123,120.5,accepted,2025-01-15 10:00:00,Morning collection,unpaid';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="collections-template.csv"');
+    res.send(csv);
+  }
+
+  @Post('bulk')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Bulk create collections',
+    description: 'Create multiple milk collections from an array. Returns success count and per-row errors.',
+  })
+  @ApiBody({ type: BulkCreateCollectionsDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk import result',
+    example: {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: { success: 2, failed: 0, errors: [] },
+    },
+  })
+  async bulkCreateCollections(@CurrentUser() user: User, @Body() body: BulkCreateCollectionsDto) {
+    const result = await this.collectionsService.bulkCreateCollections(user, body.rows);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Bulk import completed.',
+      data: result,
+    };
   }
 
   @Delete(':id')

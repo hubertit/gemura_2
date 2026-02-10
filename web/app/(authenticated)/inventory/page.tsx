@@ -8,10 +8,12 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import type { TableColumn } from '@/app/components/DataTable';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
+import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateInventoryForm from './CreateInventoryForm';
-import Icon, { faPlus, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox, faTriangleExclamation, faCircleXmark } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox, faTriangleExclamation, faCircleXmark, faFile } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -27,6 +29,7 @@ export default function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [error, setError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || '');
   const [lowStockFilter, setLowStockFilter] = useState<boolean>(false);
   const [stats, setStats] = useState<{ total_items: number; active_items: number; out_of_stock_items: number; low_stock_items: number; listed_in_marketplace?: number } | null>(null);
@@ -163,6 +166,10 @@ export default function InventoryPage() {
     },
   ];
 
+  if (loading) {
+    return <ListPageSkeleton title="Inventory" filterFields={2} tableRows={10} tableCols={6} />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -170,11 +177,47 @@ export default function InventoryPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
         </div>
-        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
-          <Icon icon={faPlus} size="sm" className="mr-2" />
-          Add Item
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setBulkImportOpen(true)} className="btn btn-secondary">
+            <Icon icon={faFile} size="sm" className="mr-2" />
+            Bulk import
+          </button>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); inventoryApi.downloadTemplate().catch(() => {}); }}
+            className="btn btn-secondary"
+          >
+            Download template
+          </a>
+          <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
+            <Icon icon={faPlus} size="sm" className="mr-2" />
+            Add Item
+          </button>
+        </div>
       </div>
+
+      <BulkImportModal
+        open={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        title="Inventory"
+        columns={[
+          { key: 'name', label: 'Name', required: true },
+          { key: 'description', label: 'Description' },
+          { key: 'price', label: 'Price', required: true },
+          { key: 'stock_quantity', label: 'Stock quantity' },
+          { key: 'min_stock_level', label: 'Min stock level' },
+        ]}
+        onDownloadTemplate={() => inventoryApi.downloadTemplate()}
+        onBulkCreate={(rows) => inventoryApi.bulkCreate(rows as import('@/lib/api/inventory').CreateInventoryData[]).then((r) => r.data)}
+        mapRow={(row) => ({
+          name: row.name || undefined,
+          description: row.description || undefined,
+          price: Number(row.price) || 0,
+          stock_quantity: row.stock_quantity ? Number(row.stock_quantity) : undefined,
+          min_stock_level: row.min_stock_level ? Number(row.min_stock_level) : undefined,
+        })}
+        onSuccess={loadInventory}
+      />
 
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Add inventory item" maxWidth="max-w-xl">
         <CreateInventoryForm

@@ -8,9 +8,11 @@ import { useAuthStore } from '@/store/auth';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
 import type { TableColumn } from '@/app/components/DataTable';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import Modal from '@/app/components/Modal';
+import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateSupplierForm from './CreateSupplierForm';
-import Icon, { faPlus, faEye, faCheckCircle, faBuilding, faPhone, faEnvelope, faDollarSign } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faBuilding, faPhone, faEnvelope, faDollarSign, faFile } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -25,6 +27,7 @@ export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [error, setError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -166,6 +169,10 @@ export default function SuppliersPage() {
     },
   ];
 
+  if (loading) {
+    return <ListPageSkeleton title="Suppliers" filterFields={3} tableRows={10} tableCols={4} />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -173,11 +180,49 @@ export default function SuppliersPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
         </div>
-        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
-          <Icon icon={faPlus} size="sm" className="mr-2" />
-          Add Supplier
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setBulkImportOpen(true)} className="btn btn-secondary">
+            <Icon icon={faFile} size="sm" className="mr-2" />
+            Bulk import
+          </button>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); suppliersApi.downloadTemplate().catch(() => {}); }}
+            className="btn btn-secondary"
+          >
+            Download template
+          </a>
+          <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
+            <Icon icon={faPlus} size="sm" className="mr-2" />
+            Add Supplier
+          </button>
+        </div>
       </div>
+
+      <BulkImportModal
+        open={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        title="Suppliers"
+        columns={[
+          { key: 'name', label: 'Name', required: true },
+          { key: 'phone', label: 'Phone', required: true },
+          { key: 'price_per_liter', label: 'Price per liter', required: true },
+          { key: 'email', label: 'Email' },
+          { key: 'nid', label: 'NID' },
+          { key: 'address', label: 'Address' },
+        ]}
+        onDownloadTemplate={() => suppliersApi.downloadTemplate()}
+        onBulkCreate={(rows) => suppliersApi.bulkCreate(rows as import('@/lib/api/suppliers').CreateSupplierData[]).then((r) => r.data)}
+        mapRow={(row) => ({
+          name: row.name || '',
+          phone: row.phone || '',
+          price_per_liter: Number(row.price_per_liter) || 0,
+          email: row.email || undefined,
+          nid: row.nid || undefined,
+          address: row.address || undefined,
+        })}
+        onSuccess={loadSuppliers}
+      />
 
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Add Supplier" maxWidth="max-w-lg">
         <CreateSupplierForm

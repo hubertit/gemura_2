@@ -22,6 +22,7 @@ import Icon, {
   faTriangleExclamation,
 } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import { FinancePageSkeleton } from '@/app/components/SkeletonLoader';
 
 function toYYYYMMDD(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -177,9 +178,7 @@ export default function FinancePage() {
       )}
 
       {loading && !income && !receivables && !payables ? (
-        <div className="flex justify-center py-12">
-          <Icon icon={faSpinner} size="2x" className="animate-spin text-gray-400" />
-        </div>
+        <FinancePageSkeleton />
       ) : (
         <>
           {/* All summary cards in one row, consistent styling */}

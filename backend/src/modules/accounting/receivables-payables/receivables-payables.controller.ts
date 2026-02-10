@@ -25,7 +25,7 @@ export class ReceivablesPayablesController {
   @Get('receivables')
   @ApiOperation({
     summary: 'Get Receivables',
-    description: 'Returns all unpaid/partial milk sales where the authenticated user is the supplier (selling to customers). Includes aging analysis, grouping by customer, and detailed invoice information. Data is scoped to the user\'s default account.',
+    description: 'Returns all unpaid/partial milk sales (and inventory sales to suppliers on credit) where the authenticated user is the supplier. Includes aging_summary (current, days_31_60, days_61_90, days_90_plus) in numeric form for dashboard aging charts, grouping by customer, and detailed invoice information. Data is scoped to the user\'s default account.',
   })
   @ApiQuery({ 
     name: 'customer_account_id', 
@@ -135,7 +135,7 @@ export class ReceivablesPayablesController {
   @Get('payables')
   @ApiOperation({
     summary: 'Get Payables',
-    description: 'Returns all unpaid/partial milk collections where the authenticated user is the customer/collector (buying from suppliers). Includes aging analysis, grouping by supplier, and detailed invoice information. Data is scoped to the user\'s default account.',
+    description: 'Returns all unpaid/partial milk collections where the authenticated user is the customer/collector (buying from suppliers). Includes aging_summary (current, days_31_60, days_61_90, days_90_plus) in numeric form for dashboard aging charts, grouping by supplier, and detailed invoice information. Data is scoped to the user\'s default account.',
   })
   @ApiQuery({ 
     name: 'supplier_account_id', 

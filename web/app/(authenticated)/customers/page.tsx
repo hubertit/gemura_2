@@ -8,9 +8,11 @@ import { useAuthStore } from '@/store/auth';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
 import type { TableColumn } from '@/app/components/DataTable';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import Modal from '@/app/components/Modal';
+import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateCustomerForm from './CreateCustomerForm';
-import Icon, { faPlus, faEye, faCheckCircle, faStore, faPhone, faEnvelope, faDollarSign } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faStore, faPhone, faEnvelope, faDollarSign, faFile } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -25,6 +27,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [error, setError] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -166,6 +169,10 @@ export default function CustomersPage() {
     },
   ];
 
+  if (loading) {
+    return <ListPageSkeleton title="Customers" filterFields={3} tableRows={10} tableCols={4} />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Page Header */}
@@ -173,11 +180,49 @@ export default function CustomersPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
         </div>
-        <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
-          <Icon icon={faPlus} size="sm" className="mr-2" />
-          Add Customer
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setBulkImportOpen(true)} className="btn btn-secondary">
+            <Icon icon={faFile} size="sm" className="mr-2" />
+            Bulk import
+          </button>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); customersApi.downloadTemplate().catch(() => {}); }}
+            className="btn btn-secondary"
+          >
+            Download template
+          </a>
+          <button type="button" onClick={() => setCreateModalOpen(true)} className="btn btn-primary">
+            <Icon icon={faPlus} size="sm" className="mr-2" />
+            Add Customer
+          </button>
+        </div>
       </div>
+
+      <BulkImportModal
+        open={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        title="Customers"
+        columns={[
+          { key: 'name', label: 'Name', required: true },
+          { key: 'phone', label: 'Phone', required: true },
+          { key: 'email', label: 'Email' },
+          { key: 'nid', label: 'NID' },
+          { key: 'address', label: 'Address' },
+          { key: 'price_per_liter', label: 'Price per liter' },
+        ]}
+        onDownloadTemplate={() => customersApi.downloadTemplate()}
+        onBulkCreate={(rows) => customersApi.bulkCreate(rows as import('@/lib/api/customers').CreateCustomerData[]).then((r) => r.data)}
+        mapRow={(row) => ({
+          name: row.name || '',
+          phone: row.phone || '',
+          email: row.email || undefined,
+          nid: row.nid || undefined,
+          address: row.address || undefined,
+          price_per_liter: row.price_per_liter ? Number(row.price_per_liter) : undefined,
+        })}
+        onSuccess={loadCustomers}
+      />
 
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="Add Customer" maxWidth="max-w-lg">
         <CreateCustomerForm

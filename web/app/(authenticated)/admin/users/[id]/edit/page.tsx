@@ -8,6 +8,7 @@ import { adminApi, UpdateUserData } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faUser, faEnvelope, faPhone, faLock, faBuilding, faUserShield, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 // Available roles and account types
 const ROLES = [
@@ -218,14 +219,7 @@ export default function EditUserPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading user data...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   return (

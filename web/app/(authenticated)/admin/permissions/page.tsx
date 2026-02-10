@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { adminApi, type PermissionItem } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
-import Icon, { faLock, faSpinner } from '@/app/components/Icon';
+import Icon, { faLock } from '@/app/components/Icon';
 import FilterBar, { FilterBarGroup } from '@/app/components/FilterBar';
+import { TableSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function AdminPermissionsPage() {
   const router = useRouter();
@@ -110,9 +111,8 @@ export default function AdminPermissionsPage() {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <Icon icon={faSpinner} spin className="text-[var(--primary)]" size="lg" />
-            <p className="text-sm text-gray-600">Loading permissions...</p>
+          <div className="p-4">
+            <TableSkeleton rows={12} cols={4} showRowNumbers={false} />
           </div>
         ) : (
           <div className="overflow-x-auto">

@@ -6,6 +6,7 @@ import { payrollApi, PayrollRun } from '@/lib/api/payroll';
 import { useToastStore } from '@/store/toast';
 import Icon, { faArrowLeft, faSpinner, faCheckCircle, faCalendar, faUsers, faFileAlt, faClipboardList, faArrowsRotate } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function PayrollHistoryPage() {
   const [runs, setRuns] = useState<PayrollRun[]>([]);
@@ -102,11 +103,7 @@ export default function PayrollHistoryPage() {
     (run.status || '').toLowerCase() === 'completed' && !isAllPaid(run) && !markingId;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)]" />
-      </div>
-    );
+    return <ListPageSkeleton title="Payroll History" filterFields={0} tableRows={8} tableCols={5} />;
   }
 
   return (

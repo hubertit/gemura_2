@@ -11,6 +11,7 @@ import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Pagination from '@/app/components/Pagination';
 import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions } from '@/app/components/FilterBar';
 import Icon, { faPlus, faEye } from '@/app/components/Icon';
+import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 const ROLE_OPTIONS = [
   { value: '', label: 'All Roles' },
@@ -125,6 +126,12 @@ export default function UsersPage() {
     filtersRef.current = { search: '', statusFilter: '', roleFilter: '', pageSize: 10 };
     loadUsers(1);
   };
+
+  if (loading && users.length === 0) {
+    return (
+      <ListPageSkeleton title="Users" filterFields={3} tableRows={10} tableCols={7} />
+    );
+  }
 
   const columns: TableColumn<UserListItem>[] = [
     {

@@ -181,11 +181,46 @@ export class ReportsController {
   @Get('revenue-expenses-over-time')
   @ApiOperation({
     summary: 'Get revenue and expenses by day',
-    description: 'Time series of daily revenue and expenses for charts. Scoped to user default account.',
+    description: 'Returns a time series of daily revenue and expenses for the given date range. Used by the dashboard "Revenue & expenses over time" chart. Revenue includes direct Revenue account credits and AR payments; expenses include Expense account debits and AP payments. Scoped to the user\'s default account (CASH-*, REV-*, EXP-* chart of accounts).',
   })
-  @ApiQuery({ name: 'from_date', required: true, example: '2025-01-01' })
-  @ApiQuery({ name: 'to_date', required: true, example: '2025-01-31' })
-  @ApiResponse({ status: 200, description: 'Series of { date, revenue, expenses }' })
+  @ApiQuery({
+    name: 'from_date',
+    required: true,
+    description: 'Start date of the reporting period (YYYY-MM-DD).',
+    example: '2025-01-01',
+  })
+  @ApiQuery({
+    name: 'to_date',
+    required: true,
+    description: 'End date of the reporting period (YYYY-MM-DD).',
+    example: '2025-01-31',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Daily series of revenue and expenses',
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Revenue and expenses over time.',
+        data: {
+          series: [
+            { date: '2025-01-01', revenue: 150000, expenses: 50000 },
+            { date: '2025-01-02', revenue: 200000, expenses: 30000 },
+            { date: '2025-01-03', revenue: 0, expenses: 75000 },
+          ],
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Missing or invalid date parameters',
+    schema: { example: { code: 400, status: 'error', message: 'from_date and to_date are required.' } },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    schema: { example: { code: 401, status: 'error', message: 'Access denied. Token is required.' } },
+  })
   async getRevenueExpensesOverTime(
     @CurrentUser() user: User,
     @Query('from_date') fromDate: string,
@@ -197,11 +232,46 @@ export class ReportsController {
   @Get('expense-by-category')
   @ApiOperation({
     summary: 'Get expense grouped by category',
-    description: 'Expense totals by chart of account (category) for the date range. Scoped to user default account.',
+    description: 'Returns expense totals grouped by chart of account name (category) for the date range. Used by the dashboard "Expense by category" donut chart. Only Expense-type accounts (EXP-* prefix for the user\'s default account) are included. Scoped to the user\'s default account.',
   })
-  @ApiQuery({ name: 'from_date', required: true, example: '2025-01-01' })
-  @ApiQuery({ name: 'to_date', required: true, example: '2025-01-31' })
-  @ApiResponse({ status: 200, description: 'Series of { category_name, amount }' })
+  @ApiQuery({
+    name: 'from_date',
+    required: true,
+    description: 'Start date of the reporting period (YYYY-MM-DD).',
+    example: '2025-01-01',
+  })
+  @ApiQuery({
+    name: 'to_date',
+    required: true,
+    description: 'End date of the reporting period (YYYY-MM-DD).',
+    example: '2025-01-31',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Expense totals per category (chart of account name)',
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Expense by category.',
+        data: {
+          series: [
+            { category_name: 'Transport', amount: 250000 },
+            { category_name: 'Supplies', amount: 180000 },
+            { category_name: 'Utilities', amount: 120000 },
+          ],
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Missing or invalid date parameters',
+    schema: { example: { code: 400, status: 'error', message: 'from_date and to_date are required.' } },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing authentication token',
+    schema: { example: { code: 401, status: 'error', message: 'Access denied. Token is required.' } },
+  })
   async getExpenseByCategory(
     @CurrentUser() user: User,
     @Query('from_date') fromDate: string,

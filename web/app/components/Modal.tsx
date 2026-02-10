@@ -36,7 +36,7 @@ export default function Modal({ open, onClose, title, children, footer, maxWidth
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -47,27 +47,27 @@ export default function Modal({ open, onClose, title, children, footer, maxWidth
         aria-hidden="true"
       />
       <div
-        className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col bg-white rounded-md border border-gray-200 shadow-xl`}
+        className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col bg-white rounded-lg border border-gray-200 shadow-xl`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between shrink-0 border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between shrink-0 border-b border-gray-200 px-6 py-4">
           <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 rounded transition-colors"
+            className="p-2 -m-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             aria-label="Close"
           >
             <Icon icon={faTimes} size="sm" />
           </button>
         </div>
-        <div className="overflow-y-auto flex-1 px-4 py-4">
+        <div className="overflow-y-auto flex-1 px-6 py-5">
           {children}
         </div>
         {footer != null && (
-          <div className="shrink-0 border-t border-gray-200 px-4 py-3 flex items-center justify-end gap-2">
+          <div className="shrink-0 border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3">
             {footer}
           </div>
         )}
