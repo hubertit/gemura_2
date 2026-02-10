@@ -1,42 +1,43 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
-import { suppliersApi, SupplierDetails } from '@/lib/api/suppliers';
-import Icon, { faBuilding, faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar } from '@/app/components/Icon';
+import { customersApi, CustomerDetails } from '@/lib/api/customers';
+import Icon, { faStore, faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faEdit, faArrowLeft, faSpinner, faCalendar, faBuilding } from '@/app/components/Icon';
 
-export default function SupplierDetailsPage() {
+export default function CustomerDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
-  const supplierCode = params.code as string;
+  const customerId = params.id as string;
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [supplier, setSupplier] = useState<SupplierDetails | null>(null);
+  const [customer, setCustomer] = useState<CustomerDetails | null>(null);
 
   useEffect(() => {
-    if (!hasPermission('view_suppliers') && !isAdmin()) {
-      router.push('/suppliers');
+    if (!hasPermission('view_customers') && !isAdmin()) {
+      router.push('/customers');
       return;
     }
-    loadSupplier();
-  }, [supplierCode, hasPermission, isAdmin, router]);
+    loadCustomer();
+    // Only re-run when customer changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]);
 
-  const loadSupplier = async () => {
+  const loadCustomer = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await suppliersApi.getSupplierByCode(supplierCode);
+      const response = await customersApi.getCustomerById(customerId);
       if (response.code === 200 && response.data) {
-        setSupplier(response.data.supplier);
+        setCustomer(response.data.customer);
       } else {
-        setError('Failed to load supplier data');
+        setError('Failed to load customer data');
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load supplier. Please try again.');
+      setError(err?.response?.data?.message || err?.message || 'Failed to load customer. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -55,21 +56,21 @@ export default function SupplierDetailsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Icon icon={faSpinner} size="lg" spin className="text-[var(--primary)] mb-4" />
-          <p className="text-gray-600">Loading supplier data...</p>
+          <p className="text-gray-600">Loading customer data...</p>
         </div>
       </div>
     );
   }
 
-  if (error && !supplier) {
+  if (error && !customer) {
     return (
       <div className="space-y-4">
         <div className="bg-red-50 border border-red-200 rounded-sm p-4">
           <p className="text-sm text-red-600">{error}</p>
         </div>
-        <Link href="/suppliers" className="btn btn-secondary">
+        <Link href="/customers" className="btn btn-secondary">
           <Icon icon={faArrowLeft} size="sm" className="mr-2" />
-          Back to Suppliers
+          Back to Customers
         </Link>
       </div>
     );
@@ -77,34 +78,29 @@ export default function SupplierDetailsPage() {
 
   return (
     <div className="space-y-4">
-
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/suppliers" className="text-sm text-gray-600 hover:text-[var(--primary)] mb-2 inline-flex items-center">
+          <Link href="/customers" className="text-sm text-gray-600 hover:text-[var(--primary)] mb-2 inline-flex items-center">
             <Icon icon={faArrowLeft} size="sm" className="mr-2" />
-            Back to Suppliers
+            Back to Customers
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">{supplier?.name || 'Supplier Details'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{customer?.user?.name || 'Customer Details'}</h1>
         </div>
-        <Link href={`/suppliers/${supplierCode}/edit`} className="btn btn-primary">
+        <Link href={`/customers/${customerId}/edit`} className="btn btn-primary">
           <Icon icon={faEdit} size="sm" className="mr-2" />
-          Edit Supplier
+          Edit Customer
         </Link>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-sm p-4">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
-      {supplier && (
+      {customer && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Main Information */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Basic Information */}
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
               <div className="space-y-4">
@@ -113,44 +109,40 @@ export default function SupplierDetailsPage() {
                     <label className="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
                     <div className="flex items-center text-gray-900">
                       <Icon icon={faUser} size="sm" className="mr-2 text-gray-400" />
-                      <span>{supplier.user.name}</span>
+                      <span>{customer.user.name}</span>
                     </div>
                   </div>
-
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">Phone Number</label>
                     <div className="flex items-center text-gray-900">
                       <Icon icon={faPhone} size="sm" className="mr-2 text-gray-400" />
-                      <span>{supplier.user.phone}</span>
+                      <span>{customer.user.phone}</span>
                     </div>
                   </div>
-
-                  {supplier.user.email && (
+                  {customer.user.email && (
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">Email Address</label>
                       <div className="flex items-center text-gray-900">
                         <Icon icon={faEnvelope} size="sm" className="mr-2 text-gray-400" />
-                        <span>{supplier.user.email}</span>
+                        <span>{customer.user.email}</span>
                       </div>
                     </div>
                   )}
-
-                  {supplier.user.nid && (
+                  {customer.user.nid && (
                     <div>
                       <label className="block text-sm font-medium text-gray-500 mb-1">National ID</label>
                       <div className="flex items-center text-gray-900">
                         <Icon icon={faIdCard} size="sm" className="mr-2 text-gray-400" />
-                        <span>{supplier.user.nid}</span>
+                        <span>{customer.user.nid}</span>
                       </div>
                     </div>
                   )}
-
-                  {supplier.user.address && (
+                  {customer.user.address && (
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
                       <div className="flex items-center text-gray-900">
                         <Icon icon={faMapPin} size="sm" className="mr-2 text-gray-400" />
-                        <span>{supplier.user.address}</span>
+                        <span>{customer.user.address}</span>
                       </div>
                     </div>
                   )}
@@ -158,7 +150,6 @@ export default function SupplierDetailsPage() {
               </div>
             </div>
 
-            {/* Account Information */}
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -166,29 +157,24 @@ export default function SupplierDetailsPage() {
                   <label className="block text-sm font-medium text-gray-500 mb-1">Account Code</label>
                   <div className="flex items-center text-gray-900">
                     <Icon icon={faBuilding} size="sm" className="mr-2 text-gray-400" />
-                    <span className="font-mono">{supplier.account_code}</span>
+                    <span className="font-mono">{customer.account_code}</span>
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Account Type</label>
-                  <span className="capitalize text-gray-900">{supplier.type}</span>
+                  <span className="capitalize text-gray-900">{customer.type}</span>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Account Status</label>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    supplier.status === 'active' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-700'
+                    customer.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                   }`}>
-                    {supplier.status}
+                    {customer.status}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Relationship Information */}
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Relationship Details</h2>
               <div className="space-y-3">
@@ -196,69 +182,62 @@ export default function SupplierDetailsPage() {
                   <span className="text-sm text-gray-600">Price per Liter</span>
                   <span className="text-sm font-medium text-gray-900 flex items-center">
                     <Icon icon={faDollarSign} size="sm" className="mr-1 text-gray-400" />
-                    {formatCurrency(supplier.relationship.price_per_liter)}
+                    {formatCurrency(customer.relationship.price_per_liter)}
                   </span>
                 </div>
-                {supplier.relationship.average_supply_quantity && (
+                {customer.relationship.average_supply_quantity && (
                   <div className="flex items-center justify-between py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-600">Average Supply Quantity</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {Number(supplier.relationship.average_supply_quantity).toFixed(2)}L
+                      {Number(customer.relationship.average_supply_quantity).toFixed(2)}L
                     </span>
                   </div>
                 )}
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-gray-600">Relationship Status</span>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    supplier.relationship.relationship_status === 'active' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-700'
+                    customer.relationship.relationship_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
                   }`}>
-                    {supplier.relationship.relationship_status}
+                    {customer.relationship.relationship_status}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-4">
-            {/* Account Information */}
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Account ID</label>
-                  <p className="text-sm text-gray-900 font-mono">{supplier.account_id}</p>
+                  <p className="text-sm text-gray-900 font-mono">{customer.account_id}</p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Created At</label>
                   <div className="flex items-center text-sm text-gray-900">
                     <Icon icon={faCalendar} size="sm" className="mr-2 text-gray-400" />
-                    <span>{new Date(supplier.relationship.created_at).toLocaleString()}</span>
+                    <span>{new Date(customer.relationship.created_at).toLocaleString()}</span>
                   </div>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-1">Updated At</label>
                   <div className="flex items-center text-sm text-gray-900">
                     <Icon icon={faCalendar} size="sm" className="mr-2 text-gray-400" />
-                    <span>{new Date(supplier.relationship.updated_at).toLocaleString()}</span>
+                    <span>{new Date(customer.relationship.updated_at).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="bg-white border border-gray-200 rounded-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link href={`/suppliers/${supplierCode}/edit`} className="btn btn-primary w-full justify-center">
+                <Link href={`/customers/${customerId}/edit`} className="btn btn-primary w-full justify-center">
                   <Icon icon={faEdit} size="sm" className="mr-2" />
-                  Edit Supplier
+                  Edit Customer
                 </Link>
-                <Link href="/suppliers" className="btn btn-secondary w-full justify-center">
+                <Link href="/customers" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List
                 </Link>

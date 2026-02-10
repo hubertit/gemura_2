@@ -53,7 +53,9 @@ export default function SellInventoryPage() {
       return;
     }
     Promise.all([loadItem(), loadBuyers()]);
-  }, [itemId, hasPermission, isAdmin, router]);
+    // Only re-run when item changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId]);
 
   const loadItem = async () => {
     try {

@@ -730,8 +730,8 @@ export class CollectionsController {
       message: 'Collection not found or not authorized.',
     },
   })
-  async getCollection(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.collectionsService.getCollection(user, id);
+  async getCollection(@CurrentUser() user: User, @Param('id') id: string, @Query('account_id') accountId?: string) {
+    return this.collectionsService.getCollection(user, id, accountId);
   }
 
   @Put('update')

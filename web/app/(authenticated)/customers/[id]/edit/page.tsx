@@ -16,14 +16,14 @@ const STATUS_OPTIONS = [
 export default function EditCustomerPage() {
   const router = useRouter();
   const params = useParams();
-  const customerCode = params.code as string;
+  const customerId = params.id as string;
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [customer, setCustomer] = useState<CustomerDetails | null>(null);
   const [formData, setFormData] = useState<UpdateCustomerData>({
-    customer_account_code: customerCode,
+    customer_account_code: '',
     name: '',
     phone: '',
     email: '',
@@ -39,18 +39,20 @@ export default function EditCustomerPage() {
       return;
     }
     loadCustomer();
-  }, [customerCode, hasPermission, isAdmin, router]);
+    // Only re-run when customer changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId]);
 
   const loadCustomer = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await customersApi.getCustomerByCode(customerCode);
+      const response = await customersApi.getCustomerById(customerId);
       if (response.code === 200 && response.data) {
         const customerData = response.data.customer;
         setCustomer(customerData);
         setFormData({
-          customer_account_code: customerCode,
+          customer_account_code: customerData.account_code,
           name: customerData.user.name,
           phone: customerData.user.phone,
           email: customerData.user.email || '',
@@ -125,7 +127,7 @@ export default function EditCustomerPage() {
 
       if (response.code === 200) {
         useToastStore.getState().success('Customer updated successfully!');
-        router.push(`/customers/${customerCode}`);
+        router.push(`/customers/${customerId}`);
       } else {
         setError(response.message || 'Failed to update customer');
       }
@@ -149,27 +151,23 @@ export default function EditCustomerPage() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Edit Customer</h1>
         </div>
-        <Link href={`/customers/${customerCode}`} className="btn btn-secondary">
+        <Link href={`/customers/${customerId}`} className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />
           Cancel
         </Link>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-sm p-4">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-sm p-6 space-y-6">
-        {/* Basic Information */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -301,9 +299,8 @@ export default function EditCustomerPage() {
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-          <Link href={`/customers/${customerCode}`} className="btn btn-secondary" tabIndex={-1}>
+          <Link href={`/customers/${customerId}`} className="btn btn-secondary" tabIndex={-1}>
             Cancel
           </Link>
           <button type="submit" className="btn btn-primary" disabled={saving}>

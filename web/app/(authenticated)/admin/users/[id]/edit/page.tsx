@@ -88,14 +88,15 @@ export default function EditUserPage() {
     }).catch(() => {});
   }, [currentAccount?.account_id]);
 
-  // Check permission on mount
+  // Check permission on mount and load user; only re-run when userId changes
   useEffect(() => {
     if (!canManageUsers() && !isAdmin()) {
       router.push('/admin/users');
       return;
     }
     loadUser();
-  }, [userId, canManageUsers, isAdmin, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const loadUser = async () => {
     try {

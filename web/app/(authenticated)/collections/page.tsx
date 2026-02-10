@@ -11,7 +11,7 @@ import type { TableColumn } from '@/app/components/DataTable';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarApply, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
 import CreateCollectionForm from './CreateCollectionForm';
-import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -70,19 +70,6 @@ export default function CollectionsPage() {
   const handleClearFilters = () => {
     setFilters({});
     loadCollections();
-  };
-
-  const handleCancelCollection = async (collectionId: string) => {
-    if (!confirm('Are you sure you want to cancel this collection?')) {
-      return;
-    }
-
-    try {
-      await collectionsApi.cancelCollection(collectionId);
-      loadCollections();
-    } catch (err: any) {
-      useToastStore.getState().error(err?.response?.data?.message || 'Failed to cancel collection');
-    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -154,33 +141,13 @@ export default function CollectionsPage() {
       key: 'actions',
       label: 'Actions',
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/collections/${row.id}`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="View"
-          >
-            <Icon icon={faEye} size="sm" />
-          </Link>
-          {row.status !== 'cancelled' && row.status !== 'deleted' && (
-            <>
-              <Link
-                href={`/collections/${row.id}/edit`}
-                className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-                title="Edit"
-              >
-                <Icon icon={faEdit} size="sm" />
-              </Link>
-              <button
-                onClick={() => handleCancelCollection(row.id)}
-                className="p-1.5 text-gray-600 hover:text-red-600 transition-colors"
-                title="Cancel"
-              >
-                <Icon icon={faTrash} size="sm" />
-              </button>
-            </>
-          )}
-        </div>
+        <Link
+          href={`/collections/${row.id}`}
+          className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors inline-flex"
+          title="View details"
+        >
+          <Icon icon={faEye} size="sm" />
+        </Link>
       ),
     },
   ];

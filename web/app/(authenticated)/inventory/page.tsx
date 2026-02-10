@@ -11,7 +11,7 @@ import type { TableColumn } from '@/app/components/DataTable';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
 import CreateInventoryForm from './CreateInventoryForm';
-import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -50,19 +50,6 @@ export default function InventoryPage() {
   useEffect(() => {
     loadInventory();
   }, [loadInventory]);
-
-  const handleDelete = async (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this inventory item?')) {
-      return;
-    }
-
-    try {
-      await inventoryApi.deleteInventoryItem(itemId);
-      loadInventory();
-    } catch (err: any) {
-      useToastStore.getState().error(err?.response?.data?.message || 'Failed to delete inventory item');
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-RW', {
@@ -156,36 +143,13 @@ export default function InventoryPage() {
       key: 'actions',
       label: 'Actions',
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/inventory/${row.id}`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="View"
-          >
-            <Icon icon={faEye} size="sm" />
-          </Link>
-          <Link
-            href={`/inventory/${row.id}/edit`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="Edit"
-          >
-            <Icon icon={faEdit} size="sm" />
-          </Link>
-          <Link
-            href={`/inventory/${row.id}/sell`}
-            className="p-1.5 text-gray-600 hover:text-green-600 transition-colors"
-            title="Sell"
-          >
-            <Icon icon={faDollarSign} size="sm" />
-          </Link>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 text-gray-600 hover:text-red-600 transition-colors"
-            title="Delete"
-          >
-            <Icon icon={faTrash} size="sm" />
-          </button>
-        </div>
+        <Link
+          href={`/inventory/${row.id}`}
+          className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors inline-flex"
+          title="View details"
+        >
+          <Icon icon={faEye} size="sm" />
+        </Link>
       ),
     },
   ];

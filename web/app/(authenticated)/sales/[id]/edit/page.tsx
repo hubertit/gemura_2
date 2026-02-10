@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { salesApi, UpdateSaleData, Sale } from '@/lib/api/sales';
 import { customersApi, Customer } from '@/lib/api/customers';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
@@ -20,6 +21,7 @@ export default function EditSalePage() {
   const router = useRouter();
   const params = useParams();
   const saleId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,13 +46,15 @@ export default function EditSalePage() {
       return;
     }
     Promise.all([loadSale(), loadCustomers()]);
-  }, [saleId, hasPermission, isAdmin, router]);
+    // Only re-run when sale or account context changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleId, currentAccount?.account_id]);
 
   const loadSale = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await salesApi.getSaleById(saleId);
+      const response = await salesApi.getSaleById(saleId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         const saleData = response.data;
         setSale(saleData);

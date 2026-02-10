@@ -10,7 +10,7 @@ import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions, FilterBar
 import type { TableColumn } from '@/app/components/DataTable';
 import Modal from '@/app/components/Modal';
 import CreateSupplierForm from './CreateSupplierForm';
-import Icon, { faPlus, faEdit, faEye, faCheckCircle, faBuilding, faPhone, faEnvelope, faDollarSign } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faBuilding, faPhone, faEnvelope, faDollarSign } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -155,22 +155,13 @@ export default function SuppliersPage() {
       key: 'actions',
       label: 'Actions',
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/suppliers/${row.account.code}`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="View"
-          >
-            <Icon icon={faEye} size="sm" />
-          </Link>
-          <Link
-            href={`/suppliers/${row.account.code}/edit`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="Edit"
-          >
-            <Icon icon={faEdit} size="sm" />
-          </Link>
-        </div>
+        <Link
+          href={`/suppliers/${row.account.id}`}
+          className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors inline-flex"
+          title="View details"
+        >
+          <Icon icon={faEye} size="sm" />
+        </Link>
       ),
     },
   ];

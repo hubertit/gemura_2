@@ -9,6 +9,7 @@ export interface Customer {
   nid?: string;
   address?: string;
   account: {
+    id: string;
     code: string;
     name: string;
   };

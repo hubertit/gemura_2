@@ -16,14 +16,14 @@ const STATUS_OPTIONS = [
 export default function EditSupplierPage() {
   const router = useRouter();
   const params = useParams();
-  const supplierCode = params.code as string;
+  const supplierId = params.id as string;
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [supplier, setSupplier] = useState<SupplierDetails | null>(null);
   const [formData, setFormData] = useState<UpdateSupplierData>({
-    supplier_account_code: supplierCode,
+    supplier_account_code: '',
     price_per_liter: 0,
     relationship_status: 'active',
   });
@@ -34,18 +34,20 @@ export default function EditSupplierPage() {
       return;
     }
     loadSupplier();
-  }, [supplierCode, hasPermission, isAdmin, router]);
+    // Only re-run when supplier changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplierId]);
 
   const loadSupplier = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await suppliersApi.getSupplierByCode(supplierCode);
+      const response = await suppliersApi.getSupplierById(supplierId);
       if (response.code === 200 && response.data) {
         const supplierData = response.data.supplier;
         setSupplier(supplierData);
         setFormData({
-          supplier_account_code: supplierCode,
+          supplier_account_code: supplierData.account_code,
           price_per_liter: supplierData.relationship.price_per_liter,
           relationship_status: supplierData.relationship.relationship_status as 'active' | 'inactive',
         });
@@ -92,7 +94,7 @@ export default function EditSupplierPage() {
 
       if (response.code === 200) {
         useToastStore.getState().success('Supplier updated successfully!');
-        router.push(`/suppliers/${supplierCode}`);
+        router.push(`/suppliers/${supplierId}`);
       } else {
         setError(response.message || 'Failed to update supplier');
       }
@@ -116,27 +118,23 @@ export default function EditSupplierPage() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Edit Supplier</h1>
         </div>
-        <Link href={`/suppliers/${supplierCode}`} className="btn btn-secondary">
+        <Link href={`/suppliers/${supplierId}`} className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />
           Cancel
         </Link>
       </div>
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-sm p-4">
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-sm p-6 space-y-6">
-        {/* Supplier Details */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Supplier Relationship</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,9 +179,8 @@ export default function EditSupplierPage() {
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-          <Link href={`/suppliers/${supplierCode}`} className="btn btn-secondary" tabIndex={-1}>
+          <Link href={`/suppliers/${supplierId}`} className="btn btn-secondary" tabIndex={-1}>
             Cancel
           </Link>
           <button type="submit" className="btn btn-primary" disabled={saving}>

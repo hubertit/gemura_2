@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { collectionsApi, UpdateCollectionData, Collection } from '@/lib/api/collections';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faBox, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 
@@ -19,6 +20,7 @@ export default function EditCollectionPage() {
   const router = useRouter();
   const params = useParams();
   const collectionId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,13 +41,15 @@ export default function EditCollectionPage() {
       return;
     }
     loadCollection();
-  }, [collectionId, hasPermission, isAdmin, router]);
+    // Only re-run when collection or account context changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionId, currentAccount?.account_id]);
 
   const loadCollection = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await collectionsApi.getCollectionById(collectionId);
+      const response = await collectionsApi.getCollectionById(collectionId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         const collectionData = response.data;
         setCollection(collectionData);

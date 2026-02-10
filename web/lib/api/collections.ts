@@ -89,8 +89,11 @@ export const collectionsApi = {
     return apiClient.get(`/collections?${params.toString()}`);
   },
 
-  getCollectionById: async (collectionId: string): Promise<CollectionResponse> => {
-    const response = await apiClient.get(`/collections/${collectionId}`);
+  getCollectionById: async (collectionId: string, accountId?: string): Promise<CollectionResponse> => {
+    const params = new URLSearchParams();
+    if (accountId) params.append('account_id', accountId);
+    const url = params.toString() ? `/collections/${collectionId}?${params.toString()}` : `/collections/${collectionId}`;
+    const response = await apiClient.get(url);
     return response as CollectionResponse;
   },
 

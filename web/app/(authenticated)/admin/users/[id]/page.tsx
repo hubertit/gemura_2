@@ -47,7 +47,9 @@ export default function UserDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, currentAccount?.account_id, router]);
+    // Only re-run when user or account changes; router is stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, currentAccount?.account_id]);
 
   const handleDelete = async () => {
     if (!user) return;

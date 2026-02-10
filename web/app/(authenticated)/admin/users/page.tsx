@@ -95,19 +95,17 @@ export default function UsersPage() {
     }
   }, []);
 
-  // Initial load and permission check
+  // Initial load and permission check (run once; canManageUsers/isAdmin are stable in behavior)
   useEffect(() => {
     if (!canManageUsers() && !isAdmin()) {
       router.push('/dashboard');
       return;
     }
-    
-    // Only load if we haven't loaded yet and not currently loading
     if (!hasLoadedRef.current && !isLoadingRef.current) {
       loadUsers(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canManageUsers, isAdmin, router]);
+  }, []);
 
   const applyFilters = () => {
     setPagination((prev) => ({ ...prev, page: 1 }));

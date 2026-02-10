@@ -22,7 +22,9 @@ export default function AdminLayout({
     if (!isAdminAccount(accountType)) {
       router.replace('/dashboard');
     }
-  }, [accountType, router]);
+    // Only re-run when account type changes; router is stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountType]);
 
   if (!isAdminAccount(accountType)) {
     return (

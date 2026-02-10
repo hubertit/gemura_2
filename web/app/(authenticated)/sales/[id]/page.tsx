@@ -5,17 +5,35 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { salesApi, Sale } from '@/lib/api/sales';
-import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faEdit, faArrowLeft, faSpinner, faCheckCircle, faBuilding } from '@/app/components/Icon';
+import { useAuthStore } from '@/store/auth';
+import { useToastStore } from '@/store/toast';
+import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faEdit, faArrowLeft, faSpinner, faCheckCircle, faBuilding, faTrash } from '@/app/components/Icon';
 
 export default function SaleDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const saleId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sale, setSale] = useState<Sale | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!sale || !confirm('Are you sure you want to cancel this sale?')) return;
+    try {
+      setCancelling(true);
+      await salesApi.cancelSale(sale.id);
+      useToastStore.getState().success('Sale cancelled');
+      router.push('/sales');
+    } catch (err: any) {
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to cancel sale');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     if (!hasPermission('view_sales') && !isAdmin()) {
@@ -23,13 +41,15 @@ export default function SaleDetailsPage() {
       return;
     }
     loadSale();
-  }, [saleId, hasPermission, isAdmin, router]);
+    // Only re-run when sale or account context changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleId, currentAccount?.account_id]);
 
   const loadSale = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await salesApi.getSaleById(saleId);
+      const response = await salesApi.getSaleById(saleId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         setSale(response.data);
       } else {
@@ -95,12 +115,20 @@ export default function SaleDetailsPage() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Sale Details</h1>
         </div>
-        {sale && sale.status !== 'cancelled' && sale.status !== 'deleted' && (
-          <Link href={`/sales/${saleId}/edit`} className="btn btn-primary">
-            <Icon icon={faEdit} size="sm" className="mr-2" />
-            Edit Sale
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {sale && sale.status !== 'cancelled' && sale.status !== 'deleted' && (
+            <>
+              <Link href={`/sales/${saleId}/edit`} className="btn btn-primary">
+                <Icon icon={faEdit} size="sm" className="mr-2" />
+                Edit Sale
+              </Link>
+              <button type="button" onClick={handleCancel} disabled={cancelling} className="btn bg-red-600 hover:bg-red-700 text-white border-0">
+                <Icon icon={faTrash} size="sm" className="mr-2" />
+                {cancelling ? 'Cancelling...' : 'Cancel Sale'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Error Message */}
@@ -214,10 +242,16 @@ export default function SaleDetailsPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
                 {sale.status !== 'cancelled' && sale.status !== 'deleted' && (
-                  <Link href={`/sales/${saleId}/edit`} className="btn btn-primary w-full justify-center">
-                    <Icon icon={faEdit} size="sm" className="mr-2" />
-                    Edit Sale
-                  </Link>
+                  <>
+                    <Link href={`/sales/${saleId}/edit`} className="btn btn-primary w-full justify-center">
+                      <Icon icon={faEdit} size="sm" className="mr-2" />
+                      Edit Sale
+                    </Link>
+                    <button type="button" onClick={handleCancel} disabled={cancelling} className="btn w-full justify-center bg-red-600 hover:bg-red-700 text-white border-0">
+                      <Icon icon={faTrash} size="sm" className="mr-2" />
+                      {cancelling ? 'Cancelling...' : 'Cancel Sale'}
+                    </button>
+                  </>
                 )}
                 <Link href="/sales" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />

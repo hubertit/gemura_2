@@ -85,13 +85,14 @@ export default function CreateUserPage() {
     }).catch(() => {});
   }, [currentAccount?.account_id]);
 
-  // Check permission on mount
+  // Check permission on mount (run once; canManageUsers/isAdmin are stable in behavior)
   useEffect(() => {
     if (!canManageUsers() && !isAdmin()) {
       router.push('/admin/users');
       return;
     }
-  }, [canManageUsers, isAdmin, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

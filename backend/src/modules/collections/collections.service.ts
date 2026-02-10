@@ -671,18 +671,37 @@ export class CollectionsService {
     };
   }
 
-  async getCollection(user: User, collectionId: string) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found. Please set a default account.',
+  async getCollection(user: User, collectionId: string, accountIdParam?: string) {
+    let customerAccountId: string;
+
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
       });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      customerAccountId = accountIdParam;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found. Please set a default account.',
+        });
+      }
+      customerAccountId = user.default_account_id;
     }
 
-    const customerAccountId = user.default_account_id;
-
-    // Find collection (milk sale) where customer is the user's default account
     const collection = await this.prisma.milkSale.findFirst({
       where: {
         id: collectionId,

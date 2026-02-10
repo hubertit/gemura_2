@@ -80,11 +80,10 @@ export const salesApi = {
     });
   },
 
-  getSaleById: async (saleId: string): Promise<SaleResponse> => {
-    // Note: There might not be a direct get by ID endpoint, 
-    // so we'll filter by ID in the list endpoint
-    const response = await apiClient.post('/sales/sales', { 
-      filters: {} 
+  getSaleById: async (saleId: string, accountId?: string): Promise<SaleResponse> => {
+    const response = await apiClient.post('/sales/sales', {
+      filters: {},
+      ...(accountId && { account_id: accountId }),
     }) as SalesResponse;
     if (response.code === 200 && response.data) {
       const sale = response.data.find((s: Sale) => s.id === saleId);

@@ -5,7 +5,8 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
-import Icon, { faWarehouse, faBox, faDollarSign, faTag, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar } from '@/app/components/Icon';
+import { useToastStore } from '@/store/toast';
+import Icon, { faWarehouse, faBox, faDollarSign, faTag, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar, faTrash } from '@/app/components/Icon';
 
 export default function InventoryItemDetailsPage() {
   const router = useRouter();
@@ -16,6 +17,21 @@ export default function InventoryItemDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [item, setItem] = useState<InventoryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!item || !confirm('Are you sure you want to delete this inventory item? This cannot be undone.')) return;
+    try {
+      setDeleting(true);
+      await inventoryApi.deleteInventoryItem(item.id);
+      useToastStore.getState().success('Item deleted');
+      router.push('/inventory');
+    } catch (err: any) {
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to delete item');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!hasPermission('view_inventory') && !isAdmin()) {
@@ -23,7 +39,9 @@ export default function InventoryItemDetailsPage() {
       return;
     }
     loadItem();
-  }, [itemId, hasPermission, isAdmin, router]);
+    // Only re-run when item changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemId]);
 
   const loadItem = async () => {
     try {
@@ -109,6 +127,10 @@ export default function InventoryItemDetailsPage() {
             <Icon icon={faEdit} size="sm" className="mr-2" />
             Edit
           </Link>
+          <button type="button" onClick={handleDelete} disabled={deleting} className="btn bg-red-600 hover:bg-red-700 text-white border-0">
+            <Icon icon={faTrash} size="sm" className="mr-2" />
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
         </div>
       </div>
 
@@ -269,6 +291,10 @@ export default function InventoryItemDetailsPage() {
                   <Icon icon={faEdit} size="sm" className="mr-2" />
                   Edit Item
                 </Link>
+                <button type="button" onClick={handleDelete} disabled={deleting} className="btn w-full justify-center bg-red-600 hover:bg-red-700 text-white border-0">
+                  <Icon icon={faTrash} size="sm" className="mr-2" />
+                  {deleting ? 'Deleting...' : 'Delete Item'}
+                </button>
                 <Link href="/inventory" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List

@@ -5,17 +5,35 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { collectionsApi, Collection } from '@/lib/api/collections';
-import Icon, { faBox, faUser, faDollarSign, faCalendar, faFileAlt, faEdit, faArrowLeft, faSpinner, faCheckCircle, faBuilding } from '@/app/components/Icon';
+import { useAuthStore } from '@/store/auth';
+import { useToastStore } from '@/store/toast';
+import Icon, { faBox, faUser, faDollarSign, faCalendar, faFileAlt, faEdit, faArrowLeft, faSpinner, faCheckCircle, faBuilding, faTrash } from '@/app/components/Icon';
 
 export default function CollectionDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const collectionId = params.id as string;
+  const { currentAccount } = useAuthStore();
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [collection, setCollection] = useState<Collection | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!collection || !confirm('Are you sure you want to cancel this collection?')) return;
+    try {
+      setCancelling(true);
+      await collectionsApi.cancelCollection(collection.id);
+      useToastStore.getState().success('Collection cancelled');
+      router.push('/collections');
+    } catch (err: any) {
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to cancel collection');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     if (!hasPermission('view_collections') && !isAdmin()) {
@@ -23,13 +41,15 @@ export default function CollectionDetailsPage() {
       return;
     }
     loadCollection();
-  }, [collectionId, hasPermission, isAdmin, router]);
+    // Only re-run when collection or account context changes; hasPermission/isAdmin are stable in behavior
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collectionId, currentAccount?.account_id]);
 
   const loadCollection = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await collectionsApi.getCollectionById(collectionId);
+      const response = await collectionsApi.getCollectionById(collectionId, currentAccount?.account_id);
       if (response.code === 200 && response.data) {
         setCollection(response.data);
       } else {
@@ -95,12 +115,20 @@ export default function CollectionDetailsPage() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Collection Details</h1>
         </div>
-        {collection && collection.status !== 'cancelled' && collection.status !== 'deleted' && (
-          <Link href={`/collections/${collectionId}/edit`} className="btn btn-primary">
-            <Icon icon={faEdit} size="sm" className="mr-2" />
-            Edit Collection
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {collection && collection.status !== 'cancelled' && collection.status !== 'deleted' && (
+            <>
+              <Link href={`/collections/${collectionId}/edit`} className="btn btn-primary">
+                <Icon icon={faEdit} size="sm" className="mr-2" />
+                Edit Collection
+              </Link>
+              <button type="button" onClick={handleCancel} disabled={cancelling} className="btn bg-red-600 hover:bg-red-700 text-white border-0">
+                <Icon icon={faTrash} size="sm" className="mr-2" />
+                {cancelling ? 'Cancelling...' : 'Cancel Collection'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Error Message */}
@@ -228,10 +256,16 @@ export default function CollectionDetailsPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-2">
                 {collection.status !== 'cancelled' && collection.status !== 'deleted' && (
-                  <Link href={`/collections/${collectionId}/edit`} className="btn btn-primary w-full justify-center">
-                    <Icon icon={faEdit} size="sm" className="mr-2" />
-                    Edit Collection
-                  </Link>
+                  <>
+                    <Link href={`/collections/${collectionId}/edit`} className="btn btn-primary w-full justify-center">
+                      <Icon icon={faEdit} size="sm" className="mr-2" />
+                      Edit Collection
+                    </Link>
+                    <button type="button" onClick={handleCancel} disabled={cancelling} className="btn w-full justify-center bg-red-600 hover:bg-red-700 text-white border-0">
+                      <Icon icon={faTrash} size="sm" className="mr-2" />
+                      {cancelling ? 'Cancelling...' : 'Cancel Collection'}
+                    </button>
+                  </>
                 )}
                 <Link href="/collections" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
