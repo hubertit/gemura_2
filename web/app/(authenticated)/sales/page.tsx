@@ -202,7 +202,6 @@ export default function SalesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Sales</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage milk sales and transactions</p>
         </div>
         <Link href="/sales/new" className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />

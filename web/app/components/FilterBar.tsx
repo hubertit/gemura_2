@@ -1,0 +1,80 @@
+'use client';
+
+import { ReactNode } from 'react';
+import Icon, { faSearch, faTimes } from './Icon';
+
+/** Single filter group: label + control, aligned with others (ResolveIT-style). */
+export function FilterBarGroup({
+  label,
+  children,
+  className = '',
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col gap-1.5 min-w-0 flex-1 basis-full sm:basis-[calc(50%-0.375rem)] md:basis-auto md:min-w-[140px] lg:min-w-[180px] ${className}`}>
+      <label className="text-sm font-medium text-gray-700">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+/** Search group with icon (wider). */
+export function FilterBarSearch({
+  value,
+  onChange,
+  placeholder = 'Search...',
+  onKeyDown,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 min-w-0 flex-1 basis-full sm:basis-[calc(50%-0.375rem)] md:basis-auto md:min-w-[200px] lg:min-w-[240px]">
+      <label className="text-sm font-medium text-gray-700">Search</label>
+      <div className="relative">
+        <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none text-gray-400">
+          <Icon icon={faSearch} size="sm" />
+        </div>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          className="input w-full !pl-10 h-9 text-sm placeholder:text-gray-600"
+        />
+      </div>
+    </div>
+  );
+}
+
+/** Actions group: Clear button, aligned with filter rows. */
+export function FilterBarActions({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-0 basis-full sm:basis-auto">
+      <label className="text-sm font-medium text-gray-700 invisible select-none">Actions</label>
+      <button
+        type="button"
+        onClick={onClear}
+        className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-gray-700 bg-gray-100 border-0 rounded hover:bg-gray-200 transition-colors"
+      >
+        <Icon icon={faTimes} size="sm" />
+        Clear
+      </button>
+    </div>
+  );
+}
+
+/** ResolveIT-style horizontal filter bar: white box, flex wrap, label above each control. */
+export default function FilterBar({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex flex-wrap gap-3 md:gap-4 p-3 md:p-4 bg-white border border-gray-200 rounded mb-4 items-end">
+      {children}
+    </div>
+  );
+}

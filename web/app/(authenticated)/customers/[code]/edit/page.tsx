@@ -153,7 +153,6 @@ export default function EditCustomerPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Edit Customer</h1>
-          <p className="text-sm text-gray-600 mt-1">Update customer information</p>
         </div>
         <Link href={`/customers/${customerCode}`} className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />

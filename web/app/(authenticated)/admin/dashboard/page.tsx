@@ -1,193 +1,60 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { usePermission } from '@/hooks/usePermission';
+import Link from 'next/link';
+import { PermissionService } from '@/lib/services/permission.service';
 import { adminApi, DashboardStats } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
-import Icon, { 
-  faUsers, 
-  faBuilding, 
-  faReceipt, 
-  faBox, 
-  faStore,
-  faChartBar,
-  faDollarSign,
-} from '@/app/components/Icon';
+import Icon, { faUsers, faBuilding, faReceipt, faDollarSign } from '@/app/components/Icon';
+import StatCard from '@/app/components/StatCard';
 import dynamic from 'next/dynamic';
 
-// Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-type DashboardTab = 'overview' | 'financial' | 'sales' | 'collections';
-
-const COLORS = ['#004AAD', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const BLUE_ICON = { iconBgColor: '#eff6ff', iconColor: 'var(--primary)' };
+const GREEN_ICON = { iconBgColor: '#dcfce7', iconColor: '#059669' };
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { canViewDashboard, isAdmin } = usePermission();
   const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
 
   useEffect(() => {
-    // Check permission once on mount
-    const hasPermission = canViewDashboard() || isAdmin();
-    if (!hasPermission) {
+    if (!PermissionService.canViewDashboard() && !PermissionService.isAdmin()) {
       router.push('/dashboard');
       return;
     }
-    
-    // Load mock data only once
-    if (!stats) {
-      loadMockStats();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadMockStats = useCallback(() => {
-    // Generate mock data for dashboard
-    const now = new Date();
-    const dailyTrend = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      dailyTrend.push({
-        date: date.toISOString().split('T')[0],
-        label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        revenue: Math.floor(Math.random() * 500000) + 200000,
-        sales: Math.floor(Math.random() * 500) + 100,
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    adminApi
+      .getDashboardStats(currentAccount?.account_id)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.code === 200 && res.data) setStats(res.data);
+        else setError('Failed to load dashboard');
+      })
+      .catch((err: any) => {
+        if (!cancelled) setError(err?.response?.data?.message || err?.message || 'Failed to load dashboard');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-    }
-
-    const mockStats: DashboardStats = {
-      users: {
-        total: 145,
-        active: 132,
-        inactive: 13,
-      },
-      accounts: {
-        total: 89,
-      },
-      sales: {
-        total: 1245,
-        last30Days: 342,
-        last7Days: 87,
-        today: 12,
-      },
-      collections: {
-        total: 892,
-      },
-      suppliers: {
-        total: 45,
-      },
-      customers: {
-        total: 32,
-      },
-      revenue: {
-        total: 12500000,
-        last30Days: 3450000,
-        last7Days: 890000,
-        today: 125000,
-      },
-      trends: {
-        daily: dailyTrend,
-      },
-      salesByStatus: [
-        { status: 'accepted', count: 892 },
-        { status: 'pending', count: 234 },
-        { status: 'rejected', count: 119 },
-      ],
-      recentSales: [
-        {
-          id: '1',
-          quantity: 50,
-          unitPrice: 2500,
-          total: 125000,
-          status: 'accepted',
-          date: new Date().toISOString(),
-          supplier: 'Farm A',
-          customer: 'Customer B',
-        },
-        {
-          id: '2',
-          quantity: 75,
-          unitPrice: 2400,
-          total: 180000,
-          status: 'accepted',
-          date: new Date(Date.now() - 86400000).toISOString(),
-          supplier: 'Farm B',
-          customer: 'Customer C',
-        },
-        {
-          id: '3',
-          quantity: 30,
-          unitPrice: 2600,
-          total: 78000,
-          status: 'pending',
-          date: new Date(Date.now() - 172800000).toISOString(),
-          supplier: 'Farm C',
-          customer: 'Customer A',
-        },
-        {
-          id: '4',
-          quantity: 100,
-          unitPrice: 2550,
-          total: 255000,
-          status: 'accepted',
-          date: new Date(Date.now() - 259200000).toISOString(),
-          supplier: 'Farm A',
-          customer: 'Customer D',
-        },
-        {
-          id: '5',
-          quantity: 45,
-          unitPrice: 2450,
-          total: 110250,
-          status: 'accepted',
-          date: new Date(Date.now() - 345600000).toISOString(),
-          supplier: 'Farm D',
-          customer: 'Customer B',
-        },
-      ],
-    };
-
-    setStats(mockStats);
-    setLoading(false);
-  }, []);
-
-  // Keep API function for later integration
-  const loadStats = async () => {
-    try {
-      setLoading(true);
-      const response = await adminApi.getDashboardStats(currentAccount?.account_id);
-      if (response.code === 200) {
-        setStats(response.data);
-      } else {
-        setError('Failed to load dashboard statistics');
-      }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to load dashboard statistics');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => { cancelled = true; };
+  }, [currentAccount?.account_id, router]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-RW', {
-      style: 'currency',
-      currency: 'RWF',
-      minimumFractionDigits: 0,
-    }).format(amount);
+    return `RF ${new Intl.NumberFormat('en-RW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)}`;
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-sm text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -196,185 +63,189 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-sm p-4">
-        <p className="text-sm text-red-600">{error}</p>
+      <div className="space-y-4">
+        <div className="bg-red-50 border border-red-200 rounded-sm p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+        <Link href="/admin/users" className="btn btn-secondary">Back to Users</Link>
       </div>
     );
   }
 
-  if (!stats) {
-    return null;
-  }
+  if (!stats) return null;
 
   return (
-    <div className="space-y-4">
-      {/* Dashboard Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
-          {[
-            { id: 'overview' as DashboardTab, label: 'Overview', icon: faChartBar },
-            { id: 'financial' as DashboardTab, label: 'Financial', icon: faDollarSign },
-            { id: 'sales' as DashboardTab, label: 'Sales', icon: faReceipt },
-            { id: 'collections' as DashboardTab, label: 'Collections', icon: faBox },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab.id
-                  ? 'border-[var(--primary)] text-[var(--primary)]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Icon icon={tab.icon} size="sm" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        </div>
+        <span className="text-sm text-gray-600">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </span>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === 'overview' && <OverviewTab stats={stats} formatCurrency={formatCurrency} router={router} />}
-      {activeTab === 'financial' && <FinancialTab stats={stats} formatCurrency={formatCurrency} />}
-      {activeTab === 'sales' && <SalesTab stats={stats} formatCurrency={formatCurrency} />}
-      {activeTab === 'collections' && <CollectionsTab stats={stats} formatCurrency={formatCurrency} />}
-    </div>
-  );
-}
-
-// Overview Tab Component
-function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats; formatCurrency: (n: number) => string; router: any }) {
-  return (
-    <div className="space-y-4">
-      {/* Metrics Grid */}
+      {/* Stats Grid - ResolveIT-style cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Users"
+        <StatCard
+          label="Total Users"
           value={stats.users.total}
           subtitle={`${stats.users.active} active, ${stats.users.inactive} inactive`}
           icon={faUsers}
-          color="blue"
+          href="/admin/users"
+          {...BLUE_ICON}
         />
-        <MetricCard
-          title="Total Accounts"
+        <StatCard
+          label="Total Accounts"
           value={stats.accounts.total}
           icon={faBuilding}
-          color="indigo"
+          {...BLUE_ICON}
         />
-        <MetricCard
-          title="Total Sales"
+        <StatCard
+          label="Total Sales"
           value={stats.sales.total}
-          subtitle={stats.sales.today ? `${stats.sales.today} today` : undefined}
+          subtitle={stats.sales.today != null ? `${stats.sales.today} today` : undefined}
           icon={faReceipt}
-          color="green"
+          {...GREEN_ICON}
         />
-        <MetricCard
-          title="Total Revenue"
+        <StatCard
+          label="Total Revenue"
           value={stats.revenue ? formatCurrency(stats.revenue.total) : '0'}
-          subtitle={stats.revenue ? formatCurrency(stats.revenue.today) + ' today' : undefined}
+          subtitle={stats.revenue ? `Value of accepted milk sales · ${formatCurrency(stats.revenue.today)} today` : 'Value of accepted milk sales'}
           icon={faDollarSign}
-          color="emerald"
+          {...GREEN_ICON}
         />
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Revenue Trend Chart */}
-        {stats.trends && stats.trends.daily.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-3">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend (Last 30 Days)</h3>
+      {/* Charts row: Revenue trend (full width) + Revenue snapshot */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {(stats.trends?.daily?.length ?? 0) > 0 && (
+          <div className="lg:col-span-2 bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue (Last 30 Days)</h3>
             <Chart
               type="area"
-              height={300}
+              height={280}
               options={{
-                chart: {
-                  type: 'area',
-                  toolbar: { show: false },
-                  zoom: { enabled: false },
-                },
-                stroke: {
-                  curve: 'smooth',
-                  width: 2,
-                },
-                fill: {
-                  type: 'gradient',
-                  gradient: {
-                    shadeIntensity: 1,
-                    opacityFrom: 0.7,
-                    opacityTo: 0.3,
-                    stops: [0, 90, 100],
-                  },
-                },
+                chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3, stops: [0, 90, 100] } },
                 colors: ['#004AAD'],
-                xaxis: {
-                  categories: stats.trends.daily.map(d => d.label),
-                },
-                yaxis: {
-                  labels: {
-                    formatter: (value: number) => formatCurrency(value),
-                  },
-                },
-                tooltip: {
-                  y: {
-                    formatter: (value: number) => formatCurrency(value),
-                  },
-                },
-                dataLabels: {
-                  enabled: false,
-                },
-                grid: {
-                  strokeDashArray: 3,
-                },
+                xaxis: { categories: stats.trends?.daily?.map((d) => d.label) ?? [] },
+                yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 3 },
               }}
-              series={[
-                {
-                  name: 'Revenue',
-                  data: stats.trends.daily.map(d => d.revenue),
-                },
-              ]}
+              series={[{ name: 'Revenue', data: stats.trends?.daily?.map((d) => d.revenue) ?? [] }]}
             />
           </div>
         )}
-
-        {/* Sales by Status */}
-        {stats.salesByStatus && stats.salesByStatus.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-sm p-4 lg:col-span-1">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">Sales by Status</h3>
+        {stats.revenue && (stats.revenue.today > 0 || stats.revenue.last7Days > 0 || stats.revenue.last30Days > 0) && (
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue snapshot</h3>
             <Chart
-              type="donut"
-              height={300}
+              type="bar"
+              height={280}
               options={{
-                chart: {
-                  type: 'donut',
-                },
-                labels: stats.salesByStatus.map(s => s.status),
-                colors: COLORS,
-                legend: {
-                  position: 'bottom',
-                },
-                dataLabels: {
-                  enabled: true,
-                  formatter: (val: number, opts: any) => {
-                    const label = stats.salesByStatus![opts.seriesIndex].status;
-                    const count = stats.salesByStatus![opts.seriesIndex].count;
-                    return `${label}: ${count}`;
-                  },
-                },
-                tooltip: {
-                  y: {
-                    formatter: (val: number) => val.toString(),
-                  },
-                },
+                chart: { type: 'bar', toolbar: { show: false } },
+                plotOptions: { bar: { borderRadius: 6, columnWidth: '60%', distributed: true } },
+                colors: ['#059669', '#004AAD', '#6366f1'],
+                xaxis: { categories: ['Today', 'Last 7 days', 'Last 30 days'] },
+                yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 3 },
+                legend: { show: false },
               }}
-              series={stats.salesByStatus.map(s => s.count)}
+              series={[{ name: 'Revenue', data: [stats.revenue.today, stats.revenue.last7Days, stats.revenue.last30Days] }]}
             />
           </div>
         )}
       </div>
 
-      {/* Recent Sales Table */}
+      {/* Donut charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.salesByStatus && stats.salesByStatus.length > 0 && stats.salesByStatus.some((s) => s.count > 0) && (
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Sales by status</h3>
+            <Chart
+              type="donut"
+              height={260}
+              options={{
+                chart: { type: 'donut', fontFamily: 'inherit' },
+                labels: stats.salesByStatus.map((s) => s.status.charAt(0).toUpperCase() + s.status.slice(1)),
+                colors: ['#059669', '#d97706', '#dc2626', '#6b7280'],
+                legend: { position: 'bottom', fontSize: '12px' },
+                dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', formatter: () => String(stats.salesByStatus!.reduce((a, s) => a + s.count, 0)) } } } } },
+              }}
+              series={stats.salesByStatus.map((s) => s.count)}
+            />
+          </div>
+        )}
+        {(stats.users.active > 0 || stats.users.inactive > 0) && (
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Users</h3>
+            <Chart
+              type="donut"
+              height={260}
+              options={{
+                chart: { type: 'donut', fontFamily: 'inherit' },
+                labels: ['Active', 'Inactive'],
+                colors: ['#004AAD', '#9ca3af'],
+                legend: { position: 'bottom', fontSize: '12px' },
+                dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', formatter: () => String(stats.users.total) } } } } },
+              }}
+              series={[stats.users.active, stats.users.inactive]}
+            />
+          </div>
+        )}
+        {stats.suppliers?.total !== undefined && stats.customers?.total !== undefined && (stats.suppliers.total > 0 || stats.customers.total > 0) && (
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Relationships</h3>
+            <Chart
+              type="donut"
+              height={260}
+              options={{
+                chart: { type: 'donut', fontFamily: 'inherit' },
+                labels: ['Suppliers', 'Customers'],
+                colors: ['#7c3aed', '#0891b2'],
+                legend: { position: 'bottom', fontSize: '12px' },
+                dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', formatter: () => String(stats.suppliers!.total + stats.customers!.total) } } } } },
+              }}
+              series={[stats.suppliers.total, stats.customers.total]}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Sales volume full-width bar (last 30 days) - optional alternative: show full 30 days */}
+      {(stats.trends?.daily?.length ?? 0) > 0 && (
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-4">Sales volume — Last 30 days (liters)</h3>
+          <Chart
+            type="bar"
+            height={280}
+            options={{
+              chart: { type: 'bar', toolbar: { show: false } },
+              plotOptions: { bar: { borderRadius: 4, columnWidth: '85%' } },
+              colors: ['#059669'],
+              xaxis: { categories: stats.trends?.daily?.map((d) => d.label) ?? [], labels: { rotate: -45, rotateAlways: true } },
+              yaxis: { title: { text: 'Liters' }, labels: { formatter: (v: number) => String(Math.round(v)) } },
+              dataLabels: { enabled: false },
+              grid: { strokeDashArray: 3 },
+              tooltip: { y: { formatter: (v: number) => `${v} L` } },
+            }}
+            series={[{ name: 'Volume (L)', data: stats.trends?.daily?.map((d) => d.sales) ?? [] }]}
+          />
+        </div>
+      )}
+
+      {/* Recent Sales */}
       {stats.recentSales && stats.recentSales.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
           <h3 className="text-base font-semibold text-gray-900 mb-4">Recent Sales</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -394,14 +265,14 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
                     <td className="py-2 px-3 text-gray-600">{new Date(sale.date).toLocaleDateString()}</td>
                     <td className="py-2 px-3 text-gray-900">{sale.supplier}</td>
                     <td className="py-2 px-3 text-gray-900">{sale.customer}</td>
-                    <td className="py-2 px-3 text-right text-gray-600">{sale.quantity}L</td>
+                    <td className="py-2 px-3 text-right text-gray-600">{sale.quantity} L</td>
                     <td className="py-2 px-3 text-right font-medium text-gray-900">{formatCurrency(sale.total)}</td>
                     <td className="py-2 px-3">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        sale.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                        sale.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          sale.status === 'accepted' ? 'bg-green-100 text-green-800' : sale.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {sale.status}
                       </span>
                     </td>
@@ -416,294 +287,17 @@ function OverviewTab({ stats, formatCurrency, router }: { stats: DashboardStats;
       {/* Quick Actions */}
       <div className="bg-white border border-gray-200 rounded-sm p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => router.push('/admin/users')}
-            className="btn btn-primary text-sm"
-          >
+        <div className="flex flex-wrap gap-3">
+          <Link href="/admin/users" className="btn btn-primary text-sm">
             <Icon icon={faUsers} size="sm" className="mr-2" />
             Manage Users
-          </button>
-          <button
-            onClick={() => router.push('/admin/users/new')}
-            className="btn btn-outline text-sm"
-          >
+          </Link>
+          <Link href="/admin/users/new" className="btn border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">
             <Icon icon={faUsers} size="sm" className="mr-2" />
             Add User
-          </button>
+          </Link>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Financial Tab Component
-function FinancialTab({ stats, formatCurrency }: { stats: DashboardStats; formatCurrency: (n: number) => string }) {
-  return (
-    <div className="space-y-4">
-      {/* Financial Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Revenue"
-          value={stats.revenue ? formatCurrency(stats.revenue.total) : '0'}
-          icon={faDollarSign}
-          color="green"
-        />
-        <MetricCard
-          title="Last 30 Days"
-          value={stats.revenue ? formatCurrency(stats.revenue.last30Days) : '0'}
-          icon={faChartBar}
-          color="blue"
-        />
-        <MetricCard
-          title="Last 7 Days"
-          value={stats.revenue ? formatCurrency(stats.revenue.last7Days) : '0'}
-          icon={faChartBar}
-          color="indigo"
-        />
-        <MetricCard
-          title="Today"
-          value={stats.revenue ? formatCurrency(stats.revenue.today) : '0'}
-          icon={faDollarSign}
-          color="emerald"
-        />
-      </div>
-
-      {/* Revenue Chart */}
-      {stats.trends && stats.trends.daily.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-sm p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue Trend</h3>
-          <Chart
-            type="area"
-            height={400}
-            options={{
-              chart: {
-                type: 'area',
-                toolbar: { show: true },
-                zoom: { enabled: true },
-              },
-              stroke: {
-                curve: 'smooth',
-                width: 2,
-              },
-              fill: {
-                type: 'gradient',
-                gradient: {
-                  shadeIntensity: 1,
-                  opacityFrom: 0.7,
-                  opacityTo: 0.3,
-                  stops: [0, 90, 100],
-                },
-              },
-              colors: ['#004AAD'],
-              xaxis: {
-                categories: stats.trends.daily.map(d => d.label),
-              },
-              yaxis: {
-                labels: {
-                  formatter: (value: number) => formatCurrency(value),
-                },
-              },
-              tooltip: {
-                y: {
-                  formatter: (value: number) => formatCurrency(value),
-                },
-              },
-              dataLabels: {
-                enabled: false,
-              },
-              grid: {
-                strokeDashArray: 3,
-              },
-            }}
-            series={[
-              {
-                name: 'Revenue (RWF)',
-                data: stats.trends.daily.map(d => d.revenue),
-              },
-            ]}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Sales Tab Component
-function SalesTab({ stats, formatCurrency }: { stats: DashboardStats; formatCurrency: (n: number) => string }) {
-  return (
-    <div className="space-y-4">
-      {/* Sales Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Sales"
-          value={stats.sales.total}
-          icon={faReceipt}
-          color="green"
-        />
-        <MetricCard
-          title="Last 30 Days"
-          value={stats.sales.last30Days || 0}
-          icon={faChartBar}
-          color="blue"
-        />
-        <MetricCard
-          title="Last 7 Days"
-          value={stats.sales.last7Days || 0}
-          icon={faChartBar}
-          color="indigo"
-        />
-        <MetricCard
-          title="Today"
-          value={stats.sales.today || 0}
-          icon={faReceipt}
-          color="emerald"
-        />
-      </div>
-
-      {/* Sales Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {stats.trends && stats.trends.daily.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-sm p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">Sales Volume Trend</h3>
-            <Chart
-              type="bar"
-              height={300}
-              options={{
-                chart: {
-                  type: 'bar',
-                  toolbar: { show: false },
-                },
-                colors: ['#004AAD'],
-                xaxis: {
-                  categories: stats.trends.daily.map(d => d.label),
-                },
-                yaxis: {
-                  title: {
-                    text: 'Liters',
-                  },
-                },
-                grid: {
-                  strokeDashArray: 3,
-                },
-                dataLabels: {
-                  enabled: false,
-                },
-              }}
-              series={[
-                {
-                  name: 'Sales (Liters)',
-                  data: stats.trends.daily.map(d => d.sales),
-                },
-              ]}
-            />
-          </div>
-        )}
-
-        {stats.salesByStatus && stats.salesByStatus.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-sm p-4">
-            <h3 className="text-base font-semibold text-gray-900 mb-4">Sales by Status</h3>
-            <Chart
-              type="bar"
-              height={300}
-              options={{
-                chart: {
-                  type: 'bar',
-                  toolbar: { show: false },
-                },
-                colors: ['#10b981'],
-                xaxis: {
-                  categories: stats.salesByStatus.map(s => s.status),
-                },
-                yaxis: {
-                  title: {
-                    text: 'Count',
-                  },
-                },
-                grid: {
-                  strokeDashArray: 3,
-                },
-                dataLabels: {
-                  enabled: true,
-                },
-              }}
-              series={[
-                {
-                  name: 'Count',
-                  data: stats.salesByStatus.map(s => s.count),
-                },
-              ]}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Collections Tab Component
-function CollectionsTab({ stats, formatCurrency }: { stats: DashboardStats; formatCurrency: (n: number) => string }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <MetricCard
-          title="Total Collections"
-          value={stats.collections.total}
-          icon={faBox}
-          color="purple"
-        />
-        <MetricCard
-          title="Total Suppliers"
-          value={stats.suppliers.total}
-          icon={faStore}
-          color="amber"
-        />
-        <MetricCard
-          title="Total Customers"
-          value={stats.customers.total}
-          icon={faUsers}
-          color="indigo"
-        />
-      </div>
-    </div>
-  );
-}
-
-// Metric Card Component
-function MetricCard({ 
-  title, 
-  value, 
-  subtitle, 
-  icon, 
-  color 
-}: { 
-  title: string; 
-  value: string | number; 
-  subtitle?: string; 
-  icon: any; 
-  color: string;
-}) {
-  const colorClasses: Record<string, string> = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    indigo: 'bg-indigo-100 text-indigo-600',
-    purple: 'bg-purple-100 text-purple-600',
-    amber: 'bg-amber-100 text-amber-600',
-    emerald: 'bg-emerald-100 text-emerald-600',
-  };
-
-  return (
-    <div className="bg-white border border-gray-200 rounded-sm p-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className={`w-12 h-12 ${colorClasses[color] || 'bg-gray-100 text-gray-600'} rounded flex items-center justify-center`}>
-          <Icon icon={icon} size="lg" />
-        </div>
-      </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-sm text-gray-600">{title}</div>
-      {subtitle && (
-        <div className="text-xs text-gray-500 mt-1">{subtitle}</div>
-      )}
     </div>
   );
 }

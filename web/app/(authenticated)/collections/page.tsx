@@ -202,7 +202,6 @@ export default function CollectionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Collections</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage milk collections from suppliers</p>
         </div>
         <Link href="/collections/new" className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />

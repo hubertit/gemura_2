@@ -102,7 +102,6 @@ export default function CreateCustomerPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Add Customer</h1>
-          <p className="text-sm text-gray-600 mt-1">Register a new milk customer</p>
         </div>
         <Link href="/customers" className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />

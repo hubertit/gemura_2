@@ -138,7 +138,6 @@ export default function AccountDetailsPage() {
             Back to Accounts
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{account?.account_name || 'Account Details'}</h1>
-          <p className="text-sm text-gray-600 mt-1">View account information and permissions</p>
         </div>
         {account && !account.is_default && (
           <button

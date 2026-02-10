@@ -7,6 +7,7 @@ import Sidebar from '@/app/components/Sidebar';
 import Header from '@/app/components/Header';
 import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 import Toast from '@/app/components/Toast';
+import RouteGuard from '@/app/components/RouteGuard';
 
 export default function AuthenticatedLayout({
   children,
@@ -89,7 +90,7 @@ export default function AuthenticatedLayout({
             onMenuToggle={handleSidebarToggle}
           />
           <main className="flex-1 overflow-y-auto p-6">
-            {children}
+            <RouteGuard>{children}</RouteGuard>
           </main>
           <Toast />
         </div>

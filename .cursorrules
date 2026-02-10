@@ -39,3 +39,7 @@
 ## Task Completion
 
 - On completion of each task (especially when touching mobile code), run `flutter analyze` from the `mobile/` directory and fix any new **errors** or **warnings** introduced. Inform the user of the analyze result.
+
+## Git
+
+- When a feature or logical set of changes is completed, commit and push: run `git add` for the changed files, `git commit` with a clear message describing the feature/fix, and `git push`. Skip build artifacts, dependencies, and local-only files (e.g. backups).

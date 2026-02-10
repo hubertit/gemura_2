@@ -177,7 +177,6 @@ export default function EditInventoryPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Edit Inventory Item</h1>
-          <p className="text-sm text-gray-600 mt-1">Update inventory item information</p>
         </div>
         <Link href={`/inventory/${itemId}`} className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />

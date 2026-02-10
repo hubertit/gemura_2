@@ -99,7 +99,6 @@ export default function InventoryItemDetailsPage() {
             Back to Inventory
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{item?.name || 'Inventory Item Details'}</h1>
-          <p className="text-sm text-gray-600 mt-1">View inventory item information</p>
         </div>
         <div className="flex items-center gap-2">
           <Link href={`/inventory/${itemId}/sell`} className="btn btn-primary">

@@ -218,7 +218,6 @@ export default function SellInventoryPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Sell Inventory Item</h1>
-          <p className="text-sm text-gray-600 mt-1">Record a sale of {item?.name}</p>
         </div>
         <Link href={`/inventory/${itemId}`} className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />

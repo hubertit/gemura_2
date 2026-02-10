@@ -177,7 +177,6 @@ export default function AccountsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Accounts</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage your accounts and switch between them</p>
         </div>
       </div>
 

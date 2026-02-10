@@ -85,6 +85,36 @@ export class AdminController {
     return this.adminService.getDashboardStats(user, accountId);
   }
 
+  @Get('roles')
+  @RequirePermission('manage_users')
+  @ApiOperation({
+    summary: 'Get all roles with default permissions',
+    description: 'Returns roles and their default permission set. Used for Roles admin page.',
+  })
+  @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
+  @ApiForbiddenResponse({ description: 'Requires manage_users permission' })
+  async getRoles(
+    @CurrentUser() user: User,
+    @CurrentAccount() accountId: string,
+  ) {
+    return this.adminService.getRoles(user, accountId);
+  }
+
+  @Get('permissions')
+  @RequirePermission('manage_users')
+  @ApiOperation({
+    summary: 'Get all permissions with role assignments',
+    description: 'Returns permissions and which roles have them by default. Used for Permissions admin page.',
+  })
+  @ApiResponse({ status: 200, description: 'Permissions retrieved successfully' })
+  @ApiForbiddenResponse({ description: 'Requires manage_users permission' })
+  async getPermissions(
+    @CurrentUser() user: User,
+    @CurrentAccount() accountId: string,
+  ) {
+    return this.adminService.getPermissions(user, accountId);
+  }
+
   @Get('users')
   @RequirePermission('manage_users')
   @ApiOperation({
@@ -111,6 +141,20 @@ export class AdminController {
     type: String,
     description: 'Search term for filtering users by name, email, or phone',
     example: 'John',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    type: String,
+    description: 'Filter by user status: active or inactive',
+    example: 'active',
+  })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    type: String,
+    description: 'Filter by account role: owner, admin, manager, collector, supplier, customer',
+    example: 'admin',
   })
   @ApiResponse({
     status: 200,
@@ -162,10 +206,12 @@ export class AdminController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('role') role?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
-    return this.adminService.getUsers(user, accountId, pageNum, limitNum, search);
+    return this.adminService.getUsers(user, accountId, pageNum, limitNum, search, status, role);
   }
 
   @Get('users/:id')

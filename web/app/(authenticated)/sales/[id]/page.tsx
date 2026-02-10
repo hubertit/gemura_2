@@ -94,7 +94,6 @@ export default function SaleDetailsPage() {
             Back to Sales
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Sale Details</h1>
-          <p className="text-sm text-gray-600 mt-1">View sale information and transaction details</p>
         </div>
         {sale && sale.status !== 'cancelled' && sale.status !== 'deleted' && (
           <Link href={`/sales/${saleId}/edit`} className="btn btn-primary">

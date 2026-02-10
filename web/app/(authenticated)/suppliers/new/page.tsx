@@ -110,7 +110,6 @@ export default function CreateSupplierPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Add Supplier</h1>
-          <p className="text-sm text-gray-600 mt-1">Register a new milk supplier</p>
         </div>
         <Link href="/suppliers" className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />

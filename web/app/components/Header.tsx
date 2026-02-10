@@ -96,11 +96,9 @@ export default function Header({
         {/* Search Input */}
         <div className="flex-1 relative hidden sm:block max-w-[240px] md:max-w-[280px] lg:max-w-[360px]" ref={searchRef}>
           <div className="relative w-full">
-            <Icon
-              icon={searchLoading ? faSpinner : faSearch}
-              className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none transition-colors ${searchLoading ? 'animate-spin text-[var(--primary)]' : ''}`}
-              size="sm"
-            />
+            <div className={`absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400 z-10 transition-colors ${searchLoading ? 'animate-spin text-[var(--primary)]' : ''}`}>
+              <Icon icon={searchLoading ? faSpinner : faSearch} size="sm" />
+            </div>
             <input
               type="text"
               placeholder="Search sales, collections, suppliers..."
@@ -111,7 +109,7 @@ export default function Header({
                   setSearchOpen(true);
                 }
               }}
-              className="input pl-10"
+              className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
             />
           </div>
         </div>
@@ -227,20 +225,12 @@ export default function Header({
                     </>
                   )}
                   <Link
-                    href="/profile"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-3 w-full px-4 py-3 bg-transparent border-none text-left text-sm text-gray-700 cursor-pointer no-underline transition-colors hover:bg-gray-50"
-                  >
-                    <Icon icon={faUser} className="text-gray-500" size="sm" />
-                    <span>Profile</span>
-                  </Link>
-                  <Link
                     href="/settings"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-3 w-full px-4 py-3 bg-transparent border-none text-left text-sm text-gray-700 cursor-pointer no-underline transition-colors hover:bg-gray-50"
                   >
-                    <Icon icon={faCog} className="text-gray-500" size="sm" />
-                    <span>Settings</span>
+                    <Icon icon={faUser} className="text-gray-500" size="sm" />
+                    <span>Profile &amp; Settings</span>
                   </Link>
                   <div className="h-px bg-gray-200 my-1"></div>
                   <button

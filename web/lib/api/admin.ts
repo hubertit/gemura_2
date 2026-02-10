@@ -104,16 +104,50 @@ export interface UpdateUserData {
   permissions?: Record<string, boolean>;
 }
 
+export interface RoleItem {
+  code: string;
+  name: string;
+  description: string;
+  permissions: string[];
+  permissionCount: number;
+}
+
+export interface PermissionItem {
+  code: string;
+  name: string;
+  description: string;
+  category?: string;
+  roles: Array<{ code: string; name: string }>;
+}
+
 export const adminApi = {
   getDashboardStats: async (accountId?: string): Promise<{ code: number; status: string; message: string; data: DashboardStats }> => {
     const params = accountId ? { account_id: accountId } : {};
     return apiClient.get('/admin/dashboard/stats', { params });
   },
 
-  getUsers: async (page: number = 1, limit: number = 10, search?: string, accountId?: string): Promise<UsersResponse> => {
+  getRoles: async (accountId?: string): Promise<{ code: number; status: string; message: string; data: { roles: RoleItem[] } }> => {
+    const params = accountId ? { account_id: accountId } : {};
+    return apiClient.get('/admin/roles', { params });
+  },
+
+  getPermissions: async (accountId?: string): Promise<{ code: number; status: string; message: string; data: { permissions: PermissionItem[] } }> => {
+    const params = accountId ? { account_id: accountId } : {};
+    return apiClient.get('/admin/permissions', { params });
+  },
+
+  getUsers: async (
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    accountId?: string,
+    filters?: { status?: string; role?: string },
+  ): Promise<UsersResponse> => {
     const params: any = { page, limit };
     if (search) params.search = search;
     if (accountId) params.account_id = accountId;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.role) params.role = filters.role;
     return apiClient.get('/admin/users', { params });
   },
 

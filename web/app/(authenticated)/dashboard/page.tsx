@@ -55,7 +55,6 @@ export default function Dashboard() {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-600 mt-1">Overview of your financial operations</p>
       </div>
 
       {/* Metrics Grid */}

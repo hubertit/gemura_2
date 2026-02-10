@@ -86,7 +86,6 @@ export default function SupplierDetailsPage() {
             Back to Suppliers
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{supplier?.name || 'Supplier Details'}</h1>
-          <p className="text-sm text-gray-600 mt-1">View supplier information and relationship details</p>
         </div>
         <Link href={`/suppliers/${supplierCode}/edit`} className="btn btn-primary">
           <Icon icon={faEdit} size="sm" className="mr-2" />

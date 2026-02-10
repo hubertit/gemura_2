@@ -4,6 +4,14 @@ import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import {
+  ROLES,
+  PERMISSIONS,
+  ROLE_DEFAULT_PERMISSIONS,
+  ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
+  type RoleCode,
+} from './roles-permissions.config';
 
 @Injectable()
 export class AdminService {
@@ -75,7 +83,15 @@ export class AdminService {
   /**
    * Get all users with pagination and filters
    */
-  async getUsers(user: User, accountId: string, page: number = 1, limit: number = 20, search?: string) {
+  async getUsers(
+    user: User,
+    accountId: string,
+    page: number = 1,
+    limit: number = 20,
+    search?: string,
+    status?: string,
+    role?: string,
+  ) {
     await this.checkAdminPermission(user, accountId);
 
     const skip = (page - 1) * limit;
@@ -88,6 +104,19 @@ export class AdminService {
         { email: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
       ];
+    }
+
+    if (status === 'active' || status === 'inactive') {
+      where.status = status;
+    }
+
+    if (role) {
+      where.user_accounts = {
+        some: {
+          account_id: accountId,
+          role,
+        },
+      };
     }
 
     const [users, total] = await Promise.all([
@@ -175,11 +204,29 @@ export class AdminService {
       });
     }
 
+    const ua = targetUser.user_accounts?.[0];
+    let permissions: Record<string, boolean> | null = null;
+    if (ua?.permissions) {
+      try {
+        permissions = typeof ua.permissions === 'string' ? JSON.parse(ua.permissions) : ua.permissions;
+      } catch {
+        permissions = null;
+      }
+    }
+
+    const { user_accounts, ...userRest } = targetUser;
+    const data = {
+      ...userRest,
+      role: ua?.role ?? null,
+      permissions,
+      user_accounts,
+    };
+
     return {
       code: 200,
       status: 'success',
       message: 'User retrieved successfully.',
-      data: targetUser,
+      data,
     };
   }
 
@@ -404,9 +451,9 @@ export class AdminService {
 
     // Get date ranges for trends
     const now = new Date();
-    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const today = new Date(now.setHours(0, 0, 0, 0));
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const last30Days = new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const last7Days = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // Basic counts
     const [
@@ -462,7 +509,7 @@ export class AdminService {
     );
 
     const salesToday = allSales.filter(
-      (sale) => new Date(sale.sale_at) >= today,
+      (sale) => new Date(sale.sale_at) >= todayStart,
     );
     const revenueToday = salesToday.reduce(
       (sum, sale) => sum + Number(sale.quantity) * Number(sale.unit_price),
@@ -474,7 +521,7 @@ export class AdminService {
     
     // Initialize last 30 days
     for (let i = 29; i >= 0; i--) {
-      const date = new Date(now);
+      const date = new Date(todayStart);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       dailyBreakdown.set(dateStr, { date: dateStr, revenue: 0, sales: 0 });
@@ -577,6 +624,54 @@ export class AdminService {
           customer: sale.customer_account?.name || 'N/A',
         })),
       },
+    };
+  }
+
+  /**
+   * Get all roles with their default permissions (ResolveIT-style)
+   */
+  async getRoles(user: User, accountId: string) {
+    await this.checkAdminPermission(user, accountId);
+    const roles = ROLES.map((role) => ({
+      code: role,
+      name: ROLE_LABELS[role as RoleCode],
+      description: ROLE_DESCRIPTIONS[role as RoleCode],
+      permissions: ROLE_DEFAULT_PERMISSIONS[role as RoleCode],
+      permissionCount: ROLE_DEFAULT_PERMISSIONS[role as RoleCode].length,
+    }));
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Roles retrieved successfully.',
+      data: { roles },
+    };
+  }
+
+  /**
+   * Get all permissions with which roles have them (ResolveIT-style)
+   */
+  async getPermissions(user: User, accountId: string) {
+    await this.checkAdminPermission(user, accountId);
+    const permissions = PERMISSIONS.map((perm) => {
+      const rolesWithPermission = ROLES.filter((role) =>
+        ROLE_DEFAULT_PERMISSIONS[role as RoleCode].includes(perm.code),
+      );
+      return {
+        code: perm.code,
+        name: perm.name,
+        description: perm.description,
+        category: perm.category,
+        roles: rolesWithPermission.map((r) => ({
+          code: r,
+          name: ROLE_LABELS[r as RoleCode],
+        })),
+      };
+    });
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Permissions retrieved successfully.',
+      data: { permissions },
     };
   }
 }

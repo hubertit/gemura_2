@@ -86,7 +86,6 @@ export default function CustomerDetailsPage() {
             Back to Customers
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{customer?.name || 'Customer Details'}</h1>
-          <p className="text-sm text-gray-600 mt-1">View customer information and relationship details</p>
         </div>
         <Link href={`/customers/${customerCode}/edit`} className="btn btn-primary">
           <Icon icon={faEdit} size="sm" className="mr-2" />

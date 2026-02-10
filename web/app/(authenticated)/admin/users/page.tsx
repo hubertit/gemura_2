@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
 import { adminApi, UserListItem, UsersResponse } from '@/lib/api/admin';
@@ -9,80 +9,91 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Pagination from '@/app/components/Pagination';
-import Icon, { faPlus, faEdit, faTrash, faEye, faCheckCircle } from '@/app/components/Icon';
+import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions } from '@/app/components/FilterBar';
+import Icon, { faPlus, faEye } from '@/app/components/Icon';
+
+const ROLE_OPTIONS = [
+  { value: '', label: 'All Roles' },
+  { value: 'owner', label: 'Owner' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'collector', label: 'Collector' },
+  { value: 'supplier', label: 'Supplier' },
+  { value: 'customer', label: 'Customer' },
+];
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Status' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+];
+
+const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function UsersPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { canManageUsers, isAdmin } = usePermission();
   const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [pageSize, setPageSize] = useState(10);
   const [error, setError] = useState('');
-  const LIMIT = 10; // Constant limit to avoid dependency issues
   const hasLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
-  const searchRef = useRef(search);
+  const filtersRef = useRef({ search, statusFilter, roleFilter, pageSize });
   const accountIdRef = useRef(currentAccount?.account_id);
 
-  // Keep refs in sync
   useEffect(() => {
-    searchRef.current = search;
-  }, [search]);
+    filtersRef.current = { search, statusFilter, roleFilter, pageSize };
+  }, [search, statusFilter, roleFilter, pageSize]);
 
   useEffect(() => {
     accountIdRef.current = currentAccount?.account_id;
   }, [currentAccount?.account_id]);
 
-  const loadUsers = useCallback(async (page: number = 1, searchTerm?: string) => {
-    // Prevent concurrent loads
-    if (isLoadingRef.current) {
-      console.log('Load already in progress, skipping...');
-      return;
-    }
+  const loadUsers = useCallback(async (page: number = 1, overrides?: { limit?: number }) => {
+    if (isLoadingRef.current) return;
+    const { search: s, statusFilter: st, roleFilter: r, pageSize: lim } = filtersRef.current;
+    const limit = overrides?.limit ?? lim;
 
     try {
       isLoadingRef.current = true;
       setLoading(true);
       setError('');
-      const searchValue = searchTerm !== undefined ? searchTerm : searchRef.current;
-      const accountId = accountIdRef.current;
-      
-      console.log('Loading users...', { page, searchValue, accountId });
-      const response: UsersResponse = await adminApi.getUsers(page, LIMIT, searchValue || undefined, accountId);
-      console.log('Users response:', { code: response?.code, hasData: !!response?.data, usersCount: response?.data?.users?.length });
-      
-      // Ensure we always set loading to false, even if response structure is unexpected
+      const response: UsersResponse = await adminApi.getUsers(
+        page,
+        limit,
+        s?.trim() || undefined,
+        accountIdRef.current,
+        (st || r) ? { ...(st ? { status: st } : {}), ...(r ? { role: r } : {}) } : undefined,
+      );
+
       if (response && response.code === 200 && response.data) {
         const usersArray = Array.isArray(response.data.users) ? response.data.users : [];
-        const paginationData = response.data.pagination || { page: 1, limit: LIMIT, total: 0, totalPages: 0 };
-        
-        console.log('Setting users:', usersArray.length, 'Setting pagination:', paginationData);
+        const paginationData = response.data.pagination || { page: 1, limit, total: 0, totalPages: 0 };
         setUsers(usersArray);
         setPagination(paginationData);
         hasLoadedRef.current = true;
       } else {
-        console.error('Invalid response structure:', response);
         setError(response?.message || 'Failed to load users');
         setUsers([]);
-        setPagination({ page: 1, limit: LIMIT, total: 0, totalPages: 0 });
+        setPagination({ page: 1, limit, total: 0, totalPages: 0 });
       }
     } catch (err: any) {
-      console.error('Error loading users:', err);
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to load users';
       setError(errorMessage);
       setUsers([]);
-      setPagination({ page: 1, limit: LIMIT, total: 0, totalPages: 0 });
+      setPagination((prev) => ({ ...prev, total: 0, totalPages: 0 }));
       useToastStore.getState().error(errorMessage);
     } finally {
-      // Always set loading to false, no matter what
-      console.log('Setting loading to false');
       isLoadingRef.current = false;
       setLoading(false);
     }
-  }, []); // No dependencies - uses refs instead
+  }, []);
 
   // Initial load and permission check
   useEffect(() => {
@@ -98,23 +109,23 @@ export default function UsersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canManageUsers, isAdmin, router]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPagination(prev => ({ ...prev, page: 1 }));
-    loadUsers(1, search);
+  const applyFilters = () => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    loadUsers(1);
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) {
-      return;
-    }
+  const onSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') applyFilters();
+  };
 
-    try {
-      await adminApi.deleteUser(userId, currentAccount?.account_id);
-      loadUsers(pagination.page);
-    } catch (err: any) {
-      useToastStore.getState().error(err?.response?.data?.message || 'Failed to delete user');
-    }
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setRoleFilter('');
+    setPageSize(10);
+    setPagination((prev) => ({ ...prev, page: 1 }));
+    filtersRef.current = { search: '', statusFilter: '', roleFilter: '', pageSize: 10 };
+    loadUsers(1);
   };
 
   const columns: TableColumn<UserListItem>[] = [
@@ -167,29 +178,14 @@ export default function UsersPage() {
       key: 'actions',
       label: 'Actions',
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/admin/users/${row.id}`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="View"
-          >
-            <Icon icon={faEye} size="sm" />
-          </Link>
-          <Link
-            href={`/admin/users/${row.id}/edit`}
-            className="p-1.5 text-gray-600 hover:text-[var(--primary)] transition-colors"
-            title="Edit"
-          >
-            <Icon icon={faEdit} size="sm" />
-          </Link>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 text-gray-600 hover:text-red-600 transition-colors"
-            title="Delete"
-          >
-            <Icon icon={faTrash} size="sm" />
-          </button>
-        </div>
+        <Link
+          href={`/admin/users/${row.id}`}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-[var(--primary)] transition-colors"
+          title="View details"
+        >
+          <Icon icon={faEye} size="sm" />
+          View
+        </Link>
       ),
     },
   ];
@@ -200,7 +196,6 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage system users</p>
         </div>
         <Link href="/admin/users/new" className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />
@@ -209,19 +204,71 @@ export default function UsersPage() {
       </div>
 
 
-      {/* Search */}
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Search users by name, email, or phone..."
+      {/* Filters (ResolveIT-style bar) */}
+      <FilterBar>
+        <FilterBarSearch
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="input flex-1"
+          onChange={setSearch}
+          placeholder="Search by name, email, or phone..."
+          onKeyDown={onSearchKeyDown}
         />
-        <button type="submit" className="btn btn-primary">
-          Search
-        </button>
-      </form>
+        <FilterBarGroup label="Role">
+          <select
+            value={roleFilter}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+              filtersRef.current.roleFilter = e.target.value;
+              loadUsers(1);
+            }}
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+          >
+            {ROLE_OPTIONS.map((o) => (
+              <option key={o.value || 'all'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </FilterBarGroup>
+        <FilterBarGroup label="Status">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPagination((prev) => ({ ...prev, page: 1 }));
+              filtersRef.current.statusFilter = e.target.value;
+              loadUsers(1);
+            }}
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+          >
+            {STATUS_OPTIONS.map((o) => (
+              <option key={o.value || 'all'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </FilterBarGroup>
+        <FilterBarGroup label="Page Size">
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setPageSize(val);
+              filtersRef.current.pageSize = val;
+              setPagination((prev) => ({ ...prev, page: 1 }));
+              loadUsers(1, { limit: val });
+            }}
+            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+          >
+            {PAGE_SIZES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </FilterBarGroup>
+        <FilterBarActions onClear={clearFilters} />
+      </FilterBar>
 
       {/* Error Message */}
       {error && (

@@ -198,7 +198,6 @@ export default function InventoryPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage your product inventory</p>
         </div>
         <Link href="/inventory/new" className="btn btn-primary">
           <Icon icon={faPlus} size="sm" className="mr-2" />

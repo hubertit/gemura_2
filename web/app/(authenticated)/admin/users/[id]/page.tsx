@@ -1,47 +1,65 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePermission } from '@/hooks/usePermission';
+import { PermissionService } from '@/lib/services/permission.service';
 import { adminApi } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
-import Icon, { faUser, faEnvelope, faPhone, faBuilding, faUserShield, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar } from '@/app/components/Icon';
+import Icon, { faUser, faEnvelope, faPhone, faBuilding, faUserShield, faEdit, faTrash, faArrowLeft, faSpinner, faCalendar } from '@/app/components/Icon';
+import { useToastStore } from '@/store/toast';
 
 export default function UserDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const userId = params.id as string;
-  const { canManageUsers, isAdmin } = usePermission();
   const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (!canManageUsers() && !isAdmin()) {
+    if (!PermissionService.canManageUsers() && !PermissionService.isAdmin()) {
       router.push('/admin/users');
       return;
     }
-    loadUser();
-  }, [userId, canManageUsers, isAdmin, router]);
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    adminApi
+      .getUserById(userId, currentAccount?.account_id)
+      .then((response) => {
+        if (cancelled) return;
+        if (response.code === 200 && response.data) {
+          setUser(response.data);
+        } else {
+          setError('Failed to load user data');
+        }
+      })
+      .catch((err: any) => {
+        if (!cancelled) {
+          setError(err?.response?.data?.message || err?.message || 'Failed to load user. Please try again.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, currentAccount?.account_id, router]);
 
-  const loadUser = async () => {
+  const handleDelete = async () => {
+    if (!user) return;
+    if (!confirm(`Are you sure you want to delete "${user.name}"? This action cannot be undone.`)) {
+      return;
+    }
     try {
-      setLoading(true);
-      setError('');
-      const response = await adminApi.getUserById(userId, currentAccount?.account_id);
-
-      if (response.code === 200 && response.data) {
-        setUser(response.data);
-      } else {
-        setError('Failed to load user data');
-      }
+      await adminApi.deleteUser(userId, currentAccount?.account_id);
+      useToastStore.getState().success('User deleted successfully.');
+      router.push('/admin/users');
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to load user. Please try again.');
-    } finally {
-      setLoading(false);
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to delete user.');
     }
   };
 
@@ -99,7 +117,7 @@ export default function UserDetailsPage() {
   return (
     <div className="space-y-4">
 
-      {/* Page Header */}
+      {/* Page Header - ResolveIT style: Back, Edit & Delete on details page */}
       <div className="flex items-center justify-between">
         <div>
           <Link href="/admin/users" className="text-sm text-gray-600 hover:text-[var(--primary)] mb-2 inline-flex items-center">
@@ -107,12 +125,21 @@ export default function UserDetailsPage() {
             Back to Users
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{user?.name || 'User Details'}</h1>
-          <p className="text-sm text-gray-600 mt-1">View user information and permissions</p>
         </div>
-        <Link href={`/admin/users/${userId}/edit`} className="btn btn-primary">
-          <Icon icon={faEdit} size="sm" className="mr-2" />
-          Edit User
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/users/${userId}/edit`} className="btn btn-primary">
+            <Icon icon={faEdit} size="sm" className="mr-2" />
+            Edit User
+          </Link>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="btn border border-red-300 text-red-700 bg-white hover:bg-red-50 transition-colors"
+          >
+            <Icon icon={faTrash} size="sm" className="mr-2" />
+            Delete User
+          </button>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -250,6 +277,14 @@ export default function UserDetailsPage() {
                   <Icon icon={faEdit} size="sm" className="mr-2" />
                   Edit User
                 </Link>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-200 rounded hover:bg-red-50 transition-colors"
+                >
+                  <Icon icon={faTrash} size="sm" />
+                  Delete User
+                </button>
                 <Link href="/admin/users" className="btn btn-secondary w-full justify-center">
                   <Icon icon={faArrowLeft} size="sm" className="mr-2" />
                   Back to List

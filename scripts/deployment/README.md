@@ -109,9 +109,26 @@ Returns only the port number to stdout.
 PORT=$(./scripts/deployment/find-available-port.sh)
 ```
 
+## Credentials (same server as ResolveIT v2)
+
+Gemura uses the **same server** as ResolveIT v2. Credentials are read from ResolveIT v2 when present so you maintain them in one place.
+
+1. **Preferred:** In ResolveIT v2 create the credentials file (one-time):
+   ```bash
+   cd /Applications/AMPPS/www/resolveit/v2/scripts/deployment
+   cp server-credentials.sh.example server-credentials.sh
+   # Edit server-credentials.sh and set SERVER_PASS
+   chmod 600 server-credentials.sh
+   ```
+   Then `deploy-to-server.sh` and `ensure-backend-up.sh` will source it automatically (default path: `/Applications/AMPPS/www/resolveit/v2/scripts/deployment/server-credentials.sh`).
+
+2. **Override path:** `export RESOLVEIT_V2_CREDS=/path/to/server-credentials.sh` before running Gemura deploy scripts.
+
+3. **Or set inline:** `export SERVER_PASS=your_password` (and optionally `SERVER_IP`, `SERVER_USER`).
+
 ## Server Configuration
 
-- **Server IP**: `159.198.65.38`
+- **Server IP**: `159.198.65.38` (same as ResolveIT v2)
 - **Deployment Path**: `/opt/gemura`
 - **Database**: Shared DevLabs PostgreSQL (`devslab-postgres`)
 - **Database Name**: `gemura_db`

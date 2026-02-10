@@ -94,7 +94,6 @@ export default function CollectionDetailsPage() {
             Back to Collections
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Collection Details</h1>
-          <p className="text-sm text-gray-600 mt-1">View collection information and transaction details</p>
         </div>
         {collection && collection.status !== 'cancelled' && collection.status !== 'deleted' && (
           <Link href={`/collections/${collectionId}/edit`} className="btn btn-primary">

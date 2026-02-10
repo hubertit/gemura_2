@@ -10,11 +10,21 @@
 
 set -e
 
-SERVER_IP="159.198.65.38"
-SERVER_USER="root"
-SERVER_PASS="QF87VtuYReX5v9p6e3"
+# Use ResolveIT v2 server credentials when present (same server)
+RESOLVEIT_CREDS="${RESOLVEIT_V2_CREDS:-/Applications/AMPPS/www/resolveit/v2/scripts/deployment/server-credentials.sh}"
+[ -f "$RESOLVEIT_CREDS" ] && source "$RESOLVEIT_CREDS"
+SERVER_IP="${SERVER_IP:-159.198.65.38}"
+SERVER_USER="${SERVER_USER:-root}"
+SERVER_PASS="${SERVER_PASS:-}"
 DEPLOY_PATH="/opt/gemura"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ -z "$SERVER_PASS" ]; then
+    echo "❌ SERVER_PASS not set. Either:"
+    echo "   1. In ResolveIT v2: cp scripts/deployment/server-credentials.sh.example scripts/deployment/server-credentials.sh, then set SERVER_PASS"
+    echo "   2. Or: export SERVER_PASS=your_password"
+    exit 1
+fi
 
 echo "🚀 Starting Gemura Deployment to Server..."
 echo "================================================"

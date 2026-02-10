@@ -37,25 +37,22 @@ const STATUS_OPTIONS = [
   { value: 'inactive', label: 'Inactive' },
 ];
 
-// Common permissions
-const PERMISSIONS = [
-  { key: 'manage_users', label: 'Manage Users' },
-  { key: 'view_sales', label: 'View Sales' },
-  { key: 'create_sales', label: 'Create Sales' },
-  { key: 'update_sales', label: 'Update Sales' },
-  { key: 'delete_sales', label: 'Delete Sales' },
-  { key: 'view_collections', label: 'View Collections' },
-  { key: 'create_collections', label: 'Create Collections' },
-  { key: 'view_suppliers', label: 'View Suppliers' },
-  { key: 'create_suppliers', label: 'Create Suppliers' },
-  { key: 'view_customers', label: 'View Customers' },
-  { key: 'create_customers', label: 'Create Customers' },
-  { key: 'view_inventory', label: 'View Inventory' },
-  { key: 'manage_inventory', label: 'Manage Inventory' },
-  { key: 'view_reports', label: 'View Reports' },
-  { key: 'dashboard.view', label: 'View Dashboard' },
-  { key: 'can_collect', label: 'Can Collect' },
-  { key: 'can_add_supplier', label: 'Can Add Supplier' },
+// Fallback if permissions API fails
+const PERMISSIONS_FALLBACK = [
+  { code: 'manage_users', name: 'Manage Users' },
+  { code: 'dashboard.view', name: 'View Dashboard' },
+  { code: 'view_sales', name: 'View Sales' },
+  { code: 'create_sales', name: 'Create Sales' },
+  { code: 'update_sales', name: 'Update Sales' },
+  { code: 'view_collections', name: 'View Collections' },
+  { code: 'create_collections', name: 'Create Collections' },
+  { code: 'view_suppliers', name: 'View Suppliers' },
+  { code: 'create_suppliers', name: 'Create Suppliers' },
+  { code: 'view_customers', name: 'View Customers' },
+  { code: 'create_customers', name: 'Create Customers' },
+  { code: 'view_inventory', name: 'View Inventory' },
+  { code: 'manage_inventory', name: 'Manage Inventory' },
+  { code: 'view_analytics', name: 'View Analytics' },
 ];
 
 export default function CreateUserPage() {
@@ -65,6 +62,7 @@ export default function CreateUserPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [permissionList, setPermissionList] = useState<{ code: string; name: string }[]>(PERMISSIONS_FALLBACK);
   const [formData, setFormData] = useState<CreateUserData & { confirmPassword: string }>({
     name: '',
     email: '',
@@ -76,6 +74,16 @@ export default function CreateUserPage() {
     role: 'viewer',
     permissions: {},
   });
+
+  // Load permissions list from API (single source of truth)
+  useEffect(() => {
+    if (!currentAccount?.account_id) return;
+    adminApi.getPermissions(currentAccount.account_id).then((res) => {
+      if (res.code === 200 && res.data?.permissions?.length) {
+        setPermissionList(res.data.permissions.map((p) => ({ code: p.code, name: p.name })));
+      }
+    }).catch(() => {});
+  }, [currentAccount?.account_id]);
 
   // Check permission on mount
   useEffect(() => {
@@ -171,7 +179,6 @@ export default function CreateUserPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Create User</h1>
-          <p className="text-sm text-gray-600 mt-1">Add a new user to the system</p>
         </div>
         <Link href="/admin/users" className="btn btn-secondary">
           <Icon icon={faTimes} size="sm" className="mr-2" />
@@ -198,7 +205,7 @@ export default function CreateUserPage() {
                 Full Name <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400">
                   <Icon icon={faUser} size="sm" />
                 </div>
                 <input
@@ -208,7 +215,7 @@ export default function CreateUserPage() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="input pl-11 w-full"
+                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
                   placeholder="Enter full name"
                   disabled={loading}
                 />
@@ -221,7 +228,7 @@ export default function CreateUserPage() {
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400">
                   <Icon icon={faEnvelope} size="sm" />
                 </div>
                 <input
@@ -230,7 +237,7 @@ export default function CreateUserPage() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input pl-11 w-full"
+                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
                   placeholder="Enter email address"
                   disabled={loading}
                 />
@@ -243,7 +250,7 @@ export default function CreateUserPage() {
                 Phone Number
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400">
                   <Icon icon={faPhone} size="sm" />
                 </div>
                 <input
@@ -252,7 +259,7 @@ export default function CreateUserPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="input pl-11 w-full"
+                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
                   placeholder="250788123456"
                   disabled={loading}
                 />
@@ -271,7 +278,7 @@ export default function CreateUserPage() {
                 Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400">
                   <Icon icon={faLock} size="sm" />
                 </div>
                 <input
@@ -281,7 +288,7 @@ export default function CreateUserPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="input pl-11 w-full"
+                  className="w-full pl-12 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
                   placeholder="Enter password (min 6 characters)"
                   disabled={loading}
                   minLength={6}
@@ -289,7 +296,8 @@ export default function CreateUserPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   <Icon icon={showPassword ? faTimes : faLock} size="sm" />
                 </button>
@@ -302,7 +310,7 @@ export default function CreateUserPage() {
                 Confirm Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10">
+                <div className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400">
                   <Icon icon={faLock} size="sm" />
                 </div>
                 <input
@@ -312,7 +320,7 @@ export default function CreateUserPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="input pl-11 w-full"
+                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
                   placeholder="Confirm password"
                   disabled={loading}
                 />
@@ -395,20 +403,21 @@ export default function CreateUserPage() {
         {/* Permissions */}
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Permissions</h2>
+          <p className="text-sm text-gray-600 mb-3">Optional overrides. The selected role already has default permissions; check any extras for this user.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {PERMISSIONS.map(permission => (
+            {permissionList.map((permission) => (
               <label
-                key={permission.key}
+                key={permission.code}
                 className="flex items-center p-3 border border-gray-200 rounded-sm hover:bg-gray-50 cursor-pointer"
               >
                 <input
                   type="checkbox"
-                  checked={formData.permissions?.[permission.key] || false}
-                  onChange={() => handlePermissionToggle(permission.key)}
+                  checked={formData.permissions?.[permission.code] || false}
+                  onChange={() => handlePermissionToggle(permission.code)}
                   className="mr-3 h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
                   disabled={loading}
                 />
-                <span className="text-sm text-gray-700">{permission.label}</span>
+                <span className="text-sm text-gray-700">{permission.name}</span>
               </label>
             ))}
           </div>
