@@ -1,9 +1,10 @@
-import { Controller, Post, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiUnauthorizedResponse, ApiBadRequestResponse } from '@nestjs/swagger';
 import { StatsService } from './stats.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
+import { GetOverviewDto } from './dto/get-overview.dto';
 
 @ApiTags('Stats')
 @Controller('stats')
@@ -71,8 +72,8 @@ export class StatsController {
       message: 'Access denied. Token is required.',
     },
   })
-  async getOverview(@CurrentUser() user: User) {
-    return this.statsService.getOverview(user);
+  async getOverview(@CurrentUser() user: User, @Body() dto?: GetOverviewDto) {
+    return this.statsService.getOverview(user, dto?.account_id, dto?.date_from, dto?.date_to);
   }
 
   @Post()

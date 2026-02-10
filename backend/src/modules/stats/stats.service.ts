@@ -6,23 +6,56 @@ import { User, Prisma } from '@prisma/client';
 export class StatsService {
   constructor(private prisma: PrismaService) {}
 
-  async getOverview(user: User) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found.',
+  async getOverview(user: User, accountIdParam?: string, dateFromStr?: string, dateToStr?: string) {
+    let accountId: string;
+
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
       });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      accountId = accountIdParam;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found.',
+        });
+      }
+      accountId = user.default_account_id;
     }
 
-    const accountId = user.default_account_id;
+    const saleAtFilter: Prisma.MilkSaleWhereInput['sale_at'] =
+      dateFromStr && dateToStr
+        ? {
+            gte: new Date(`${dateFromStr}T00:00:00.000Z`),
+            lte: new Date(`${dateToStr}T23:59:59.999Z`),
+          }
+        : undefined;
+
+    const baseWhere = (extra: Prisma.MilkSaleWhereInput): Prisma.MilkSaleWhereInput => ({
+      ...extra,
+      ...(saleAtFilter && { sale_at: saleAtFilter }),
+    });
 
     // Get collections data (customer perspective)
     const collectionsAgg = await this.prisma.milkSale.aggregate({
-      where: {
+      where: baseWhere({
         customer_account_id: accountId,
         status: { not: 'deleted' },
-      },
+      }),
       _sum: {
         quantity: true,
       },
@@ -31,10 +64,10 @@ export class StatsService {
 
     // Calculate total value (quantity * unit_price)
     const collectionsWithValue = await this.prisma.milkSale.findMany({
-      where: {
+      where: baseWhere({
         customer_account_id: accountId,
         status: { not: 'deleted' },
-      },
+      }),
       select: {
         quantity: true,
         unit_price: true,
@@ -47,10 +80,10 @@ export class StatsService {
 
     // Get sales data (supplier perspective)
     const salesWithValue = await this.prisma.milkSale.findMany({
-      where: {
+      where: baseWhere({
         supplier_account_id: accountId,
         status: { not: 'deleted' },
-      },
+      }),
       select: {
         quantity: true,
         unit_price: true,
@@ -91,13 +124,13 @@ export class StatsService {
 
     // Generate daily breakdown - get all transactions and group by date
     const allTransactions = await this.prisma.milkSale.findMany({
-      where: {
+      where: baseWhere({
         OR: [
           { supplier_account_id: accountId },
           { customer_account_id: accountId },
         ],
         status: { not: 'deleted' },
-      },
+      }),
       select: {
         sale_at: true,
         quantity: true,
@@ -165,13 +198,13 @@ export class StatsService {
 
     // Get recent transactions (last 10)
     const recentTransactions = await this.prisma.milkSale.findMany({
-      where: {
+      where: baseWhere({
         OR: [
           { supplier_account_id: accountId },
           { customer_account_id: accountId },
         ],
         status: { not: 'deleted' },
-      },
+      }),
       include: {
         supplier_account: {
           select: {
@@ -227,15 +260,15 @@ export class StatsService {
       };
     });
 
-    // Get date range (all time for now)
+    // Get date range (requested range or actual data range)
     const firstTransaction = await this.prisma.milkSale.findFirst({
-      where: {
+      where: baseWhere({
         OR: [
           { supplier_account_id: accountId },
           { customer_account_id: accountId },
         ],
         status: { not: 'deleted' },
-      },
+      }),
       orderBy: {
         sale_at: 'asc',
       },
@@ -245,13 +278,13 @@ export class StatsService {
     });
 
     const lastTransaction = await this.prisma.milkSale.findFirst({
-      where: {
+      where: baseWhere({
         OR: [
           { supplier_account_id: accountId },
           { customer_account_id: accountId },
         ],
         status: { not: 'deleted' },
-      },
+      }),
       orderBy: {
         sale_at: 'desc',
       },
@@ -260,12 +293,12 @@ export class StatsService {
       },
     });
 
-    const dateFrom = firstTransaction
-      ? firstTransaction.sale_at.toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0];
-    const dateTo = lastTransaction
-      ? lastTransaction.sale_at.toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0];
+    const dateFrom =
+      dateFromStr ??
+      (firstTransaction ? firstTransaction.sale_at.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const dateTo =
+      dateToStr ??
+      (lastTransaction ? lastTransaction.sale_at.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
 
     return {
       code: 200,
