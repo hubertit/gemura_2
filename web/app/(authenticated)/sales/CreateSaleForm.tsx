@@ -5,6 +5,7 @@ import { salesApi, CreateSaleData } from '@/lib/api/sales';
 import { customersApi, Customer } from '@/lib/api/customers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import SearchableSelect from '@/app/components/SearchableSelect';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -48,11 +49,14 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
       [name]: value,
     }));
     setError('');
-    if (name === 'customer_account_code') {
-      const customer = customers.find(c => c.account.code === value);
-      if (customer?.price_per_liter) {
-        setFormData(prev => ({ ...prev, unit_price: customer.price_per_liter }));
-      }
+  };
+
+  const handleCustomerSelect = (customer_account_code: string) => {
+    setFormData(prev => ({ ...prev, customer_account_code }));
+    setError('');
+    const customer = customers.find(c => c.account.code === customer_account_code);
+    if (customer?.price_per_liter != null) {
+      setFormData(prev => ({ ...prev, unit_price: customer.price_per_liter }));
     }
   };
 
@@ -105,10 +109,16 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
           {loadingCustomers ? (
             <div className="input w-full flex items-center text-gray-500 text-sm"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading customers...</div>
           ) : (
-            <select id="sale-customer" name="customer_account_code" required value={formData.customer_account_code} onChange={handleChange} className="input w-full" disabled={loading}>
-              <option value="">Select a customer</option>
-              {customers.map(c => <option key={c.relationship_id} value={c.account.code}>{c.name} ({c.account.code})</option>)}
-            </select>
+            <SearchableSelect
+              id="sale-customer"
+              name="customer_account_code"
+              options={customers.map(c => ({ value: c.account.code, label: `${c.name} (${c.account.code})` }))}
+              value={formData.customer_account_code}
+              onChange={handleCustomerSelect}
+              placeholder="Search or select a customer..."
+              disabled={loading}
+              required
+            />
           )}
         </div>
         <div>

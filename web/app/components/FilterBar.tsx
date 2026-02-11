@@ -53,7 +53,7 @@ export function FilterBarSearch({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
-          className="input w-full !pl-10 h-9 text-sm placeholder:text-gray-600"
+          className="input w-full !pl-11 h-9 text-sm placeholder:text-gray-500"
         />
       </div>
     </div>

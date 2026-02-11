@@ -5,6 +5,7 @@ import { collectionsApi, CreateCollectionData } from '@/lib/api/collections';
 import { suppliersApi, Supplier } from '@/lib/api/suppliers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import SearchableSelect from '@/app/components/SearchableSelect';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -44,10 +45,13 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
-    if (name === 'supplier_account_code') {
-      const supplier = suppliers.find(s => s.account.code === value);
-      if (supplier?.price_per_liter) setFormData(prev => ({ ...prev, unit_price: supplier.price_per_liter }));
-    }
+  };
+
+  const handleSupplierSelect = (supplier_account_code: string) => {
+    setFormData(prev => ({ ...prev, supplier_account_code }));
+    setError('');
+    const supplier = suppliers.find(s => s.account.code === supplier_account_code);
+    if (supplier?.price_per_liter != null) setFormData(prev => ({ ...prev, unit_price: supplier.price_per_liter }));
   };
 
   const validateForm = (): boolean => {
@@ -95,10 +99,16 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
           {loadingSuppliers ? (
             <div className="input w-full flex items-center text-gray-500 text-sm"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading suppliers...</div>
           ) : (
-            <select id="coll-supplier" name="supplier_account_code" required value={formData.supplier_account_code} onChange={handleChange} className="input w-full" disabled={loading}>
-              <option value="">Select a supplier</option>
-              {suppliers.map(s => <option key={s.relationship_id} value={s.account.code}>{s.name} ({s.account.code})</option>)}
-            </select>
+            <SearchableSelect
+              id="coll-supplier"
+              name="supplier_account_code"
+              options={suppliers.map(s => ({ value: s.account.code, label: `${s.name} (${s.account.code})` }))}
+              value={formData.supplier_account_code}
+              onChange={handleSupplierSelect}
+              placeholder="Search or select a supplier..."
+              disabled={loading}
+              required
+            />
           )}
         </div>
         <div>

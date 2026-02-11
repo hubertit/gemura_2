@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
+import SearchableSelect from '@/app/components/SearchableSelect';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -194,22 +195,16 @@ export default function EditSalePage() {
                   Loading customers...
                 </div>
               ) : (
-                <select
+                <SearchableSelect
                   id="customer_account_code"
                   name="customer_account_code"
-                  required
+                  options={customers.map(c => ({ value: c.account.code, label: `${c.name} (${c.account.code})` }))}
                   value={formData.customer_account_code}
-                  onChange={handleChange}
-                  className="input w-full"
+                  onChange={(value) => setFormData(prev => ({ ...prev, customer_account_code: value }))}
+                  placeholder="Search or select a customer..."
                   disabled={saving}
-                >
-                  <option value="">Select a customer</option>
-                  {customers.map(customer => (
-                    <option key={customer.relationship_id} value={customer.account.code}>
-                      {customer.name} ({customer.account.code})
-                    </option>
-                  ))}
-                </select>
+                  required
+                />
               )}
             </div>
           </div>

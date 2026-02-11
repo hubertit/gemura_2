@@ -121,13 +121,13 @@ export default function SettingsPage() {
                   Email
                 </label>
                 <div className="relative">
-                  <Icon icon={faEnvelope} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size="sm" />
+                  <Icon icon={faEnvelope} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size="sm" />
                   <input
                     id="settings-email"
                     type="email"
                     value={profile.email}
                     onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-sm text-gray-900 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -137,13 +137,13 @@ export default function SettingsPage() {
                   Phone
                 </label>
                 <div className="relative">
-                  <Icon icon={faPhone} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size="sm" />
+                  <Icon icon={faPhone} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size="sm" />
                   <input
                     id="settings-phone"
                     type="tel"
                     value={profile.phone}
                     onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-sm text-gray-900 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
                     placeholder="250788123456"
                   />
                 </div>

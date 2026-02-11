@@ -10,6 +10,7 @@ import { suppliersApi, Supplier } from '@/lib/api/suppliers';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faDollarSign, faUser, faBox, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import SearchableSelect from '@/app/components/SearchableSelect';
 
 const BUYER_TYPES = [
   { value: 'supplier', label: 'Supplier' },
@@ -294,22 +295,16 @@ export default function SellInventoryPage() {
                     Loading...
                   </div>
                 ) : (
-                  <select
+                  <SearchableSelect
                     id="buyer_account_code"
                     name="buyer_account_code"
-                    required={formData.buyer_type === 'customer' || formData.buyer_type === 'supplier'}
+                    options={(formData.buyer_type === 'customer' ? customers : suppliers).map(b => ({ value: b.account.code, label: `${b.name} (${b.account.code})` }))}
                     value={formData.buyer_account_code}
-                    onChange={handleChange}
-                    className="input w-full"
+                    onChange={(value) => setFormData(prev => ({ ...prev, buyer_account_code: value }))}
+                    placeholder={`Search or select a ${formData.buyer_type}...`}
                     disabled={saving}
-                  >
-                    <option value="">Select a {formData.buyer_type}</option>
-                    {(formData.buyer_type === 'customer' ? customers : suppliers).map(buyer => (
-                      <option key={buyer.relationship_id} value={buyer.account.code}>
-                        {buyer.name} ({buyer.account.code})
-                      </option>
-                    ))}
-                  </select>
+                    required
+                  />
                 )}
               </div>
             )}
