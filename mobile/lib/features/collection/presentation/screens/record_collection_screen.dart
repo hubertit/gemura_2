@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gemura/core/theme/app_theme.dart';
+import 'package:gemura/features/finance/presentation/providers/payables_provider.dart';
 import 'package:gemura/features/suppliers/presentation/providers/suppliers_provider.dart';
 import 'package:gemura/shared/models/supplier.dart';
 import '../providers/collections_provider.dart';
@@ -83,15 +84,14 @@ class _RecordCollectionScreenState extends ConsumerState<RecordCollectionScreen>
             ),
           );
           
-          // Invalidate providers to ensure the list refreshes on the collections screen
-          // This will trigger a refresh of both FutureProvider and StateNotifierProvider
+          // Invalidate/refresh so collections list and payables list show the new record
           ref.invalidate(collectionsProvider);
           ref.invalidate(collectionsNotifierProvider);
-          
-          // Small delay to ensure the success message is visible before navigating back
+          ref.invalidate(payablesProvider);
+          // Wait for collections refetch so list is fresh when we pop
+          await ref.read(collectionsProvider.future);
           await Future.delayed(const Duration(milliseconds: 300));
-          
-          Navigator.of(context).pop();
+          if (mounted) Navigator.of(context).pop();
         }
       } catch (error) {
         if (mounted) {

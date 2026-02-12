@@ -4,6 +4,9 @@
 # - Builds frontend locally (avoids OOM on server), uploads backend + web + pre-built .next
 # - Uses docker-compose.gemura.prebuilt.yml on server (no Next.js build on server)
 #
+# Full run can take 20-30 min (upload 5-15 min, server build ~5-10 min). Run in a terminal
+# with no timeout so you see "Deployment Complete!" at the end.
+#
 # Usage (from project root):
 #   cd /path/to/gemura2
 #   ./scripts/deployment/deploy-to-server.sh
@@ -116,19 +119,28 @@ echo "   Creating archive (backend + web with pre-built .next + prebuilt compose
   --exclude='backend/node_modules' --exclude='backend/dist' \
   --exclude='web/node_modules' --exclude='web/dist' \
   backend/ web/ docker-compose.gemura.prebuilt.yml docker-compose.devlabs-db.yml scripts/deployment/ )
+echo "   ✅ Archive created ($(du -h /tmp/gemura-deploy.tar.gz 2>/dev/null | cut -f1))."
 
 upload_ok=
 for attempt in 1 2; do
-  if sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH" 2>/dev/null && \
-     sshpass -p "$SERVER_PASS" scp $SCP_OPTS /tmp/gemura-deploy.tar.gz $SERVER_USER@$SERVER_IP:/tmp/ 2>/dev/null && \
-     sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && rm -rf backend web docker-compose.gemura.yml docker-compose.gemura.prebuilt.yml docker-compose.devlabs-db.yml scripts/deployment && tar -xzf /tmp/gemura-deploy.tar.gz 2>/dev/null && rm /tmp/gemura-deploy.tar.gz"; then
-    upload_ok=1
-    break
+  if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH" 2>/dev/null; then
+    [ "$attempt" -eq 1 ] && echo "   ⚠️  Upload failed (network?). Retrying in 15s..." && sleep 15
+    continue
   fi
-  if [ "$attempt" -eq 1 ]; then
-    echo "   ⚠️  Upload failed (network?). Retrying in 15s..."
-    sleep 15
+  echo "   Uploading to server (may take 5–15 min depending on connection)..."
+  if ! sshpass -p "$SERVER_PASS" scp $SCP_OPTS /tmp/gemura-deploy.tar.gz $SERVER_USER@$SERVER_IP:/tmp/ 2>/dev/null; then
+    [ "$attempt" -eq 1 ] && echo "   ⚠️  Upload failed (network?). Retrying in 15s..." && sleep 15
+    continue
   fi
+  echo "   ✅ Upload done. Extracting on server..."
+  extract_err=$(sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && rm -rf backend web docker-compose.gemura.yml docker-compose.gemura.prebuilt.yml docker-compose.devlabs-db.yml scripts/deployment && tar -xzf /tmp/gemura-deploy.tar.gz 2>&1 && rm /tmp/gemura-deploy.tar.gz" 2>&1)
+  if [ $? -ne 0 ]; then
+    echo "   ⚠️  Extract failed: $extract_err"
+    [ "$attempt" -eq 1 ] && echo "   Retrying upload in 15s..." && sleep 15
+    continue
+  fi
+  upload_ok=1
+  break
 done
 rm -f /tmp/gemura-deploy.tar.gz
 if [ -z "$upload_ok" ]; then
@@ -149,7 +161,7 @@ echo "   ✅ Compose and pre-built frontend OK"
 # "Permission denied" when too many SSH connections were opened in quick succession).
 echo ""
 echo "🗄️  Step 2: Ensuring Docker and DevLabs PostgreSQL..."
-sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'ENDSSH'
+sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP 'bash -s' << 'ENDSSH'
 export LC_ALL=C.UTF-8
 cd /opt/gemura
 
@@ -165,6 +177,11 @@ if ! docker info &>/dev/null; then
   fi
 fi
 echo "   ✅ Docker is running"
+
+# Clean dead/stopped containers (except database) to avoid overlay2/port conflicts
+echo "   Cleaning dead containers (keeping devslab-postgres)..."
+docker ps -a --format '{{.Names}} {{.Status}}' | awk '$2=="Exited" || $2=="Dead" || $2=="Created" {print $1}' | grep -v '^devslab-postgres$' | while read -r c; do docker rm -f "$c" 2>/dev/null || true; done
+echo "   ✅ Dead containers cleaned"
 
 # Load environment variables
 export POSTGRES_USER=devslab_admin
@@ -203,7 +220,7 @@ fi
 
 # Create Gemura database and ensure all shared DBs exist (single source of truth)
 echo "   Creating/ensuring shared databases on devslab-postgres..."
-docker exec -i devslab-postgres psql -U devslab_admin -d postgres << 'EOF'
+docker exec -i devslab-postgres psql -U 'devslab_admin' -d postgres << 'EOF'
 -- Create each DB if not exists so all apps use the same latest data
 SELECT 'CREATE DATABASE gemura_db'     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'gemura_db')     \gexec
 SELECT 'CREATE DATABASE resolveit_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'resolveit_db') \gexec
@@ -223,7 +240,7 @@ EOF
 echo "   ✅ Shared databases ensured"
 
 # Step 2.5: Single source of truth — ensure no stray Postgres
-for c in pg-source devslab-postgres-temp; do
+for c in "pg-source" "devslab-postgres-temp"; do
   if docker ps -a --format '{{.Names}}' | grep -qx "$c"; then
     echo "   Stopping $c so only devslab-postgres holds latest data..."
     docker stop "$c" 2>/dev/null || true
@@ -279,18 +296,18 @@ docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs bui
 echo "   Starting Gemura backend and frontend..."
 docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs up -d --force-recreate --no-deps backend frontend
 
-# Wait for backend to be ready
+# Wait for backend to be ready (up to 2 min)
 echo ""
 echo "   ⏳ Waiting for backend to be ready..."
-for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24; do
   if curl -s http://localhost:3004/api/health > /dev/null 2>&1; then
     echo "   ✅ Backend is healthy!"
     break
   fi
-  if [ \$i -eq 12 ]; then
+  if [ \$i -eq 24 ]; then
     echo "   ⚠️  Backend may still be starting (check logs if needed)"
   else
-    echo "   ⏳ Attempt \$i/12..."
+    echo "   ⏳ Attempt \$i/24..."
     sleep 5
   fi
 done

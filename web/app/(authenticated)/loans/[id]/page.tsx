@@ -57,7 +57,7 @@ export default function LoanDetailPage() {
     setEditSubmitting(true);
     try {
       const res = await loansApi.updateLoan(id, {
-        status: editStatus,
+        status: editStatus ? (editStatus as 'active' | 'closed') : undefined,
         due_date: editDueDate || undefined,
         notes: editNotes.trim() || undefined,
       });

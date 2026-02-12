@@ -183,9 +183,13 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
               ? _buildEmptyState(_hasActiveFilters())
               : RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(collectionsProvider);
+                    // Force refetch and wait for new data (invalidate alone can leave stale cache)
                     if (_currentApiFilters != null) {
                       ref.invalidate(filteredCollectionsProvider(_currentApiFilters!));
+                      await ref.read(filteredCollectionsProvider(_currentApiFilters!).future);
+                    } else {
+                      ref.invalidate(collectionsProvider);
+                      await ref.read(collectionsProvider.future);
                     }
                   },
                   child: ListView.builder(

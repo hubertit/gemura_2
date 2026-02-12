@@ -130,7 +130,7 @@ export const loansApi = {
   bulkCreate: async (
     rows: CreateLoanData[],
   ): Promise<{ code: number; data: { success: number; failed: number; errors: { row: number; message: string }[] } }> => {
-    const res = await apiClient.post('/loans/bulk', { rows });
-    return res.data;
+    const res = await apiClient.post('/loans/bulk', { rows }) as { code: number; data: { success: number; failed: number; errors: { row: number; message: string }[] } };
+    return res;
   },
 };
