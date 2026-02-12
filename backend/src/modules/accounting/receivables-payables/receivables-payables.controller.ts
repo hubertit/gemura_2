@@ -6,6 +6,7 @@ import {
   ApiBearerAuth, 
   ApiQuery,
   ApiParam,
+  ApiBody,
   ApiUnauthorizedResponse,
   ApiBadRequestResponse,
 } from '@nestjs/swagger';
@@ -247,7 +248,11 @@ export class ReceivablesPayablesController {
     summary: 'Record payment for inventory receivable',
     description: 'Record a direct payment against an InventorySale receivable (supplier debt). Use when a supplier pays off their inventory debt directly, not via payroll deduction. Updates Receivables automatically.',
   })
-  @ApiParam({ name: 'inventorySaleId', description: 'Inventory sale ID (receivable)' })
+  @ApiParam({ name: 'inventorySaleId', description: 'Inventory sale ID (receivable UUID)' })
+  @ApiBody({
+    type: RecordPaymentDto,
+    description: 'Payment amount and optional date/notes',
+  })
   @ApiResponse({ status: 200, description: 'Payment recorded successfully' })
   @ApiBadRequestResponse({ description: 'Invalid amount or exceeds outstanding' })
   @ApiUnauthorizedResponse({ description: 'Access denied' })
