@@ -22,7 +22,7 @@ interface DataTableWithPaginationProps<T = unknown> {
   onRowClick?: (row: T) => void;
 }
 
-export default function DataTableWithPagination<T extends Record<string, unknown>>({
+export default function DataTableWithPagination<T extends object>({
   data,
   columns,
   loading = false,

@@ -138,9 +138,9 @@ export default function SearchableSelect({
         tabIndex={disabled ? -1 : 0}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleKeyDown}
-        className="input w-full flex items-center justify-between cursor-pointer bg-white border border-gray-200 rounded-sm px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] disabled:bg-gray-50 disabled:cursor-not-allowed"
+        className={`input w-full flex items-center justify-between cursor-pointer bg-white border border-gray-200 rounded-sm px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''}`}
         style={{ caretColor: 'transparent' }}
-        disabled={disabled}
+        aria-disabled={disabled}
         aria-required={required}
         aria-label={placeholder}
       >

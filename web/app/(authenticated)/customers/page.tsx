@@ -212,7 +212,17 @@ export default function CustomersPage() {
           { key: 'price_per_liter', label: 'Price per liter' },
         ]}
         onDownloadTemplate={() => customersApi.downloadTemplate()}
-        onBulkCreate={(rows) => customersApi.bulkCreate(rows as import('@/lib/api/customers').CreateCustomerData[]).then((r) => r.data)}
+        onBulkCreate={(rows) => {
+          const data: import('@/lib/api/customers').CreateCustomerData[] = rows.map((row) => ({
+            name: String(row.name ?? ''),
+            phone: String(row.phone ?? ''),
+            email: row.email != null ? String(row.email) : undefined,
+            nid: row.nid != null ? String(row.nid) : undefined,
+            address: row.address != null ? String(row.address) : undefined,
+            price_per_liter: row.price_per_liter != null ? Number(row.price_per_liter) : undefined,
+          }));
+          return customersApi.bulkCreate(data).then((r) => r.data);
+        }}
         mapRow={(row) => ({
           name: row.name || '',
           phone: row.phone || '',

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { accountsApi } from '@/lib/api/accounts';
+import { useToastStore } from '@/store/toast';
 import Icon, {
   faBars,
   faSearch,
@@ -31,13 +33,14 @@ export default function Header({
   onSidebarToggle,
 }: HeaderProps) {
   const router = useRouter();
-  const { user, logout, accounts, currentAccount, setCurrentAccount } = useAuthStore();
+  const { user, logout, accounts, currentAccount, setCurrentAccount, setAccounts } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountSwitcherOpen, setAccountSwitcherOpen] = useState(false);
+  const [switchingAccountId, setSwitchingAccountId] = useState<string | null>(null);
   const [userName, setUserName] = useState('User');
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -80,6 +83,35 @@ export default function Header({
   const handleLogout = () => {
     logout();
     router.push('/auth/login');
+  };
+
+  const handleSwitchAccount = async (accountId: string) => {
+    if (currentAccount?.account_id === accountId) {
+      setAccountSwitcherOpen(false);
+      return;
+    }
+    setSwitchingAccountId(accountId);
+    try {
+      const res = await accountsApi.switchAccount({ account_id: accountId });
+      if (res.code === 200 && res.data) {
+        const { accounts: nextAccounts } = res.data;
+        const nextAccount = nextAccounts.find((a) => a.account_id === accountId) || null;
+        setAccounts(nextAccounts);
+        setCurrentAccount(nextAccount);
+        setAccountSwitcherOpen(false);
+        useToastStore.getState().success('Default account updated');
+      } else {
+        useToastStore.getState().error(res.message || 'Failed to switch account');
+      }
+    } catch (e: unknown) {
+      const msg =
+        (e as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ??
+        (e as Error)?.message ??
+        'Failed to switch account';
+      useToastStore.getState().error(msg);
+    } finally {
+      setSwitchingAccountId(null);
+    }
   };
 
   // Mock notifications
@@ -164,26 +196,29 @@ export default function Header({
                 <ul className="max-h-[280px] overflow-y-auto">
                   {accounts.map((account) => {
                     const isActive = currentAccount?.account_id === account.account_id;
+                    const isSwitching = switchingAccountId === account.account_id;
                     return (
                       <li key={account.account_id}>
                         <button
                           type="button"
-                          onClick={() => {
-                            setCurrentAccount(account);
-                            setAccountSwitcherOpen(false);
-                          }}
+                          onClick={() => handleSwitchAccount(account.account_id)}
+                          disabled={!!switchingAccountId}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors rounded-lg mx-2 ${
                             isActive
                               ? 'bg-[var(--primary)]/10 text-[var(--primary)]'
                               : 'hover:bg-gray-50 text-gray-700'
-                          }`}
+                          } disabled:opacity-60 disabled:cursor-not-allowed`}
                         >
                           <div
                             className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
                               isActive ? 'bg-[var(--primary)]/20' : 'bg-gray-100'
                             }`}
                           >
-                            <Icon icon={faBuilding} size="sm" className={isActive ? 'text-[var(--primary)]' : 'text-gray-500'} />
+                            {isSwitching ? (
+                              <Icon icon={faSpinner} size="sm" className="animate-spin text-[var(--primary)]" />
+                            ) : (
+                              <Icon icon={faBuilding} size="sm" className={isActive ? 'text-[var(--primary)]' : 'text-gray-500'} />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-semibold truncate ${isActive ? 'text-[var(--primary)]' : 'text-gray-900'}`}>
@@ -193,7 +228,7 @@ export default function Header({
                               {account.account_code} · {(account.account_type || '').toLowerCase()}
                             </p>
                           </div>
-                          {isActive && (
+                          {isActive && !isSwitching && (
                             <Icon icon={faCheck} className="flex-shrink-0 text-[var(--primary)]" size="sm" />
                           )}
                         </button>

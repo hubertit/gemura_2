@@ -29,6 +29,7 @@ import { MediaModule } from './modules/media/media.module';
 import { HealthModule } from './modules/health/health.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { InventoryItemsModule } from './modules/inventory-items/inventory-items.module';
+import { LoansModule } from './modules/loans/loans.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AppController } from './app.controller';
 
@@ -72,6 +73,7 @@ import { AppController } from './app.controller';
     HealthModule,
     InventoryModule,
     InventoryItemsModule,
+    LoansModule,
     AdminModule,
   ],
 })

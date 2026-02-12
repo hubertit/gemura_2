@@ -1,0 +1,88 @@
+### Loans API – test with login 250788606765 / Pass123
+### 1) Run "Login" request, then copy data.user.token from response into @token below.
+### 2) Run the Loans requests. Ensure backend is on http://localhost:3004
+
+@baseUrl = http://localhost:3004/api
+@token = your-auth-token-here
+
+### --- Login (250788606765 / Pass123) ---
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "identifier": "250788606765",
+  "password": "Pass123"
+}
+
+### After login, copy data.user.token into @token above.
+
+### --- Get loans (list) ---
+POST {{baseUrl}}/loans/get
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### With filters (optional query params)
+# POST {{baseUrl}}/loans/get?status=active&borrower_type=supplier
+# Authorization: Bearer {{token}}
+
+### --- Create loan (use a real borrower account_id from your suppliers/customers) ---
+# @name createLoan
+POST {{baseUrl}}/loans/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "account_id": "REPLACE_WITH_CURRENT_ACCOUNT_ID_FROM_LOGIN_DATA",
+  "borrower_type": "supplier",
+  "borrower_account_id": "REPLACE_WITH_SUPPLIER_ACCOUNT_UUID",
+  "principal": 50000,
+  "currency": "RWF",
+  "disbursement_date": "2026-02-12",
+  "due_date": "2026-03-12",
+  "notes": "Test loan"
+}
+
+### --- Get loan by ID (use id from create response) ---
+# GET {{baseUrl}}/loans/by-id/LOAN_UUID_HERE
+# Authorization: Bearer {{token}}
+
+### --- Record repayment ---
+# POST {{baseUrl}}/loans/LOAN_UUID_HERE/repayment
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+#
+# {
+#   "amount": 10000,
+#   "notes": "Partial repayment"
+# }
+
+### --- Update loan (e.g. close or change due date) ---
+# PUT {{baseUrl}}/loans/update/LOAN_UUID_HERE
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+#
+# {
+#   "status": "closed",
+#   "notes": "Paid in full"
+# }
+
+### --- Download loans CSV template ---
+GET {{baseUrl}}/loans/template
+Authorization: Bearer {{token}}
+
+### --- Bulk create loans ---
+# POST {{baseUrl}}/loans/bulk
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+#
+# {
+#   "rows": [
+#     {
+#       "borrower_type": "supplier",
+#       "borrower_account_id": "SUPPLIER_ACCOUNT_UUID",
+#       "principal": 25000,
+#       "disbursement_date": "2026-02-12"
+#     }
+#   ]
+# }

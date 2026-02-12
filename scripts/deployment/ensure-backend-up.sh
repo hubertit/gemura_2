@@ -1,31 +1,26 @@
 #!/bin/bash
 # Ensure Gemura backend is up on the production server.
-# Uses same SSH approach as ResolveIT v2 (deploy-improved.sh) and Gemura deploy-to-server.sh.
-#
-# Run from your local machine (requires sshpass):
+# Run from project root (requires sshpass and scripts/deployment/server-credentials.sh):
 #   ./scripts/deployment/ensure-backend-up.sh
-#
-# Or run from ResolveIT v2 directory to use its pattern:
-#   Same server (159.198.65.38); this script handles Gemura at /opt/gemura, port 3004.
 
 set -e
 
-# Use ResolveIT v2 server credentials when present (same server)
-RESOLVEIT_CREDS="${RESOLVEIT_V2_CREDS:-/Applications/AMPPS/www/resolveit/v2/scripts/deployment/server-credentials.sh}"
-[ -f "$RESOLVEIT_CREDS" ] && source "$RESOLVEIT_CREDS"
+# Server credentials: project-local (scripts/deployment/server-credentials.sh)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CREDS_FILE="$SCRIPT_DIR/server-credentials.sh"
+[ -f "$CREDS_FILE" ] && source "$CREDS_FILE"
+[ -n "${GEMURA_SERVER_CREDS:-}" ] && [ -f "$GEMURA_SERVER_CREDS" ] && source "$GEMURA_SERVER_CREDS"
 SERVER_IP="${SERVER_IP:-159.198.65.38}"
 SERVER_USER="${SERVER_USER:-root}"
 SERVER_PASS="${SERVER_PASS:-}"
 DEPLOY_PATH="/opt/gemura"
 
 if [ -z "$SERVER_PASS" ]; then
-    echo "❌ SERVER_PASS not set. Source ResolveIT v2 credentials or set SERVER_PASS:"
-    echo "   source /Applications/AMPPS/www/resolveit/v2/scripts/deployment/server-credentials.sh"
-    echo "   Or: export SERVER_PASS=your_password"
+    echo "❌ SERVER_PASS not set. Set up project credentials:"
+    echo "   cp scripts/deployment/server-credentials.sh.example scripts/deployment/server-credentials.sh"
+    echo "   Edit server-credentials.sh and set SERVER_PASS. Or: export SERVER_PASS=your_password"
     exit 1
 fi
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "🔍 Ensuring Gemura backend is up on server..."
 echo "   Server: $SERVER_USER@$SERVER_IP"
 echo "   Path:   $DEPLOY_PATH"

@@ -4,7 +4,7 @@
  * @param columns Column config: key (field name), label (header), optional getValue(row) for custom export value
  * @param filename Download filename (without .csv)
  */
-export function exportToCsv<T extends Record<string, unknown>>(
+export function exportToCsv<T extends object>(
   data: T[],
   columns: { key: string; label: string; getValue?: (row: T) => string }[],
   filename: string
@@ -16,7 +16,7 @@ export function exportToCsv<T extends Record<string, unknown>>(
   };
   const header = columns.map((c) => escape(c.label)).join(',');
   const rows = data.map((row) =>
-    columns.map((col) => escape(col.getValue ? col.getValue(row) : String(row[col.key] ?? ''))).join(',')
+    columns.map((col) => escape(col.getValue ? col.getValue(row) : String((row as Record<string, unknown>)[col.key] ?? ''))).join(',')
   );
   const csv = [header, ...rows].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

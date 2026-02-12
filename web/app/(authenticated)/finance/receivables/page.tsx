@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { accountingApi, ReceivablesSummary, Receivable } from '@/lib/api/accounting';
 import { salesApi } from '@/lib/api/sales';
+import { loansApi } from '@/lib/api/loans';
 import { useToastStore } from '@/store/toast';
 import Icon, {
   faArrowLeft,
@@ -89,7 +90,13 @@ export default function FinanceReceivablesPage() {
     const source = rec.source || 'milk_sale';
     setPaySubmitting(true);
     try {
-      if (source === 'inventory_sale') {
+      if (source === 'loan') {
+        await loansApi.recordRepayment(rec.sale_id, {
+          amount,
+          repayment_date: payDate,
+          notes: payNotes.trim() || undefined,
+        });
+      } else if (source === 'inventory_sale') {
         await accountingApi.recordInventoryReceivablePayment(rec.sale_id, {
           amount,
           payment_date: payDate,

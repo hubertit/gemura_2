@@ -8,6 +8,7 @@ import { isAdminAccount } from '@/lib/config/nav.config';
 import { statsApi, OverviewResponse } from '@/lib/api/stats';
 import { accountingApi } from '@/lib/api/accounting';
 import { inventoryApi, type InventoryStats, type ValuationOverTimePoint, type TopItemByValue, type StockMovementPoint } from '@/lib/api/inventory';
+import { loansApi, type Loan } from '@/lib/api/loans';
 import { useToastStore } from '@/store/toast';
 import Icon, {
   faBuilding,
@@ -21,6 +22,8 @@ import Icon, {
   faChartLine,
   faDollarSign,
   faSpinner,
+  faHandHoldingDollar,
+  faEye,
 } from '@/app/components/Icon';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
@@ -100,7 +103,7 @@ export default function Dashboard() {
   const [recordDate, setRecordDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [recordSubmitting, setRecordSubmitting] = useState(false);
 
-  type DashboardTab = 'overview' | 'sales' | 'collections' | 'inventory' | 'finance';
+  type DashboardTab = 'overview' | 'sales' | 'collections' | 'inventory' | 'finance' | 'loans';
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>('overview');
   const [inventoryStats, setInventoryStats] = useState<InventoryStats | null>(null);
   const [inventoryLoading, setInventoryLoading] = useState(false);
@@ -117,6 +120,8 @@ export default function Dashboard() {
   const [financeLoading, setFinanceLoading] = useState(false);
   const [financeRevenueExpensesSeries, setFinanceRevenueExpensesSeries] = useState<{ date: string; revenue: number; expenses: number }[]>([]);
   const [financeExpenseByCategory, setFinanceExpenseByCategory] = useState<{ category_name: string; amount: number }[]>([]);
+  const [loansData, setLoansData] = useState<Loan[]>([]);
+  const [loansLoading, setLoansLoading] = useState(false);
 
   const dateRange = useMemo(
     () => getPeriodRange(period, customFrom || undefined, customTo || undefined),
@@ -229,6 +234,26 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, [dashboardTab, currentAccount?.account_id, dateRange.date_from, dateRange.date_to]);
 
+  // Load loans when Loans tab is selected
+  useEffect(() => {
+    if (dashboardTab !== 'loans' || !currentAccount?.account_id) return;
+    let cancelled = false;
+    setLoansLoading(true);
+    loansApi
+      .getLoans({ account_id: currentAccount.account_id })
+      .then((res) => {
+        if (!cancelled && res.code === 200 && res.data) setLoansData(Array.isArray(res.data) ? res.data : []);
+        else if (!cancelled) setLoansData([]);
+      })
+      .catch(() => {
+        if (!cancelled) setLoansData([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoansLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [dashboardTab, currentAccount?.account_id]);
+
   const formatCurrency = (amount: number) => {
     const n = Number(amount);
     if (Number.isNaN(n)) return 'RF 0';
@@ -317,6 +342,7 @@ export default function Dashboard() {
     { id: 'collections', label: 'Collections' },
     { id: 'inventory', label: 'Inventory' },
     { id: 'finance', label: 'Finance' },
+    { id: 'loans', label: 'Loans' },
   ];
 
   return (
@@ -1122,6 +1148,229 @@ export default function Dashboard() {
                 <Link href="/finance" className="text-sm font-medium text-[var(--primary)] hover:text-[#003d8f] flex items-center gap-1">Go to Finance <Icon icon={faArrowRight} size="xs" /></Link>
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {/* Loans tab */}
+      {dashboardTab === 'loans' && (
+        <div className="space-y-4">
+          {loansLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-sm text-gray-600">Loading loans...</p>
+              </div>
+            </div>
+          ) : (
+            (() => {
+              const totalOutstanding = loansData.reduce((s, l) => s + (l.outstanding ?? 0), 0);
+              const activeLoans = loansData.filter((l) => l.status === 'active');
+              const closedLoans = loansData.filter((l) => l.status === 'closed');
+              const totalPrincipal = loansData.reduce((s, l) => s + (l.principal ?? 0), 0);
+              const totalRepaid = loansData.reduce((s, l) => s + (l.amount_repaid ?? 0), 0);
+              const from = dateRange.date_from;
+              const to = dateRange.date_to;
+              const disbursementsByMonth: { month: string; amount: number }[] = [];
+              const monthMap = new Map<string, number>();
+              loansData.forEach((l) => {
+                const d = typeof l.disbursement_date === 'string' ? l.disbursement_date.slice(0, 7) : '';
+                if (d && l.disbursement_date >= from && l.disbursement_date <= to) {
+                  monthMap.set(d, (monthMap.get(d) ?? 0) + (l.principal ?? 0));
+                }
+              });
+              Array.from(monthMap.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .forEach(([month, amount]) => disbursementsByMonth.push({ month, amount }));
+              const outstandingByType = [
+                { type: 'Supplier', value: loansData.filter((l) => l.borrower_type === 'supplier').reduce((s, l) => s + (l.outstanding ?? 0), 0) },
+                { type: 'Customer', value: loansData.filter((l) => l.borrower_type === 'customer').reduce((s, l) => s + (l.outstanding ?? 0), 0) },
+                { type: 'Other', value: loansData.filter((l) => l.borrower_type === 'other').reduce((s, l) => s + (l.outstanding ?? 0), 0) },
+              ].filter((x) => x.value > 0);
+              const topByOutstanding = [...activeLoans]
+                .sort((a, b) => (b.outstanding ?? 0) - (a.outstanding ?? 0))
+                .slice(0, 10)
+                .reverse();
+              const hasDonut = totalOutstanding > 0 || totalRepaid > 0;
+              return (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard
+                      label="Outstanding"
+                      value={formatCurrency(totalOutstanding)}
+                      subtitle="Total owed"
+                      icon={faHandHoldingDollar}
+                      href="/loans"
+                      {...{ iconBgColor: '#fef3c7', iconColor: '#b45309' }}
+                    />
+                    <StatCard
+                      label="Active loans"
+                      value={String(activeLoans.length)}
+                      subtitle="With balance"
+                      icon={faHandHoldingDollar}
+                      href="/loans?status=active"
+                      {...BLUE_ICON}
+                    />
+                    <StatCard
+                      label="Closed loans"
+                      value={String(closedLoans.length)}
+                      subtitle="Fully repaid"
+                      icon={faHandHoldingDollar}
+                      href="/loans?status=closed"
+                      {...{ iconBgColor: '#f3f4f6', iconColor: '#6b7280' }}
+                    />
+                    <StatCard
+                      label="Total disbursed"
+                      value={formatCurrency(totalPrincipal)}
+                      subtitle={`${formatCurrency(totalRepaid)} repaid`}
+                      icon={faDollarSign}
+                      href="/loans"
+                      {...GREEN_ICON}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-2 bg-white border border-gray-200 rounded-sm p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">Disbursements by month</h3>
+                      {disbursementsByMonth.length === 0 ? (
+                        <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">
+                          No disbursements in this period.
+                        </div>
+                      ) : (
+                        <Chart
+                          type="area"
+                          height={280}
+                          options={{
+                            chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                            stroke: { curve: 'smooth', width: 2 },
+                            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
+                            colors: ['#b45309'],
+                            xaxis: { categories: disbursementsByMonth.map((d) => d.month) },
+                            yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                            tooltip: { y: { formatter: (v: number) => formatCurrency(Number(v)) } },
+                            dataLabels: { enabled: false },
+                            grid: { strokeDashArray: 3 },
+                          }}
+                          series={[{ name: 'Disbursed', data: disbursementsByMonth.map((d) => d.amount) }]}
+                        />
+                      )}
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-sm p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">Outstanding vs repaid</h3>
+                      {!hasDonut ? (
+                        <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">No loan data yet.</div>
+                      ) : (
+                        <Chart
+                          type="donut"
+                          height={280}
+                          options={{
+                            chart: { type: 'donut', fontFamily: 'inherit' },
+                            labels: ['Outstanding', 'Repaid'],
+                            colors: ['#b45309', '#059669'],
+                            legend: { position: 'bottom', fontSize: '12px' },
+                            dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
+                            plotOptions: {
+                              pie: {
+                                donut: {
+                                  size: '65%',
+                                  labels: {
+                                    show: true,
+                                    total: { show: true, label: 'Total', formatter: () => formatCurrency(totalPrincipal) },
+                                  },
+                                },
+                              },
+                            },
+                          }}
+                          series={[totalOutstanding, totalRepaid]}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="bg-white border border-gray-200 rounded-sm p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">Outstanding by borrower type</h3>
+                      {outstandingByType.length === 0 ? (
+                        <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No outstanding by type.</div>
+                      ) : (
+                        <Chart
+                          type="bar"
+                          height={260}
+                          options={{
+                            chart: { type: 'bar', toolbar: { show: false } },
+                            plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
+                            colors: ['#004AAD', '#7c3aed', '#6b7280'],
+                            xaxis: {
+                              categories: outstandingByType.map((x) => x.type),
+                              labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },
+                            },
+                            yaxis: { labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) } },
+                            tooltip: { y: { formatter: (v: number) => formatCurrency(Number(v)) } },
+                            dataLabels: { enabled: false },
+                            grid: { strokeDashArray: 3 },
+                          }}
+                          series={[{ name: 'Outstanding', data: outstandingByType.map((x) => x.value) }]}
+                        />
+                      )}
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-sm p-6">
+                      <h3 className="text-base font-semibold text-gray-900 mb-4">Top loans by outstanding</h3>
+                      {topByOutstanding.length === 0 ? (
+                        <div className="h-[260px] flex items-center justify-center text-gray-500 text-sm">No active loans.</div>
+                      ) : (
+                        <Chart
+                          type="bar"
+                          height={260}
+                          options={{
+                            chart: { type: 'bar', toolbar: { show: false } },
+                            plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
+                            colors: ['#b45309'],
+                            xaxis: {
+                              categories: topByOutstanding.map((l) => (l.borrower_label?.length > 18 ? l.borrower_label.slice(0, 18) + '…' : l.borrower_label)),
+                              labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },
+                            },
+                            yaxis: { labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) } },
+                            tooltip: { y: { formatter: (v: number) => formatCurrency(Number(v)) } },
+                            dataLabels: { enabled: false },
+                            grid: { strokeDashArray: 3 },
+                          }}
+                          series={[{ name: 'Outstanding', data: topByOutstanding.map((l) => l.outstanding ?? 0) }]}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-sm p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-semibold text-gray-900">Active loans</h3>
+                      <Link href="/loans" className="text-sm font-medium text-[var(--primary)] hover:text-[#003d8f] flex items-center gap-1">
+                        View all <Icon icon={faArrowRight} size="xs" />
+                      </Link>
+                    </div>
+                    {activeLoans.length === 0 ? (
+                      <p className="text-sm text-gray-500">No active loans.</p>
+                    ) : (
+                      <ul className="divide-y divide-gray-100">
+                        {activeLoans.slice(0, 8).map((loan) => (
+                          <li key={loan.id} className="py-3 first:pt-0">
+                            <Link href={`/loans/${loan.id}`} className="flex items-center justify-between gap-4 hover:bg-gray-50 -mx-2 px-2 py-1 rounded">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{loan.borrower_label}</p>
+                                <p className="text-xs text-gray-500 capitalize">{loan.borrower_type}</p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="text-sm font-semibold text-amber-700">{formatCurrency(loan.outstanding)}</span>
+                                <Icon icon={faEye} size="sm" className="text-gray-400" />
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              );
+            })()
           )}
         </div>
       )}

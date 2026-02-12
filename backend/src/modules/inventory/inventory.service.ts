@@ -839,7 +839,7 @@ export class InventoryService {
         const accountCode = `A_${randomBytes(3).toString('hex').toUpperCase()}`;
         const walletCode = `W_${randomBytes(3).toString('hex').toUpperCase()}`;
         const token = randomBytes(32).toString('hex');
-        const passwordHash = await bcrypt.hash('default123', 10);
+        const passwordHash = await bcrypt.hash('Pass123!', 10);
 
         let newUser;
         if (existingUser) {

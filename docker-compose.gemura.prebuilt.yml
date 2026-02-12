@@ -1,8 +1,7 @@
+# Gemura - frontend uses pre-built .next (built locally to avoid server OOM)
 version: '3.8'
 
-# Gemura Application - Uses shared DevLabs PostgreSQL
 services:
-  # Backend API (NestJS)
   backend:
     build:
       context: ./backend
@@ -14,7 +13,6 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${BACKEND_PORT:-3004}
-      # Connect to shared DevLabs PostgreSQL
       DATABASE_URL: ${DATABASE_URL:-postgresql://devslab_admin:devslab_secure_password_2024@devslab-postgres:5432/gemura_db}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3005,http://localhost:3004,http://159.198.65.38:3005,http://159.198.65.38:3004}
     ports:
@@ -37,13 +35,10 @@ services:
         node dist/src/main.js
       "
 
-  # Frontend Web App (Next.js) - talks to prod backend via NEXT_PUBLIC_API_URL (set at build)
   frontend:
     build:
       context: ./web
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://159.198.65.38:3004/api}
+      dockerfile: Dockerfile.prebuilt
     container_name: gemura-frontend
     restart: unless-stopped
     environment:
@@ -60,4 +55,3 @@ networks:
   devslab-network:
     external: true
     name: devslab-network
-

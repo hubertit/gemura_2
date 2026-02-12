@@ -2,11 +2,19 @@
 
 # Find available port on remote server (3000-3020)
 # Returns the first available port number to stdout
-# All status messages go to stderr
+# Credentials: source from scripts/deployment/server-credentials.sh (or pass as args: IP USER PASS)
 
-SERVER_IP="${1:-159.198.65.38}"
-SERVER_USER="${2:-root}"
-SERVER_PASS="${3:-QF87VtuYReX5v9p6e3}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[ -f "$SCRIPT_DIR/server-credentials.sh" ] && source "$SCRIPT_DIR/server-credentials.sh"
+[ -n "${GEMURA_SERVER_CREDS:-}" ] && [ -f "$GEMURA_SERVER_CREDS" ] && source "$GEMURA_SERVER_CREDS"
+
+SERVER_IP="${1:-${SERVER_IP:-159.198.65.38}}"
+SERVER_USER="${2:-${SERVER_USER:-root}}"
+SERVER_PASS="${3:-${SERVER_PASS:-}}"
+if [ -z "$SERVER_PASS" ]; then
+    echo "❌ SERVER_PASS not set. Use scripts/deployment/server-credentials.sh or: $0 <IP> <USER> <PASS>" >&2
+    exit 1
+fi
 
 echo "🔍 Finding available port on $SERVER_IP (range: 3000-3020)..." >&2
 

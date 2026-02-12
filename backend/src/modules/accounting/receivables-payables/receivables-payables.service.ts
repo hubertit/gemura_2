@@ -181,8 +181,52 @@ export class ReceivablesPayablesService {
       };
     });
 
+    // Loans receivable (money lent – outstanding principal)
+    const activeLoans = await this.prisma.loan.findMany({
+      where: {
+        lender_account_id: user.default_account_id,
+        status: 'active',
+      },
+      include: {
+        borrower_account: { select: { id: true, code: true, name: true } },
+      },
+    });
+    const loanReceivables = activeLoans
+      .filter((loan) => Number(loan.principal) - Number(loan.amount_repaid || 0) > 0)
+      .map((loan) => {
+        const totalAmount = Number(loan.principal);
+        const amountPaid = Number(loan.amount_repaid || 0);
+        const outstanding = totalAmount - amountPaid;
+        const saleDate = loan.disbursement_date;
+        const daysOutstanding = Math.floor(
+          (new Date().getTime() - saleDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        let agingBucket = 'current';
+        if (daysOutstanding > 90) agingBucket = '90+';
+        else if (daysOutstanding > 60) agingBucket = '61-90';
+        else if (daysOutstanding > 30) agingBucket = '31-60';
+        return {
+          sale_id: loan.id,
+          loan_id: loan.id,
+          source: 'loan' as const,
+          customer: loan.borrower_account
+            ? { id: loan.borrower_account.id, code: loan.borrower_account.code, name: loan.borrower_account.name }
+            : { id: '', code: '', name: loan.borrower_name || 'Other' },
+          sale_date: saleDate,
+          quantity: null,
+          unit_price: null,
+          total_amount: totalAmount,
+          amount_paid: amountPaid,
+          outstanding,
+          payment_status: amountPaid >= totalAmount ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid',
+          days_outstanding: daysOutstanding,
+          aging_bucket: agingBucket,
+          notes: loan.notes,
+        };
+      });
+
     // Combine and sort by sale_date desc
-    const receivables = [...milkReceivables, ...invReceivables].sort(
+    const receivables = [...milkReceivables, ...invReceivables, ...loanReceivables].sort(
       (a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime()
     );
 

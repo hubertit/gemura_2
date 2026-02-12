@@ -103,6 +103,7 @@ export {
   faFilter,
   faTriangleExclamation,
   faArrowsRotate,
+  faHandHoldingDollar,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Export aliases for convenience  

@@ -198,7 +198,17 @@ export default function CollectionsPage() {
           { key: 'payment_status', label: 'Payment status (paid/unpaid)' },
         ]}
         onDownloadTemplate={() => collectionsApi.downloadTemplate()}
-        onBulkCreate={(rows) => collectionsApi.bulkCreate(rows as import('@/lib/api/collections').CreateCollectionData[]).then((r) => r.data)}
+        onBulkCreate={(rows) => {
+          const data: import('@/lib/api/collections').CreateCollectionData[] = rows.map((row) => ({
+            supplier_account_code: String(row.supplier_account_code ?? ''),
+            quantity: Number(row.quantity) || 0,
+            status: (row.status as 'pending' | 'accepted' | 'rejected' | 'cancelled') || undefined,
+            collection_at: String(row.collection_at ?? new Date().toISOString().slice(0, 19).replace('T', ' ')),
+            notes: row.notes != null ? String(row.notes) : undefined,
+            payment_status: (row.payment_status as 'paid' | 'unpaid') || undefined,
+          }));
+          return collectionsApi.bulkCreate(data).then((r) => r.data);
+        }}
         mapRow={(row) => ({
           supplier_account_code: row.supplier_account_code || '',
           quantity: Number(row.quantity) || 0,

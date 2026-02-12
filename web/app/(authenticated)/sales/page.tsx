@@ -198,7 +198,17 @@ export default function SalesPage() {
           { key: 'payment_status', label: 'Payment status (paid/unpaid)' },
         ]}
         onDownloadTemplate={() => salesApi.downloadTemplate()}
-        onBulkCreate={(rows) => salesApi.bulkCreate(rows as import('@/lib/api/sales').CreateSaleData[]).then((r) => r.data)}
+        onBulkCreate={(rows) => {
+          const data: import('@/lib/api/sales').CreateSaleData[] = rows.map((row) => ({
+            customer_account_code: row.customer_account_code != null ? String(row.customer_account_code) : undefined,
+            quantity: Number(row.quantity) || 0,
+            unit_price: row.unit_price != null ? Number(row.unit_price) : undefined,
+            sale_at: row.sale_at != null ? String(row.sale_at) : undefined,
+            notes: row.notes != null ? String(row.notes) : undefined,
+            payment_status: (row.payment_status as 'paid' | 'unpaid') || undefined,
+          }));
+          return salesApi.bulkCreate(data).then((r) => r.data);
+        }}
         mapRow={(row) => ({
           customer_account_code: row.customer_account_code || undefined,
           quantity: Number(row.quantity) || 0,

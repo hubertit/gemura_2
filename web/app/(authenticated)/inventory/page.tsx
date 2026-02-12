@@ -208,7 +208,16 @@ export default function InventoryPage() {
           { key: 'min_stock_level', label: 'Min stock level' },
         ]}
         onDownloadTemplate={() => inventoryApi.downloadTemplate()}
-        onBulkCreate={(rows) => inventoryApi.bulkCreate(rows as import('@/lib/api/inventory').CreateInventoryData[]).then((r) => r.data)}
+        onBulkCreate={(rows) => {
+          const data: import('@/lib/api/inventory').CreateInventoryData[] = rows.map((row) => ({
+            name: row.name != null ? String(row.name) : undefined,
+            description: row.description != null ? String(row.description) : undefined,
+            price: Number(row.price) || 0,
+            stock_quantity: row.stock_quantity != null ? Number(row.stock_quantity) : undefined,
+            min_stock_level: row.min_stock_level != null ? Number(row.min_stock_level) : undefined,
+          }));
+          return inventoryApi.bulkCreate(data).then((r) => r.data);
+        }}
         mapRow={(row) => ({
           name: row.name || undefined,
           description: row.description || undefined,

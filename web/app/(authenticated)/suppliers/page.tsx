@@ -212,7 +212,17 @@ export default function SuppliersPage() {
           { key: 'address', label: 'Address' },
         ]}
         onDownloadTemplate={() => suppliersApi.downloadTemplate()}
-        onBulkCreate={(rows) => suppliersApi.bulkCreate(rows as import('@/lib/api/suppliers').CreateSupplierData[]).then((r) => r.data)}
+        onBulkCreate={(rows) => {
+          const data: import('@/lib/api/suppliers').CreateSupplierData[] = rows.map((row) => ({
+            name: String(row.name ?? ''),
+            phone: String(row.phone ?? ''),
+            price_per_liter: Number(row.price_per_liter) || 0,
+            email: row.email != null ? String(row.email) : undefined,
+            nid: row.nid != null ? String(row.nid) : undefined,
+            address: row.address != null ? String(row.address) : undefined,
+          }));
+          return suppliersApi.bulkCreate(data).then((r) => r.data);
+        }}
         mapRow={(row) => ({
           name: row.name || '',
           phone: row.phone || '',

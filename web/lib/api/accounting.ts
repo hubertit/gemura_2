@@ -56,7 +56,7 @@ export interface SupplierInfo {
 /** One receivable (unpaid/partial milk or inventory sale) */
 export interface Receivable {
   sale_id: string;
-  source?: string; // 'milk_sale' | 'inventory_sale'
+  source?: string; // 'milk_sale' | 'inventory_sale' | 'loan'
   customer: CustomerInfo;
   sale_date: string;
   quantity: number;
@@ -144,9 +144,10 @@ export interface GetPayablesParams {
   payment_status?: string;
 }
 
-function unwrap<T>(res: { code: number; data?: T }): T {
-  if (res.code === 200 && res.data !== undefined) return res.data as T;
-  throw new Error((res as { message?: string }).message || 'Request failed');
+function unwrap<T>(res: unknown): T {
+  const r = res as { code: number; data?: T; message?: string };
+  if (r.code === 200 && r.data !== undefined) return r.data as T;
+  throw new Error(r.message || 'Request failed');
 }
 
 export const accountingApi = {

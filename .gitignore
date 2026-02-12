@@ -27,6 +27,9 @@ backend/coverage/
 .env.production.local
 .env.devlabs
 
+# Deployment credentials (copy from server-credentials.sh.example)
+scripts/deployment/server-credentials.sh
+
 # IDE
 .vscode/
 .idea/

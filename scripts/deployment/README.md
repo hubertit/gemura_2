@@ -34,24 +34,27 @@ echo "Will use port: $PORT"
 
 ### `deploy-to-server.sh`
 
-Main deployment script that:
-1. Uses specified port OR finds an available port (3000-3020)
-2. Uploads project files to server
-3. Sets up database (if needed)
-4. Builds and deploys Docker containers
+Main deployment script. **Run from project root.**
+
+**What it does:**
+1. Backs up the production database
+2. **Builds the frontend locally** (prod API URL) so the server never runs the heavy Next.js build (avoids OOM)
+3. Uploads backend + web (with pre-built `.next`) + `docker-compose.gemura.prebuilt.yml` + deployment scripts
+4. On server: ensures Docker + DevLabs PostgreSQL, then builds backend image and frontend image (frontend just copies `.next`), starts both containers
 
 **Usage:**
 ```bash
-# Auto-detect available port
+cd /path/to/gemura2
 ./scripts/deployment/deploy-to-server.sh
-
-# Use specific port (recommended - check ports first!)
-./scripts/deployment/deploy-to-server.sh 3002
 ```
 
-**Options:**
-- No argument: Auto-detects first available port
-- With port number: Uses the specified port (verifies it's available first)
+**Behaviour:**
+- Upload is retried once on connection failure (e.g. brief "No route to host").
+- After `docker compose down`, the script waits a few seconds before rebuild/up to reduce "overlay2 device or resource busy" issues.
+
+**If you see "overlay2 failed to remove root filesystem" / "device or resource busy":**
+1. Restart Docker on the server: `ssh root@159.198.65.38 'systemctl restart docker'`, wait 15s, then re-run the script.
+2. If it persists, reboot the server: `ssh root@159.198.65.38 'reboot'`, wait ~2 min, then re-run.
 
 ### `auto-deploy-backend.sh` ⭐ **AUTO-DEPLOY**
 
@@ -109,22 +112,29 @@ Returns only the port number to stdout.
 PORT=$(./scripts/deployment/find-available-port.sh)
 ```
 
-## Credentials (same server as ResolveIT v2)
+## Credentials (project-local)
 
-Gemura uses the **same server** as ResolveIT v2. Credentials are read from ResolveIT v2 when present so you maintain them in one place.
+Credentials are stored **only in this project**. Do not commit the credentials file.
 
-1. **Preferred:** In ResolveIT v2 create the credentials file (one-time):
+1. **One-time setup:**
    ```bash
-   cd /Applications/AMPPS/www/resolveit/v2/scripts/deployment
+   cd scripts/deployment
    cp server-credentials.sh.example server-credentials.sh
-   # Edit server-credentials.sh and set SERVER_PASS
+   # Edit server-credentials.sh and set SERVER_PASS (and SERVER_IP, SERVER_USER if needed)
    chmod 600 server-credentials.sh
    ```
-   Then `deploy-to-server.sh` and `ensure-backend-up.sh` will source it automatically (default path: `/Applications/AMPPS/www/resolveit/v2/scripts/deployment/server-credentials.sh`).
+   `deploy-to-server.sh` and `ensure-backend-up.sh` source `scripts/deployment/server-credentials.sh` automatically.
 
-2. **Override path:** `export RESOLVEIT_V2_CREDS=/path/to/server-credentials.sh` before running Gemura deploy scripts.
+2. **Override path (optional):** `export GEMURA_SERVER_CREDS=/path/to/server-credentials.sh` before running deploy scripts.
 
 3. **Or set inline:** `export SERVER_PASS=your_password` (and optionally `SERVER_IP`, `SERVER_USER`).
+
+## Network / firewall
+
+The deploy script connects to **159.198.65.38** over SSH. If your current network blocks that (e.g. corporate firewall, restricted Wi‑Fi):
+
+- The script runs a **quick connectivity check** first and exits with a clear message if the server is unreachable.
+- **Workarounds:** use a different network (e.g. mobile hotspot), a VPN, or run the deploy from a machine that can reach the server (e.g. from the server itself after cloning the repo there).
 
 ## Server Configuration
 

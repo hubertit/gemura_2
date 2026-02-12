@@ -1,33 +1,57 @@
 #!/bin/bash
 
 # Complete Deployment Script for Gemura to Server
-# This script sets up DevLabs PostgreSQL and deploys Gemura
-# Matches ResolveIt v2 deployment pattern
+# - Builds frontend locally (avoids OOM on server), uploads backend + web + pre-built .next
+# - Uses docker-compose.gemura.prebuilt.yml on server (no Next.js build on server)
 #
-# Usage:
-#   ./deploy-to-server.sh              # Auto-detect available port
-#   ./deploy-to-server.sh 3002        # Use specific port
+# Usage (from project root):
+#   cd /path/to/gemura2
+#   ./scripts/deployment/deploy-to-server.sh
+#
+# If you see "overlay2 failed to remove root filesystem" / "device or resource busy":
+#   1. ssh root@SERVER 'systemctl restart docker' then wait 15s and re-run this script.
+#   2. If it persists: ssh root@SERVER 'reboot', wait ~2 min, then re-run.
 
 set -e
 
-# Use ResolveIT v2 server credentials when present (same server)
-RESOLVEIT_CREDS="${RESOLVEIT_V2_CREDS:-/Applications/AMPPS/www/resolveit/v2/scripts/deployment/server-credentials.sh}"
-[ -f "$RESOLVEIT_CREDS" ] && source "$RESOLVEIT_CREDS"
+# Server credentials: project-local only (scripts/deployment/server-credentials.sh)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+CREDS_FILE="$SCRIPT_DIR/server-credentials.sh"
+[ -f "$CREDS_FILE" ] && source "$CREDS_FILE"
+# Optional override from env (e.g. CI or another path)
+[ -n "${GEMURA_SERVER_CREDS:-}" ] && [ -f "$GEMURA_SERVER_CREDS" ] && source "$GEMURA_SERVER_CREDS"
 SERVER_IP="${SERVER_IP:-159.198.65.38}"
 SERVER_USER="${SERVER_USER:-root}"
 SERVER_PASS="${SERVER_PASS:-}"
 DEPLOY_PATH="/opt/gemura"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ -z "$SERVER_PASS" ]; then
-    echo "❌ SERVER_PASS not set. Either:"
-    echo "   1. In ResolveIT v2: cp scripts/deployment/server-credentials.sh.example scripts/deployment/server-credentials.sh, then set SERVER_PASS"
-    echo "   2. Or: export SERVER_PASS=your_password"
+    echo "❌ SERVER_PASS not set. Set up project credentials:"
+    echo "   1. cp scripts/deployment/server-credentials.sh.example scripts/deployment/server-credentials.sh"
+    echo "   2. Edit scripts/deployment/server-credentials.sh and set SERVER_PASS (and optionally SERVER_IP, SERVER_USER)"
+    echo "   3. chmod 600 scripts/deployment/server-credentials.sh"
+    echo "   Or export SERVER_PASS=your_password before running this script."
     exit 1
 fi
 
+# Reduce timeouts on long uploads (keepalive every 30s, allow 6 misses = 3 min)
+SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
+SCP_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
+
 echo "🚀 Starting Gemura Deployment to Server..."
 echo "================================================"
+
+# Quick connectivity check (fails fast if network blocks the server)
+echo ""
+echo "🔌 Checking connectivity to $SERVER_IP..."
+if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "echo OK" 2>/dev/null; then
+  echo "❌ Cannot reach the server. Your network may be blocking access to $SERVER_IP."
+  echo "   Try: different Wi‑Fi, mobile hotspot, or VPN. Then run this script again."
+  exit 1
+fi
+echo "   ✅ Server reachable"
+echo ""
 
 # Step 0: Set Gemura ports (3004 for backend, 3005 for frontend)
 echo ""
@@ -44,8 +68,8 @@ else
     echo "ℹ️  Port 3004: Will deploy new Gemura Backend"
 fi
 
-# Check port 3005
-result=$(sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
+# Check port 3005 (use SSH_OPTS for keepalive)
+result=$(sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \
     "netstat -tuln 2>/dev/null | grep -q ':3005 ' || ss -tuln 2>/dev/null | grep -q ':3005 ' || echo 'available'" 2>/dev/null)
 
 if [ "$result" = "available" ]; then
@@ -60,12 +84,12 @@ export FRONTEND_PORT=3005
 # Step 0: Backup database first (before any deployment changes)
 echo ""
 echo "💾 Step 0: Backing up production database..."
-if sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
+if sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \
     "docker ps --format '{{.Names}}' | grep -qx devslab-postgres" 2>/dev/null; then
-  if sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
+  if sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \
       "[ -f $DEPLOY_PATH/scripts/deployment/backup-all-databases.sh ]" 2>/dev/null; then
-    sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP \
-      "cd $DEPLOY_PATH && mkdir -p backups && bash scripts/deployment/backup-all-databases.sh" || \
+    sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \
+      "export LC_ALL=C.UTF-8; cd $DEPLOY_PATH && mkdir -p backups && bash scripts/deployment/backup-all-databases.sh" || \
       echo "   ⚠️  Backup had warnings (continuing)"
     echo "   ✅ Database backup complete"
   else
@@ -75,33 +99,58 @@ else
   echo "   ⏭️  Skipping backup (PostgreSQL not running yet - fresh deploy)"
 fi
 
-# Step 1: Upload files to server
+# Step 1: Build frontend locally (avoids OOM on server during Next.js build)
 echo ""
-echo "📤 Step 1: Uploading files to server..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH"
+echo "🌐 Step 1a: Building frontend locally (prod API URL)..."
+( cd "$REPO_ROOT/web" && NEXT_PUBLIC_API_URL=http://159.198.65.38:3004/api npm run build ) || {
+  echo "   ❌ Local frontend build failed. Fix errors and re-run."
+  exit 1
+}
+echo "   ✅ Frontend built (.next/standalone + static)"
 
-# Upload project files
-echo "   Uploading project files..."
-# Create a temporary tar archive excluding unnecessary files
-# Optimized exclusions to match ResolveIt speed (exclude large dirs)
-tar --exclude='node_modules' --exclude='.next' --exclude='dist' \
-    --exclude='.git' --exclude='*.log' --exclude='.env*' \
-    --exclude='mobile' --exclude='build' \
-    --exclude='backend/node_modules' --exclude='backend/dist' \
-    --exclude='.dart_tool' --exclude='mobile/.dart_tool' \
-    --exclude='coverage' --exclude='.nyc_output' \
-    --exclude='*.test.ts' --exclude='*.spec.ts' \
-    -czf /tmp/gemura-deploy.tar.gz .
-sshpass -p "$SERVER_PASS" scp -o StrictHostKeyChecking=no /tmp/gemura-deploy.tar.gz $SERVER_USER@$SERVER_IP:/tmp/
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && tar -xzf /tmp/gemura-deploy.tar.gz && rm /tmp/gemura-deploy.tar.gz"
-rm /tmp/gemura-deploy.tar.gz
+# Step 1b: Upload files to server (retry once on connection failure)
+echo ""
+echo "📤 Step 1b: Uploading files to server..."
+echo "   Creating archive (backend + web with pre-built .next + prebuilt compose)..."
+( cd "$REPO_ROOT" && COPYFILE_DISABLE=1 tar -czf /tmp/gemura-deploy.tar.gz \
+  --exclude='backend/node_modules' --exclude='backend/dist' \
+  --exclude='web/node_modules' --exclude='web/dist' \
+  backend/ web/ docker-compose.gemura.prebuilt.yml docker-compose.devlabs-db.yml scripts/deployment/ )
+
+upload_ok=
+for attempt in 1 2; do
+  if sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH" 2>/dev/null && \
+     sshpass -p "$SERVER_PASS" scp $SCP_OPTS /tmp/gemura-deploy.tar.gz $SERVER_USER@$SERVER_IP:/tmp/ 2>/dev/null && \
+     sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && rm -rf backend web docker-compose.gemura.yml docker-compose.gemura.prebuilt.yml docker-compose.devlabs-db.yml scripts/deployment && tar -xzf /tmp/gemura-deploy.tar.gz 2>/dev/null && rm /tmp/gemura-deploy.tar.gz"; then
+    upload_ok=1
+    break
+  fi
+  if [ "$attempt" -eq 1 ]; then
+    echo "   ⚠️  Upload failed (network?). Retrying in 15s..."
+    sleep 15
+  fi
+done
+rm -f /tmp/gemura-deploy.tar.gz
+if [ -z "$upload_ok" ]; then
+  echo "   ❌ Upload failed after 2 attempts. Check network/VPN and re-run."
+  exit 1
+fi
+
+# Verify compose file on server
+echo "   Verifying docker-compose.gemura.prebuilt.yml on server..."
+if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "test -f $DEPLOY_PATH/docker-compose.gemura.prebuilt.yml && test -d $DEPLOY_PATH/web/.next/standalone" 2>/dev/null; then
+  echo "   ❌ Server missing prebuilt compose or web/.next/standalone. Re-run from project root: cd $REPO_ROOT && $0"
+  exit 1
+fi
+echo "   ✅ Compose and pre-built frontend OK"
 
 # Step 2: Setup DevLabs PostgreSQL (if not already running)
 # Docker check is inside this heredoc to avoid extra SSH sessions (was causing
 # "Permission denied" when too many SSH connections were opened in quick succession).
 echo ""
 echo "🗄️  Step 2: Ensuring Docker and DevLabs PostgreSQL..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'ENDSSH'
+sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << 'ENDSSH'
+export LC_ALL=C.UTF-8
 cd /opt/gemura
 
 # Ensure Docker is running (e.g. after server reboot)
@@ -186,13 +235,14 @@ ENDSSH
 # Step 3: Build and start Gemura
 echo ""
 echo "🔨 Step 3: Building and starting Gemura..."
-sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << ENDSSH
+sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << ENDSSH
+export LC_ALL=C.UTF-8
 cd /opt/gemura
 
 # Ensure DevLabs network exists (created by devlabs-db compose)
 docker network create devslab-network 2>/dev/null || true
 
-# Update .env.devlabs with correct DATABASE_URL and fixed ports
+# Update .env.devlabs: backend uses prod DB; frontend build uses prod API URL
 cat > .env.devlabs << EOF
 # DevLabs PostgreSQL Configuration
 POSTGRES_USER=devslab_admin
@@ -204,30 +254,32 @@ POSTGRES_PORT=5433
 BACKEND_PORT=3004
 FRONTEND_PORT=3005
 CORS_ORIGIN=http://localhost:3005,http://localhost:3004,http://159.198.65.38:3005,http://159.198.65.38:3004
-NEXT_PUBLIC_API_BASE=http://159.198.65.38:3004/api
+# Frontend talks to prod backend (baked in at build time)
+NEXT_PUBLIC_API_URL=http://159.198.65.38:3004/api
 
-# Database connection for Gemura backend
+# Backend uses prod DB (devslab-postgres on server)
 DATABASE_URL=postgresql://devslab_admin:devslab_secure_password_2024@devslab-postgres:5432/gemura_db
 EOF
 
-# Stop and remove existing containers to ensure fresh deployment
+# Stop and remove existing containers (give overlay time to release — avoids "device or resource busy")
 echo "   Stopping and removing existing containers..."
-docker compose -f docker-compose.gemura.yml --env-file .env.devlabs down --remove-orphans 2>/dev/null || true
+docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs down --remove-orphans --timeout 30 2>/dev/null || true
+sleep 5
 
 # Force remove any stuck containers
 echo "   Cleaning up any stuck containers..."
 docker ps -a | grep gemura | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
+sleep 2
 
-# Build new image with latest code
-# Use cache when possible for faster builds (only rebuild changed layers)
-echo "   Building Gemura containers with latest code..."
-docker compose -f docker-compose.gemura.yml --env-file .env.devlabs build backend
+# Build backend and frontend (frontend uses pre-built .next — no heavy build on server)
+echo "   Building Gemura backend and frontend images..."
+docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs build backend frontend
 
-# Start containers with force recreate to ensure new image is used
-echo "   Starting Gemura containers with new image..."
-docker compose -f docker-compose.gemura.yml --env-file .env.devlabs up -d --force-recreate --no-deps backend
+# Start both containers with force recreate
+echo "   Starting Gemura backend and frontend..."
+docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs up -d --force-recreate --no-deps backend frontend
 
-# Wait for services to start and verify health
+# Wait for backend to be ready
 echo ""
 echo "   ⏳ Waiting for backend to be ready..."
 for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
@@ -242,16 +294,17 @@ for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
     sleep 5
   fi
 done
+echo "   ✅ Frontend: http://159.198.65.38:3005"
 
 # Check status
 echo ""
 echo "   📊 Container Status:"
-docker compose -f docker-compose.gemura.yml ps
+docker compose -f docker-compose.gemura.prebuilt.yml ps
 
 # Verify the new image is running
 echo ""
 echo "   🔍 Verifying deployment..."
-CURRENT_IMAGE=$(docker compose -f docker-compose.gemura.yml --env-file .env.devlabs ps backend 2>/dev/null | grep backend | awk '{print $2}' || echo "unknown")
+CURRENT_IMAGE=$(docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs ps backend 2>/dev/null | grep backend | awk '{print $2}' || echo "unknown")
 echo "   Running image: $CURRENT_IMAGE"
 
 echo ""
@@ -259,7 +312,7 @@ echo "   📋 Service URLs:"
 echo "   - Backend API: http://159.198.65.38:3004/api"
 echo "   - API Docs: http://159.198.65.38:3004/api/docs"
 echo "   - Health Check: http://159.198.65.38:3004/api/health"
-echo "   - Frontend: http://159.198.65.38:3005 (when deployed)"
+echo "   - Frontend: http://159.198.65.38:3005"
 ENDSSH
 
 echo ""
@@ -269,15 +322,14 @@ echo ""
 echo "📦 Deployment Summary:"
 echo "   ✅ Database backed up (before deploy)"
 echo "   ✅ Files uploaded to server"
-echo "   ✅ Docker image rebuilt with latest code"
-echo "   ✅ Containers recreated with new image"
-echo "   ✅ Backend service started"
+echo "   ✅ Backend & frontend Docker images built (backend=prod DB, frontend=prod API)"
+echo "   ✅ Backend and frontend containers started"
 echo ""
 echo "🌐 Access your application:"
 echo "   Backend API: http://159.198.65.38:3004/api"
 echo "   API Docs: http://159.198.65.38:3004/api/docs"
 echo "   Health Check: http://159.198.65.38:3004/api/health"
-echo "   Frontend: http://159.198.65.38:3005 (when deployed)"
+echo "   Frontend: http://159.198.65.38:3005"
 echo ""
 echo "📌 Port Information:"
 echo "   Backend Port: 3004"
@@ -290,8 +342,10 @@ echo "   Password: devslab_secure_password_2024"
 echo "   Database: gemura_db"
 echo ""
 echo "🔧 Useful Commands:"
-echo "   View logs: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.yml logs -f'"
-echo "   Restart: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.yml restart'"
-echo "   Stop: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.yml down'"
+echo "   View logs: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.prebuilt.yml logs -f'"
+echo "   Restart: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.prebuilt.yml restart'"
+echo "   Stop: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.prebuilt.yml down'"
+echo ""
+echo "   If overlay2 \"device or resource busy\": restart Docker or reboot server, then re-run this script."
 echo ""
 

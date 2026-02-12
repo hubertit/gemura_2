@@ -410,4 +410,130 @@ export class TransactionsService {
       },
     };
   }
+
+  /**
+   * Get or create Loans Receivable (Asset) and Cash accounts for an account.
+   * Used for loan disbursement and repayment journal entries.
+   */
+  private async getLoansReceivableAndCash(accountId: string) {
+    const account = await this.prisma.account.findUnique({
+      where: { id: accountId },
+    });
+    if (!account) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Account not found.',
+      });
+    }
+    const prefix = account.code || accountId.substring(0, 8).toUpperCase();
+    const cashCode = `CASH-${prefix}`;
+    const loansRecCode = `LOANS-REC-${prefix}`;
+
+    let cashAccount = await this.prisma.chartOfAccount.findFirst({
+      where: { code: cashCode, account_type: 'Asset', is_active: true },
+    });
+    if (!cashAccount) {
+      cashAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: cashCode,
+          name: `Cash - ${account.name}`,
+          account_type: 'Asset',
+          is_active: true,
+        },
+      });
+    }
+
+    let loansRecAccount = await this.prisma.chartOfAccount.findFirst({
+      where: { code: loansRecCode, account_type: 'Asset', is_active: true },
+    });
+    if (!loansRecAccount) {
+      loansRecAccount = await this.prisma.chartOfAccount.create({
+        data: {
+          code: loansRecCode,
+          name: `Loans Receivable - ${account.name}`,
+          account_type: 'Asset',
+          is_active: true,
+        },
+      });
+    }
+
+    return { cashAccount, loansRecAccount };
+  }
+
+  /**
+   * Record loan disbursement: DR Loans Receivable, CR Cash.
+   * Call when a loan is created (money given out).
+   */
+  async createLoanDisbursementEntry(
+    userId: string,
+    lenderAccountId: string,
+    amount: number,
+    description: string,
+    transactionDate: Date,
+  ) {
+    const { cashAccount, loansRecAccount } = await this.getLoansReceivableAndCash(lenderAccountId);
+    await this.prisma.accountingTransaction.create({
+      data: {
+        transaction_date: transactionDate,
+        description,
+        total_amount: amount,
+        created_by: userId,
+        entries: {
+          create: [
+            {
+              account_id: loansRecAccount.id,
+              debit_amount: amount,
+              credit_amount: null,
+              description: `Loans receivable: ${description}`,
+            },
+            {
+              account_id: cashAccount.id,
+              credit_amount: amount,
+              debit_amount: null,
+              description: `Cash disbursed: ${description}`,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  /**
+   * Record loan repayment (cash received): DR Cash, CR Loans Receivable.
+   * Call when a direct repayment is recorded (not payroll deduction).
+   */
+  async createLoanRepaymentEntry(
+    userId: string,
+    lenderAccountId: string,
+    amount: number,
+    description: string,
+    transactionDate: Date,
+  ) {
+    const { cashAccount, loansRecAccount } = await this.getLoansReceivableAndCash(lenderAccountId);
+    await this.prisma.accountingTransaction.create({
+      data: {
+        transaction_date: transactionDate,
+        description,
+        total_amount: amount,
+        created_by: userId,
+        entries: {
+          create: [
+            {
+              account_id: cashAccount.id,
+              debit_amount: amount,
+              credit_amount: null,
+              description: `Cash received: ${description}`,
+            },
+            {
+              account_id: loansRecAccount.id,
+              credit_amount: amount,
+              debit_amount: null,
+              description: `Loans receivable reduced: ${description}`,
+            },
+          ],
+        },
+      },
+    });
+  }
 }

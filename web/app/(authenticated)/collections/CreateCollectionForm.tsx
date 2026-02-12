@@ -51,7 +51,8 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
     setFormData(prev => ({ ...prev, supplier_account_code }));
     setError('');
     const supplier = suppliers.find(s => s.account.code === supplier_account_code);
-    if (supplier?.price_per_liter != null) setFormData(prev => ({ ...prev, unit_price: supplier.price_per_liter }));
+    const price = supplier?.price_per_liter;
+    if (typeof price === 'number') setFormData(prev => ({ ...prev, unit_price: price }));
   };
 
   const validateForm = (): boolean => {

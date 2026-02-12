@@ -184,6 +184,8 @@ model Account {
   products              Product[]           @relation("ProductAccount")
   default_account_users User[]              @relation("UserDefaultAccount")
   inventory_sales_buyer InventorySale[]     @relation("InventorySaleBuyer") // Used for both buyer tracking and supplier debt tracking
+  loans_lent            Loan[]             @relation("LoanLender")
+  loans_borrowed        Loan[]             @relation("LoanBorrower")
   created_by_user       User?               @relation("AccountCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
   updated_by_user       User?               @relation("AccountUpdatedBy", fields: [updated_by], references: [id], onDelete: SetNull)
 
@@ -964,19 +966,22 @@ model PayrollPayslip {
 model PayrollDeduction {
   id               String   @id @default(uuid()) @db.Uuid
   payslip_id       String   @map("payslip_id") @db.Uuid
-  deduction_type   String   @map("deduction_type") // tax, social_security, loan, benefit, fee, inventory_debt
+  deduction_type   String   @map("deduction_type") // tax, social_security, loan, loan_repayment, benefit, fee, inventory_debt
   amount           Decimal  @db.Decimal(10, 2)
   description      String?
   inventory_sale_id String?  @map("inventory_sale_id") @db.Uuid // Links to InventorySale when deduction_type=inventory_debt
+  loan_id          String?  @map("loan_id") @db.Uuid // Links to Loan when deduction_type=loan_repayment
   created_at       DateTime @default(now()) @map("created_at")
 
   // Relations
   payslip       PayrollPayslip @relation(fields: [payslip_id], references: [id], onDelete: Cascade)
   inventory_sale InventorySale? @relation(fields: [inventory_sale_id], references: [id], onDelete: SetNull)
+  loan           Loan?          @relation(fields: [loan_id], references: [id], onDelete: SetNull)
 
   @@index([payslip_id])
   @@index([deduction_type])
   @@index([inventory_sale_id])
+  @@index([loan_id])
   @@map("payroll_deductions")
 }
 
@@ -1076,4 +1081,55 @@ model InventorySale {
   @@index([payment_status])
   @@index([sale_date])
   @@map("inventory_sales")
+}
+
+// ============================================
+// LOANS MODULE (money lending – generic borrower)
+// ============================================
+
+model Loan {
+  id                   String    @id @default(uuid()) @db.Uuid
+  lender_account_id    String    @map("lender_account_id") @db.Uuid   // MCC / your account
+  borrower_type        String    @map("borrower_type")              // supplier, customer, other
+  borrower_account_id  String?   @map("borrower_account_id") @db.Uuid // Required for supplier/customer; null for other
+  borrower_name        String?   @map("borrower_name")              // For "other" or display
+  principal            Decimal   @db.Decimal(15, 2)
+  amount_repaid        Decimal   @default(0) @map("amount_repaid") @db.Decimal(15, 2)
+  currency             String    @default("RWF")
+  status               String    @default("active")                // active, closed
+  disbursement_date    DateTime  @map("disbursement_date")
+  due_date             DateTime? @map("due_date")
+  notes                String?   @db.Text
+  created_at           DateTime  @default(now()) @map("created_at")
+  updated_at           DateTime  @updatedAt @map("updated_at")
+  created_by           String?   @map("created_by") @db.Uuid
+
+  // Relations
+  lender_account    Account             @relation("LoanLender", fields: [lender_account_id], references: [id], onDelete: Cascade)
+  borrower_account  Account?            @relation("LoanBorrower", fields: [borrower_account_id], references: [id], onDelete: SetNull)
+  payroll_deductions PayrollDeduction[]
+  repayments        LoanRepayment[]
+
+  @@index([lender_account_id])
+  @@index([borrower_account_id])
+  @@index([borrower_type])
+  @@index([status])
+  @@index([disbursement_date])
+  @@map("loans")
+}
+
+model LoanRepayment {
+  id               String   @id @default(uuid()) @db.Uuid
+  loan_id          String   @map("loan_id") @db.Uuid
+  amount           Decimal  @db.Decimal(15, 2)
+  repayment_date   DateTime @map("repayment_date")
+  notes            String?  @db.Text
+  source           String   @default("direct") // direct | payroll
+  created_at       DateTime @default(now()) @map("created_at")
+
+  loan Loan @relation(fields: [loan_id], references: [id], onDelete: Cascade)
+
+  @@index([loan_id])
+  @@index([repayment_date])
+  @@map("loan_repayments")
 }

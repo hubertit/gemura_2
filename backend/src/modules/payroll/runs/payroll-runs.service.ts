@@ -7,6 +7,7 @@ import { GeneratePayrollDto } from './dto/generate-payroll.dto';
 import { MarkPayrollPaidDto } from './dto/mark-payroll-paid.dto';
 import { TransactionsService } from '../../accounting/transactions/transactions.service';
 import { TransactionType } from '../../accounting/transactions/dto/create-transaction.dto';
+import { LoansService } from '../../loans/loans.service';
 import { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 const PDFDocument = require('pdfkit');
@@ -16,6 +17,7 @@ export class PayrollRunsService {
   constructor(
     private prisma: PrismaService,
     private transactionsService: TransactionsService,
+    private loansService: LoansService,
   ) {}
 
   async createRun(user: User, createDto: CreatePayrollRunDto) {
@@ -261,7 +263,17 @@ export class PayrollRunsService {
         return sum + (total - paid);
       }, 0);
 
-      const totalDeductions = Math.min(grossAmount, totalInventoryDebt);
+      const totalLoanDebt = user.default_account_id
+        ? await this.loansService.getOutstandingBalanceForBorrower(
+            user.default_account_id,
+            payrollSupplier.supplier_account_id,
+          )
+        : 0;
+
+      const totalDeductions = Math.min(
+        grossAmount,
+        totalInventoryDebt + totalLoanDebt,
+      );
       const netAmount = Math.max(0, grossAmount - totalDeductions);
 
       if (netAmount <= 0 && grossAmount <= 0) {
@@ -283,9 +295,8 @@ export class PayrollRunsService {
         },
       });
 
-      // Create PayrollDeduction records for inventory debt settlement tracking
-      if (inventoryDebtSales.length > 0 && totalDeductions > 0) {
-        let remainingToAllocate = totalDeductions;
+      let remainingToAllocate = totalDeductions;
+      if (inventoryDebtSales.length > 0 && remainingToAllocate > 0) {
         for (const invSale of inventoryDebtSales) {
           if (remainingToAllocate <= 0) break;
           const outstanding = Number(invSale.total_amount) - Number(invSale.amount_paid || 0);
@@ -299,6 +310,28 @@ export class PayrollRunsService {
               amount: deductAmount,
               description: `Inventory debt - Sale ${invSale.id.substring(0, 8)}`,
               inventory_sale_id: invSale.id,
+            },
+          });
+        }
+      }
+      if (remainingToAllocate > 0 && user.default_account_id) {
+        const activeLoans = await this.loansService.getActiveLoansForBorrower(
+          user.default_account_id,
+          payrollSupplier.supplier_account_id,
+        );
+        for (const loan of activeLoans) {
+          if (remainingToAllocate <= 0) break;
+          const outstanding = loan.principal - loan.amount_repaid;
+          if (outstanding <= 0) continue;
+          const deductAmount = Math.min(remainingToAllocate, outstanding);
+          remainingToAllocate -= deductAmount;
+          await this.prisma.payrollDeduction.create({
+            data: {
+              payslip_id: payslip.id,
+              deduction_type: 'loan_repayment',
+              amount: deductAmount,
+              description: `Loan repayment - Loan ${loan.id.substring(0, 8)}`,
+              loan_id: loan.id,
             },
           });
         }
@@ -530,8 +563,19 @@ export class PayrollRunsService {
         return sum + (total - paid);
       }, 0);
 
-      // Can only deduct up to gross (can't deduct more than we owe them)
-      const totalDeductions = Math.min(grossAmount, totalInventoryDebt);
+      // Outstanding loan balance for this supplier (they borrowed from us)
+      const totalLoanDebt = user.default_account_id
+        ? await this.loansService.getOutstandingBalanceForBorrower(
+            user.default_account_id,
+            payrollSupplier.supplier_account_id,
+          )
+        : 0;
+
+      // Can only deduct up to gross (inventory + loan repayments)
+      const totalDeductions = Math.min(
+        grossAmount,
+        totalInventoryDebt + totalLoanDebt,
+      );
       const netAmount = Math.max(0, grossAmount - totalDeductions);
 
       if (netAmount <= 0 && grossAmount <= 0) {
@@ -554,9 +598,11 @@ export class PayrollRunsService {
         },
       });
 
-      // Create PayrollDeduction records - allocate deductions across inventory sales (oldest first)
-      if (inventoryDebtSales.length > 0 && totalDeductions > 0) {
-        let remainingToAllocate = totalDeductions;
+      // Allocate deductions: first inventory, then loans (oldest first)
+      let remainingToAllocate = totalDeductions;
+
+      // PayrollDeduction - inventory debt (oldest first)
+      if (inventoryDebtSales.length > 0 && remainingToAllocate > 0) {
         for (const invSale of inventoryDebtSales) {
           if (remainingToAllocate <= 0) break;
           const outstanding = Number(invSale.total_amount) - Number(invSale.amount_paid || 0);
@@ -575,8 +621,35 @@ export class PayrollRunsService {
         }
       }
 
+      // PayrollDeduction - loan repayment (oldest first)
+      if (remainingToAllocate > 0 && user.default_account_id) {
+        const activeLoans = await this.loansService.getActiveLoansForBorrower(
+          user.default_account_id,
+          payrollSupplier.supplier_account_id,
+        );
+        for (const loan of activeLoans) {
+          if (remainingToAllocate <= 0) break;
+          const outstanding = loan.principal - loan.amount_repaid;
+          if (outstanding <= 0) continue;
+          const deductAmount = Math.min(remainingToAllocate, outstanding);
+          remainingToAllocate -= deductAmount;
+          await this.prisma.payrollDeduction.create({
+            data: {
+              payslip_id: payslip.id,
+              deduction_type: 'loan_repayment',
+              amount: deductAmount,
+              description: `Loan repayment - Loan ${loan.id.substring(0, 8)}`,
+              loan_id: loan.id,
+            },
+          });
+        }
+      }
+
       totalAmount += netAmount;
-      const remainingDebt = Math.max(0, totalInventoryDebt - totalDeductions);
+      const remainingDebt = Math.max(
+        0,
+        totalInventoryDebt + totalLoanDebt - totalDeductions,
+      );
       payslipsCreated.push({
         supplier: payrollSupplier.supplier_account?.name || 'Unknown',
         supplier_code: payrollSupplier.supplier_account?.code || 'Unknown',
@@ -731,6 +804,39 @@ export class PayrollRunsService {
           }
         }
 
+        // Apply loan repayment deductions to Loan.amount_repaid
+        const loanDeductions = await tx.payrollDeduction.findMany({
+          where: {
+            payslip_id: payslip.id,
+            deduction_type: 'loan_repayment',
+            loan_id: { not: null },
+          },
+        });
+        for (const ded of loanDeductions) {
+          if (ded.loan_id) {
+            const loan = await tx.loan.findUnique({ where: { id: ded.loan_id } });
+            if (loan) {
+              const newRepaid = Number(loan.amount_repaid || 0) + Number(ded.amount);
+              const principal = Number(loan.principal);
+              await tx.loan.update({
+                where: { id: loan.id },
+                data: {
+                  amount_repaid: newRepaid,
+                  status: newRepaid >= principal ? 'closed' : loan.status,
+                },
+              });
+              await tx.loanRepayment.create({
+                data: {
+                  loan_id: loan.id,
+                  amount: ded.amount,
+                  repayment_date: paymentDate,
+                  source: 'payroll',
+                },
+              });
+            }
+          }
+        }
+
         const milkSalesToSettle = await tx.milkSale.findMany({
           where: {
             supplier_account_id: payslip.supplier_account_id,
@@ -833,6 +939,38 @@ export class PayrollRunsService {
                 data: {
                   amount_paid: newAmountPaid,
                   payment_status: paymentStatus,
+                },
+              });
+            }
+          }
+        }
+
+        const loanDeductions = await tx.payrollDeduction.findMany({
+          where: {
+            payslip_id: payslip.id,
+            deduction_type: 'loan_repayment',
+            loan_id: { not: null },
+          },
+        });
+        for (const ded of loanDeductions) {
+          if (ded.loan_id) {
+            const loan = await tx.loan.findUnique({ where: { id: ded.loan_id } });
+            if (loan) {
+              const newRepaid = Number(loan.amount_repaid || 0) + Number(ded.amount);
+              const principal = Number(loan.principal);
+              await tx.loan.update({
+                where: { id: loan.id },
+                data: {
+                  amount_repaid: newRepaid,
+                  status: newRepaid >= principal ? 'closed' : loan.status,
+                },
+              });
+              await tx.loanRepayment.create({
+                data: {
+                  loan_id: loan.id,
+                  amount: ded.amount,
+                  repayment_date: paymentDate,
+                  source: 'payroll',
                 },
               });
             }

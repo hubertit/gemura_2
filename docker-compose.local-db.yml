@@ -1,0 +1,36 @@
+# Local PostgreSQL for development - standalone (no external network)
+# Use when you want a local database for backup/restore from production
+#
+# Usage:
+#   docker-compose -f docker-compose.local-db.yml up -d
+#
+# Connect: localhost:5432
+#   User: postgres
+#   Pass: postgres
+#   DB:   gemura_db (created on first run)
+#
+# After running backup-production-to-local.sh:
+#   LOCAL_HOST=localhost LOCAL_PORT=5432 LOCAL_USER=postgres LOCAL_PASSWORD=postgres ./scripts/deployment/backup-production-to-local.sh
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: gemura-local-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gemura_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - gemura_local_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  gemura_local_pgdata:
+    driver: local

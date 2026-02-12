@@ -52,7 +52,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       // Pause health checks to save battery and network
       ref.read(healthCheckProvider.notifier).pause();
-    }
+
     
     // Handle app coming to foreground
     if (state == AppLifecycleState.resumed) {

@@ -95,7 +95,7 @@ export function FilterBarApply({ onApply }: { onApply: () => void }) {
 }
 
 /** Export CSV button for the filter bar. */
-export function FilterBarExport<T extends Record<string, unknown>>({
+export function FilterBarExport<T extends object>({
   data,
   exportFilename,
   exportColumns,
