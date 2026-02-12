@@ -83,6 +83,14 @@ export default function CollectionsPage() {
     }).format(amount);
   };
 
+  /** Supplier display name: avoid showing "System"; use code or — when name is empty or "System". */
+  const supplierDisplayName = (row: Collection) => {
+    const name = row.supplier_account?.name?.trim();
+    const code = row.supplier_account?.code?.trim();
+    if (name && name.toLowerCase() !== 'system') return name;
+    return code || '—';
+  };
+
   const columns: TableColumn<Collection>[] = [
     {
       key: 'collection_at',
@@ -96,8 +104,8 @@ export default function CollectionsPage() {
       sortable: false,
       render: (_, row) => (
         <div>
-          <div className="font-medium text-gray-900">{row.supplier_account.name}</div>
-          <div className="text-xs text-gray-500">{row.supplier_account.code}</div>
+          <div className="font-medium text-gray-900">{supplierDisplayName(row)}</div>
+          <div className="text-xs text-gray-500">{row.supplier_account?.code ?? '—'}</div>
         </div>
       ),
     },
@@ -274,7 +282,7 @@ export default function CollectionsPage() {
           exportFilename="collections"
           exportColumns={[
             { key: 'collection_at', label: 'Date', getValue: (r) => new Date(r.collection_at).toLocaleString() },
-            { key: 'supplier_account', label: 'Supplier', getValue: (r) => r.supplier_account?.name ?? '' },
+            { key: 'supplier_account', label: 'Supplier', getValue: (r) => supplierDisplayName(r) },
             { key: 'quantity', label: 'Quantity (L)', getValue: (r) => String(Number(r.quantity).toFixed(2)) },
             { key: 'unit_price', label: 'Unit Price', getValue: (r) => String(r.unit_price ?? '') },
             { key: 'total_amount', label: 'Total', getValue: (r) => String(r.total_amount ?? '') },

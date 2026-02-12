@@ -12,8 +12,9 @@ import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarExport } from '@/app/components/FilterBar';
 import Modal from '@/app/components/Modal';
 import BulkImportModal from '@/app/components/BulkImportModal';
+import StatCard from '@/app/components/StatCard';
 import CreateInventoryForm from './CreateInventoryForm';
-import Icon, { faPlus, faEye, faCheckCircle, faWarehouse, faDollarSign, faBox, faTriangleExclamation, faCircleXmark, faFile } from '@/app/components/Icon';
+import Icon, { faPlus, faEye, faCheckCircle, faDollarSign, faBox, faTriangleExclamation, faCircleXmark, faFile } from '@/app/components/Icon';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -235,37 +236,45 @@ export default function InventoryPage() {
         />
       </Modal>
 
-      {/* Stats cards */}
+      {/* Stats cards - same style as dashboard */}
       {stats && currentAccount && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-gray-400">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Items</span>
-              <Icon icon={faBox} className="text-gray-400" size="sm" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900 tabular-nums">{stats.total_items}</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-green-500">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active</span>
-              <Icon icon={faCheckCircle} className="text-green-500" size="sm" />
-            </div>
-            <p className="text-3xl font-bold text-green-600 tabular-nums">{stats.active_items}</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-amber-500">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Low Stock</span>
-              <Icon icon={faTriangleExclamation} className="text-amber-500" size="sm" />
-            </div>
-            <p className="text-3xl font-bold text-amber-600 tabular-nums">{stats.low_stock_items}</p>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-sm flex flex-col gap-3 border-l-4 border-l-red-500">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Out of Stock</span>
-              <Icon icon={faCircleXmark} className="text-red-500" size="sm" />
-            </div>
-            <p className="text-3xl font-bold text-red-600 tabular-nums">{stats.out_of_stock_items}</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Total Items"
+            value={stats.total_items}
+            subtitle="Products"
+            icon={faBox}
+            href="/inventory"
+            iconBgColor="#f3f4f6"
+            iconColor="#6b7280"
+          />
+          <StatCard
+            label="Active"
+            value={stats.active_items}
+            subtitle="In stock"
+            icon={faCheckCircle}
+            href="/inventory?status=active"
+            iconBgColor="#dcfce7"
+            iconColor="#059669"
+          />
+          <StatCard
+            label="Low Stock"
+            value={stats.low_stock_items}
+            subtitle="Below minimum"
+            icon={faTriangleExclamation}
+            href="/inventory"
+            iconBgColor="#fffbeb"
+            iconColor="#d97706"
+          />
+          <StatCard
+            label="Out of Stock"
+            value={stats.out_of_stock_items}
+            subtitle="Zero quantity"
+            icon={faCircleXmark}
+            href="/inventory?status=out_of_stock"
+            iconBgColor="#fef2f2"
+            iconColor="#b91c1c"
+          />
         </div>
       )}
 

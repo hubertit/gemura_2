@@ -21,19 +21,21 @@ class CollectedMilkScreen extends ConsumerStatefulWidget {
 }
 
 class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
-  // Filter variables
+  // Filter variables - same as web: Status, Date From, Date To, Supplier
   String _selectedSupplier = 'All';
   String _selectedStatus = 'All';
   DateTime? _startDate;
   DateTime? _endDate;
-  RangeValues _quantityRange = const RangeValues(0, 100);
-  RangeValues _priceRange = const RangeValues(0, 1000);
+  
+  // Sort - same sortable columns as web: Date, Quantity, Unit Price, Total, Status
+  String _sortKey = 'collectionDate';
+  bool _sortDesc = true; // default: newest / highest first
   
   // Store current API filters to avoid recreation
   Map<String, dynamic>? _currentApiFilters;
   
-  // Filter options
-  List<String> get statuses => ['All', 'accepted', 'pending', 'cancelled'];
+  // Filter options - match web STATUS_OPTIONS order
+  List<String> get statuses => ['All', 'pending', 'accepted', 'rejected', 'cancelled'];
   
   // Get supplier name from code using actual supplier data
   String _getSupplierName(String code, List<Supplier> suppliers) {
@@ -77,24 +79,12 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
       filters['status'] = _selectedStatus;
     }
     
-    // Date range filter
+    // Date range filter (same as web: date_from, date_to)
     if (_startDate != null) {
       filters['date_from'] = DateFormat('yyyy-MM-dd').format(_startDate!);
     }
     if (_endDate != null) {
       filters['date_to'] = DateFormat('yyyy-MM-dd').format(_endDate!);
-    }
-    
-    // Quantity range filter
-    if (_quantityRange.start > 0 || _quantityRange.end < 100) {
-      filters['quantity_min'] = _quantityRange.start;
-      filters['quantity_max'] = _quantityRange.end;
-    }
-    
-    // Price range filter
-    if (_priceRange.start > 0 || _priceRange.end < 1000) {
-      filters['price_min'] = _priceRange.start;
-      filters['price_max'] = _priceRange.end;
     }
     
     final result = filters.isEmpty ? null : filters;
@@ -188,12 +178,12 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
               loading: () => _buildLoadingState(),
               error: (error, stack) => _buildErrorState(error.toString()),
         data: (collections) {
-          return collections.isEmpty
+          final sorted = _sortCollections(collections);
+          return sorted.isEmpty
               ? _buildEmptyState(_hasActiveFilters())
               : RefreshIndicator(
                   onRefresh: () async {
                     ref.invalidate(collectionsProvider);
-                    // Also invalidate filtered collections if filters are active
                     if (_currentApiFilters != null) {
                       ref.invalidate(filteredCollectionsProvider(_currentApiFilters!));
                     }
@@ -204,9 +194,9 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       left: AppTheme.spacing16,
                       right: AppTheme.spacing16,
                     ),
-                    itemCount: collections.length,
+                    itemCount: sorted.length,
                     itemBuilder: (context, index) {
-                      final collection = collections[index];
+                      final collection = sorted[index];
                       return _buildCollectionCard(collection);
                     },
                   ),
@@ -297,7 +287,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           ),
         ),
         title: Text(
-          collection.supplierName,
+          collection.supplierDisplayName,
           style: AppTheme.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: AppTheme.textPrimaryColor,
@@ -374,9 +364,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
     return _selectedSupplier != 'All' ||
         _selectedStatus != 'All' ||
         _startDate != null ||
-        _endDate != null ||
-        _quantityRange != const RangeValues(0, 100) ||
-        _priceRange != const RangeValues(0, 1000);
+        _endDate != null;
   }
 
   void _clearFilters() {
@@ -385,13 +373,42 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
       _selectedStatus = 'All';
       _startDate = null;
       _endDate = null;
-      _quantityRange = const RangeValues(0, 100);
-      _priceRange = const RangeValues(0, 1000);
-      // Reset cached filters
+      _sortKey = 'collectionDate';
+      _sortDesc = true;
       _currentApiFilters = null;
     });
-    // Reload all collections when clearing filters
     ref.invalidate(collectionsProvider);
+  }
+
+  /// Sort collections client-side to match web DataTable (Date, Quantity, Unit Price, Total, Status).
+  /// _sortDesc true = newest/highest first (descending), same as backend order and web when no column clicked.
+  List<Collection> _sortCollections(List<Collection> list) {
+    final dir = _sortDesc ? -1 : 1; // descending when _sortDesc (newest first), ascending when oldest first
+    final sorted = List<Collection>.from(list);
+    sorted.sort((a, b) {
+      int cmp;
+      switch (_sortKey) {
+        case 'collectionDate':
+          cmp = a.collectionDate.compareTo(b.collectionDate);
+          break;
+        case 'quantity':
+          cmp = a.quantity.compareTo(b.quantity);
+          break;
+        case 'pricePerLiter':
+          cmp = a.pricePerLiter.compareTo(b.pricePerLiter);
+          break;
+        case 'totalValue':
+          cmp = a.totalValue.compareTo(b.totalValue);
+          break;
+        case 'status':
+          cmp = a.status.compareTo(b.status);
+          break;
+        default:
+          cmp = a.collectionDate.compareTo(b.collectionDate);
+      }
+      return dir * cmp;
+    });
+    return sorted;
   }
 
   void _showFilterDialog() {
@@ -466,7 +483,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                     children: [
 
 
-                      // Status Filter
+                      // Status Filter (same options as web: All, Pending, Accepted, Rejected, Cancelled)
                       Text(
                         'Status',
                         style: AppTheme.bodyMedium.copyWith(
@@ -484,9 +501,10 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                         items: statuses.map((status) {
+                          final label = status == 'All' ? 'All Statuses' : status[0].toUpperCase() + status.substring(1);
                           return DropdownMenuItem(
                             value: status,
-                            child: Text(status),
+                            child: Text(label),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -497,7 +515,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing16),
 
-                      // Supplier Filter
+                      // Supplier Filter (same as web: Supplier Code / by supplier)
                       Text(
                         'Supplier',
                         style: AppTheme.bodyMedium.copyWith(
@@ -659,66 +677,49 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       ),
                       const SizedBox(height: AppTheme.spacing16),
 
-                      // Quantity Range Filter
+                      // Sort (same sortable columns as web: Date, Quantity, Unit Price, Total, Status)
                       Text(
-                        'Quantity Range (L)',
+                        'Sort by',
                         style: AppTheme.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimaryColor,
                         ),
                       ),
                       const SizedBox(height: AppTheme.spacing8),
-                      RangeSlider(
-                        values: RangeValues(
-                          _quantityRange.start.clamp(0.0, 100.0),
-                          _quantityRange.end.clamp(0.0, 100.0),
+                      DropdownButtonFormField<String>(
+                        value: _sortKey,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        min: 0,
-                        max: 100,
-                        divisions: 20,
-                        labels: RangeLabels(
-                          '${_quantityRange.start.clamp(0.0, 100.0).round()} L',
-                          '${_quantityRange.end.clamp(0.0, 100.0).round()} L',
-                        ),
-                        onChanged: (values) {
-                          setState(() {
-                            _quantityRange = RangeValues(
-                              values.start.clamp(0.0, 100.0),
-                              values.end.clamp(0.0, 100.0),
-                            );
-                          });
+                        items: const [
+                          DropdownMenuItem(value: 'collectionDate', child: Text('Date')),
+                          DropdownMenuItem(value: 'quantity', child: Text('Quantity (L)')),
+                          DropdownMenuItem(value: 'pricePerLiter', child: Text('Unit Price')),
+                          DropdownMenuItem(value: 'totalValue', child: Text('Total')),
+                          DropdownMenuItem(value: 'status', child: Text('Status')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) setState(() => _sortKey = value);
                         },
                       ),
-                      const SizedBox(height: AppTheme.spacing16),
-
-                      // Price Range Filter
-                      Text(
-                        'Price Range (Frw/L)',
-                        style: AppTheme.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimaryColor,
-                        ),
-                      ),
                       const SizedBox(height: AppTheme.spacing8),
-                      RangeSlider(
-                        values: RangeValues(
-                          _priceRange.start.clamp(0.0, 1000.0),
-                          _priceRange.end.clamp(0.0, 1000.0),
+                      DropdownButtonFormField<bool>(
+                        value: _sortDesc,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        min: 0,
-                        max: 1000,
-                        divisions: 20,
-                        labels: RangeLabels(
-                          '${_priceRange.start.clamp(0.0, 1000.0).round()} Frw',
-                          '${_priceRange.end.clamp(0.0, 1000.0).round()} Frw',
-                        ),
-                        onChanged: (values) {
-                          setState(() {
-                            _priceRange = RangeValues(
-                              values.start.clamp(0.0, 1000.0),
-                              values.end.clamp(0.0, 1000.0),
-                            );
-                          });
+                        items: const [
+                          DropdownMenuItem(value: true, child: Text('Newest / Highest first')),
+                          DropdownMenuItem(value: false, child: Text('Oldest / Lowest first')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) setState(() => _sortDesc = value);
                         },
                       ),
                       const SizedBox(height: AppTheme.spacing20),
@@ -795,7 +796,7 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
     final supplier = TopSeller(
       id: int.tryParse(collection.supplierId) ?? 1,
       code: collection.supplierId,
-      name: collection.supplierName,
+      name: collection.supplierDisplayName,
       email: '${collection.supplierId}@example.com',
       phone: collection.supplierPhone,
       imageUrl: null,
@@ -886,12 +887,12 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
           ),
           details: [
             DetailRow(
-              label: 'Supplier', 
-              value: collection.supplierName,
+              label: 'Supplier',
+              value: collection.supplierDisplayName,
               customValue: GestureDetector(
                 onTap: () => _navigateToSupplierProfile(collection),
                 child: Text(
-                  collection.supplierName,
+                  collection.supplierDisplayName,
                   style: AppTheme.bodyMedium.copyWith(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w600,
@@ -1129,16 +1130,16 @@ class _CollectedMilkScreenState extends ConsumerState<CollectedMilkScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing32),
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          // Clear search filters
                           setState(() {
                             _selectedSupplier = 'All';
                             _selectedStatus = 'All';
                             _startDate = null;
                             _endDate = null;
-                            _quantityRange = const RangeValues(0, 100);
-                            _priceRange = const RangeValues(0, 1000);
+                            _sortKey = 'collectionDate';
+                            _sortDesc = true;
                             _currentApiFilters = null;
                           });
+                          ref.invalidate(collectionsProvider);
                         },
                         icon: const Icon(Icons.clear, size: 20),
                         label: const Text('Clear Filters'),

@@ -9,40 +9,25 @@ class CollectionsService {
 
   final Dio _dio = AuthenticatedDioService.instance;
 
-  /// Get all collections for the authenticated user
-  /// Note: Collections are stored as sales records in the backend
-  /// Using sales endpoint with filters to get collections
+  /// Get all collections for the authenticated user (milk collected from suppliers).
+  /// Uses GET /collections so that supplier_account = farmer/supplier (name shown in list),
+  /// and customer_account = current user's account (the processor/collector).
   Future<List<Collection>> getCollections() async {
     try {
-      // Collections are milk sales from supplier perspective
-      // Use sales endpoint to get collections
-      final response = await _dio.post(
-        '/sales/sales',
-        data: {
-          'filters': {}, // Get all sales (collections)
-        },
-      );
+      final response = await _dio.get('/collections');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data['code'] == 200 || data['status'] == 'success') {
-          // Handle both old nested structure and new direct array structure
           List<dynamic> collectionsData;
           if (data['data'] is List) {
-            // New structure: data is directly an array
             collectionsData = data['data'] ?? [];
           } else if (data['data'] is Map && data['data']['collections'] != null) {
-            // Old structure: data contains a collections array
             collectionsData = data['data']['collections'] ?? [];
           } else {
-            // Fallback: try to get collections from data
             collectionsData = data['data'] ?? [];
           }
-          
-          // Convert API data to collections
-          final apiCollections = collectionsData.map((json) => Collection.fromApiResponse(json)).toList();
-          
-          return apiCollections;
+          return collectionsData.map((json) => Collection.fromApiResponse(json)).toList();
         } else {
           throw Exception(data['message'] ?? 'Failed to get collections');
         }

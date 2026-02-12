@@ -108,49 +108,49 @@ export default function FinancePayablesPage() {
   const hasAging = aging && (aging.current > 0 || aging.days_31_60 > 0 || aging.days_61_90 > 0 || aging.days_90_plus > 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <Link href="/finance" className="text-sm text-gray-600 hover:text-[var(--primary)] mb-2 inline-flex items-center">
-            <Icon icon={faArrowLeft} size="sm" className="mr-2" />
+          <Link href="/finance" className="text-xs text-gray-600 hover:text-[var(--primary)] mb-1 inline-flex items-center">
+            <Icon icon={faArrowLeft} size="sm" className="mr-1.5" />
             Back to Finance
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Payables</h1>
+          <h1 className="text-xl font-bold text-gray-900">Payables</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <div className="flex">
-            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
+            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
               From
             </span>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
+              className="rounded-r border border-gray-300 px-1.5 py-1 text-xs w-[130px]"
               aria-label="From date"
             />
           </div>
           <div className="flex">
-            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
+            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
               To
             </span>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
+              className="rounded-r border border-gray-300 px-1.5 py-1 text-xs w-[130px]"
               aria-label="To date"
             />
           </div>
-          <button type="button" onClick={() => load()} className="btn btn-secondary" disabled={loading}>
-            <Icon icon={loading ? faSpinner : faArrowsRotate} size="sm" className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <button type="button" onClick={() => load()} className="btn btn-secondary text-sm py-1.5 px-2.5" disabled={loading}>
+            <Icon icon={loading ? faSpinner : faArrowsRotate} size="sm" className={`mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-3 text-red-800">
+        <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-800">
           <Icon icon={faTriangleExclamation} size="sm" />
           <span>{error}</span>
           <button type="button" onClick={() => load()} className="ml-2 text-sm underline">
@@ -164,12 +164,12 @@ export default function FinancePayablesPage() {
       ) : summary ? (
         <>
           {/* Summary card */}
-          <div className="rounded-sm border border-gray-200 bg-white p-4">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-500">Total Payables</span>
-              <span className="text-xl font-bold text-red-700">{formatAmount(summary.total_payables)}</span>
+          <div className="rounded-sm border border-gray-200 bg-white p-3">
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs text-gray-500">Total Payables</span>
+              <span className="text-lg font-bold text-red-700">{formatAmount(summary.total_payables)}</span>
             </div>
-            <div className="mt-2 flex justify-between border-t border-gray-100 pt-2 text-sm text-gray-500">
+            <div className="flex justify-between border-t border-gray-100 pt-1.5 mt-1.5 text-xs text-gray-500">
               <span>Total Invoices</span>
               <span className="font-medium text-gray-700">{summary.total_invoices}</span>
             </div>
@@ -177,22 +177,22 @@ export default function FinancePayablesPage() {
 
           {/* Aging summary */}
           {hasAging && aging && (
-            <div className="rounded-sm border border-gray-200 bg-white p-4">
-              <h2 className="text-sm font-semibold text-gray-900">Aging Summary</h2>
-              <div className="mt-3 space-y-2">
-                <div className="flex justify-between text-sm">
+            <div className="rounded-sm border border-gray-200 bg-white p-3">
+              <h2 className="text-xs font-semibold text-gray-900">Aging Summary</h2>
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Current (0–30 days)</span>
                   <span className="font-medium text-emerald-600">{formatAmount(aging.current)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-gray-500">31–60 days</span>
                   <span className="font-medium text-red-600">{formatAmount(aging.days_31_60)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-gray-500">61–90 days</span>
                   <span className="font-medium text-red-600">{formatAmount(aging.days_61_90)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs">
                   <span className="text-gray-500">90+ days</span>
                   <span className="font-medium text-red-600">{formatAmount(aging.days_90_plus)}</span>
                 </div>
@@ -203,13 +203,13 @@ export default function FinancePayablesPage() {
           {/* By supplier */}
           {summary.by_supplier.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-900 mb-2">By Supplier</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <h2 className="text-xs font-semibold text-gray-900 mb-1.5">By Supplier</h2>
+              <div className="grid gap-2 sm:grid-cols-2">
                 {summary.by_supplier.map((sp) => (
-                  <div key={sp.supplier.id} className="rounded-sm border border-gray-200 bg-white p-4">
-                    <p className="font-medium text-gray-900">{sp.supplier.name}</p>
+                  <div key={sp.supplier.id} className="rounded-sm border border-gray-200 bg-white p-2.5">
+                    <p className="font-medium text-sm text-gray-900">{sp.supplier.name}</p>
                     <p className="text-xs text-gray-500">{sp.supplier.code}</p>
-                    <p className="mt-2 font-semibold text-red-600">{formatAmount(sp.total_outstanding)}</p>
+                    <p className="mt-1 font-semibold text-sm text-red-600">{formatAmount(sp.total_outstanding)}</p>
                     <p className="text-xs text-gray-500">{sp.invoice_count} invoice(s)</p>
                   </div>
                 ))}
@@ -219,33 +219,30 @@ export default function FinancePayablesPage() {
 
           {/* All payables */}
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 mb-2">All Payables</h2>
+            <h2 className="text-xs font-semibold text-gray-900 mb-1.5">All Payables</h2>
             {summary.all_payables.length === 0 ? (
-              <div className="rounded-sm border border-gray-200 bg-gray-50 p-6 text-center text-gray-500">
+              <div className="rounded-sm border border-gray-200 bg-gray-50 p-4 text-center text-xs text-gray-500">
                 No payables in this period.
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {summary.all_payables.map((pay) => (
-                  <li key={pay.collection_id} className="rounded-sm border border-gray-200 bg-white p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <p className="font-medium text-gray-900">{pay.supplier.name}</p>
-                        <p className="text-xs text-gray-500">{formatDate(pay.collection_date)}</p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          Total: {formatAmount(pay.total_amount)} · Paid: {formatAmount(pay.amount_paid)}
-                        </p>
+                  <li key={pay.collection_id} className="rounded-sm border border-gray-200 bg-white p-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm text-gray-900">{pay.supplier.name}</p>
+                        <p className="text-xs text-gray-500">{formatDate(pay.collection_date)} · Total: {formatAmount(pay.total_amount)} · Paid: {formatAmount(pay.amount_paid)}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-red-600">{formatAmount(pay.outstanding)}</p>
-                        <span className="inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                          {pay.aging_bucket === 'current' ? 'Current' : `${pay.days_outstanding} days`}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
+                          {pay.aging_bucket === 'current' ? 'Current' : `${pay.days_outstanding}d`}
                         </span>
+                        <span className="font-semibold text-sm text-red-600">{formatAmount(pay.outstanding)}</span>
                         {pay.outstanding > 0 && (
                           <button
                             type="button"
                             onClick={() => openPaymentModal(pay)}
-                            className="mt-2 block w-full rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                            className="rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700"
                           >
                             Record Payment
                           </button>

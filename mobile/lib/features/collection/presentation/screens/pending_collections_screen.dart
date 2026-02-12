@@ -137,9 +137,9 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
                 CircleAvatar(
                   backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                   child: Text(
-                    collection.supplierName.isNotEmpty 
-                        ? collection.supplierName[0].toUpperCase()
-                        : 'S',
+                    collection.supplierDisplayName.isNotEmpty
+                        ? collection.supplierDisplayName[0].toUpperCase()
+                        : '?',
                     style: AppTheme.bodyMedium.copyWith(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,
@@ -152,7 +152,7 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        collection.supplierName,
+                        collection.supplierDisplayName,
                         style: AppTheme.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -280,7 +280,7 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to approve this collection from ${collection.supplierName}?'),
+            Text('Are you sure you want to approve this collection from ${collection.supplierDisplayName}?'),
             const SizedBox(height: AppTheme.spacing16),
             TextField(
               controller: notesController,
@@ -344,7 +344,7 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Are you sure you want to reject this collection from ${collection.supplierName}?'),
+                      Text('Are you sure you want to reject this collection from ${collection.supplierDisplayName}?'),
                       const SizedBox(height: AppTheme.spacing16),
                       const Text('Rejection Reason:'),
                       const SizedBox(height: AppTheme.spacing8),
@@ -432,7 +432,7 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Collection from ${collection.supplierName} approved successfully!'),
+            content: Text('Collection from ${collection.supplierDisplayName} approved successfully!'),
             backgroundColor: AppTheme.snackbarSuccessColor,
           ),
         );
@@ -462,7 +462,7 @@ class _PendingCollectionsScreenState extends ConsumerState<PendingCollectionsScr
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Collection from ${collection.supplierName} rejected successfully!'),
+            content: Text('Collection from ${collection.supplierDisplayName} rejected successfully!'),
             backgroundColor: AppTheme.snackbarSuccessColor,
           ),
         );

@@ -179,8 +179,12 @@ export default function CollectionDetailsPage() {
                   <div className="flex items-center text-gray-900">
                     <Icon icon={faBuilding} size="sm" className="mr-2 text-gray-400" />
                     <div>
-                      <div className="font-medium">{collection.supplier_account.name}</div>
-                      <div className="text-xs text-gray-500">{collection.supplier_account.code}</div>
+                      <div className="font-medium">
+                        {collection.supplier_account?.name?.trim() && collection.supplier_account.name.toLowerCase() !== 'system'
+                          ? collection.supplier_account.name
+                          : (collection.supplier_account?.code ?? '—')}
+                      </div>
+                      <div className="text-xs text-gray-500">{collection.supplier_account?.code ?? '—'}</div>
                     </div>
                   </div>
                 </div>

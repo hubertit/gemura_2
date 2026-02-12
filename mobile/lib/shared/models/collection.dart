@@ -42,8 +42,7 @@ class Collection {
   factory Collection.fromApiResponse(Map<String, dynamic> json) {
     // Handle the new API response structure
     final supplierAccount = json['supplier_account'] as Map<String, dynamic>?;
-    final customerAccount = json['customer_account'] as Map<String, dynamic>?;
-    
+
     return Collection(
       id: json['id']?.toString() ?? '',
       supplierId: supplierAccount?['code']?.toString() ?? json['supplier_account_code']?.toString() ?? '',
@@ -109,4 +108,11 @@ class Collection {
 
   @override
   int get hashCode => id.hashCode;
+
+  /// Display name for supplier: do not show "System"; use code or fallback when name is empty or "System" (matches web).
+  String get supplierDisplayName {
+    final name = supplierName.trim();
+    if (name.isNotEmpty && name.toLowerCase() != 'system') return name;
+    return supplierId.isNotEmpty ? supplierId : 'Unknown supplier';
+  }
 }
