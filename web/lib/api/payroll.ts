@@ -5,6 +5,7 @@ export interface GeneratePayrollParams {
   period_start: string; // YYYY-MM-DD
   period_end: string;   // YYYY-MM-DD
   payment_terms_days?: number;
+  run_name?: string;    // Optional custom name for the payroll run
 }
 
 export interface GeneratePayrollResult {
@@ -68,6 +69,7 @@ export const payrollApi = {
       period_start: params.period_start,
       period_end: params.period_end,
       ...(params.payment_terms_days != null && { payment_terms_days: params.payment_terms_days }),
+      ...(params.run_name != null && params.run_name.trim() !== '' && { run_name: params.run_name.trim() }),
     });
   },
 

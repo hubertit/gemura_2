@@ -17,12 +17,31 @@ class PayrollScreen extends ConsumerStatefulWidget {
 class _PayrollScreenState extends ConsumerState<PayrollScreen> {
   DateTime _periodStart = DateTime.now().subtract(const Duration(days: 30));
   DateTime _periodEnd = DateTime.now();
+  late TextEditingController _runNameController;
   Set<String> _selectedSupplierCodes = {};
   bool _isGenerating = false;
   Map<String, dynamic>? _payrollResult;
 
   String _formatDate(DateTime date) {
     return DateFormat('MMM dd, yyyy').format(date);
+  }
+
+  /// Suggested run name from date range (e.g. "13 Jan 2026 – 12 Feb 2026").
+  String get _suggestedRunName {
+    final fmt = DateFormat('d MMM yyyy');
+    return '${fmt.format(_periodStart)} – ${fmt.format(_periodEnd)}';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _runNameController = TextEditingController(text: _suggestedRunName);
+  }
+
+  @override
+  void dispose() {
+    _runNameController.dispose();
+    super.dispose();
   }
 
   String _formatAmount(num amount) {
@@ -66,6 +85,7 @@ class _PayrollScreenState extends ConsumerState<PayrollScreen> {
       setState(() {
         _periodStart = picked.start;
         _periodEnd = picked.end;
+        _runNameController.text = _suggestedRunName;
         _payrollResult = null;
       });
     }
@@ -86,10 +106,13 @@ class _PayrollScreenState extends ConsumerState<PayrollScreen> {
     });
 
     try {
+      final runNameText = _runNameController.text.trim();
+      final runNameToSend = runNameText.isEmpty ? _suggestedRunName : runNameText;
       final result = await ref.read(generatePayrollProvider(GeneratePayrollParams(
         supplierAccountCodes: _selectedSupplierCodes.toList(),
         periodStart: _periodStart,
         periodEnd: _periodEnd,
+        runName: runNameToSend.isEmpty ? null : runNameToSend,
       )).future);
 
       if (!mounted) return;
@@ -147,11 +170,18 @@ class _PayrollScreenState extends ConsumerState<PayrollScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date Range Section
+            // Date Range Section (tap to open range picker)
             Text(
               'Date Range',
               style: AppTheme.titleSmall.copyWith(
                 color: AppTheme.textPrimaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing2),
+            Text(
+              'Tap to select the period for milk sales to include',
+              style: AppTheme.labelSmall.copyWith(
+                color: AppTheme.textSecondaryColor,
               ),
             ),
             const SizedBox(height: AppTheme.spacing8),
@@ -196,6 +226,43 @@ class _PayrollScreenState extends ConsumerState<PayrollScreen> {
                   ],
                 ),
               ),
+            ),
+
+            const SizedBox(height: AppTheme.spacing16),
+
+            // Run name (prefilled from date range, user can edit)
+            Text(
+              'Run name',
+              style: AppTheme.titleSmall.copyWith(
+                color: AppTheme.textPrimaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacing8),
+            TextField(
+              controller: _runNameController,
+              decoration: InputDecoration(
+                hintText: 'e.g. January 2025',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                  borderSide: const BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                  borderSide: const BorderSide(color: AppTheme.thinBorderColor, width: AppTheme.thinBorderWidth),
+                ),
+                filled: true,
+                fillColor: AppTheme.surfaceColor,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spacing12,
+                  vertical: AppTheme.spacing12,
+                ),
+              ),
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.textPrimaryColor),
+            ),
+            const SizedBox(height: AppTheme.spacing4),
+            Text(
+              'Prefilled from the date range; you can change it to any name you like.',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textSecondaryColor),
             ),
 
             const SizedBox(height: AppTheme.spacing16),

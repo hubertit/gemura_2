@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Put, Body, UseGuards, Param, Query, HttpCode, Res } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiProduces } from '@nestjs/swagger';
 import { Response } from 'express';
 import { PayrollRunsService } from './payroll-runs.service';
 import { TokenGuard } from '../../../common/guards/token.guard';
@@ -117,13 +117,16 @@ export class PayrollRunsController {
   }
 
   @Get(':id/export')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Export payroll to Excel or PDF',
-    description: 'Exports payroll run to Excel (.xlsx) or PDF format. Default format is Excel.'
+    description: 'Exports payroll run to Excel (.xlsx) or PDF format. Response is a file download. Default format is Excel.',
   })
-  @ApiParam({ name: 'id', description: 'Payroll run ID' })
-  @ApiQuery({ name: 'format', required: false, enum: ['excel', 'pdf'], description: 'Export format (excel or pdf). Default: excel' })
-  @ApiResponse({ status: 200, description: 'Payroll exported successfully' })
+  @ApiParam({ name: 'id', description: 'Payroll run ID (UUID)' })
+  @ApiQuery({ name: 'format', required: false, enum: ['excel', 'pdf'], description: 'Export format. Default: excel' })
+  @ApiProduces('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/pdf')
+  @ApiResponse({ status: 200, description: 'File download (Excel or PDF)' })
+  @ApiNotFoundResponse({ description: 'Payroll run not found or no access' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing token' })
   async exportPayroll(
     @CurrentUser() user: User,
     @Param('id') id: string,

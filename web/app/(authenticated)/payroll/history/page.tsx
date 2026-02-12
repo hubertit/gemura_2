@@ -6,6 +6,7 @@ import { payrollApi, PayrollRun } from '@/lib/api/payroll';
 import { useToastStore } from '@/store/toast';
 import Icon, { faArrowLeft, faSpinner, faCheckCircle, faCalendar, faUsers, faFileAlt, faClipboardList, faArrowsRotate } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import ConfirmDialog from '@/app/components/ConfirmDialog';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function PayrollHistoryPage() {
@@ -15,6 +16,7 @@ export default function PayrollHistoryPage() {
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [detailRun, setDetailRun] = useState<PayrollRun | null>(null);
+  const [runIdToConfirm, setRunIdToConfirm] = useState<string | null>(null);
 
   const loadRuns = useCallback(async () => {
     try {
@@ -36,15 +38,22 @@ export default function PayrollHistoryPage() {
   }, [loadRuns]);
 
   const handleMarkPaid = async (runId: string) => {
-    if (!confirm('Mark this payroll as paid? This will create an expense transaction in finance.')) return;
+    setRunIdToConfirm(runId);
+  };
+
+  const handleConfirmMarkPaid = async () => {
+    const runId = runIdToConfirm;
+    if (!runId) return;
     setMarkingId(runId);
     try {
       await payrollApi.markPayrollAsPaid(runId);
       useToastStore.getState().success('Payroll marked as paid');
+      setDetailRun(null);
       loadRuns();
     } catch (err: any) {
       useToastStore.getState().error(err?.response?.data?.message || 'Failed to mark as paid');
     } finally {
+      setRunIdToConfirm(null);
       setMarkingId(null);
     }
   };
@@ -157,7 +166,7 @@ export default function PayrollHistoryPage() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-gray-900">Payroll Run</p>
+                  <p className="font-semibold text-gray-900">{run.period_name || 'Payroll Run'}</p>
                   <p className="text-sm text-gray-500">{formatDateTime(run.run_date)}</p>
                   {run.period_start && run.period_end && (
                     <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
@@ -170,10 +179,16 @@ export default function PayrollHistoryPage() {
                     {run.payslips_count} supplier{run.payslips_count !== 1 ? 's' : ''}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor(run.status)}`}>
                     {(run.status || '').toUpperCase()}
                   </span>
+                  {isAllPaid(run) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                      <Icon icon={faCheckCircle} size="xs" />
+                      Paid
+                    </span>
+                  )}
                   <span className="text-lg font-bold text-[var(--primary)]">{formatAmount(run.total_amount)}</span>
                 </div>
               </div>
@@ -206,10 +221,15 @@ export default function PayrollHistoryPage() {
                     PDF
                   </button>
                 </div>
-                {canMarkPaid(run) && (
+                {isAllPaid(run) ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                    <Icon icon={faCheckCircle} size="sm" />
+                    Paid
+                  </span>
+                ) : canMarkPaid(run) ? (
                   <button
                     type="button"
-                    onClick={() => handleMarkPaid(run.id)}
+                    onClick={(e) => { e.stopPropagation(); handleMarkPaid(run.id); }}
                     disabled={!!markingId}
                     className="btn btn-primary text-sm inline-flex items-center"
                   >
@@ -220,7 +240,7 @@ export default function PayrollHistoryPage() {
                     )}
                     Mark as Paid
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           ))}
@@ -252,16 +272,24 @@ export default function PayrollHistoryPage() {
               >
                 Export PDF
               </button>
-              {canMarkPaid(detailRun) && (
+              {isAllPaid(detailRun) ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium bg-green-100 text-green-700">
+                  <Icon icon={faCheckCircle} size="sm" />
+                  Paid
+                </span>
+              ) : canMarkPaid(detailRun) ? (
                 <button
                   type="button"
-                  onClick={() => { handleMarkPaid(detailRun.id); setDetailRun(null); }}
+                  onClick={() => handleMarkPaid(detailRun.id)}
                   disabled={!!markingId}
                   className="btn btn-primary text-sm"
                 >
+                  {markingId === detailRun.id ? (
+                    <Icon icon={faSpinner} size="sm" spin className="mr-1" />
+                  ) : null}
                   Mark as Paid
                 </button>
-              )}
+              ) : null}
             </div>
           ) : null
         }
@@ -271,9 +299,17 @@ export default function PayrollHistoryPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-gray-500 font-medium">Status</p>
-                <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${statusColor(detailRun.status || '')}`}>
-                  {(detailRun.status || '').toUpperCase()}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex px-2 py-1 rounded text-xs font-medium ${statusColor(detailRun.status || '')}`}>
+                    {(detailRun.status || '').toUpperCase()}
+                  </span>
+                  {isAllPaid(detailRun) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                      <Icon icon={faCheckCircle} size="xs" />
+                      Paid
+                    </span>
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-gray-500 font-medium">Run Date</p>
@@ -312,6 +348,19 @@ export default function PayrollHistoryPage() {
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={!!runIdToConfirm}
+        onClose={() => !markingId && setRunIdToConfirm(null)}
+        onConfirm={handleConfirmMarkPaid}
+        title="Mark as paid?"
+        message="This will create an expense transaction in finance."
+        confirmText="Mark as paid"
+        cancelText="Cancel"
+        type="info"
+        showIcon
+        loading={markingId === runIdToConfirm}
+      />
     </div>
   );
 }

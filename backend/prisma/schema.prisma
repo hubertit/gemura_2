@@ -909,6 +909,7 @@ model PayrollPeriod {
 model PayrollRun {
   id                 String    @id @default(uuid()) @db.Uuid
   period_id          String?   @map("period_id") @db.Uuid // Optional - flexible payroll generation
+  run_name           String?   @map("run_name") // Custom name (e.g. "Jan 1 – Jan 31, 2025"); falls back to period or "Flexible Run"
   run_date           DateTime  @map("run_date")
   period_start       DateTime? @map("period_start") // Start date for milk sales period (flexible)
   period_end         DateTime? @map("period_end") // End date for milk sales period (flexible)

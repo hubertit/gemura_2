@@ -136,10 +136,10 @@ async function bootstrap() {
   // API prefix
   app.setGlobalPrefix('api');
 
-  // Swagger documentation
+  // Swagger / OpenAPI documentation – all endpoints are documented here
   const config = new DocumentBuilder()
     .setTitle('Gemura API')
-    .setDescription('Gemura Financial Services API Documentation')
+    .setDescription('Gemura Financial Services API. All endpoints are documented below. Use the Authorize button to set a Bearer token for authenticated routes.')
     .setVersion('2.0')
     .addBearerAuth()
     .build();

@@ -12,6 +12,7 @@ final generatePayrollProvider = FutureProvider.family<Map<String, dynamic>, Gene
     periodStart: params.periodStart,
     periodEnd: params.periodEnd,
     paymentTermsDays: params.paymentTermsDays,
+    runName: params.runName,
   );
 });
 
@@ -20,12 +21,14 @@ class GeneratePayrollParams {
   final DateTime periodStart;
   final DateTime periodEnd;
   final int? paymentTermsDays;
+  final String? runName;
 
   GeneratePayrollParams({
     required this.supplierAccountCodes,
     required this.periodStart,
     required this.periodEnd,
     this.paymentTermsDays,
+    this.runName,
   });
 }
 

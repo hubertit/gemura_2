@@ -19,9 +19,24 @@ export default function PayrollPage() {
     return d.toISOString().slice(0, 10);
   });
   const [periodEnd, setPeriodEnd] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [runName, setRunName] = useState('');
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<GeneratePayrollResult | null>(null);
+
+  /** Suggested run name from date range (e.g. "1 Jan – 31 Jan 2025") */
+  const suggestedRunName = (() => {
+    if (!periodStart || !periodEnd) return '';
+    const start = new Date(periodStart);
+    const end = new Date(periodEnd);
+    const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `${fmt(start)} – ${fmt(end)}`;
+  })();
+
+  // Prefill run name with suggestion; update when date range changes (user can still edit)
+  useEffect(() => {
+    setRunName(suggestedRunName);
+  }, [suggestedRunName]);
 
   const loadSuppliers = useCallback(async () => {
     try {
@@ -71,6 +86,7 @@ export default function PayrollPage() {
         supplier_account_codes: Array.from(selectedCodes),
         period_start: periodStart,
         period_end: periodEnd,
+        run_name: runName.trim() || suggestedRunName || undefined,
       });
       if (res.code === 200 && res.data) {
         setResult(res.data);
@@ -104,10 +120,11 @@ export default function PayrollPage() {
         </div>
       )}
 
-      {/* Date range */}
+      {/* Date range + Run name (same row) */}
       <div className="bg-white border border-gray-200 rounded-sm p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Date Range</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">Date Range</h2>
+        <p className="text-sm text-gray-500 mb-3">Select the period for milk sales to include in this payroll.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
             <input
@@ -132,7 +149,24 @@ export default function PayrollPage() {
               className="input w-full"
             />
           </div>
+          <div>
+            <label htmlFor="payroll-run-name" className="block text-sm font-medium text-gray-700 mb-1">
+              Run name
+            </label>
+            <input
+              id="payroll-run-name"
+              type="text"
+              value={runName}
+              onChange={(e) => setRunName(e.target.value)}
+              placeholder="e.g. January 2025"
+              className="input w-full"
+              aria-label="Payroll run name"
+            />
+          </div>
         </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Run name is prefilled from the date range; you can change it to any name you like.
+        </p>
       </div>
 
       {/* Suppliers */}

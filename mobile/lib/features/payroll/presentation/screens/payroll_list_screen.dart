@@ -55,12 +55,14 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
   Future<void> _markAsPaid(BuildContext context, String runId) async {
     final confirmed = await ConfirmationDialog.show(
       context: context,
-      title: 'Mark as Paid',
-      message: 'Are you sure you want to mark this payroll as paid? This will create an expense transaction in finance.',
-      confirmText: 'Confirm',
+      title: 'Mark as paid?',
+      message: 'This will create an expense transaction in finance.',
+      confirmText: 'Mark as paid',
       cancelText: 'Cancel',
       isDestructive: false,
-      showIcon: false,
+      showIcon: true,
+      icon: Icons.info_outline_rounded,
+      iconColor: AppTheme.primaryColor,
     );
 
     if (!confirmed) return;
@@ -326,7 +328,7 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Payroll Run',
+                          payroll['period_name']?.toString() ?? 'Payroll Run',
                           style: AppTheme.bodySmall.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimaryColor,
@@ -343,22 +345,54 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacing8,
-                      vertical: AppTheme.spacing4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
-                    ),
-                    child: Text(
-                      status.toUpperCase(),
-                      style: AppTheme.labelXSmall.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w600,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (allPaid) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppTheme.spacing8,
+                            vertical: AppTheme.spacing4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.successColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle, size: 12, color: AppTheme.successColor),
+                              const SizedBox(width: AppTheme.spacing2),
+                              Text(
+                                'Paid',
+                                style: AppTheme.labelXSmall.copyWith(
+                                  color: AppTheme.successColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.spacing4),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing8,
+                          vertical: AppTheme.spacing4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppTheme.borderRadius4),
+                        ),
+                        child: Text(
+                          status.toUpperCase(),
+                          style: AppTheme.labelXSmall.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -435,23 +469,56 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
                   ),
                   const SizedBox(width: AppTheme.spacing8),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: canMarkPaid
-                        ? () => _markAsPaid(context, payroll['id'])
-                        : null,
-                      icon: _isMarkingPaid
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.surfaceColor),
+                    child: allPaid
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.spacing8,
+                              horizontal: AppTheme.spacing12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.successColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                              border: Border.all(
+                                color: AppTheme.successColor.withOpacity(0.4),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 18,
+                                  color: AppTheme.successColor,
+                                ),
+                                const SizedBox(width: AppTheme.spacing4),
+                                Text(
+                                  'Paid',
+                                  style: AppTheme.bodySmall.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.successColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                           )
-                        : const Icon(Icons.payment, size: 18),
-                      label: const Text('Mark Paid'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.successColor,
-                        foregroundColor: AppTheme.surfaceColor,
-                      ),
-                    ),
+                        : ElevatedButton.icon(
+                            onPressed: canMarkPaid
+                                ? () => _markAsPaid(context, payroll['id'])
+                                : null,
+                            icon: _isMarkingPaid
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: AppTheme.surfaceColor),
+                                  )
+                                : const Icon(Icons.payment, size: 18),
+                            label: const Text('Mark Paid'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.successColor,
+                              foregroundColor: AppTheme.surfaceColor,
+                            ),
+                          ),
                   ),
                 ],
               ),
@@ -506,7 +573,12 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
               ),
             ),
             const SizedBox(height: AppTheme.spacing16),
-            _buildDetailRow('Status', payroll['status']?.toString() ?? 'Unknown'),
+            _buildDetailRow(
+              'Status',
+              allPaid
+                  ? '${payroll['status'] ?? 'Unknown'} · Paid'
+                  : (payroll['status']?.toString() ?? 'Unknown'),
+            ),
             if (payroll['run_date'] != null)
               _buildDetailRow('Run Date', _formatDateTime(payroll['run_date'].toString())),
             if (payroll['period_start'] != null && payroll['period_end'] != null)
@@ -601,26 +673,59 @@ class _PayrollListScreenState extends ConsumerState<PayrollListScreen> {
                 ),
                 const SizedBox(width: AppTheme.spacing8),
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: canMarkPaid
-                      ? () {
-                          Navigator.pop(context);
-                          _markAsPaid(context, payroll['id']);
-                        }
-                      : null,
-                    icon: _isMarkingPaid
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.surfaceColor),
+                  child: allPaid
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppTheme.spacing8,
+                            horizontal: AppTheme.spacing12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.successColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius8),
+                            border: Border.all(
+                              color: AppTheme.successColor.withOpacity(0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 18,
+                                color: AppTheme.successColor,
+                              ),
+                              const SizedBox(width: AppTheme.spacing4),
+                              Text(
+                                'Paid',
+                                style: AppTheme.bodySmall.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.successColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         )
-                      : const Icon(Icons.payment, size: 18),
-                    label: const Text('Mark Paid'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.successColor,
-                      foregroundColor: AppTheme.surfaceColor,
-                    ),
-                  ),
+                      : ElevatedButton.icon(
+                          onPressed: canMarkPaid
+                              ? () {
+                                  Navigator.pop(context);
+                                  _markAsPaid(context, payroll['id']);
+                                }
+                              : null,
+                          icon: _isMarkingPaid
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: AppTheme.surfaceColor),
+                                )
+                              : const Icon(Icons.payment, size: 18),
+                          label: const Text('Mark Paid'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.successColor,
+                            foregroundColor: AppTheme.surfaceColor,
+                          ),
+                        ),
                 ),
               ],
             ),

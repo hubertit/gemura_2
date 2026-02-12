@@ -168,7 +168,7 @@ export const inventoryApi = {
 
   downloadTemplate: async (): Promise<void> => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('gemura-auth-token') : null;
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://159.198.65.38:3004/api';
     const res = await fetch(`${baseURL}/inventory/template`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });

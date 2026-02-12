@@ -10,6 +10,7 @@ class PayrollService {
     required DateTime periodStart,
     required DateTime periodEnd,
     int? paymentTermsDays,
+    String? runName,
   }) async {
     try {
       final response = await _dio.post(
@@ -19,6 +20,7 @@ class PayrollService {
           'period_start': periodStart.toIso8601String().split('T')[0],
           'period_end': periodEnd.toIso8601String().split('T')[0],
           if (paymentTermsDays != null) 'payment_terms_days': paymentTermsDays,
+          if (runName != null && runName.trim().isNotEmpty) 'run_name': runName.trim(),
         },
       );
 

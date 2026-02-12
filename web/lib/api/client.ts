@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
+// Production backend. Set NEXT_PUBLIC_API_URL to use local (e.g. http://localhost:3004/api) or another host.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://159.198.65.38:3004/api';
 
 class ApiClient {
   private client: AxiosInstance;

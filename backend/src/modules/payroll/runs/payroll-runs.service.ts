@@ -108,7 +108,7 @@ export class PayrollRunsService {
       message: 'Payroll runs fetched successfully.',
       data: runs.map((r) => ({
         id: r.id,
-        period_name: r.period?.period_name || 'Flexible Run',
+        period_name: r.run_name || r.period?.period_name || 'Flexible Run',
         run_date: r.run_date,
         period_start: r.period_start,
         period_end: r.period_end,
@@ -125,6 +125,7 @@ export class PayrollRunsService {
           milk_sales_count: p.milk_sales_count,
           period_start: p.period_start,
           period_end: p.period_end,
+          status: p.status,
         })),
       })),
     };
@@ -382,6 +383,7 @@ export class PayrollRunsService {
       run = await this.prisma.payrollRun.create({
       data: {
         period_id: null,
+        run_name: generateDto.run_name?.trim() || null,
         run_date: new Date(),
         period_start: new Date(generateDto.period_start),
         period_end: new Date(generateDto.period_end),
@@ -1080,7 +1082,7 @@ export class PayrollRunsService {
     }
 
     const exportFormat = (format || 'excel').toLowerCase();
-    const periodName = run.period?.period_name || 'Flexible Run';
+    const periodName = run.run_name || run.period?.period_name || 'Flexible Run';
     const periodStart = run.period_start 
       ? new Date(run.period_start).toLocaleDateString() 
       : 'N/A';

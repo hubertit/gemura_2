@@ -41,4 +41,13 @@ export class GeneratePayrollDto {
   @Min(1)
   @Max(90)
   payment_terms_days?: number;
+
+  @ApiProperty({
+    description: 'Custom name for this payroll run (e.g. "Jan 1 – Jan 31, 2025"). Optional.',
+    example: 'January 2025',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  run_name?: string;
 }
