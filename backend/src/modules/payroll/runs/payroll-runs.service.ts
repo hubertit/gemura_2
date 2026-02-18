@@ -8,6 +8,7 @@ import { MarkPayrollPaidDto } from './dto/mark-payroll-paid.dto';
 import { TransactionsService } from '../../accounting/transactions/transactions.service';
 import { TransactionType } from '../../accounting/transactions/dto/create-transaction.dto';
 import { LoansService } from '../../loans/loans.service';
+import { ChargesService } from '../../charges/charges.service';
 import { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 const PDFDocument = require('pdfkit');
@@ -18,6 +19,7 @@ export class PayrollRunsService {
     private prisma: PrismaService,
     private transactionsService: TransactionsService,
     private loansService: LoansService,
+    private chargesService: ChargesService,
   ) {}
 
   async createRun(user: User, createDto: CreatePayrollRunDto) {
@@ -121,6 +123,7 @@ export class PayrollRunsService {
           supplier: p.supplier_account.name,
           supplier_code: p.supplier_account.code,
           gross_amount: Number(p.gross_amount),
+          total_deductions: Number(p.total_deductions),
           net_amount: Number(p.net_amount),
           milk_sales_count: p.milk_sales_count,
           period_start: p.period_start,
@@ -128,6 +131,102 @@ export class PayrollRunsService {
           status: p.status,
         })),
       })),
+    };
+  }
+
+  /** Get a single payslip with full detail: deductions (with reason/source) and milk collections (earnings source). */
+  async getPayslipDetail(user: User, runId: string, payslipId: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found.',
+      });
+    }
+    const run = await this.prisma.payrollRun.findFirst({
+      where: { id: runId, created_by: user.id },
+    });
+    if (!run) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Payroll run not found.',
+      });
+    }
+    const p = await this.prisma.payrollPayslip.findFirst({
+      where: { id: payslipId, run_id: runId },
+      include: {
+        supplier_account: { select: { id: true, code: true, name: true } },
+        deductions: {
+          include: {
+            charge: { select: { id: true, name: true, description: true } },
+            loan: { select: { id: true, principal: true } },
+            inventory_sale: { select: { id: true, sale_date: true } },
+          },
+        },
+      },
+    });
+    if (!p) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Payslip not found.',
+      });
+    }
+    const periodStart = p.period_start;
+    const periodEnd = p.period_end;
+    const milkSales = await this.prisma.milkSale.findMany({
+      where: {
+        supplier_account_id: p.supplier_account_id,
+        sale_at: { gte: periodStart, lte: periodEnd },
+      },
+      orderBy: { sale_at: 'asc' },
+      select: {
+        id: true,
+        sale_at: true,
+        quantity: true,
+        unit_price: true,
+        notes: true,
+      },
+    });
+    const earnings = milkSales.map((m) => ({
+      id: m.id,
+      date: m.sale_at,
+      quantity: Number(m.quantity),
+      unit_price: Number(m.unit_price),
+      amount: Number(m.quantity) * Number(m.unit_price),
+      notes: m.notes ?? undefined,
+    }));
+    const deductions = p.deductions.map((d) => {
+      let reason = d.description ?? d.deduction_type;
+      if (d.deduction_type === 'fee' && d.charge) reason = d.charge.name;
+      else if (d.deduction_type === 'loan_repayment' && d.loan) reason = `Loan repayment`;
+      else if (d.deduction_type === 'inventory_debt' && d.inventory_sale) reason = `Inventory (sale ${d.inventory_sale.sale_date?.toISOString().slice(0, 10) ?? d.inventory_sale.id})`;
+      return {
+        id: d.id,
+        type: d.deduction_type,
+        amount: Number(d.amount),
+        reason,
+      };
+    });
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Payslip detail fetched.',
+      data: {
+        id: p.id,
+        supplier: p.supplier_account.name,
+        supplier_code: p.supplier_account.code,
+        gross_amount: Number(p.gross_amount),
+        total_deductions: Number(p.total_deductions),
+        net_amount: Number(p.net_amount),
+        milk_sales_count: p.milk_sales_count,
+        period_start: periodStart,
+        period_end: periodEnd,
+        status: p.status,
+        earnings,
+        deductions,
+      },
     };
   }
 
@@ -573,10 +672,22 @@ export class PayrollRunsService {
           )
         : 0;
 
-      // Can only deduct up to gross (inventory + loan repayments)
+      // Applicable supplier charges (one-time or recurring, from Charges module)
+      const applicableCharges = user.default_account_id
+        ? await this.chargesService.getApplicableChargesForPayroll(
+            user.default_account_id,
+            payrollSupplier.supplier_account_id,
+            startDate,
+            endDate,
+            grossAmount,
+          )
+        : [];
+      const totalChargeAmount = applicableCharges.reduce((sum, c) => sum + c.amount, 0);
+
+      // Can only deduct up to gross (inventory + loans + charges)
       const totalDeductions = Math.min(
         grossAmount,
-        totalInventoryDebt + totalLoanDebt,
+        totalInventoryDebt + totalLoanDebt + totalChargeAmount,
       );
       const netAmount = Math.max(0, grossAmount - totalDeductions);
 
@@ -600,7 +711,7 @@ export class PayrollRunsService {
         },
       });
 
-      // Allocate deductions: first inventory, then loans (oldest first)
+      // Allocate deductions: first inventory, then loans, then charges
       let remainingToAllocate = totalDeductions;
 
       // PayrollDeduction - inventory debt (oldest first)
@@ -644,6 +755,31 @@ export class PayrollRunsService {
               loan_id: loan.id,
             },
           });
+        }
+      }
+
+      // PayrollDeduction - supplier charges (fee)
+      for (const ch of applicableCharges) {
+        if (remainingToAllocate <= 0) break;
+        const deductAmount = Math.min(remainingToAllocate, ch.amount);
+        if (deductAmount <= 0) continue;
+        remainingToAllocate -= deductAmount;
+        await this.prisma.payrollDeduction.create({
+          data: {
+            payslip_id: payslip.id,
+            deduction_type: 'fee',
+            amount: deductAmount,
+            description: ch.name,
+            charge_id: ch.chargeId,
+          },
+        });
+        if (ch.kind === 'one_time') {
+          await this.chargesService.recordChargeApplication(
+            ch.chargeId,
+            payrollSupplier.supplier_account_id,
+            payslip.id,
+            deductAmount,
+          );
         }
       }
 

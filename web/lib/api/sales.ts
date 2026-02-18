@@ -100,7 +100,7 @@ export const salesApi = {
   },
 
   createSale: async (data: CreateSaleData): Promise<SaleResponse> => {
-    return apiClient.post('/sales/create', data);
+    return apiClient.post('/sales', data);
   },
 
   downloadTemplate: async (): Promise<void> => {

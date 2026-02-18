@@ -35,29 +35,24 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException({
-        code: 401,
+      throw new NotFoundException({
+        code: 404,
         status: 'error',
-        message: 'Invalid credentials.',
+        message: 'No account found with this phone number or email.',
       });
     }
 
     // Verify password
-    // Skip PHP bcrypt format ($2y$) as Node.js bcrypt doesn't support it
-    if (user.password_hash.startsWith('$2y$')) {
-      throw new UnauthorizedException({
-        code: 401,
-        status: 'error',
-        message: 'Invalid credentials.',
-      });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    // PHP bcrypt uses $2y$; Node bcrypt accepts $2a$ (same algorithm, compatible)
+    const hashToCompare = user.password_hash.startsWith('$2y$')
+      ? user.password_hash.replace(/^\$2y\$/, '$2a$')
+      : user.password_hash;
+    const isPasswordValid = await bcrypt.compare(password, hashToCompare);
     if (!isPasswordValid) {
       throw new UnauthorizedException({
         code: 401,
         status: 'error',
-        message: 'Invalid credentials.',
+        message: 'Incorrect password.',
       });
     }
 

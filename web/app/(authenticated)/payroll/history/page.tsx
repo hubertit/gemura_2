@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { payrollApi, PayrollRun } from '@/lib/api/payroll';
+import { payrollApi, PayrollRun, PayslipDetail } from '@/lib/api/payroll';
 import { useToastStore } from '@/store/toast';
 import Icon, { faArrowLeft, faSpinner, faCheckCircle, faCalendar, faUsers, faFileAlt, faClipboardList, faArrowsRotate } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
@@ -17,6 +17,8 @@ export default function PayrollHistoryPage() {
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [detailRun, setDetailRun] = useState<PayrollRun | null>(null);
   const [runIdToConfirm, setRunIdToConfirm] = useState<string | null>(null);
+  const [payslipDetail, setPayslipDetail] = useState<PayslipDetail | null>(null);
+  const [payslipDetailLoading, setPayslipDetailLoading] = useState(false);
 
   const loadRuns = useCallback(async () => {
     try {
@@ -92,6 +94,20 @@ export default function PayrollHistoryPage() {
       return new Date(dateStr).toLocaleDateString();
     } catch {
       return dateStr;
+    }
+  };
+
+  const openPayslipDetail = async (runId: string, payslipId: string) => {
+    if (!runId || !payslipId) return;
+    setPayslipDetailLoading(true);
+    setPayslipDetail(null);
+    try {
+      const res = await payrollApi.getPayslipDetail(runId, payslipId);
+      if (res.code === 200 && res.data) setPayslipDetail(res.data);
+    } catch (err: any) {
+      useToastStore.getState().error(err?.response?.data?.message || 'Failed to load payslip detail');
+    } finally {
+      setPayslipDetailLoading(false);
     }
   };
 
@@ -247,12 +263,12 @@ export default function PayrollHistoryPage() {
         </div>
       )}
 
-      {/* Payroll run detail modal (same as mobile bottom sheet) */}
+      {/* Payroll run detail modal – list of people */}
       <Modal
         open={!!detailRun}
         onClose={() => setDetailRun(null)}
-        title="Payroll Details"
-        maxWidth="max-w-lg"
+        title={detailRun ? (detailRun.period_name || 'Payroll Details') : 'Payroll Details'}
+        maxWidth="max-w-4xl"
         footer={
           detailRun ? (
             <div className="flex flex-wrap gap-2 justify-end">
@@ -333,17 +349,144 @@ export default function PayrollHistoryPage() {
               )}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">Payslips ({detailRun.payslips?.length ?? 0})</h3>
-              <div className="border border-gray-200 rounded-sm divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                {(detailRun.payslips || []).map((p) => (
-                  <div key={p.id} className="p-3 flex items-center justify-between bg-gray-50/50">
-                    <span className="font-medium text-gray-900">{p.supplier ?? p.supplier_code ?? 'Unknown'}</span>
-                    <span className="text-sm text-gray-600">
-                      {p.milk_sales_count ?? 0} collections · {formatAmount(p.net_amount ?? 0)}
-                    </span>
-                  </div>
-                ))}
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                Payroll list ({detailRun.payslips?.length ?? 0} people)
+              </h3>
+              <div className="border border-gray-200 rounded-sm overflow-hidden">
+                <div className="overflow-x-auto max-h-[min(70vh,28rem)] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Supplier</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Collections</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Gross</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Deductions</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Net</th>
+                        <th className="text-center py-2 px-3 font-medium text-gray-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {(detailRun.payslips || []).map((p) => (
+                        <tr
+                          key={p.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => detailRun?.id && openPayslipDetail(detailRun.id, p.id)}
+                          onKeyDown={(e) => e.key === 'Enter' && detailRun?.id && openPayslipDetail(detailRun.id, p.id)}
+                          className="hover:bg-gray-50/50 cursor-pointer"
+                        >
+                          <td className="py-2 px-3 font-medium text-gray-900">{p.supplier ?? p.supplier_code ?? 'Unknown'}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{p.milk_sales_count ?? 0}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{formatAmount(p.gross_amount ?? 0)}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{formatAmount(p.total_deductions ?? 0)}</td>
+                          <td className="py-2 px-3 text-right font-medium text-[var(--primary)]">{formatAmount(p.net_amount ?? 0)}</td>
+                          <td className="py-2 px-3 text-center">
+                            <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                              (p.status || '').toLowerCase() === 'paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {(p.status || 'generated').toLowerCase()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Payslip detail modal – earnings (milk collections) and deductions */}
+      <Modal
+        open={!!payslipDetail || payslipDetailLoading}
+        onClose={() => { setPayslipDetail(null); setPayslipDetailLoading(false); }}
+        title={payslipDetailLoading ? 'Loading…' : (payslipDetail ? `${payslipDetail.supplier} – Breakdown` : 'Payslip')}
+        maxWidth="max-w-4xl"
+      >
+        {payslipDetailLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Icon icon={faSpinner} size="2x" spin className="text-gray-400" />
+          </div>
+        )}
+        {payslipDetail && !payslipDetailLoading && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div>
+                <p className="text-gray-500 font-medium">Gross</p>
+                <p className="text-gray-900 font-medium">{formatAmount(payslipDetail.gross_amount)}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">Deductions</p>
+                <p className="text-gray-900 font-medium text-red-600">{formatAmount(payslipDetail.total_deductions)}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">Net</p>
+                <p className="text-gray-900 font-semibold text-[var(--primary)]">{formatAmount(payslipDetail.net_amount)}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 font-medium">Period</p>
+                <p className="text-gray-900">{formatDate(payslipDetail.period_start)} – {formatDate(payslipDetail.period_end)}</p>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Where the amount comes from (milk collections)</h4>
+              {payslipDetail.earnings.length === 0 ? (
+                <p className="text-sm text-gray-500">No collections in this period.</p>
+              ) : (
+                <div className="border border-gray-200 rounded-sm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Date</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Quantity (L)</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Unit price</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Amount</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {payslipDetail.earnings.map((e) => (
+                        <tr key={e.id}>
+                          <td className="py-2 px-3 text-gray-900">{formatDate(e.date)}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{Number(e.quantity).toLocaleString()}</td>
+                          <td className="py-2 px-3 text-right text-gray-600">{formatAmount(e.unit_price)}</td>
+                          <td className="py-2 px-3 text-right font-medium text-gray-900">{formatAmount(e.amount)}</td>
+                          <td className="py-2 px-3 text-gray-500 text-xs">{e.notes ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Deductions (why amounts were charged)</h4>
+              {payslipDetail.deductions.length === 0 ? (
+                <p className="text-sm text-gray-500">No deductions.</p>
+              ) : (
+                <div className="border border-gray-200 rounded-sm overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700">Reason / Type</th>
+                        <th className="text-right py-2 px-3 font-medium text-gray-700">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {payslipDetail.deductions.map((d) => (
+                        <tr key={d.id}>
+                          <td className="py-2 px-3 text-gray-900">{d.reason}</td>
+                          <td className="py-2 px-3 text-right font-medium text-red-600">{formatAmount(d.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}

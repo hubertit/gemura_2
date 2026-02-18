@@ -10,9 +10,10 @@ import { PayrollReportsService } from './reports/payroll-reports.service';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { LoansModule } from '../loans/loans.module';
+import { ChargesModule } from '../charges/charges.module';
 
 @Module({
-  imports: [PrismaModule, AccountingModule, LoansModule],
+  imports: [PrismaModule, AccountingModule, LoansModule, ChargesModule],
   controllers: [
     PayrollSuppliersController,
     PayrollPeriodsController,

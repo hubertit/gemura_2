@@ -186,6 +186,9 @@ model Account {
   inventory_sales_buyer InventorySale[]     @relation("InventorySaleBuyer") // Used for both buyer tracking and supplier debt tracking
   loans_lent            Loan[]             @relation("LoanLender")
   loans_borrowed        Loan[]             @relation("LoanBorrower")
+  charges               Charge[]           @relation("ChargeCustomerAccount")
+  charge_supplier_links ChargeSupplier[]   @relation("ChargeSupplierAccount")
+  charge_applications_supplier ChargeApplication[] @relation("ChargeApplicationSupplier")
   created_by_user       User?               @relation("AccountCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
   updated_by_user       User?               @relation("AccountUpdatedBy", fields: [updated_by], references: [id], onDelete: SetNull)
 
@@ -953,6 +956,7 @@ model PayrollPayslip {
   supplier_account Account            @relation("PayrollPayslipSupplier", fields: [supplier_account_id], references: [id], onDelete: Restrict)
   payroll_supplier PayrollSupplier?   @relation("PayrollSupplierPayslips", fields: [payroll_supplier_id], references: [id], onDelete: SetNull)
   deductions       PayrollDeduction[]
+  charge_applications ChargeApplication[]
 
   payroll_supplier_id String? @map("payroll_supplier_id") @db.Uuid
 
@@ -972,18 +976,92 @@ model PayrollDeduction {
   description      String?
   inventory_sale_id String?  @map("inventory_sale_id") @db.Uuid // Links to InventorySale when deduction_type=inventory_debt
   loan_id          String?  @map("loan_id") @db.Uuid // Links to Loan when deduction_type=loan_repayment
+  charge_id        String?  @map("charge_id") @db.Uuid // Links to Charge when deduction_type=fee
   created_at       DateTime @default(now()) @map("created_at")
 
   // Relations
   payslip       PayrollPayslip @relation(fields: [payslip_id], references: [id], onDelete: Cascade)
   inventory_sale InventorySale? @relation(fields: [inventory_sale_id], references: [id], onDelete: SetNull)
   loan           Loan?          @relation(fields: [loan_id], references: [id], onDelete: SetNull)
+  charge         Charge?        @relation(fields: [charge_id], references: [id], onDelete: SetNull)
 
   @@index([payslip_id])
   @@index([deduction_type])
   @@index([inventory_sale_id])
   @@index([loan_id])
+  @@index([charge_id])
   @@map("payroll_deductions")
+}
+
+// ============================================
+// CHARGES MODULE (supplier charges: one-time or recurring, all or selected)
+// ============================================
+
+model Charge {
+  id                      String    @id @default(uuid()) @db.Uuid
+  customer_account_id     String    @map("customer_account_id") @db.Uuid
+  name                    String
+  description             String?
+  kind                    String    // one_time | recurring
+  amount_type             String    @map("amount_type") // fixed | percentage
+  amount                  Decimal   @db.Decimal(10, 2) // fixed amount or percentage (e.g. 5.00 for 5%)
+  recurrence              String?   // monthly | per_payroll (for recurring only)
+  apply_to_all_suppliers   Boolean   @default(true) @map("apply_to_all_suppliers")
+  effective_from          DateTime?  @map("effective_from")
+  effective_to            DateTime?  @map("effective_to")
+  is_active               Boolean   @default(true) @map("is_active")
+  created_at              DateTime  @default(now()) @map("created_at")
+  updated_at              DateTime  @updatedAt @map("updated_at")
+  created_by              String?   @map("created_by") @db.Uuid
+
+  // Relations
+  customer_account Account            @relation("ChargeCustomerAccount", fields: [customer_account_id], references: [id], onDelete: Cascade)
+  selected_suppliers ChargeSupplier[]
+  applications      ChargeApplication[]
+  payroll_deductions PayrollDeduction[]
+
+  @@index([customer_account_id])
+  @@index([is_active])
+  @@index([kind])
+  @@index([effective_from])
+  @@index([effective_to])
+  @@map("charges")
+}
+
+model ChargeSupplier {
+  id                  String   @id @default(uuid()) @db.Uuid
+  charge_id           String   @map("charge_id") @db.Uuid
+  supplier_account_id String   @map("supplier_account_id") @db.Uuid
+  created_at          DateTime @default(now()) @map("created_at")
+
+  // Relations
+  charge   Charge  @relation(fields: [charge_id], references: [id], onDelete: Cascade)
+  supplier Account @relation("ChargeSupplierAccount", fields: [supplier_account_id], references: [id], onDelete: Cascade)
+
+  @@unique([charge_id, supplier_account_id])
+  @@index([charge_id])
+  @@index([supplier_account_id])
+  @@map("charge_suppliers")
+}
+
+model ChargeApplication {
+  id                  String   @id @default(uuid()) @db.Uuid
+  charge_id           String   @map("charge_id") @db.Uuid
+  supplier_account_id String   @map("supplier_account_id") @db.Uuid
+  payslip_id          String   @map("payslip_id") @db.Uuid
+  amount              Decimal  @db.Decimal(10, 2)
+  applied_at           DateTime @default(now()) @map("applied_at")
+
+  // Relations
+  charge   Charge         @relation(fields: [charge_id], references: [id], onDelete: Cascade)
+  supplier Account        @relation("ChargeApplicationSupplier", fields: [supplier_account_id], references: [id], onDelete: Cascade)
+  payslip  PayrollPayslip @relation(fields: [payslip_id], references: [id], onDelete: Cascade)
+
+  @@unique([charge_id, supplier_account_id])
+  @@index([charge_id])
+  @@index([supplier_account_id])
+  @@index([payslip_id])
+  @@map("charge_applications")
 }
 
 // ============================================

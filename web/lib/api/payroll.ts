@@ -42,9 +42,36 @@ export interface PayrollRun {
     supplier_code?: string;
     milk_sales_count?: number;
     gross_amount?: number;
-    deductions?: number;
+    total_deductions?: number;
     net_amount?: number;
     status?: string;
+  }>;
+}
+
+export interface PayslipDetail {
+  id: string;
+  supplier: string;
+  supplier_code?: string;
+  gross_amount: number;
+  total_deductions: number;
+  net_amount: number;
+  milk_sales_count: number;
+  period_start: string;
+  period_end: string;
+  status: string;
+  earnings: Array<{
+    id: string;
+    date: string;
+    quantity: number;
+    unit_price: number;
+    amount: number;
+    notes?: string;
+  }>;
+  deductions: Array<{
+    id: string;
+    type: string;
+    amount: number;
+    reason: string;
   }>;
 }
 
@@ -76,6 +103,10 @@ export const payrollApi = {
   getPayrollRuns: async (periodId?: string): Promise<PayrollRunsResponse> => {
     const params = periodId ? `?period_id=${encodeURIComponent(periodId)}` : '';
     return apiClient.get(`/payroll/runs${params}`);
+  },
+
+  getPayslipDetail: async (runId: string, payslipId: string): Promise<{ code: number; data: PayslipDetail }> => {
+    return apiClient.get(`/payroll/runs/${runId}/payslips/${payslipId}`);
   },
 
   markPayrollAsPaid: async (

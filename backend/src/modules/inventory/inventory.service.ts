@@ -921,18 +921,14 @@ export class InventoryService {
     }
 
     // 6. Validate buyer account exists if we have an ID
-    // Handle both UUID and account code
+    // Handle both UUID and account code (don't pass non-UUID to id column - Prisma throws)
     if (finalBuyerAccountId && !buyerAccount) {
       console.log('📦 [Inventory Sale] Looking up buyer account:', finalBuyerAccountId);
-      
-      // Try to find by ID first (UUID), then by code
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalBuyerAccountId);
       buyerAccount = await this.prisma.account.findFirst({
-        where: {
-          OR: [
-            { id: finalBuyerAccountId },
-            { code: finalBuyerAccountId },
-          ],
-        },
+        where: isUuid
+          ? { OR: [{ id: finalBuyerAccountId }, { code: finalBuyerAccountId }] }
+          : { code: finalBuyerAccountId },
       });
 
       if (!buyerAccount) {

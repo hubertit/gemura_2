@@ -22,7 +22,9 @@ import {
   faDollarSign,
   faChartLine,
   faClipboardList,
+  faList,
   faHandHoldingDollar,
+  faTag,
 } from '@/app/components/Icon';
 
 /** Account type that sees only admin menu/features */
@@ -69,6 +71,8 @@ export const OPERATIONS_NAV_ITEMS: NavItem[] = [
   { icon: faStore, label: 'Customers', href: '/customers', section: 'operations', requiresPermission: 'view_customers' },
   { icon: faWarehouse, label: 'Inventory', href: '/inventory', section: 'operations', requiresPermission: 'view_inventory' },
   { icon: faClipboardList, label: 'Payroll', href: '/payroll', section: 'operations' },
+  { icon: faList, label: 'Payroll History', href: '/payroll/history', section: 'operations' },
+  { icon: faTag, label: 'Charges', href: '/charges', section: 'operations' },
   { icon: faHandHoldingDollar, label: 'Loans', href: '/loans', section: 'operations' },
   { icon: faChartLine, label: 'Finance', href: '/finance', section: 'operations' },
   { icon: faDollarSign, label: 'Accounts', href: '/accounts', section: 'operations' },
