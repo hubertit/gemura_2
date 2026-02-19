@@ -6,6 +6,7 @@ export interface GeneratePayrollParams {
   period_end: string;   // YYYY-MM-DD
   payment_terms_days?: number;
   run_name?: string;    // Optional custom name for the payroll run
+  account_id?: string;  // Account to generate for (defaults to user's default if not set)
 }
 
 export interface GeneratePayrollResult {
@@ -97,16 +98,25 @@ export const payrollApi = {
       period_end: params.period_end,
       ...(params.payment_terms_days != null && { payment_terms_days: params.payment_terms_days }),
       ...(params.run_name != null && params.run_name.trim() !== '' && { run_name: params.run_name.trim() }),
+      ...(params.account_id != null && params.account_id !== '' && { account_id: params.account_id }),
     });
   },
 
-  getPayrollRuns: async (periodId?: string): Promise<PayrollRunsResponse> => {
-    const params = periodId ? `?period_id=${encodeURIComponent(periodId)}` : '';
-    return apiClient.get(`/payroll/runs${params}`);
+  getPayrollRuns: async (params?: { period_id?: string; account_id?: string }): Promise<PayrollRunsResponse> => {
+    const search = new URLSearchParams();
+    if (params?.period_id) search.append('period_id', params.period_id);
+    if (params?.account_id) search.append('account_id', params.account_id);
+    const q = search.toString();
+    return apiClient.get(`/payroll/runs${q ? `?${q}` : ''}`);
   },
 
-  getPayslipDetail: async (runId: string, payslipId: string): Promise<{ code: number; data: PayslipDetail }> => {
-    return apiClient.get(`/payroll/runs/${runId}/payslips/${payslipId}`);
+  getPayslipDetail: async (
+    runId: string,
+    payslipId: string,
+    accountId?: string
+  ): Promise<{ code: number; data: PayslipDetail }> => {
+    const params = accountId ? `?account_id=${encodeURIComponent(accountId)}` : '';
+    return apiClient.get(`/payroll/runs/${runId}/payslips/${payslipId}${params}`);
   },
 
   markPayrollAsPaid: async (

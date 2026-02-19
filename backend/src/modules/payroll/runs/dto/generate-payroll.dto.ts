@@ -2,6 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, IsNumber, IsArray, Min, Max } from 'class-validator';
 
 export class GeneratePayrollDto {
+  @ApiProperty({
+    description: 'Account ID (MCC/branch) to generate payroll for. Must be the account currently selected in the UI. If omitted, uses user default.',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  account_id?: string;
+
   @ApiProperty({ 
     description: 'Supplier account codes to include in payroll (optional - if not provided, all active suppliers are included)', 
     example: ['A_ABC123', 'A_XYZ789'],

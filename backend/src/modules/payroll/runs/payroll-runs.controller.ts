@@ -78,14 +78,15 @@ export class PayrollRunsController {
   @Get()
   @ApiOperation({
     summary: 'Get payroll runs',
-    description: 'List all payroll runs for the authenticated user\'s default account. Optionally filter by period_id. Returns runs with payslips (supplier, gross, deductions, net, status).',
+    description: 'List payroll runs for the given account (or user default). Scoped so Kozamgi only sees Kozamgi runs. Optionally filter by period_id.',
   })
   @ApiQuery({ name: 'period_id', required: false, description: 'Optional payroll period UUID to filter runs' })
+  @ApiQuery({ name: 'account_id', required: false, description: 'Account UUID (default: user\'s default account)' })
   @ApiResponse({ status: 200, description: 'Runs fetched successfully' })
   @ApiBadRequestResponse({ description: 'No valid default account found' })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing token' })
-  async getRuns(@CurrentUser() user: User, @Query('period_id') periodId?: string) {
-    return this.payrollRunsService.getRuns(user, periodId);
+  async getRuns(@CurrentUser() user: User, @Query('period_id') periodId?: string, @Query('account_id') accountId?: string) {
+    return this.payrollRunsService.getRuns(user, periodId, accountId);
   }
 
   @Get(':runId/payslips/:payslipId')
@@ -95,6 +96,7 @@ export class PayrollRunsController {
   })
   @ApiParam({ name: 'runId', description: 'Payroll run ID (UUID)' })
   @ApiParam({ name: 'payslipId', description: 'Payslip ID (UUID)' })
+  @ApiQuery({ name: 'account_id', required: false, description: 'Account UUID (default: user\'s default account)' })
   @ApiResponse({
     status: 200,
     description: 'Payslip detail with earnings and deductions',
@@ -127,8 +129,9 @@ export class PayrollRunsController {
     @CurrentUser() user: User,
     @Param('runId') runId: string,
     @Param('payslipId') payslipId: string,
+    @Query('account_id') accountId?: string,
   ) {
-    return this.payrollRunsService.getPayslipDetail(user, runId, payslipId);
+    return this.payrollRunsService.getPayslipDetail(user, runId, payslipId, accountId);
   }
 
   @Put(':id')

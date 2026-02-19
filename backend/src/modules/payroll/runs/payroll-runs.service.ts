@@ -48,6 +48,7 @@ export class PayrollRunsService {
 
     const run = await this.prisma.payrollRun.create({
       data: {
+        account_id: user.default_account_id,
         period_id: createDto.period_id || null,
         run_date: new Date(createDto.run_date || new Date()),
         period_start: createDto.period_start ? new Date(createDto.period_start) : null,
@@ -75,15 +76,40 @@ export class PayrollRunsService {
     };
   }
 
-  async getRuns(user: User, periodId?: string) {
-    if (!user.default_account_id) {
+  async getRuns(user: User, periodId?: string, accountIdParam?: string) {
+    const accountId = accountIdParam || user.default_account_id;
+    if (!accountId) {
       throw new BadRequestException({
         code: 400,
         status: 'error',
         message: 'No valid default account found.',
       });
     }
-    const where: any = { created_by: user.id };
+    // If explicit account_id provided, verify user has access
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: accountIdParam,
+          status: 'active',
+        },
+        include: { account: true },
+      });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+    }
+    // Scope runs to this account; include legacy runs (null account_id) created by this user
+    const where: any = {
+      OR: [
+        { account_id: accountId },
+        { account_id: null, created_by: user.id },
+      ],
+    };
     if (periodId) where.period_id = periodId;
     const runs = await this.prisma.payrollRun.findMany({
       where,
@@ -135,16 +161,36 @@ export class PayrollRunsService {
   }
 
   /** Get a single payslip with full detail: deductions (with reason/source) and milk collections (earnings source). */
-  async getPayslipDetail(user: User, runId: string, payslipId: string) {
-    if (!user.default_account_id) {
+  async getPayslipDetail(user: User, runId: string, payslipId: string, accountIdParam?: string) {
+    const accountId = accountIdParam || user.default_account_id;
+    if (!accountId) {
       throw new BadRequestException({
         code: 400,
         status: 'error',
         message: 'No valid default account found.',
       });
     }
+    if (accountIdParam) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: { user_id: user.id, account_id: accountIdParam, status: 'active' },
+        include: { account: true },
+      });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+    }
     const run = await this.prisma.payrollRun.findFirst({
-      where: { id: runId, created_by: user.id },
+      where: {
+        id: runId,
+        OR: [
+          { account_id: accountId },
+          { account_id: null, created_by: user.id },
+        ],
+      },
     });
     if (!run) {
       throw new NotFoundException({
@@ -230,6 +276,26 @@ export class PayrollRunsService {
     };
   }
 
+  private async assertRunBelongsToAccount(user: User, run: { account_id: string | null; created_by: string | null }) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found.',
+      });
+    }
+    const belongs =
+      run.account_id === user.default_account_id ||
+      (run.account_id == null && run.created_by === user.id);
+    if (!belongs) {
+      throw new BadRequestException({
+        code: 403,
+        status: 'error',
+        message: 'You do not have permission to access this payroll run.',
+      });
+    }
+  }
+
   async updateRun(user: User, runId: string, updateDto: UpdatePayrollRunDto) {
     const run = await this.prisma.payrollRun.findUnique({ where: { id: runId } });
     if (!run) {
@@ -239,13 +305,7 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
-    if (run.created_by && run.created_by !== user.id) {
-      throw new BadRequestException({
-        code: 403,
-        status: 'error',
-        message: 'You do not have permission to update this payroll run.',
-      });
-    }
+    await this.assertRunBelongsToAccount(user, run);
 
     const updated = await this.prisma.payrollRun.update({
       where: { id: runId },
@@ -286,13 +346,7 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
-    if (run.created_by && run.created_by !== user.id) {
-      throw new BadRequestException({
-        code: 403,
-        status: 'error',
-        message: 'You do not have permission to process this payroll run.',
-      });
-    }
+    await this.assertRunBelongsToAccount(user, run);
 
     // Determine date range for milk sales
     const endDate = run.period_end || new Date();
@@ -470,17 +524,40 @@ export class PayrollRunsService {
   async generatePayroll(user: User, generateDto: GeneratePayrollDto) {
     let run: any = null;
     try {
-      if (!user.default_account_id) {
-        throw new BadRequestException({
-          code: 400,
-          status: 'error',
-          message: 'No valid default account found.',
+      // Use account from request (UI-selected) so run and data always match the account the user is viewing
+      let accountId: string;
+      if (generateDto.account_id) {
+        const hasAccess = await this.prisma.userAccount.findFirst({
+          where: {
+            user_id: user.id,
+            account_id: generateDto.account_id,
+            status: 'active',
+          },
+          include: { account: true },
         });
+        if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+          throw new BadRequestException({
+            code: 400,
+            status: 'error',
+            message: 'Account not found or access denied.',
+          });
+        }
+        accountId = generateDto.account_id;
+      } else {
+        if (!user.default_account_id) {
+          throw new BadRequestException({
+            code: 400,
+            status: 'error',
+            message: 'No valid default account found.',
+          });
+        }
+        accountId = user.default_account_id;
       }
 
-      // Create payroll run
+      // Create payroll run (scoped to the account we're generating for)
       run = await this.prisma.payrollRun.create({
       data: {
+        account_id: accountId,
         period_id: null,
         run_name: generateDto.run_name?.trim() || null,
         run_date: new Date(),
@@ -594,11 +671,11 @@ export class PayrollRunsService {
       // Get milk sales for this supplier
       // Exclude deleted sales, but include pending, accepted, rejected, and cancelled
       // (rejected and cancelled might need to be reviewed, but we include them for now)
-      console.log(`Querying milk sales for supplier ${payrollSupplier.supplier_account_id}, customer ${user.default_account_id}, dates ${startDate.toISOString()} to ${endDate.toISOString()}`);
+      console.log(`Querying milk sales for supplier ${payrollSupplier.supplier_account_id}, customer ${accountId}, dates ${startDate.toISOString()} to ${endDate.toISOString()}`);
       const milkSales = await this.prisma.milkSale.findMany({
         where: {
           supplier_account_id: payrollSupplier.supplier_account_id,
-          customer_account_id: user.default_account_id,
+          customer_account_id: accountId,
           sale_at: {
             gte: startDate,
             lte: endDate,
@@ -652,7 +729,7 @@ export class PayrollRunsService {
           buyer_type: 'supplier',
           payment_status: { not: 'paid' },
           product: {
-            account_id: user.default_account_id,
+            account_id: accountId,
           },
         },
         orderBy: { sale_date: 'asc' },
@@ -665,17 +742,17 @@ export class PayrollRunsService {
       }, 0);
 
       // Outstanding loan balance for this supplier (they borrowed from us)
-      const totalLoanDebt = user.default_account_id
+      const totalLoanDebt = accountId
         ? await this.loansService.getOutstandingBalanceForBorrower(
-            user.default_account_id,
+            accountId,
             payrollSupplier.supplier_account_id,
           )
         : 0;
 
       // Applicable supplier charges (one-time or recurring, from Charges module)
-      const applicableCharges = user.default_account_id
+      const applicableCharges = accountId
         ? await this.chargesService.getApplicableChargesForPayroll(
-            user.default_account_id,
+            accountId,
             payrollSupplier.supplier_account_id,
             startDate,
             endDate,
@@ -735,9 +812,9 @@ export class PayrollRunsService {
       }
 
       // PayrollDeduction - loan repayment (oldest first)
-      if (remainingToAllocate > 0 && user.default_account_id) {
+      if (remainingToAllocate > 0 && accountId) {
         const activeLoans = await this.loansService.getActiveLoansForBorrower(
-          user.default_account_id,
+          accountId,
           payrollSupplier.supplier_account_id,
         );
         for (const loan of activeLoans) {
@@ -873,13 +950,7 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
-    if (run.created_by && run.created_by !== user.id) {
-      throw new BadRequestException({
-        code: 403,
-        status: 'error',
-        message: 'You do not have permission to mark this payroll run as paid.',
-      });
-    }
+    await this.assertRunBelongsToAccount(user, run);
 
     const paymentDate = markPaidDto.payment_date 
       ? new Date(markPaidDto.payment_date) 
@@ -1209,13 +1280,7 @@ export class PayrollRunsService {
         message: 'Payroll run not found.',
       });
     }
-    if (run.created_by && run.created_by !== user.id) {
-      throw new BadRequestException({
-        code: 403,
-        status: 'error',
-        message: 'You do not have permission to export this payroll run.',
-      });
-    }
+    await this.assertRunBelongsToAccount(user, run);
 
     const exportFormat = (format || 'excel').toLowerCase();
     const periodName = run.run_name || run.period?.period_name || 'Flexible Run';

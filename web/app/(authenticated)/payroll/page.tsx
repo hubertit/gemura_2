@@ -75,6 +75,10 @@ export default function PayrollPage() {
   };
 
   const handleGenerate = async () => {
+    if (!currentAccount?.account_id) {
+      useToastStore.getState().error('Please select an account first');
+      return;
+    }
     if (selectedCodes.size === 0) {
       useToastStore.getState().error('Please select at least one supplier');
       return;
@@ -87,6 +91,7 @@ export default function PayrollPage() {
         period_start: periodStart,
         period_end: periodEnd,
         run_name: runName.trim() || suggestedRunName || undefined,
+        account_id: currentAccount?.account_id,
       });
       if (res.code === 200 && res.data) {
         setResult(res.data);
