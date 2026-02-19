@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Icon, { faTimes } from './Icon';
 
 interface ModalProps {
@@ -34,15 +35,16 @@ export default function Modal({ open, onClose, title, children, footer, maxWidth
 
   if (!open) return null;
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 min-h-screen min-h-[100dvh]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div
         className="absolute inset-0 bg-black/50"
+        style={{ minHeight: '100vh', minHeight: '100dvh' }}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -74,4 +76,6 @@ export default function Modal({ open, onClose, title, children, footer, maxWidth
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 }

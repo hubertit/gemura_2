@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Icon, { faTimes, faDownload, faUpload, faSpinner, faCheckCircle, faCircleXmark } from '@/app/components/Icon';
 
 export interface BulkImportRow {
@@ -55,6 +56,14 @@ export default function BulkImportModal({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ success: number; failed: number; errors: { row: number; phone: string; message: string }[] } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -130,9 +139,14 @@ export default function BulkImportModal({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} aria-hidden="true" />
+  const modalContent = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 min-h-screen min-h-[100dvh]" role="dialog" aria-modal="true">
+      <div
+        className="absolute inset-0 bg-black/50"
+        style={{ minHeight: '100vh', minHeight: '100dvh' }}
+        onClick={handleClose}
+        aria-hidden="true"
+      />
       <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-lg border border-gray-200 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between shrink-0 border-b border-gray-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">{title} – Bulk import</h2>
@@ -192,4 +206,6 @@ export default function BulkImportModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 }

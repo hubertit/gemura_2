@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Icon, { faTriangleExclamation, faInfoCircle } from './Icon';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
@@ -72,22 +73,27 @@ export default function ConfirmDialog({
 
   if (!open) return null;
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (closeOnOverlayClick && !loading && e.target === e.currentTarget) onClose();
+  const handleOverlayClick = () => {
+    if (closeOnOverlayClick && !loading) onClose();
   };
 
   const IconComponent = ICON_MAP[type];
 
-  return (
+  const dialogContent = (
     <div
-      className="fixed inset-0 z-[1060] flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] transition-opacity"
+      className="fixed inset-0 z-[1060] flex items-center justify-center p-4 min-h-screen min-h-[100dvh]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
-      onClick={handleOverlayClick}
     >
       <div
-        className="w-full max-w-[420px] bg-white rounded-lg border border-gray-200 shadow-xl p-6 sm:p-8 text-center"
+        className="absolute inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity"
+        style={{ minHeight: '100vh', minHeight: '100dvh' }}
+        onClick={handleOverlayClick}
+        aria-hidden="true"
+      />
+      <div
+        className="relative w-full max-w-[420px] bg-white rounded-lg border border-gray-200 shadow-xl p-6 sm:p-8 text-center"
         onClick={(e) => e.stopPropagation()}
       >
         {showIcon && (
@@ -129,4 +135,6 @@ export default function ConfirmDialog({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(dialogContent, document.body) : null;
 }

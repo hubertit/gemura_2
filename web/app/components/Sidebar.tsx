@@ -156,11 +156,13 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Overlay for mobile - full viewport height to avoid gap at bottom */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden min-h-screen min-h-[100dvh]"
+          style={{ minHeight: '100vh', minHeight: '100dvh' }}
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
