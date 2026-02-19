@@ -152,6 +152,22 @@ enum InventorySalePaymentStatus {
   unpaid
 }
 
+enum InventoryMovementType {
+  sale_out
+  adjustment_in
+  adjustment_out
+  purchase_in
+  transfer_in
+  transfer_out
+}
+
+enum InventoryMovementReferenceType {
+  inventory_sale
+  stock_adjustment
+  purchase
+  transfer
+}
+
 // ============================================
 // EXISTING TABLES (25 tables)
 // ============================================
@@ -267,7 +283,8 @@ model User {
   user_referrals_referred      UserReferral[]     @relation("UserReferred")
   user_rewards                 UserReward[]
   user_onboardings             UserOnboarding[]
-  inventory_sales_created      InventorySale[]   @relation("InventorySaleCreatedBy")
+  inventory_sales_created      InventorySale[]    @relation("InventorySaleCreatedBy")
+  inventory_movements_created  InventoryMovement[] @relation("InventoryMovementCreatedBy")
 
   @@index([code])
   @@index([phone])
@@ -387,6 +404,7 @@ model Product {
   images           ProductImage[]
   order_items      OrderItem[]
   sales            InventorySale[]    @relation("InventorySaleProduct")
+  movements        InventoryMovement[]
 
   @@index([status])
   @@index([created_at])
@@ -1160,6 +1178,33 @@ model InventorySale {
   @@index([payment_status])
   @@index([sale_date])
   @@map("inventory_sales")
+}
+
+// ============================================
+// INVENTORY MOVEMENTS (audit trail for stock changes)
+// ============================================
+
+model InventoryMovement {
+  id               String                         @id @default(uuid()) @db.Uuid
+  product_id       String                         @map("product_id") @db.Uuid
+  movement_type    InventoryMovementType          @map("movement_type")
+  quantity         Int                            // Always positive; direction from movement_type
+  reference_type   InventoryMovementReferenceType @map("reference_type")
+  reference_id     String?                        @map("reference_id") @db.Uuid // e.g. inventory_sale.id
+  description      String?                        @db.Text // e.g. "Sale to John (A_ABC)", "New shipment"
+  unit_price       Decimal?                       @map("unit_price") @db.Decimal(10, 2)
+  created_at       DateTime                       @default(now()) @map("created_at")
+  created_by       String?                        @map("created_by") @db.Uuid
+
+  // Relations
+  product        Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  created_by_user User?  @relation("InventoryMovementCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([product_id])
+  @@index([movement_type])
+  @@index([reference_type])
+  @@index([created_at])
+  @@map("inventory_movements")
 }
 
 // ============================================

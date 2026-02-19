@@ -319,6 +319,65 @@ export class InventoryController {
     res.send(csv);
   }
 
+  @Get(':id/movements')
+  @ApiOperation({
+    summary: 'Get inventory movements for a product',
+    description: 'Returns paginated list of stock movements (sales, adjustments) for the given product. Each movement has type, quantity, description (e.g. "Sale to John"), reference to sale or adjustment, and created_at. Scoped to the user\'s default account.',
+  })
+  @ApiParam({ name: 'id', description: 'Product ID (UUID)', type: String })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'movement_type', required: false, enum: ['sale_out', 'adjustment_in', 'adjustment_out', 'purchase_in', 'transfer_in', 'transfer_out'] })
+  @ApiQuery({ name: 'date_from', required: false, type: String, description: 'Filter from date (ISO)' })
+  @ApiQuery({ name: 'date_to', required: false, type: String, description: 'Filter to date (ISO)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Movements retrieved successfully',
+    schema: {
+      example: {
+        code: 200,
+        status: 'success',
+        message: 'Movements retrieved successfully.',
+        data: {
+          items: [
+            {
+              id: 'movement-uuid',
+              product_id: 'product-uuid',
+              movement_type: 'sale_out',
+              quantity: 5,
+              reference_type: 'inventory_sale',
+              reference_id: 'sale-uuid',
+              description: 'Sale to John (A_ABC)',
+              unit_price: 800,
+              created_at: '2025-01-20T10:00:00Z',
+              created_by: { id: 'user-uuid', name: 'Admin' },
+            },
+          ],
+          pagination: { page: 1, limit: 20, total: 1, total_pages: 1 },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'No valid default account' })
+  @ApiNotFoundResponse({ description: 'Inventory item not found' })
+  async getMovements(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('movement_type') movementType?: string,
+    @Query('date_from') dateFrom?: string,
+    @Query('date_to') dateTo?: string,
+  ) {
+    return this.inventoryService.getMovements(user, id, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      movement_type: movementType,
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get inventory item by ID',
@@ -588,19 +647,19 @@ export class InventoryController {
   })
   @ApiBody({
     type: UpdateStockDto,
-    description: 'Stock update data',
+    description: 'New absolute stock quantity. Optional notes are stored on the inventory movement record.',
     examples: {
       addStock: {
-        summary: 'Add stock',
+        summary: 'Set stock (e.g. after receiving shipment)',
         value: {
-          quantity: 50,
+          stock_quantity: 150,
           notes: 'New shipment received',
         },
       },
       adjustStock: {
-        summary: 'Adjust stock',
+        summary: 'Set stock (e.g. after damage count)',
         value: {
-          quantity: -10,
+          stock_quantity: 140,
           notes: 'Damaged items removed',
         },
       },

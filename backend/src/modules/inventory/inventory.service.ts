@@ -360,6 +360,38 @@ export class InventoryService {
       },
     });
 
+    // Record inventory movement when stock changed via edit
+    if (updateDto.stock_quantity !== undefined) {
+      const delta = updateDto.stock_quantity - existing.stock_quantity;
+      if (delta > 0) {
+        await this.prisma.inventoryMovement.create({
+          data: {
+            product_id: productId,
+            movement_type: 'adjustment_in',
+            quantity: delta,
+            reference_type: 'stock_adjustment',
+            reference_id: null,
+            description: 'Stock updated (edit)',
+            unit_price: existing.price,
+            created_by: user.id,
+          },
+        });
+      } else if (delta < 0) {
+        await this.prisma.inventoryMovement.create({
+          data: {
+            product_id: productId,
+            movement_type: 'adjustment_out',
+            quantity: Math.abs(delta),
+            reference_type: 'stock_adjustment',
+            reference_id: null,
+            description: 'Stock updated (edit)',
+            unit_price: existing.price,
+            created_by: user.id,
+          },
+        });
+      }
+    }
+
     // Update categories if provided
     if (updateDto.category_ids !== undefined) {
       // Delete existing categories
@@ -441,6 +473,37 @@ export class InventoryService {
       },
     });
 
+    // Record inventory movement(s) for adjustment
+    const delta = updateStockDto.stock_quantity - existing.stock_quantity;
+    const notes = updateStockDto.notes?.trim() || null;
+    if (delta > 0) {
+      await this.prisma.inventoryMovement.create({
+        data: {
+          product_id: productId,
+          movement_type: 'adjustment_in',
+          quantity: delta,
+          reference_type: 'stock_adjustment',
+          reference_id: null,
+          description: notes || 'Stock adjustment (increase)',
+          unit_price: existing.price,
+          created_by: user.id,
+        },
+      });
+    } else if (delta < 0) {
+      await this.prisma.inventoryMovement.create({
+        data: {
+          product_id: productId,
+          movement_type: 'adjustment_out',
+          quantity: Math.abs(delta),
+          reference_type: 'stock_adjustment',
+          reference_id: null,
+          description: notes || 'Stock adjustment (decrease)',
+          unit_price: existing.price,
+          created_by: user.id,
+        },
+      });
+    }
+
     return {
       code: 200,
       status: 'success',
@@ -449,6 +512,92 @@ export class InventoryService {
         id: product.id,
         stock_quantity: product.stock_quantity,
         status: product.status,
+      },
+    };
+  }
+
+  async getMovements(
+    user: User,
+    productId: string,
+    options?: { page?: number; limit?: number; movement_type?: string; date_from?: string; date_to?: string },
+  ) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found.',
+      });
+    }
+
+    // Verify product belongs to user's account
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id: productId,
+        account_id: user.default_account_id,
+      },
+    });
+    if (!product) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Inventory item not found.',
+      });
+    }
+
+    const page = Math.max(1, options?.page ?? 1);
+    const limit = Math.min(100, Math.max(1, options?.limit ?? 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = { product_id: productId };
+    if (options?.movement_type) {
+      where.movement_type = options.movement_type;
+    }
+    if (options?.date_from || options?.date_to) {
+      where.created_at = {};
+      if (options.date_from) where.created_at.gte = new Date(options.date_from);
+      if (options.date_to) {
+        const d = new Date(options.date_to);
+        d.setHours(23, 59, 59, 999);
+        where.created_at.lte = d;
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.inventoryMovement.findMany({
+        where,
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          created_by_user: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.inventoryMovement.count({ where }),
+    ]);
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Movements retrieved successfully.',
+      data: {
+        items: items.map((m) => ({
+          id: m.id,
+          product_id: m.product_id,
+          movement_type: m.movement_type,
+          quantity: m.quantity,
+          reference_type: m.reference_type,
+          reference_id: m.reference_id,
+          description: m.description,
+          unit_price: m.unit_price != null ? Number(m.unit_price) : null,
+          created_at: m.created_at,
+          created_by: m.created_by_user ? { id: m.created_by_user.id, name: m.created_by_user.name } : null,
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: Math.ceil(total / limit),
+        },
       },
     };
   }
@@ -1029,6 +1178,21 @@ export class InventoryService {
           },
         });
       }
+
+      // 11b. Record inventory movement (sale out)
+      const buyerLabel = inventorySale.buyer_account?.name || createSaleDto.buyer_name || createSaleDto.buyer_phone || 'Unknown';
+      await this.prisma.inventoryMovement.create({
+        data: {
+          product_id: productId,
+          movement_type: 'sale_out',
+          quantity: createSaleDto.quantity,
+          reference_type: 'inventory_sale',
+          reference_id: inventorySale.id,
+          description: `Sale to ${buyerLabel}`,
+          unit_price: createSaleDto.unit_price,
+          created_by: user.id,
+        },
+      });
 
       // 12. Create finance transaction if amount_paid > 0
       if (amountPaid > 0) {

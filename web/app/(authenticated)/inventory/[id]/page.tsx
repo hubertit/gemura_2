@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
-import { inventoryApi, InventoryItem } from '@/lib/api/inventory';
+import { inventoryApi, InventoryItem, InventoryMovement } from '@/lib/api/inventory';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
-import Icon, { faWarehouse, faBox, faDollarSign, faTag, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar, faTrash } from '@/app/components/Icon';
+import Icon, { faWarehouse, faBox, faDollarSign, faTag, faEdit, faArrowLeft, faSpinner, faCheckCircle, faCalendar, faTrash, faArrowDown, faArrowUp, faList } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function InventoryItemDetailsPage() {
@@ -22,6 +22,10 @@ export default function InventoryItemDetailsPage() {
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [togglingListing, setTogglingListing] = useState(false);
+  const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [movementsLoading, setMovementsLoading] = useState(false);
+  const [movementsPage, setMovementsPage] = useState(1);
+  const [movementsPagination, setMovementsPagination] = useState<{ total: number; total_pages: number; limit: number } | null>(null);
 
   const handleDelete = async () => {
     if (!item || !confirm('Are you sure you want to delete this inventory item? This cannot be undone.')) return;
@@ -62,6 +66,11 @@ export default function InventoryItemDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemId, currentAccount?.account_id]);
 
+  useEffect(() => {
+    if (item?.id) loadMovements(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id]);
+
   const loadItem = async () => {
     try {
       setLoading(true);
@@ -76,6 +85,24 @@ export default function InventoryItemDetailsPage() {
       setError(err?.response?.data?.message || err?.message || 'Failed to load inventory item. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMovements = async (page = 1) => {
+    if (!itemId) return;
+    try {
+      setMovementsLoading(true);
+      const res = await inventoryApi.getProductMovements(itemId, { page, limit: 15 });
+      if (res.code === 200 && res.data) {
+        setMovements(res.data.items);
+        setMovementsPagination(res.data.pagination);
+        setMovementsPage(page);
+      }
+    } catch {
+      setMovements([]);
+      setMovementsPagination(null);
+    } finally {
+      setMovementsLoading(false);
     }
   };
 
@@ -230,6 +257,91 @@ export default function InventoryItemDetailsPage() {
                   {formatCurrency(Number(item.price))}
                 </span>
               </div>
+            </div>
+
+            {/* Movement history */}
+            <div className="bg-white border border-gray-200 rounded-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Icon icon={faList} size="sm" className="mr-2 text-gray-500" />
+                Movement history
+              </h2>
+              {movementsLoading ? (
+                <div className="flex items-center justify-center py-8 text-gray-500">
+                  <Icon icon={faSpinner} className="animate-spin mr-2" />
+                  Loading movements…
+                </div>
+              ) : movements.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4">No movements recorded yet.</p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto -mx-6 px-6">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 text-left text-gray-600">
+                          <th className="py-2 pr-4">Date</th>
+                          <th className="py-2 pr-4">Type</th>
+                          <th className="py-2 pr-4">Direction</th>
+                          <th className="py-2 pr-4 text-right">Quantity</th>
+                          <th className="py-2">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {movements.map((m) => {
+                          const isIn = ['adjustment_in', 'purchase_in', 'transfer_in'].includes(m.movement_type);
+                          return (
+                            <tr key={m.id} className="border-b border-gray-100">
+                              <td className="py-2 pr-4 text-gray-700 whitespace-nowrap">
+                                {new Date(m.created_at).toLocaleString()}
+                              </td>
+                              <td className="py-2 pr-4 capitalize">
+                                {m.movement_type.replace(/_/g, ' ')}
+                              </td>
+                              <td className="py-2 pr-4">
+                                {isIn ? (
+                                  <span className="inline-flex items-center text-green-700">
+                                    <Icon icon={faArrowDown} size="sm" className="mr-1" /> In
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center text-amber-700">
+                                    <Icon icon={faArrowUp} size="sm" className="mr-1" /> Out
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 pr-4 text-right font-medium">{m.quantity}</td>
+                              <td className="py-2 text-gray-700">{m.description || '—'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {movementsPagination && movementsPagination.total_pages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                      <span className="text-sm text-gray-500">
+                        Page {movementsPage} of {movementsPagination.total_pages} ({movementsPagination.total} total)
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => loadMovements(movementsPage - 1)}
+                          disabled={movementsPage <= 1}
+                          className="btn btn-secondary text-sm py-1 px-2 disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => loadMovements(movementsPage + 1)}
+                          disabled={movementsPage >= movementsPagination.total_pages}
+                          className="btn btn-secondary text-sm py-1 px-2 disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Categories */}

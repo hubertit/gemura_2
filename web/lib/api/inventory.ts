@@ -53,6 +53,38 @@ export interface UpdateInventoryData {
 
 export interface UpdateStockData {
   stock_quantity: number;
+  notes?: string;
+}
+
+export type InventoryMovementType =
+  | 'sale_out'
+  | 'adjustment_in'
+  | 'adjustment_out'
+  | 'purchase_in'
+  | 'transfer_in'
+  | 'transfer_out';
+
+export interface InventoryMovement {
+  id: string;
+  product_id: string;
+  movement_type: InventoryMovementType;
+  quantity: number;
+  reference_type: string;
+  reference_id: string | null;
+  description: string | null;
+  unit_price: number | null;
+  created_at: string;
+  created_by: { id: string; name: string } | null;
+}
+
+export interface InventoryMovementsResponse {
+  code: number;
+  status: string;
+  message: string;
+  data: {
+    items: InventoryMovement[];
+    pagination: { page: number; limit: number; total: number; total_pages: number };
+  };
 }
 
 export interface CreateInventorySaleData {
@@ -160,6 +192,20 @@ export const inventoryApi = {
     if (accountId) params.append('account_id', accountId);
     const url = params.toString() ? `/inventory/${id}?${params.toString()}` : `/inventory/${id}`;
     return apiClient.get(url);
+  },
+
+  getProductMovements: async (
+    productId: string,
+    params?: { page?: number; limit?: number; movement_type?: string; date_from?: string; date_to?: string }
+  ): Promise<InventoryMovementsResponse> => {
+    const search = new URLSearchParams();
+    if (params?.page != null) search.append('page', String(params.page));
+    if (params?.limit != null) search.append('limit', String(params.limit));
+    if (params?.movement_type) search.append('movement_type', params.movement_type);
+    if (params?.date_from) search.append('date_from', params.date_from);
+    if (params?.date_to) search.append('date_to', params.date_to);
+    const q = search.toString();
+    return apiClient.get(`/inventory/${productId}/movements${q ? `?${q}` : ''}`);
   },
 
   createInventoryItem: async (data: CreateInventoryData): Promise<InventoryItemResponse> => {
