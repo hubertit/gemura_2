@@ -1,11 +1,12 @@
-import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiForbiddenResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Param, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiQuery, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiNotFoundResponse, ApiForbiddenResponse, ApiParam } from '@nestjs/swagger';
 import { EmployeesService } from './employees.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { InviteEmployeeDto } from './dto/invite-employee.dto';
 
 @ApiTags('Employees')
 @Controller('employees')
@@ -111,8 +112,10 @@ export class EmployeesController {
   @Get()
   @ApiOperation({
     summary: 'Get employees',
-    description: 'Get all employees for your default account. Returns list of employees with their roles, permissions, and status.',
+    description: 'Get all employees for the given account (or default). Optional status filter: active | inactive. For owner/admin of the account.',
   })
+  @ApiQuery({ name: 'account_id', required: false, description: 'Account ID (default: user default account)' })
+  @ApiQuery({ name: 'status', required: false, description: 'Filter by status: active | inactive' })
   @ApiResponse({
     status: 200,
     description: 'Employees fetched successfully',
@@ -152,8 +155,67 @@ export class EmployeesController {
       message: 'Access denied. Token is required.',
     },
   })
-  async getEmployees(@CurrentUser() user: User) {
-    return this.employeesService.getEmployees(user);
+  async getEmployees(
+    @CurrentUser() user: User,
+    @Query('account_id') accountId?: string,
+    @Query('status') status?: 'active' | 'inactive',
+  ) {
+    return this.employeesService.getEmployees(user, accountId || null, status);
+  }
+
+  @Post('invite')
+  @ApiOperation({
+    summary: 'Add team member',
+    description: 'Add a user to the account by email or phone. If they already have an account, they are linked to this account. If not, a new user is created (name and password required).',
+  })
+  @ApiBody({ type: InviteEmployeeDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Team member added successfully',
+    example: {
+      code: 201,
+      status: 'success',
+      message: 'Team member added successfully.',
+      data: {
+        id: 'user-account-uuid',
+        user: { id: 'user-uuid', name: 'Jane Doe', email: 'jane@example.com', phone: null },
+        account: { id: 'account-uuid', code: 'MCC_001', name: 'My MCC' },
+        role: 'manager',
+        permissions: ['view_sales', 'create_sales'],
+        status: 'active',
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Email or phone required; user already in account',
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions - requires owner, admin, or manager role',
+  })
+  async inviteEmployee(@CurrentUser() user: User, @Body() dto: InviteEmployeeDto) {
+    return this.employeesService.inviteEmployee(user, dto);
+  }
+
+  @Get('roles')
+  @ApiOperation({
+    summary: 'Get roles config',
+    description: 'Returns roles and default permissions for use in employee management UI. Requires owner or admin on the account.',
+  })
+  @ApiQuery({ name: 'account_id', required: false, description: 'Account ID (default: user default account)' })
+  @ApiResponse({ status: 200, description: 'Roles config' })
+  async getRoles(@CurrentUser() user: User, @Query('account_id') accountId?: string) {
+    return this.employeesService.getRoles(user, accountId || null);
+  }
+
+  @Get('permissions')
+  @ApiOperation({
+    summary: 'Get permissions config',
+    description: 'Returns permissions list for use in employee management UI. Requires owner or admin on the account.',
+  })
+  @ApiQuery({ name: 'account_id', required: false, description: 'Account ID (default: user default account)' })
+  @ApiResponse({ status: 200, description: 'Permissions config' })
+  async getPermissions(@CurrentUser() user: User, @Query('account_id') accountId?: string) {
+    return this.employeesService.getPermissions(user, accountId || null);
   }
 
   @Put(':id/access')
@@ -247,8 +309,13 @@ export class EmployeesController {
       message: 'Access denied. Token is required.',
     },
   })
-  async updateEmployee(@CurrentUser() user: User, @Param('id') id: string, @Body() updateDto: UpdateEmployeeDto) {
-    return this.employeesService.updateEmployee(user, id, updateDto);
+  async updateEmployee(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() updateDto: UpdateEmployeeDto,
+    @Query('account_id') accountId?: string,
+  ) {
+    return this.employeesService.updateEmployee(user, id, updateDto, accountId || null);
   }
 
   @Delete(':id')
@@ -308,8 +375,12 @@ export class EmployeesController {
       message: 'Access denied. Token is required.',
     },
   })
-  async deleteEmployee(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.employeesService.deleteEmployee(user, id);
+  async deleteEmployee(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Query('account_id') accountId?: string,
+  ) {
+    return this.employeesService.deleteEmployee(user, id, accountId || null);
   }
 }
 
