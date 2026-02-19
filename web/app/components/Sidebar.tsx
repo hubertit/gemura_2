@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/auth';
 import { usePermission } from '@/hooks/usePermission';
-import Icon, { faBars, faChevronRight, faUser } from './Icon';
+import Icon, { faBars, faChevronRight, faChevronDown, faUser } from './Icon';
 import type { NavItem } from '@/lib/config/nav.config';
 import {
   ADMIN_NAV_ITEMS,
@@ -35,6 +35,8 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState('User');
+  // Collapsible sections: set of parent hrefs that are expanded (only when they have children)
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() => new Set());
 
   const role = currentAccount?.role ?? '';
   const accountType = currentAccount?.account_type ?? '';
@@ -108,6 +110,22 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
     return items;
   }, [role, accountType, canManageUsers, isAdmin, hasPermission]);
 
+  // Keep the section that contains the current route expanded (only add, never remove, to avoid loop)
+  useEffect(() => {
+    if (!pathname || collapsed) return;
+    const key = menuItems.find(
+      (item) => item.href === pathname || item.children?.some((c) => pathname.startsWith(c.href))
+    )?.href;
+    if (key) {
+      setExpandedKeys((prev) => {
+        if (prev.has(key)) return prev;
+        const next = new Set(prev);
+        next.add(key);
+        return next;
+      });
+    }
+  }, [pathname, collapsed, menuItems]);
+
   const isActive = (href?: string) => {
     if (!href) return false;
     return pathname?.startsWith(href);
@@ -125,6 +143,15 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
     if (window.innerWidth < 1024) {
       onClose();
     }
+  };
+
+  const toggleExpanded = (key: string) => {
+    setExpandedKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   return (
@@ -232,34 +259,94 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
         <nav className="flex-1 py-0 overflow-y-auto min-h-0">
           <ul className="list-none p-0 m-0 flex flex-col gap-0">
             {menuItems.map((item, index) => {
-              const active = isActive(item.href);
+              const hasChildren = !collapsed && item.children && item.children.length > 0;
+              const parentActive = isActive(item.href) || (item.children?.some((c) => isActive(c.href)) ?? false);
+              const isExpanded = hasChildren && expandedKeys.has(item.href);
+              const rowClass = `
+                flex items-center gap-3 px-7 py-4 w-full text-left
+                transition-all duration-200
+                ${collapsed ? 'justify-center px-3' : ''}
+                ${parentActive && !hasChildren
+                  ? 'bg-[#031a3a] text-white border-l-4 border-white/30'
+                  : parentActive && hasChildren
+                    ? 'text-white border-l-4 border-white/30'
+                    : 'text-gray-300 hover:bg-[#031a3a] hover:text-white'
+                }
+              `;
               return (
                 <li key={index} className="my-0.5">
-                  <Link
-                    href={item.href || '#'}
-                    onClick={handleLinkClick}
-                    className={`
-                      flex items-center gap-3 px-7 py-4
-                      transition-all duration-200
-                      ${collapsed ? 'justify-center px-3' : ''}
-                      ${active
-                        ? 'bg-[#031a3a] text-white border-l-4 border-white/30'
-                        : 'text-gray-300 hover:bg-[#031a3a] hover:text-white'
-                      }
-                    `}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <Icon
-                      icon={item.icon}
-                      className={active ? 'text-white' : 'text-gray-300'}
-                      size="sm"
-                    />
-                    {!collapsed && (
-                      <span className="text-sm font-medium flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {item.label}
-                      </span>
-                    )}
-                  </Link>
+                  {hasChildren ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(item.href)}
+                        className={rowClass}
+                        title={collapsed ? item.label : undefined}
+                        aria-expanded={isExpanded}
+                      >
+                        <Icon
+                          icon={item.icon}
+                          className={parentActive ? 'text-white' : 'text-gray-300'}
+                          size="sm"
+                        />
+                        {!collapsed && (
+                          <>
+                            <span className="text-sm font-medium flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                              {item.label}
+                            </span>
+                            <Icon
+                              icon={faChevronDown}
+                              size="sm"
+                              className={`text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            />
+                          </>
+                        )}
+                      </button>
+                      {isExpanded && (
+                        <ul className="list-none pl-0 mt-0 mb-1">
+                          {item.children!.map((child, childIndex) => {
+                            const childActive = isActive(child.href);
+                            return (
+                              <li key={childIndex} className="my-0">
+                                <Link
+                                  href={child.href}
+                                  onClick={handleLinkClick}
+                                  className={`
+                                    flex items-center gap-2 py-2.5 pl-12 pr-4 text-sm
+                                    transition-all duration-200
+                                    ${childActive
+                                      ? 'bg-[#031a3a] text-white border-l-4 border-white/30 -ml-0.5 pl-[3.25rem]'
+                                      : 'text-gray-400 hover:bg-[#031a3a] hover:text-white'
+                                    }
+                                  `}
+                                >
+                                  <span className="whitespace-nowrap overflow-hidden text-ellipsis">{child.label}</span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href || '#'}
+                      onClick={handleLinkClick}
+                      className={rowClass}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <Icon
+                        icon={item.icon}
+                        className={parentActive ? 'text-white' : 'text-gray-300'}
+                        size="sm"
+                      />
+                      {!collapsed && (
+                        <span className="text-sm font-medium flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                          {item.label}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                 </li>
               );
             })}

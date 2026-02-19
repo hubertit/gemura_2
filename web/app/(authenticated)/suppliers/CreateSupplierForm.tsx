@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { fullNameFromParts } from '@/lib/utils/name';
 import { suppliersApi, CreateSupplierData } from '@/lib/api/suppliers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
@@ -13,27 +14,43 @@ interface CreateSupplierFormProps {
 export default function CreateSupplierForm({ onSuccess, onCancel }: CreateSupplierFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState<CreateSupplierData>({
-    name: '',
+  const [formData, setFormData] = useState<Omit<CreateSupplierData, 'name'> & { firstName: string; lastName: string }>({
+    firstName: '',
+    lastName: '',
     phone: '',
     price_per_liter: 0,
     email: '',
     nid: '',
     address: '',
   });
+  const [nidTouched, setNidTouched] = useState(false);
+
+  const nidValue = formData.nid ?? '';
+  const nidClean = nidValue.replace(/\D/g, '');
+  const nidValid = nidClean.length === 16 && /^1[0-9]{15}$/.test(nidClean);
+  const nidInvalid = nidTouched && nidValue.length > 0 && !nidValid;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'price_per_liter' ? parseFloat(value) || 0 : value,
-    }));
+    if (name === 'nid') {
+      const digitsOnly = value.replace(/\D/g, '');
+      setFormData(prev => ({ ...prev, [name]: digitsOnly }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: name === 'price_per_liter' ? parseFloat(value) || 0 : value,
+      }));
+    }
     setError('');
   };
 
   const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      setError('Supplier name is required');
+    if (!formData.firstName.trim()) {
+      setError('First name is required');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      setError('Last name is required');
       return false;
     }
     if (!formData.phone.trim()) {
@@ -46,6 +63,14 @@ export default function CreateSupplierForm({ onSuccess, onCancel }: CreateSuppli
     }
     if (!formData.price_per_liter || formData.price_per_liter <= 0) {
       setError('Price per liter must be greater than 0');
+      return false;
+    }
+    if (!formData.nid || !formData.nid.trim()) {
+      setError('National ID is required');
+      return false;
+    }
+    if (!/^1[0-9]{15}$/.test(formData.nid)) {
+      setError('National ID must be 16 digits and start with 1');
       return false;
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -63,10 +88,11 @@ export default function CreateSupplierForm({ onSuccess, onCancel }: CreateSuppli
     try {
       const normalizedPhone = formData.phone.replace(/\D/g, '');
       const finalData: CreateSupplierData = {
-        ...formData,
+        name: fullNameFromParts(formData.firstName, formData.lastName),
         phone: normalizedPhone,
+        price_per_liter: formData.price_per_liter,
         email: formData.email || undefined,
-        nid: formData.nid || undefined,
+        nid: formData.nid,
         address: formData.address || undefined,
       };
       const response = await suppliersApi.createSupplier(finalData);
@@ -92,8 +118,12 @@ export default function CreateSupplierForm({ onSuccess, onCancel }: CreateSuppli
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="supplier-name" className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
-          <input id="supplier-name" name="name" type="text" required value={formData.name} onChange={handleChange} className="input w-full" placeholder="Supplier name" disabled={loading} />
+          <label htmlFor="supplier-firstName" className="block text-sm font-medium text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
+          <input id="supplier-firstName" name="firstName" type="text" required value={formData.firstName} onChange={handleChange} className="input w-full" placeholder="First name" disabled={loading} />
+        </div>
+        <div>
+          <label htmlFor="supplier-lastName" className="block text-sm font-medium text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
+          <input id="supplier-lastName" name="lastName" type="text" required value={formData.lastName} onChange={handleChange} className="input w-full" placeholder="Last name" disabled={loading} />
         </div>
         <div>
           <label htmlFor="supplier-phone" className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
@@ -108,8 +138,28 @@ export default function CreateSupplierForm({ onSuccess, onCancel }: CreateSuppli
           <input id="supplier-price" name="price_per_liter" type="number" step="0.01" min="0" required value={formData.price_per_liter} onChange={handleChange} className="input w-full" disabled={loading} />
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="supplier-nid" className="block text-sm font-medium text-gray-700 mb-1">National ID</label>
-          <input id="supplier-nid" name="nid" type="text" value={formData.nid} onChange={handleChange} className="input w-full" placeholder="Optional" disabled={loading} />
+          <label htmlFor="supplier-nid" className="block text-sm font-medium text-gray-700 mb-1">National ID <span className="text-red-500">*</span></label>
+          <input
+            id="supplier-nid"
+            name="nid"
+            type="text"
+            inputMode="numeric"
+            value={formData.nid}
+            onChange={handleChange}
+            onBlur={() => setNidTouched(true)}
+            className={`input w-full ${nidInvalid ? 'border-red-500 ring-1 ring-red-500' : ''}`}
+            placeholder="National ID"
+            maxLength={16}
+            disabled={loading}
+            required
+            aria-invalid={nidInvalid}
+            aria-describedby={nidInvalid ? 'supplier-nid-error' : undefined}
+          />
+          {nidInvalid && (
+            <p id="supplier-nid-error" className="mt-1 text-sm text-red-600">
+              National ID must be 16 digits and start with 1.
+            </p>
+          )}
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="supplier-address" className="block text-sm font-medium text-gray-700 mb-1">Address</label>
