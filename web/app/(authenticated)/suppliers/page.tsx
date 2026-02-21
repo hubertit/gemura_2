@@ -188,7 +188,7 @@ export default function SuppliersPage() {
           <a
             href="#"
             onClick={(e) => { e.preventDefault(); suppliersApi.downloadTemplate().catch(() => {}); }}
-            className="btn btn-secondary"
+            className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 transition-colors"
           >
             Download template
           </a>

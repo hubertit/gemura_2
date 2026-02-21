@@ -15,6 +15,8 @@ export default function LoanDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [repayAmount, setRepayAmount] = useState('');
+  const [repaySource, setRepaySource] = useState<'direct' | 'milk_deduction'>('direct');
+  const [repayDate, setRepayDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [repaySubmitting, setRepaySubmitting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editStatus, setEditStatus] = useState('');
@@ -83,12 +85,15 @@ export default function LoanDetailPage() {
       useToastStore.getState().error('Amount cannot exceed outstanding balance.');
       return;
     }
+    const effectiveDate = repaySource === 'milk_deduction' ? new Date().toISOString().slice(0, 10) : repayDate;
     setRepaySubmitting(true);
     try {
-      const res = await loansApi.recordRepayment(id, { amount });
+      const res = await loansApi.recordRepayment(id, { amount, repayment_date: effectiveDate });
       if (res.code === 200 && res.data) {
         setLoan(res.data);
         setRepayAmount('');
+        setRepaySource('direct');
+        setRepayDate(new Date().toISOString().slice(0, 10));
         useToastStore.getState().success('Repayment recorded.');
       } else {
         useToastStore.getState().error(res.message || 'Failed to record repayment');
@@ -188,26 +193,53 @@ export default function LoanDetailPage() {
       {loan.status === 'active' && loan.outstanding > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Record repayment</h2>
-          <form onSubmit={handleRecordRepayment} className="flex flex-wrap items-end gap-3">
+          <form onSubmit={handleRecordRepayment} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Amount (RWF)</label>
-              <input
-                type="number"
-                value={repayAmount}
-                onChange={(e) => setRepayAmount(e.target.value)}
-                className="input w-40"
-                min={0.01}
-                max={loan.outstanding}
-                step={0.01}
-                placeholder="0"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Repayment type</label>
+              <select
+                value={repaySource}
+                onChange={(e) => setRepaySource(e.target.value as 'direct' | 'milk_deduction')}
+                className="input w-full max-w-xs"
+              >
+                <option value="direct">Direct payment (cash, mobile, etc.) — choose date</option>
+                <option value="milk_deduction">Deduction from milk supplied — date auto (today)</option>
+              </select>
             </div>
-            <button type="submit" className="btn btn-primary" disabled={repaySubmitting || !repayAmount}>
-              {repaySubmitting ? <Icon icon={faSpinner} size="sm" className="animate-spin" /> : null}
-              Record repayment
-            </button>
+            <div className="flex flex-wrap items-end gap-3">
+              {repaySource === 'direct' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Repayment date</label>
+                  <input
+                    type="date"
+                    value={repayDate}
+                    onChange={(e) => setRepayDate(e.target.value)}
+                    className="input w-40"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (RWF)</label>
+                <input
+                  type="number"
+                  value={repayAmount}
+                  onChange={(e) => setRepayAmount(e.target.value)}
+                  className="input w-40"
+                  min={0.01}
+                  max={loan.outstanding}
+                  step={0.01}
+                  placeholder="0"
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={repaySubmitting || !repayAmount}>
+                {repaySubmitting ? <Icon icon={faSpinner} size="sm" className="animate-spin" /> : null}
+                Record repayment
+              </button>
+            </div>
           </form>
           <p className="text-xs text-gray-500 mt-2">Outstanding: {formatCurrency(loan.outstanding)}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Repayments from payroll (when you run and pay payroll) are also created automatically with the payroll payment date.
+          </p>
         </div>
       )}
 

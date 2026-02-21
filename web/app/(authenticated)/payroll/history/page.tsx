@@ -3,13 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { payrollApi, PayrollRun, PayslipDetail } from '@/lib/api/payroll';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
-import Icon, { faArrowLeft, faSpinner, faCheckCircle, faCalendar, faUsers, faFileAlt, faClipboardList, faArrowsRotate } from '@/app/components/Icon';
+import Icon, { faArrowLeft, faSpinner, faCheckCircle, faCalendar, faUsers, faFileAlt, faClipboardList, faArrowsRotate, faDownload } from '@/app/components/Icon';
+import { exportToCsv } from '@/lib/utils/export-csv';
 import Modal from '@/app/components/Modal';
 import ConfirmDialog from '@/app/components/ConfirmDialog';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function PayrollHistoryPage() {
+  const { currentAccount } = useAuthStore();
   const [runs, setRuns] = useState<PayrollRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,7 +27,9 @@ export default function PayrollHistoryPage() {
     try {
       setLoading(true);
       setError('');
-      const res = await payrollApi.getPayrollRuns();
+      const res = await payrollApi.getPayrollRuns({
+        account_id: currentAccount?.account_id,
+      });
       if (res.code === 200 && res.data) setRuns(res.data);
       else setRuns([]);
     } catch (err: any) {
@@ -33,7 +38,7 @@ export default function PayrollHistoryPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentAccount?.account_id]);
 
   useEffect(() => {
     loadRuns();
@@ -102,7 +107,7 @@ export default function PayrollHistoryPage() {
     setPayslipDetailLoading(true);
     setPayslipDetail(null);
     try {
-      const res = await payrollApi.getPayslipDetail(runId, payslipId);
+      const res = await payrollApi.getPayslipDetail(runId, payslipId, currentAccount?.account_id);
       if (res.code === 200 && res.data) setPayslipDetail(res.data);
     } catch (err: any) {
       useToastStore.getState().error(err?.response?.data?.message || 'Failed to load payslip detail');
@@ -126,6 +131,55 @@ export default function PayrollHistoryPage() {
 
   const canMarkPaid = (run: PayrollRun) =>
     (run.status || '').toLowerCase() === 'completed' && !isAllPaid(run) && !markingId;
+
+  const exportPayslipBreakdown = (detail: PayslipDetail) => {
+    const rows: Array<{
+      section: string;
+      date: string;
+      quantity: string;
+      unit_price: string;
+      amount: string;
+      notes: string;
+      reason: string;
+      deduction_amount: string;
+    }> = [];
+    detail.earnings.forEach((e) => {
+      rows.push({
+        section: 'Earning',
+        date: formatDate(e.date),
+        quantity: String(Number(e.quantity).toLocaleString()),
+        unit_price: formatAmount(e.unit_price),
+        amount: formatAmount(e.amount),
+        notes: e.notes ?? '',
+        reason: '',
+        deduction_amount: '',
+      });
+    });
+    detail.deductions.forEach((d) => {
+      rows.push({
+        section: 'Deduction',
+        date: '',
+        quantity: '',
+        unit_price: '',
+        amount: '',
+        notes: '',
+        reason: d.reason,
+        deduction_amount: formatAmount(d.amount),
+      });
+    });
+    const columns = [
+      { key: 'section', label: 'Section' },
+      { key: 'date', label: 'Date' },
+      { key: 'quantity', label: 'Quantity (L)' },
+      { key: 'unit_price', label: 'Unit price' },
+      { key: 'amount', label: 'Amount' },
+      { key: 'notes', label: 'Notes' },
+      { key: 'reason', label: 'Reason / Type' },
+      { key: 'deduction_amount', label: 'Deduction amount' },
+    ];
+    const safeName = (detail.supplier || 'payslip').replace(/[^a-zA-Z0-9-_]/g, '_');
+    exportToCsv(rows, columns, `payslip-breakdown-${safeName}`);
+  };
 
   if (loading) {
     return <ListPageSkeleton title="Payroll History" filterFields={0} tableRows={8} tableCols={5} />;
@@ -214,7 +268,7 @@ export default function PayrollHistoryPage() {
                     type="button"
                     onClick={() => handleExport(run.id, 'excel')}
                     disabled={!!exportingId}
-                    className="btn btn-secondary text-sm inline-flex items-center"
+                    className="inline-flex items-center justify-center gap-1.5 h-9 px-3 text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {exportingId === run.id ? (
                       <Icon icon={faSpinner} size="sm" spin className="mr-1" />
@@ -227,7 +281,7 @@ export default function PayrollHistoryPage() {
                     type="button"
                     onClick={() => handleExport(run.id, 'pdf')}
                     disabled={!!exportingId}
-                    className="btn btn-secondary text-sm inline-flex items-center"
+                    className="inline-flex items-center justify-center gap-1.5 h-9 px-3 text-sm font-medium text-blue-800 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {exportingId === run.id ? (
                       <Icon icon={faSpinner} size="sm" spin className="mr-1" />
@@ -276,7 +330,7 @@ export default function PayrollHistoryPage() {
                 type="button"
                 onClick={() => { handleExport(detailRun.id, 'excel'); }}
                 disabled={!!exportingId}
-                className="btn btn-secondary text-sm"
+                className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Export Excel
               </button>
@@ -284,7 +338,7 @@ export default function PayrollHistoryPage() {
                 type="button"
                 onClick={() => { handleExport(detailRun.id, 'pdf'); }}
                 disabled={!!exportingId}
-                className="btn btn-secondary text-sm"
+                className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-blue-800 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Export PDF
               </button>
@@ -404,6 +458,20 @@ export default function PayrollHistoryPage() {
         onClose={() => { setPayslipDetail(null); setPayslipDetailLoading(false); }}
         title={payslipDetailLoading ? 'Loading…' : (payslipDetail ? `${payslipDetail.supplier} – Breakdown` : 'Payslip')}
         maxWidth="max-w-4xl"
+        footer={
+          payslipDetail && !payslipDetailLoading ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => exportPayslipBreakdown(payslipDetail)}
+                className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 transition-colors"
+              >
+                <Icon icon={faDownload} size="sm" className="mr-2" />
+                Export CSV
+              </button>
+            </div>
+          ) : null
+        }
       >
         {payslipDetailLoading && (
           <div className="flex items-center justify-center py-12">

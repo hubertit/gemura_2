@@ -143,7 +143,7 @@ export default function BulkImportModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 min-h-screen min-h-[100dvh]" role="dialog" aria-modal="true">
       <div
         className="absolute inset-0 bg-black/50"
-        style={{ minHeight: '100vh', minHeight: '100dvh' }}
+        style={{ minHeight: '100dvh' }}
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -156,7 +156,7 @@ export default function BulkImportModal({
         </div>
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={handleDownload} disabled={downloading} className="btn btn-secondary text-sm">
+            <button type="button" onClick={handleDownload} disabled={downloading} className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {downloading ? <Icon icon={faSpinner} size="sm" spin className="mr-2" /> : <Icon icon={faDownload} size="sm" className="mr-2" />}
               Download template
             </button>
