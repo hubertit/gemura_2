@@ -1,0 +1,66 @@
+# Gemura – Production on Kwezi server (209.74.80.195)
+# Uses existing Kwezi PostgreSQL (kwezi-postgres container)
+# Ports: 3006 (UI), 3007 (API)
+# NO .env file required - environment variables set in this file or via deploy script
+
+services:
+  gemura-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gemura-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET:-gemura_jwt_secret_production_2026}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3006}
+    ports:
+      - "3007:3004"
+    networks:
+      - kwezi_default
+      - default
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        npx prisma migrate deploy &&
+        node dist/src/main.js
+      "
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3004/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  gemura-ui:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3007/api}
+    container_name: gemura-ui
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+    ports:
+      - "3006:3005"
+    depends_on:
+      - gemura-api
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3005"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  kwezi_default:
+    external: true
+    name: kwezi_default
