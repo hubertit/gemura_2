@@ -1,0 +1,549 @@
+@import "tailwindcss";
+
+/* Orora brand colors (from Orora mobile v1 color_constants.dart) - lime green primary */
+@theme {
+  --color-primary: #84BD22;
+  --color-primary-50: #f7fce8;
+  --color-primary-100: #ecf7cc;
+  --color-primary-200: #d9ef9a;
+  --color-primary-300: #c1e362;
+  --color-primary-400: #a8d43a;
+  --color-primary-500: #84BD22;
+  --color-primary-600: #6a9a1b;
+  --color-primary-700: #507514;
+  --color-primary-800: #3a560f;
+  --color-primary-900: #263a0a;
+  --color-accent: #f5a623;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #84BD22;
+  --primary-hover: #6a9a1b;
+  --primary-active: #507514;
+  --accent: #f5a623;
+  --font-source-sans-pro: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-source-sans-pro);
+  line-height: 1.5;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: white;
+}
+
+.btn-primary:active:not(:disabled) {
+  background-color: var(--primary-active);
+  border-color: var(--primary-active);
+}
+
+/* Typography Hierarchy */
+h1, .h1 {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 700;
+  line-height: 1.2;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+h2, .h2 {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 600;
+  line-height: 1.3;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+h3, .h3 {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+h4, .h4 {
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+/* Body text */
+p, .body {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+  color: #374151;
+}
+
+/* Small text */
+.text-small, small {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+/* Form input styles - Orora: gray-50 bg, green focus */
+/* Base styles: only .input gets default padding so Tailwind pl-* works on auth inputs with icons */
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #111827;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.5;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="tel"],
+input[type="url"],
+input[type="search"] {
+  width: 100%;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #111827;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.5;
+}
+
+.input::placeholder,
+input::placeholder {
+  color: #4b5563; /* gray-600 for better readability */
+  font-weight: 400;
+}
+
+.input:hover:not(:disabled),
+input:hover:not(:disabled) {
+  border-color: #d1d5db;
+}
+
+.input:focus,
+input:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.input:disabled,
+input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.input-error,
+input.input-error {
+  border-color: #dc2626;
+}
+
+.input-error:focus,
+input.input-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.select,
+select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #111827;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.5;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.select:hover:not(:disabled),
+select:hover:not(:disabled) {
+  border-color: #d1d5db;
+}
+
+.select:focus,
+select:focus {
+  outline: none;
+  background-color: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(132, 189, 34, 0.1);
+}
+
+.select:disabled,
+select:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.textarea,
+textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #111827;
+  min-height: 80px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.5;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.textarea::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.textarea:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: #d1d5db;
+}
+
+.textarea:focus,
+textarea:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(132, 189, 34, 0.1);
+}
+
+.textarea:disabled,
+textarea:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Checkbox and Radio styles */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--primary);
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+input[type="radio"] {
+  border-radius: 50%;
+}
+
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(132, 189, 34, 0.1);
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Label styles */
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+label.required::after {
+  content: " *";
+  color: #dc2626;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem; /* 10px 16px */
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  border-radius: 0.125rem; /* 2px - rounded-sm */
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #6a9a1b;
+  border-color: #6a9a1b;
+}
+
+.btn-primary:active:not(:disabled) {
+  background-color: #507514;
+  border-color: #507514;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: #374151;
+  border-color: transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.btn-secondary-color {
+  background-color: var(--secondary);
+  color: white;
+  border-color: var(--secondary);
+}
+
+.btn-secondary-color:hover:not(:disabled) {
+  background-color: #2a939b;
+  border-color: #2a939b;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.btn-sm {
+  padding: 0.5rem 0.75rem; /* 8px 12px */
+  font-size: 0.75rem; /* 12px */
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem; /* 12px 24px */
+  font-size: 1rem; /* 16px */
+}
+
+/* Card styles */
+.card {
+  background: white;
+  border-radius: 0.125rem;
+  border: 1px solid #e5e7eb;
+}
+
+.card-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-body {
+  padding: 1rem 1.5rem;
+}
+
+.card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(132, 189, 34, 0.2);
+}
+
+/* Skeleton shimmer animation */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f3f4f6 0%,
+    #e5e7eb 20%,
+    #f3f4f6 40%,
+    #f3f4f6 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Phone Input - react-phone-input-2 (login) */
+.phone-input-container {
+  width: 100%;
+  position: relative;
+}
+.phone-input-container .flag-dropdown {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+}
+.phone-input-container .form-control {
+  padding-left: 3.5rem !important;
+}
+
+/* Phone Input - react-phone-number-input (register, ResolveIt-style) */
+.phone-input-wrapper {
+  position: relative;
+}
+.phone-input-wrapper .PhoneInput {
+  width: 100%;
+}
+.phone-input-wrapper .PhoneInputInput {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  font-size: 0.875rem;
+  color: #111827;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.phone-input-wrapper .PhoneInputInput:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.phone-input-wrapper.error .PhoneInputInput {
+  border-color: #fca5a5;
+}
+.phone-input-wrapper.error .PhoneInputInput:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+.phone-input-wrapper .PhoneInputCountry {
+  margin-right: 0.5rem;
+}
+.phone-input-wrapper .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.125rem;
+}
+.phone-input-wrapper .PhoneInputCountrySelect {
+  padding: 0.625rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  font-size: 0.875rem;
+}
+.phone-input-wrapper .PhoneInputCountrySelect:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}

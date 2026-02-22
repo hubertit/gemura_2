@@ -1,0 +1,102 @@
+import { apiClient } from './client';
+import { LoginCredentials, RegisterData, User, UserAccount } from '@/types';
+
+export interface LoginResponseData {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    account_type: string;
+    status: string;
+    token: string;
+  };
+  account?: any;
+  accounts?: UserAccount[];
+  total_accounts?: number;
+  profile_completion?: number;
+}
+
+export interface RegisterResponseData {
+  user: {
+    code?: string;
+    name: string;
+    email: string;
+    phone: string;
+    nid?: string;
+    account_type: string;
+    status: string;
+    token: string;
+  };
+  account?: any;
+  wallet?: any;
+  sms_sent?: boolean;
+}
+
+export interface AuthResponse {
+  code: number;
+  status: string;
+  message: string;
+  data: LoginResponseData | RegisterResponseData;
+}
+
+export interface ErrorResponse {
+  code: number;
+  status: string;
+  message: string;
+}
+
+export const authApi = {
+  login: async (credentials: LoginCredentials): Promise<AuthResponse | ErrorResponse> => {
+    // Validate credentials before sending
+    if (!credentials.email || !credentials.email.trim()) {
+      return {
+        code: 400,
+        status: 'error',
+        message: 'Identifier is required',
+      };
+    }
+    
+    if (!credentials.password || !credentials.password.trim()) {
+      return {
+        code: 400,
+        status: 'error',
+        message: 'Password is required',
+      };
+    }
+    
+    // Backend expects 'identifier' (can be email or phone), not 'email'
+    return apiClient.post('/auth/login', {
+      identifier: credentials.email.trim(), // Use email as identifier
+      password: credentials.password,
+    });
+  },
+
+  register: async (data: RegisterData): Promise<AuthResponse | ErrorResponse> => {
+    // Backend expects 'name' (full name), not firstName/lastName separately
+    // Also requires account_type and phone
+    if (!data.phone) {
+      throw new Error('Phone number is required');
+    }
+    
+    return apiClient.post('/auth/register', {
+      name: `${data.firstName} ${data.lastName}`.trim(),
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      account_type: 'mcc', // Default account type
+    });
+  },
+
+  verify: async (token: string): Promise<AuthResponse | ErrorResponse> => {
+    return apiClient.post('/auth/verify', { token });
+  },
+
+  forgotPassword: async (email: string): Promise<{ code: number; status: string; message: string }> => {
+    return apiClient.post('/auth/forgot-password', { email });
+  },
+
+  resetPassword: async (token: string, password: string): Promise<{ code: number; status: string; message: string }> => {
+    return apiClient.post('/auth/reset-password', { token, password });
+  },
+};

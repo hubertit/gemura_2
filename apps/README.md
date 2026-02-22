@@ -9,7 +9,7 @@ apps/
 ├── gemura-mobile/     # Gemura Mobile (Flutter)
 ├── gemura-web/        # Gemura Web (Next.js)
 ├── orora-mobile/      # Orora Mobile (Flutter) - future
-└── orora-web/         # Orora Web (Next.js) - future
+└── orora-web/         # Orora Web (Next.js) - ready
 ```
 
 ## Gemura Apps
