@@ -3,7 +3,7 @@
 # Test ports 3000-3020 with curl to see actual responses
 # Shows HTTP status codes and response content
 
-SERVER_IP="${1:-159.198.65.38}"
+SERVER_IP="${1:-209.74.80.195}"
 # Note: This script only tests HTTP responses, doesn't need SSH password
 
 echo "=========================================="

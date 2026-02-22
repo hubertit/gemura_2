@@ -29,7 +29,7 @@ CREDS_FILE="$SCRIPT_DIR/server-credentials.sh"
 [ -f "$CREDS_FILE" ] && source "$CREDS_FILE"
 # Optional override from env (e.g. CI or another path)
 [ -n "${GEMURA_SERVER_CREDS:-}" ] && [ -f "$GEMURA_SERVER_CREDS" ] && source "$GEMURA_SERVER_CREDS"
-SERVER_IP="${SERVER_IP:-159.198.65.38}"
+SERVER_IP="${SERVER_IP:-209.74.80.195}"
 SERVER_USER="${SERVER_USER:-root}"
 SERVER_PASS="${SERVER_PASS:-}"
 DEPLOY_PATH="/opt/gemura"
@@ -61,33 +61,33 @@ fi
 echo "   ✅ Server reachable"
 echo ""
 
-# Step 0: Set Gemura ports (3004 for backend, 3005 for frontend)
+# Step 0: Set Gemura ports (3007 for backend, 3006 for frontend) on Kwezi server
 echo ""
-echo "📌 Gemura Port Configuration:"
-echo "   Backend Port: 3004"
-echo "   Frontend Port: 3005"
+echo "📌 Gemura Port Configuration (Kwezi Server):"
+echo "   Backend Port: 3007"
+echo "   Frontend Port: 3006"
 echo ""
 
-# Check if port 3004 is already running Gemura
-if curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 http://$SERVER_IP:3004/api/health 2>/dev/null | grep -q "200"; then
-    echo "✅ Port 3004: Gemura Backend is already running"
+# Check if port 3007 is already running Gemura
+if curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 http://$SERVER_IP:3007/api/health 2>/dev/null | grep -q "200"; then
+    echo "✅ Port 3007: Gemura Backend is already running"
     echo "   Will update/redeploy existing deployment"
 else
-    echo "ℹ️  Port 3004: Will deploy new Gemura Backend"
+    echo "ℹ️  Port 3007: Will deploy new Gemura Backend"
 fi
 
-# Check port 3005 (use SSH_OPTS for keepalive)
+# Check port 3006 (use SSH_OPTS for keepalive)
 result=$(sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP \
-    "netstat -tuln 2>/dev/null | grep -q ':3005 ' || ss -tuln 2>/dev/null | grep -q ':3005 ' || echo 'available'" 2>/dev/null)
+    "netstat -tuln 2>/dev/null | grep -q ':3006 ' || ss -tuln 2>/dev/null | grep -q ':3006 ' || echo 'available'" 2>/dev/null)
 
 if [ "$result" = "available" ]; then
-    echo "✅ Port 3005: Available for Gemura Frontend"
+    echo "✅ Port 3006: Available for Gemura Frontend"
 else
-    echo "⚠️  Port 3005: May be in use, but will proceed (frontend not deployed yet)"
+    echo "⚠️  Port 3006: May be in use, but will proceed (frontend not deployed yet)"
 fi
 
-export BACKEND_PORT=3004
-export FRONTEND_PORT=3005
+export BACKEND_PORT=3007
+export FRONTEND_PORT=3006
 
 # Step 0: Backup database first (before any deployment changes). Read-only; no data loss.
 echo ""
@@ -110,7 +110,7 @@ fi
 # Step 1: Build frontend locally (avoids OOM on server during Next.js build)
 echo ""
 echo "🌐 Step 1a: Building frontend locally (prod API URL)..."
-( cd "$REPO_ROOT/web" && NEXT_PUBLIC_API_URL=http://159.198.65.38:3004/api npm run build ) || {
+( cd "$REPO_ROOT/apps/gemura-web" && NEXT_PUBLIC_API_URL=http://209.74.80.195:3007/api npm run build ) || {
   echo "   ❌ Local frontend build failed. Fix errors and re-run."
   exit 1
 }
@@ -122,8 +122,8 @@ echo "📤 Step 1b: Uploading files to server..."
 echo "   Creating archive (backend + web with pre-built .next + prebuilt compose)..."
 ( cd "$REPO_ROOT" && COPYFILE_DISABLE=1 tar -czf /tmp/gemura-deploy.tar.gz \
   --exclude='backend/node_modules' --exclude='backend/dist' \
-  --exclude='web/node_modules' --exclude='web/dist' \
-  backend/ web/ docker-compose.gemura.prebuilt.yml docker-compose.devlabs-db.yml scripts/deployment/ )
+  --exclude='apps/gemura-web/node_modules' --exclude='apps/gemura-web/.next' \
+  backend/ apps/gemura-web/ docker/docker-compose.kwezi.yml scripts/ )
 echo "   ✅ Archive created ($(du -h /tmp/gemura-deploy.tar.gz 2>/dev/null | cut -f1))."
 
 upload_ok=
@@ -154,190 +154,101 @@ if [ -z "$upload_ok" ]; then
 fi
 
 # Verify compose file on server
-echo "   Verifying docker-compose.gemura.prebuilt.yml on server..."
-if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "test -f $DEPLOY_PATH/docker-compose.gemura.prebuilt.yml && test -d $DEPLOY_PATH/web/.next/standalone" 2>/dev/null; then
-  echo "   ❌ Server missing prebuilt compose or web/.next/standalone. Re-run from project root: cd $REPO_ROOT && $0"
+echo "   Verifying docker-compose.kwezi.yml on server..."
+if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "test -f $DEPLOY_PATH/docker/docker-compose.kwezi.yml" 2>/dev/null; then
+  echo "   ❌ Server missing docker-compose.kwezi.yml. Re-run from project root: cd $REPO_ROOT && $0"
   exit 1
 fi
-echo "   ✅ Compose and pre-built frontend OK"
+echo "   ✅ Compose file OK"
 
-# Step 2: Setup DevLabs PostgreSQL (if not already running)
-# Docker check is inside this heredoc to avoid extra SSH sessions (was causing
-# "Permission denied" when too many SSH connections were opened in quick succession).
+# Step 2: Ensure Docker and Kwezi PostgreSQL are running
 echo ""
-echo "🗄️  Step 2: Ensuring Docker and DevLabs PostgreSQL..."
+echo "🗄️  Step 2: Ensuring Docker and Kwezi PostgreSQL..."
 sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP 'bash -s' << 'ENDSSH'
 export LC_ALL=C.UTF-8
 cd /opt/gemura
 
-# Ensure Docker is running (e.g. after server reboot)
+# Ensure Docker is running
 if ! docker info &>/dev/null; then
   echo "   Docker not running. Attempting to start..."
   systemctl start docker 2>/dev/null || service docker start 2>/dev/null || true
   systemctl enable docker 2>/dev/null || true
   sleep 5
   if ! docker info &>/dev/null; then
-    echo "   ❌ Cannot connect to Docker. On this server run: systemctl start docker && systemctl enable docker"
+    echo "   ❌ Cannot connect to Docker."
     exit 1
   fi
 fi
 echo "   ✅ Docker is running"
 
-# Clean dead/stopped containers (except database) to avoid overlay2/port conflicts
-echo "   Cleaning dead containers (keeping devslab-postgres)..."
-docker ps -a --format '{{.Names}} {{.Status}}' | awk '$2=="Exited" || $2=="Dead" || $2=="Created" {print $1}' | grep -v '^devslab-postgres$' | while read -r c; do docker rm -f "$c" 2>/dev/null || true; done
-echo "   ✅ Dead containers cleaned"
-
-# Load environment variables
-export POSTGRES_USER=devslab_admin
-export POSTGRES_PASSWORD=devslab_secure_password_2024
-export POSTGRES_PORT=5433
-
-# If devslab-postgres exists but is not running (exited, dead, or marked for removal), remove only the container.
-# DATA SAFETY: "down" without -v does NOT remove the volume. Never add -v or --volumes here.
-if docker ps -a --format '{{.Names}}' | grep -qx devslab-postgres; then
-  if ! docker ps --format '{{.Names}}' | grep -qx devslab-postgres; then
-    echo "   ⚠️  devslab-postgres exists but not running. Removing container only (volume devslab_postgres_data kept - no data loss)..."
-    docker compose -f docker-compose.devlabs-db.yml down --remove-orphans 2>/dev/null || true
-    docker rm -f devslab-postgres 2>/dev/null || true
-    sleep 2
-  fi
-fi
-
-# Check if DevLabs PostgreSQL is already running
-if docker ps | grep -q devslab-postgres; then
-    echo "   ✅ DevLabs PostgreSQL is already running"
+# Verify Kwezi PostgreSQL is running
+if docker ps | grep -q kwezi-postgres; then
+    echo "   ✅ Kwezi PostgreSQL is running"
 else
-    # Start DevLabs PostgreSQL (creates new container if none exists)
-    echo "   Starting DevLabs PostgreSQL container..."
-    docker compose -f docker-compose.devlabs-db.yml up -d --force-recreate
-
-    # Wait for PostgreSQL to be ready
-    echo "   Waiting for PostgreSQL to be ready..."
-    sleep 10
-
-    # Check if container is running
-    if docker ps | grep -q devslab-postgres; then
-        echo "   ✅ DevLabs PostgreSQL is running"
-    else
-        echo "   ❌ Failed to start PostgreSQL"
-        docker logs devslab-postgres || true
-        exit 1
-    fi
+    echo "   ❌ kwezi-postgres not running! Start it first."
+    exit 1
 fi
 
-# Create Gemura database and ensure all shared DBs exist (single source of truth)
-echo "   Creating/ensuring shared databases on devslab-postgres..."
-docker exec -i devslab-postgres psql -U 'devslab_admin' -d postgres << 'EOF'
--- Create each DB if not exists so all apps use the same latest data
-SELECT 'CREATE DATABASE gemura_db'     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'gemura_db')     \gexec
-SELECT 'CREATE DATABASE resolveit_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'resolveit_db') \gexec
-SELECT 'CREATE DATABASE orchestrate_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'orchestrate_db') \gexec
-SELECT 'CREATE DATABASE ihuzo_finance'  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'ihuzo_finance')  \gexec
-SELECT 'CREATE DATABASE zoea_events'    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'zoea_events')    \gexec
-SELECT 'CREATE DATABASE refuel'         WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'refuel')         \gexec
-GRANT ALL PRIVILEGES ON DATABASE gemura_db TO devslab_admin;
-GRANT ALL PRIVILEGES ON DATABASE resolveit_db TO devslab_admin;
-GRANT ALL PRIVILEGES ON DATABASE orchestrate_db TO devslab_admin;
-GRANT ALL PRIVILEGES ON DATABASE ihuzo_finance TO devslab_admin;
-GRANT ALL PRIVILEGES ON DATABASE zoea_events TO devslab_admin;
-GRANT ALL PRIVILEGES ON DATABASE refuel TO devslab_admin;
-\l
-EOF
-
-echo "   ✅ Shared databases ensured"
-
-# Step 2.5: Single source of truth — ensure no stray Postgres
-for c in "pg-source" "devslab-postgres-temp"; do
-  if docker ps -a --format '{{.Names}}' | grep -qx "$c"; then
-    echo "   Stopping $c so only devslab-postgres holds latest data..."
-    docker stop "$c" 2>/dev/null || true
-    docker rm "$c" 2>/dev/null || true
-  fi
-done
+# Create Gemura database if not exists
+echo "   Ensuring gemura_db exists..."
+docker exec kwezi-postgres psql -U kwezi -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'gemura_db'" | grep -q 1 || \
+docker exec kwezi-postgres psql -U kwezi -d postgres -c "CREATE DATABASE gemura_db;"
+echo "   ✅ Database gemura_db ready"
 ENDSSH
 
-# Step 3: Build and start Gemura
+# Step 3: Build and start Gemura on Kwezi server
 echo ""
 echo "🔨 Step 3: Building and starting Gemura..."
 sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP << ENDSSH
 export LC_ALL=C.UTF-8
 cd /opt/gemura
 
-# Ensure DevLabs network exists (created by devlabs-db compose)
-docker network create devslab-network 2>/dev/null || true
+# Get Postgres password from Kwezi
+POSTGRES_PASSWORD=\$(grep -E '^POSTGRES_PASSWORD=' /opt/kwezi/.env 2>/dev/null | cut -d= -f2- || echo "KweziPg2025!")
 
-# Update .env.devlabs: backend uses prod DB; frontend build uses prod API URL
-cat > .env.devlabs << EOF
-# DevLabs PostgreSQL Configuration
-POSTGRES_USER=devslab_admin
-POSTGRES_PASSWORD=devslab_secure_password_2024
-POSTGRES_DB=postgres
-POSTGRES_PORT=5433
-
-# Gemura Configuration
-BACKEND_PORT=3004
-FRONTEND_PORT=3005
-CORS_ORIGIN=http://localhost:3005,http://localhost:3004,http://159.198.65.38:3005,http://159.198.65.38:3004
-# Frontend talks to prod backend (baked in at build time)
-NEXT_PUBLIC_API_URL=http://159.198.65.38:3004/api
-
-# Backend uses prod DB (devslab-postgres on server)
-DATABASE_URL=postgresql://devslab_admin:devslab_secure_password_2024@devslab-postgres:5432/gemura_db
+# Create .env file
+cat > .env << EOF
+DATABASE_URL=postgresql://kwezi:\${POSTGRES_PASSWORD}@kwezi-postgres:5432/gemura_db?schema=public
+JWT_SECRET=gemura_jwt_secret_production_2026
+JWT_EXPIRES_IN=7d
+API_PORT=3007
+UI_PORT=3006
+NEXT_PUBLIC_API_URL=http://$SERVER_IP:3007/api
+CORS_ORIGIN=http://localhost:3006,http://$SERVER_IP:3006,http://$SERVER_IP:3007
 EOF
 
-# Stop and remove existing containers (give overlay time to release — avoids "device or resource busy")
-echo "   Stopping and removing existing containers..."
-docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs down --remove-orphans --timeout 30 2>/dev/null || true
-sleep 5
+# Stop existing containers
+echo "   Stopping existing containers..."
+docker compose -f docker/docker-compose.kwezi.yml down --timeout 30 2>/dev/null || true
+sleep 3
 
-# Force remove any stuck containers
-echo "   Cleaning up any stuck containers..."
-docker ps -a | grep gemura | awk '{print $1}' | xargs -r docker rm -f 2>/dev/null || true
-sleep 2
+# Build and start
+echo "   Building Gemura images..."
+docker compose -f docker/docker-compose.kwezi.yml --env-file .env build
 
-# Build backend and frontend (frontend uses pre-built .next — no heavy build on server)
-echo "   Building Gemura backend and frontend images..."
-docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs build backend frontend
+echo "   Starting Gemura containers..."
+docker compose -f docker/docker-compose.kwezi.yml --env-file .env up -d
 
-# Start both containers with force recreate
-echo "   Starting Gemura backend and frontend..."
-docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs up -d --force-recreate --no-deps backend frontend
-
-# Wait for backend to be ready (up to 2 min)
+# Wait for backend
 echo ""
 echo "   ⏳ Waiting for backend to be ready..."
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24; do
-  if curl -s http://localhost:3004/api/health > /dev/null 2>&1; then
+for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  if curl -s http://localhost:3007/api/health > /dev/null 2>&1; then
     echo "   ✅ Backend is healthy!"
     break
   fi
-  if [ \$i -eq 24 ]; then
-    echo "   ⚠️  Backend may still be starting (check logs if needed)"
-  else
-    echo "   ⏳ Attempt \$i/24..."
-    sleep 5
-  fi
+  [ \$i -eq 12 ] && echo "   ⚠️  Backend may still be starting" || sleep 5
 done
-echo "   ✅ Frontend: http://159.198.65.38:3005"
 
-# Check status
 echo ""
 echo "   📊 Container Status:"
-docker compose -f docker-compose.gemura.prebuilt.yml ps
-
-# Verify the new image is running
-echo ""
-echo "   🔍 Verifying deployment..."
-CURRENT_IMAGE=$(docker compose -f docker-compose.gemura.prebuilt.yml --env-file .env.devlabs ps backend 2>/dev/null | grep backend | awk '{print $2}' || echo "unknown")
-echo "   Running image: $CURRENT_IMAGE"
+docker compose -f docker/docker-compose.kwezi.yml ps
 
 echo ""
 echo "   📋 Service URLs:"
-echo "   - Backend API: http://159.198.65.38:3004/api"
-echo "   - API Docs: http://159.198.65.38:3004/api/docs"
-echo "   - Health Check: http://159.198.65.38:3004/api/health"
-echo "   - Frontend: http://159.198.65.38:3005"
+echo "   - Backend API: http://$SERVER_IP:3007/api"
+echo "   - API Docs: http://$SERVER_IP:3007/api/docs"
+echo "   - Frontend: http://$SERVER_IP:3006"
 ENDSSH
 
 echo ""
@@ -345,34 +256,22 @@ echo "✅ Deployment Complete!"
 echo "================================================"
 echo ""
 echo "📦 Deployment Summary:"
-echo "   ✅ Database backed up (before deploy)"
 echo "   ✅ Files uploaded to server"
-echo "   ✅ Backend & frontend Docker images built (backend=prod DB, frontend=prod API)"
+echo "   ✅ Backend & frontend Docker images built"
 echo "   ✅ Backend and frontend containers started"
 echo ""
 echo "🌐 Access your application:"
-echo "   Backend API: http://159.198.65.38:3004/api"
-echo "   API Docs: http://159.198.65.38:3004/api/docs"
-echo "   Health Check: http://159.198.65.38:3004/api/health"
-echo "   Frontend: http://159.198.65.38:3005"
+echo "   Backend API: http://$SERVER_IP:3007/api"
+echo "   API Docs: http://$SERVER_IP:3007/api/docs"
+echo "   Frontend: http://$SERVER_IP:3006"
 echo ""
 echo "📌 Port Information:"
-echo "   Backend Port: 3004"
-echo "   Frontend Port: 3005"
-echo ""
-echo "📋 DevLabs PostgreSQL Credentials:"
-echo "   Host: localhost:5433"
-echo "   User: devslab_admin"
-echo "   Password: devslab_secure_password_2024"
-echo "   Database: gemura_db"
+echo "   Backend Port: 3007"
+echo "   Frontend Port: 3006"
 echo ""
 echo "🔧 Useful Commands:"
-echo "   View logs: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.prebuilt.yml logs -f'"
-echo "   Restart: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.prebuilt.yml restart'"
-echo "   Stop: ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemura.prebuilt.yml down'"
-echo ""
-echo "   If overlay2 \"device or resource busy\": reboot server, then run:"
-echo "   ./scripts/deployment/ensure-all-containers-up.sh   (start containers only, no re-upload)"
-echo "   or re-run this script for a full deploy."
+echo "   View logs: ssh root@$SERVER_IP 'cd /opt/gemura && docker compose -f docker/docker-compose.kwezi.yml logs -f'"
+echo "   Restart: ssh root@$SERVER_IP 'cd /opt/gemura && docker compose -f docker/docker-compose.kwezi.yml restart'"
+echo "   Stop: ssh root@$SERVER_IP 'cd /opt/gemura && docker compose -f docker/docker-compose.kwezi.yml down'"
 echo ""
 

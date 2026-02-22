@@ -5,7 +5,7 @@
 
 set -e
 
-SERVER="${1:-159.198.65.38}"
+SERVER="${1:-209.74.80.195}"
 PORT="${2:-3004}"
 BASE_URL="http://$SERVER:$PORT/api"
 

@@ -9,7 +9,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CREDS="$SCRIPT_DIR/../deployment/server-credentials.sh"
 if [ -f "$CREDS" ]; then source "$CREDS"; fi
 [ -n "$SERVER_PASS" ] || { echo "SERVER_PASS not set. Source server-credentials.sh."; exit 1; }
-SERVER_IP="${SERVER_IP:-159.198.65.38}"
+SERVER_IP="${SERVER_IP:-209.74.80.195}"
 SERVER_USER="${SERVER_USER:-root}"
 
 SQL_FILE="$SCRIPT_DIR/merge-kozamgi-accounts.sql"

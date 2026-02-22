@@ -27,7 +27,7 @@
 set -e
 
 # Production database (remote)
-PROD_HOST="${PROD_HOST:-159.198.65.38}"
+PROD_HOST="${PROD_HOST:-209.74.80.195}"
 PROD_PORT="${PROD_PORT:-5433}"
 PROD_USER="${PROD_USER:-devslab_admin}"
 PROD_PASS="${PROD_PASSWORD:-devslab_secure_password_2024}"

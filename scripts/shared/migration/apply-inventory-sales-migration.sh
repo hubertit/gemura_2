@@ -10,7 +10,7 @@ echo "=========================================================="
 echo ""
 
 # Server details (if running locally, modify these)
-SERVER_IP="${SERVER_IP:-159.198.65.38}"
+SERVER_IP="${SERVER_IP:-209.74.80.195}"
 SERVER_USER="${SERVER_USER:-root}"
 SERVER_PASS="${SERVER_PASS:-QF87VtuYReX5v9p6e3}"
 

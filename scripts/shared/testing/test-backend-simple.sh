@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Simple Backend Status Test
-SERVER="159.198.65.38"
+SERVER="209.74.80.195"
 PORT="3004"
 URL="http://$SERVER:$PORT/api/health"
 

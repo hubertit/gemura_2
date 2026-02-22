@@ -90,7 +90,7 @@ echo ""
 # Test 6: Remote Server Connectivity
 echo "Test 6: Remote Server Connectivity"
 echo "---------------------------------"
-SERVER="159.198.65.38"
+SERVER="209.74.80.195"
 if ping -c 1 -W 2 "$SERVER" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Server is reachable${NC}"
     

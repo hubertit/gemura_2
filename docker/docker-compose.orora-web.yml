@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  orora-ui:
+    build:
+      context: ../apps/orora-web
+      dockerfile: Dockerfile
+    container_name: orora-ui
+    restart: unless-stopped
+    ports:
+      - "3011:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://209.74.80.195:3007/api
+    networks:
+      - orora-network
+
+networks:
+  orora-network:
+    driver: bridge

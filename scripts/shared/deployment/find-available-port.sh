@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$SCRIPT_DIR/server-credentials.sh" ] && source "$SCRIPT_DIR/server-credentials.sh"
 [ -n "${GEMURA_SERVER_CREDS:-}" ] && [ -f "$GEMURA_SERVER_CREDS" ] && source "$GEMURA_SERVER_CREDS"
 
-SERVER_IP="${1:-${SERVER_IP:-159.198.65.38}}"
+SERVER_IP="${1:-${SERVER_IP:-209.74.80.195}}"
 SERVER_USER="${2:-${SERVER_USER:-root}}"
 SERVER_PASS="${3:-${SERVER_PASS:-}}"
 if [ -z "$SERVER_PASS" ]; then
