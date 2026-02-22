@@ -67,7 +67,7 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
   static const int maxRetries = 3;
 
   // Main API Configuration — production by default.
-  // Production: http://159.198.65.38:3004/api
+  // Production: http://209.74.80.195:3007/api (Kwezi server)
   // To use local backend: flutter run --dart-define=USE_LOCAL_API=true
   // For physical device: set localApiHost to your Mac's IP (e.g. '192.168.1.100')
   static const String localApiHost = '127.0.0.1'; // Use Mac's LAN IP for physical device
@@ -80,7 +80,7 @@ Just talk to me like you would with a friend - no need to be formal. I'm here to
       }
       return 'http://$localApiHost:$localApiPort/api';
     }
-    return 'http://159.198.65.38:3004/api';
+    return 'http://209.74.80.195:3007/api';
   }
   
   // Your Custom API Configuration
