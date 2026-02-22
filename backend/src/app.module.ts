@@ -32,6 +32,7 @@ import { InventoryItemsModule } from './modules/inventory-items/inventory-items.
 import { LoansModule } from './modules/loans/loans.module';
 import { ChargesModule } from './modules/charges/charges.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { PublicAnalyticsModule } from './modules/public-analytics/public-analytics.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -77,6 +78,7 @@ import { AppController } from './app.controller';
     LoansModule,
     ChargesModule,
     AdminModule,
+    PublicAnalyticsModule,
   ],
 })
 export class AppModule {}

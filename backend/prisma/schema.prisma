@@ -205,8 +205,10 @@ model Account {
   charges               Charge[]           @relation("ChargeCustomerAccount")
   charge_supplier_links ChargeSupplier[]   @relation("ChargeSupplierAccount")
   charge_applications_supplier ChargeApplication[] @relation("ChargeApplicationSupplier")
+  payroll_runs         PayrollRun[]        @relation("PayrollRunAccount")
   created_by_user       User?               @relation("AccountCreatedBy", fields: [created_by], references: [id], onDelete: SetNull)
   updated_by_user       User?               @relation("AccountUpdatedBy", fields: [updated_by], references: [id], onDelete: SetNull)
+  api_keys              ApiKey[]
 
   @@index([code])
   @@index([type])
@@ -285,6 +287,7 @@ model User {
   user_onboardings             UserOnboarding[]
   inventory_sales_created      InventorySale[]    @relation("InventorySaleCreatedBy")
   inventory_movements_created  InventoryMovement[] @relation("InventoryMovementCreatedBy")
+  api_keys_created             ApiKey[]
 
   @@index([code])
   @@index([phone])
@@ -706,17 +709,32 @@ model Notification {
 }
 
 model ApiKey {
-  id         String    @id @default(uuid()) @db.Uuid
-  legacy_id  BigInt?   @unique @map("legacy_id") // For migration reference
-  key        String    @unique
-  name       String?
-  is_active  Boolean   @default(true) @map("is_active")
-  expires_at DateTime? @map("expires_at")
-  created_at DateTime  @default(now()) @map("created_at")
-  updated_at DateTime  @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid()) @db.Uuid
+  legacy_id          BigInt?   @unique @map("legacy_id") // For migration reference
+  key                String    @unique
+  key_hash           String?   @map("key_hash") // SHA-256 hash for secure validation
+  name               String?
+  description        String?
+  account_id         String?   @map("account_id") @db.Uuid // NULL = platform-wide access
+  created_by_user_id String?   @map("created_by_user_id") @db.Uuid
+  scopes             String[]  @default([]) // e.g., ["analytics:read", "export:read"]
+  rate_limit         Int       @default(1000) @map("rate_limit") // requests per hour
+  is_active          Boolean   @default(true) @map("is_active")
+  expires_at         DateTime? @map("expires_at")
+  last_used_at       DateTime? @map("last_used_at")
+  request_count      Int       @default(0) @map("request_count") // total requests made
+  created_at         DateTime  @default(now()) @map("created_at")
+  updated_at         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  account    Account? @relation(fields: [account_id], references: [id], onDelete: SetNull)
+  created_by User?    @relation(fields: [created_by_user_id], references: [id], onDelete: SetNull)
 
   @@index([key])
+  @@index([key_hash])
   @@index([is_active])
+  @@index([account_id])
+  @@index([created_by_user_id])
   @@map("api_keys")
 }
 
@@ -929,6 +947,7 @@ model PayrollPeriod {
 
 model PayrollRun {
   id                 String    @id @default(uuid()) @db.Uuid
+  account_id         String?   @map("account_id") @db.Uuid // MCC/branch this run belongs to (null = legacy)
   period_id          String?   @map("period_id") @db.Uuid // Optional - flexible payroll generation
   run_name           String?   @map("run_name") // Custom name (e.g. "Jan 1 – Jan 31, 2025"); falls back to period or "Flexible Run"
   run_date           DateTime  @map("run_date")
@@ -942,9 +961,11 @@ model PayrollRun {
   created_by         String?   @map("created_by") @db.Uuid
 
   // Relations
+  account   Account?          @relation("PayrollRunAccount", fields: [account_id], references: [id], onDelete: Cascade)
   period   PayrollPeriod?   @relation(fields: [period_id], references: [id], onDelete: SetNull)
   payslips PayrollPayslip[]
 
+  @@index([account_id])
   @@index([period_id])
   @@index([status])
   @@index([run_date])
