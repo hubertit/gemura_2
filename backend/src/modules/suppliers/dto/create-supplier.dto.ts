@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, Length, Matches } from 'class-validator';
 
 export class CreateSupplierDto {
   @ApiProperty({
@@ -41,13 +41,18 @@ export class CreateSupplierDto {
   email?: string;
 
   @ApiProperty({
-    description: 'National ID number (optional)',
+    description: 'National ID number (16 digits, must start with 1)',
     example: '1199887766554433',
-    required: false,
+    required: true,
+    minLength: 16,
+    maxLength: 16,
+    pattern: '^1[0-9]{15}$',
   })
-  @IsOptional()
+  @IsNotEmpty({ message: 'National ID is required' })
   @IsString({ message: 'National ID must be a string' })
-  nid?: string;
+  @Length(16, 16, { message: 'National ID must be exactly 16 digits' })
+  @Matches(/^1[0-9]{15}$/, { message: 'National ID must be 16 digits and start with 1' })
+  nid: string;
 
   @ApiProperty({
     description: 'Physical address (optional)',

@@ -4,21 +4,21 @@ import { IsString, IsOptional, IsEnum } from 'class-validator';
 export class UpdateEmployeeDto {
   @ApiProperty({
     description: 'New role for employee',
-    enum: ['owner', 'admin', 'manager', 'collector', 'viewer'],
+    enum: ['owner', 'admin', 'manager', 'accountant', 'collector', 'viewer', 'agent'],
     example: 'admin',
     required: false,
   })
   @IsOptional()
-  @IsEnum(['owner', 'admin', 'manager', 'collector', 'viewer'], { message: 'Invalid role' })
+  @IsEnum(['owner', 'admin', 'manager', 'accountant', 'collector', 'viewer', 'agent'], { message: 'Invalid role' })
   role?: string;
 
   @ApiProperty({
-    description: 'New permissions JSON object',
-    example: { can_edit: true, can_view: true, can_manage: true },
+    description: 'Permission codes array',
+    example: ['view_sales', 'create_sales', 'view_collections'],
     required: false,
   })
   @IsOptional()
-  permissions?: any;
+  permissions?: string[];
 
   @ApiProperty({
     description: 'Employee status',

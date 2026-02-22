@@ -21,19 +21,19 @@ export class CreateEmployeeDto {
 
   @ApiProperty({
     description: 'Employee role',
-    enum: ['owner', 'admin', 'manager', 'collector', 'viewer'],
+    enum: ['owner', 'admin', 'manager', 'accountant', 'collector', 'viewer', 'agent'],
     example: 'manager',
   })
   @IsNotEmpty({ message: 'Role is required' })
-  @IsEnum(['owner', 'admin', 'manager', 'collector', 'viewer'], { message: 'Invalid role' })
+  @IsEnum(['owner', 'admin', 'manager', 'accountant', 'collector', 'viewer', 'agent'], { message: 'Invalid role' })
   role: string;
 
   @ApiProperty({
-    description: 'Permissions JSON object',
-    example: { can_edit: true, can_view: true, can_manage: false },
+    description: 'Permission codes array',
+    example: ['view_sales', 'create_sales'],
     required: false,
   })
   @IsOptional()
-  permissions?: any;
+  permissions?: string[];
 }
 

@@ -519,21 +519,42 @@ export class InventoryService {
   async getMovements(
     user: User,
     productId: string,
-    options?: { page?: number; limit?: number; movement_type?: string; date_from?: string; date_to?: string },
+    options?: { page?: number; limit?: number; movement_type?: string; date_from?: string; date_to?: string; account_id?: string },
   ) {
-    if (!user.default_account_id) {
-      throw new BadRequestException({
-        code: 400,
-        status: 'error',
-        message: 'No valid default account found.',
+    let accountId: string;
+    if (options?.account_id) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: options.account_id,
+          status: 'active',
+        },
+        include: { account: true },
       });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      accountId = options.account_id;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found.',
+        });
+      }
+      accountId = user.default_account_id;
     }
 
     // Verify product belongs to user's account
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
-        account_id: user.default_account_id,
+        account_id: accountId,
       },
     });
     if (!product) {
@@ -583,6 +604,100 @@ export class InventoryService {
         items: items.map((m) => ({
           id: m.id,
           product_id: m.product_id,
+          movement_type: m.movement_type,
+          quantity: m.quantity,
+          reference_type: m.reference_type,
+          reference_id: m.reference_id,
+          description: m.description,
+          unit_price: m.unit_price != null ? Number(m.unit_price) : null,
+          created_at: m.created_at,
+          created_by: m.created_by_user ? { id: m.created_by_user.id, name: m.created_by_user.name } : null,
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          total_pages: Math.ceil(total / limit),
+        },
+      },
+    };
+  }
+
+  async getMovementsAll(
+    user: User,
+    options?: { page?: number; limit?: number; product_id?: string; movement_type?: string; date_from?: string; date_to?: string; account_id?: string },
+  ) {
+    let accountId: string;
+    if (options?.account_id) {
+      const hasAccess = await this.prisma.userAccount.findFirst({
+        where: {
+          user_id: user.id,
+          account_id: options.account_id,
+          status: 'active',
+        },
+        include: { account: true },
+      });
+      if (!hasAccess?.account || hasAccess.account.status !== 'active') {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Account not found or access denied.',
+        });
+      }
+      accountId = options.account_id;
+    } else {
+      if (!user.default_account_id) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'No valid default account found.',
+        });
+      }
+      accountId = user.default_account_id;
+    }
+
+    const page = Math.max(1, options?.page ?? 1);
+    const limit = Math.min(100, Math.max(1, options?.limit ?? 20));
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      product: { account_id: accountId },
+    };
+    if (options?.product_id) where.product_id = options.product_id;
+    if (options?.movement_type) where.movement_type = options.movement_type;
+    if (options?.date_from || options?.date_to) {
+      where.created_at = {};
+      if (options.date_from) where.created_at.gte = new Date(options.date_from);
+      if (options.date_to) {
+        const d = new Date(options.date_to);
+        d.setHours(23, 59, 59, 999);
+        where.created_at.lte = d;
+      }
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.inventoryMovement.findMany({
+        where,
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          product: { select: { id: true, name: true } },
+          created_by_user: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.inventoryMovement.count({ where }),
+    ]);
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Movements retrieved successfully.',
+      data: {
+        items: items.map((m) => ({
+          id: m.id,
+          product_id: m.product_id,
+          product_name: m.product?.name ?? null,
           movement_type: m.movement_type,
           quantity: m.quantity,
           reference_type: m.reference_type,

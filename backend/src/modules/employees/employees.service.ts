@@ -49,25 +49,15 @@ export class EmployeesService {
   async createEmployee(user: User, createDto: CreateEmployeeDto) {
     const accountId = await this.ensureCanManageAccount(user, createDto.account_id);
 
-    // Check if employee already exists
-    const existing = await this.prisma.userAccount.findFirst({
-      where: {
-        user_id: user.id,
-        account_id: accountId,
-        role: { in: ['owner', 'admin'] },
-        status: 'active',
-      },
-    });
-
-    // Check if employee already exists
-    const existing = await this.prisma.userAccount.findFirst({
+    // Check if user is already an employee of this account
+    const existingLink = await this.prisma.userAccount.findFirst({
       where: {
         user_id: createDto.user_id,
         account_id: accountId,
       },
     });
 
-    if (existing) {
+    if (existingLink) {
       throw new BadRequestException({
         code: 400,
         status: 'error',
@@ -121,7 +111,7 @@ export class EmployeesService {
   async getEmployees(user: User, accountId?: string | null, status?: 'active' | 'inactive') {
     const resolvedAccountId = await this.ensureCanManageAccount(user, accountId);
 
-    const where: { account_id: string; status?: string } = {
+    const where: { account_id: string; status?: 'active' | 'inactive' } = {
       account_id: resolvedAccountId,
     };
     if (status === 'active' || status === 'inactive') {
@@ -150,14 +140,17 @@ export class EmployeesService {
       code: 200,
       status: 'success',
       message: 'Employees fetched successfully.',
-      data: employees.map((e) => ({
-        id: e.id,
-        user: e.user,
-        role: e.role,
-        permissions: e.permissions || null,
-        status: e.status,
-        created_at: e.created_at,
-      })),
+      data: employees.map((e) => {
+        const row = e as typeof e & { user: { id: string; name: string | null; email: string | null; phone: string | null; account_type?: string } };
+        return {
+          id: e.id,
+          user: row.user,
+          role: e.role,
+          permissions: e.permissions || null,
+          status: e.status,
+          created_at: e.created_at,
+        };
+      }),
     };
   }
 

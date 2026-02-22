@@ -319,14 +319,50 @@ export class InventoryController {
     res.send(csv);
   }
 
+  @Get('movements')
+  @ApiOperation({
+    summary: 'Get all inventory movements',
+    description: 'Returns paginated list of stock movements across all inventory items. Scoped to account_id (or user default). Optional filters: product_id, movement_type, date_from, date_to.',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'account_id', required: false, type: String, description: 'Account UUID (default: user\'s default account)' })
+  @ApiQuery({ name: 'product_id', required: false, type: String, description: 'Filter by product UUID' })
+  @ApiQuery({ name: 'movement_type', required: false, enum: ['sale_out', 'adjustment_in', 'adjustment_out', 'purchase_in', 'transfer_in', 'transfer_out'] })
+  @ApiQuery({ name: 'date_from', required: false, type: String, description: 'Filter from date (ISO)' })
+  @ApiQuery({ name: 'date_to', required: false, type: String, description: 'Filter to date (ISO)' })
+  @ApiResponse({ status: 200, description: 'Movements retrieved successfully.' })
+  @ApiBadRequestResponse({ description: 'No valid default account' })
+  async getAllMovements(
+    @CurrentUser() user: User,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('account_id') accountId?: string,
+    @Query('product_id') productId?: string,
+    @Query('movement_type') movementType?: string,
+    @Query('date_from') dateFrom?: string,
+    @Query('date_to') dateTo?: string,
+  ) {
+    return this.inventoryService.getMovementsAll(user, {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      account_id: accountId,
+      product_id: productId,
+      movement_type: movementType,
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
+  }
+
   @Get(':id/movements')
   @ApiOperation({
     summary: 'Get inventory movements for a product',
-    description: 'Returns paginated list of stock movements (sales, adjustments) for the given product. Each movement has type, quantity, description (e.g. "Sale to John"), reference to sale or adjustment, and created_at. Scoped to the user\'s default account.',
+    description: 'Returns paginated list of stock movements for the given product. Scoped to account_id (or user default).',
   })
   @ApiParam({ name: 'id', description: 'Product ID (UUID)', type: String })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
+  @ApiQuery({ name: 'account_id', required: false, type: String, description: 'Account UUID (default: user\'s default account)' })
   @ApiQuery({ name: 'movement_type', required: false, enum: ['sale_out', 'adjustment_in', 'adjustment_out', 'purchase_in', 'transfer_in', 'transfer_out'] })
   @ApiQuery({ name: 'date_from', required: false, type: String, description: 'Filter from date (ISO)' })
   @ApiQuery({ name: 'date_to', required: false, type: String, description: 'Filter to date (ISO)' })
@@ -365,6 +401,7 @@ export class InventoryController {
     @Param('id') id: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('account_id') accountId?: string,
     @Query('movement_type') movementType?: string,
     @Query('date_from') dateFrom?: string,
     @Query('date_to') dateTo?: string,
@@ -372,6 +409,7 @@ export class InventoryController {
     return this.inventoryService.getMovements(user, id, {
       page: page ? parseInt(page, 10) : undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
+      account_id: accountId,
       movement_type: movementType,
       date_from: dateFrom,
       date_to: dateTo,
