@@ -22,19 +22,21 @@ Orora is a digital platform designed to help cattle farmers manage their livesto
 
 ## Quick Links
 
-- [Architecture](./ARCHITECTURE.md)
-- [Development Roadmap](./ROADMAP.md)
-- [Feature Specifications](./FEATURES.md)
-- [API Documentation](./API.md)
-- [Database Schema](./DATABASE.md)
-- [Deployment Guide](./DEPLOYMENT.md)
+- [Architecture](./architecture.md)
+- [Development Roadmap](./roadmap.md)
+- [Feature Specifications](./features.md)
+- [API Documentation](./api.md)
+- [Database Schema](./database.md)
+- [Deployment Guide](./deployment.md)
+- [Mobile App Guide](./mobile.md)
+- [Feedback & Communication Strategy](./feedback-strategy.md)
 
 ## Project Timeline
 
 | Milestone | Target Date | Status |
 |-----------|-------------|--------|
-| MVP Release | March 15, 2026 | In Progress |
-| Beta Release | April 30, 2026 | Planned |
+| Soft Launch | March 15, 2026 | In Progress |
+| Beta Release | April 15, 2026 | Planned |
 | Production Release | June 15, 2026 | Planned |
 
 ## Getting Started

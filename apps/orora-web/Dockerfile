@@ -1,8 +1,8 @@
-# Gemura Web (Next.js) - production build with prod API URL baked in at build time
+# Orora Web (Next.js) - production build with prod API URL baked in at build time
 FROM node:20-alpine AS base
 
 # Build-time: API URL the browser will use (must be set for production)
-ARG NEXT_PUBLIC_API_URL=http://159.198.65.38:3004/api
+ARG NEXT_PUBLIC_API_URL=http://209.74.80.195:3007/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 FROM base AS deps
@@ -22,7 +22,7 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3005
+ENV PORT=3000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -32,6 +32,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
-EXPOSE 3005
+EXPOSE 3000
 
 CMD ["node", "server.js"]

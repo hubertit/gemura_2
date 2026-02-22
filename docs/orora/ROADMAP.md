@@ -1,6 +1,6 @@
 # Orora Development Roadmap
 
-> Target: MVP by March 15, 2026 | Full Release by June 15, 2026
+> Target: Soft Launch March 15, 2026 | Full Production Release June 15, 2026
 
 ## Overview
 
@@ -9,12 +9,12 @@
 │  Feb 22          Mar 15           Apr 15          May 15          Jun 15        │
 │    │               │                │               │               │           │
 │    ▼               ▼                ▼               ▼               ▼           │
-│  ┌───┐          ┌─────┐          ┌─────┐        ┌─────┐         ┌───────┐       │
-│  │NOW│──────────│ MVP │──────────│BETA │────────│STABLE│─────────│RELEASE│      │
-│  └───┘          └─────┘          └─────┘        └─────┘         └───────┘       │
-│                                                                                  │
+│  ┌───┐          ┌──────┐        ┌─────┐        ┌─────┐         ┌───────┐        │
+│  │NOW│──────────│ SOFT │────────│BETA │────────│STABLE│─────────│  V1.0 │       │
+│  └───┘          │LAUNCH│        └─────┘        └─────┘         │RELEASE│        │
+│                 └──────┘                                        └───────┘        │
 │  Phase 1         Phase 2          Phase 3        Phase 4          Phase 5       │
-│  Foundation      Core Features    Advanced       Polish           Launch        │
+│  Foundation      Soft Launch      Advanced       Polish           Production    │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -41,12 +41,12 @@
 
 ---
 
-## Phase 2: MVP Core Features (Mar 1 - Mar 15)
-**Target: MVP Release**
+## Phase 2: Soft Launch (Mar 1 - Mar 15)
+**Target: Soft Launch with Early Adopters**
 
-### MVP Scope
+### Soft Launch Scope
 
-The MVP focuses on essential cattle farming operations that provide immediate value.
+The soft launch focuses on essential cattle farming operations, deployed to a limited group of early adopter farms for real-world testing and feedback.
 
 #### 2.1 Animal Management Module 🆕
 **Priority: Critical**
@@ -97,10 +97,10 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 | Animal count statistics | ✅ | ✅ | ✅ | ⏳ Pending |
 | Basic reports | ✅ | ❌ | ✅ | ⏳ Pending |
 
-### MVP Deliverables
+### Soft Launch Deliverables
 
 ```
-📱 Orora Mobile MVP
+📱 Orora Mobile (Soft Launch)
 ├── Login/Register
 ├── Dashboard (overview)
 ├── Animal list & registration
@@ -108,7 +108,7 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 ├── Collection history
 └── Basic profile
 
-🖥️ Orora Web MVP
+🖥️ Orora Web (Soft Launch)
 ├── Login/Register
 ├── Dashboard
 ├── Animal management (CRUD)
@@ -116,13 +116,23 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 ├── Supplier management
 └── Basic reports
 
-⚙️ Backend MVP
+⚙️ Backend (Soft Launch)
 ├── Auth endpoints
 ├── Animal CRUD endpoints
 ├── Milk collection endpoints
 ├── Dashboard/analytics endpoints
 └── User/account endpoints
 ```
+
+### Soft Launch Strategy
+
+| Aspect | Details |
+|--------|---------|
+| **Target Users** | 5-10 early adopter farms |
+| **Duration** | 2-4 weeks of monitored usage |
+| **Support** | Direct support channel with dev team |
+| **Feedback** | Weekly feedback sessions |
+| **Goal** | Validate core features, identify issues |
 
 ---
 
@@ -262,7 +272,7 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 
 ## Feature Priority Matrix
 
-### Must Have (MVP - Mar 15)
+### Must Have (Soft Launch - Mar 15)
 
 | Feature | Effort | Impact |
 |---------|--------|--------|
@@ -281,15 +291,16 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 | Weight tracking | Low | Medium |
 | Vaccination records | Medium | Medium |
 | Basic reports | Medium | Medium |
+| Soft launch feedback fixes | High | High |
 
-### Nice to Have (Release - Jun 15)
+### Nice to Have (Production - Jun 15)
 
 | Feature | Effort | Impact |
 |---------|--------|--------|
 | Offline mode | High | Medium |
 | Push notifications | Medium | Medium |
 | Advanced analytics | High | Medium |
-| Multi-language | Medium | Low |
+| Multi-language (Kinyarwanda) | Medium | High |
 | SMS alerts | Medium | Low |
 
 ---
@@ -311,8 +322,10 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 ### Sprint 3 (Mar 10 - Mar 15)
 - [ ] Dashboard with animal stats
 - [ ] Link milk collection to animals
-- [ ] MVP testing & bug fixes
-- [ ] MVP deployment
+- [ ] Soft launch testing & bug fixes
+- [ ] Deploy to production
+- [ ] Onboard early adopter farms
+- [ ] Set up feedback/support channel
 
 ### Sprint 4 (Mar 17 - Mar 22)
 - [ ] Breeding module backend
@@ -343,24 +356,28 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 
 ## Success Metrics
 
-### MVP (Mar 15)
-- [ ] 5+ farms onboarded for testing
-- [ ] Core features functional
-- [ ] No critical bugs
+### Soft Launch (Mar 15)
+- [ ] 5-10 farms onboarded as early adopters
+- [ ] Core features functional and stable
+- [ ] No critical bugs blocking usage
 - [ ] < 3 second page load time
+- [ ] Direct feedback channel established
+- [ ] Mobile app available for Android (APK distribution)
 
 ### Beta (Apr 15)
 - [ ] 20+ active farms
 - [ ] 80% feature completion
-- [ ] User feedback incorporated
-- [ ] Mobile app stable
+- [ ] Soft launch feedback incorporated
+- [ ] Mobile app on Play Store (beta track)
+- [ ] iOS TestFlight available
 
-### Release (Jun 15)
+### Production Release (Jun 15)
 - [ ] 50+ active farms
 - [ ] 100% planned features
 - [ ] 99% uptime
 - [ ] < 10 open bugs
 - [ ] User satisfaction > 4/5
+- [ ] Apps published on Play Store & App Store
 
 ---
 
@@ -393,6 +410,6 @@ The MVP focuses on essential cattle farming operations that provide immediate va
 
 | Version | Date | Description |
 |---------|------|-------------|
-| 0.1.0 | Mar 15, 2026 | MVP Release |
-| 0.2.0 | Apr 15, 2026 | Beta Release |
-| 1.0.0 | Jun 15, 2026 | Production Release |
+| 0.1.0 | Mar 15, 2026 | Soft Launch (Early Adopters) |
+| 0.5.0 | Apr 15, 2026 | Beta Release (Public Beta) |
+| 1.0.0 | Jun 15, 2026 | Production Release (General Availability) |

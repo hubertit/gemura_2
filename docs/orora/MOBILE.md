@@ -459,6 +459,6 @@ testWidgets('Animal card displays correctly', (tester) async {
 
 | Version | Date | Description |
 |---------|------|-------------|
-| 0.1.0 | Mar 15, 2026 | MVP Release |
-| 0.2.0 | Apr 15, 2026 | Beta (Breeding, Health) |
-| 1.0.0 | Jun 15, 2026 | Production Release |
+| 0.1.0 | Mar 15, 2026 | Soft Launch (APK distribution) |
+| 0.5.0 | Apr 15, 2026 | Beta (Play Store beta, TestFlight) |
+| 1.0.0 | Jun 15, 2026 | Production Release (Store listings) |
