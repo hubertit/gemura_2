@@ -5,6 +5,10 @@ import { PrismaClient, LocationType } from '@prisma/client';
  * Import full Rwanda administrative hierarchy from dsacco_uat.m01_adm.adm_location
  * into Gemura's locations table.
  *
+ * ⚠️ This can create duplicates or inconsistent names (e.g. "East" vs "Eastern Province").
+ * For farm management UI, prefer: npx ts-node prisma/clean-and-seed-locations.ts
+ * which wipes locations and seeds a canonical list (no duplicates).
+ *
  * Source DB (read-only):
  *   host: 10.20.1.250  port: 5432  db: dsacco_uat
  *   user: sacco_app    password: Nimba@@321

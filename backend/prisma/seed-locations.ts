@@ -1,7 +1,10 @@
 /**
- * Seed Rwanda administrative hierarchy: country + provinces (+ a few example districts).
+ * Seed Rwanda administrative hierarchy: country + provinces (+ sample districts).
  * Run after prisma db push: npx ts-node prisma/seed-locations.ts
- * Or import and call from main seed.
+ *
+ * If locations already exist and are duplicated or wrong, use instead:
+ *   npx ts-node prisma/clean-and-seed-locations.ts
+ * to clear all locations and seed a fresh, canonical list.
  */
 import { PrismaClient } from '@prisma/client';
 
