@@ -169,11 +169,11 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
   };
 
   const linkClass = (active: boolean, indent: 'base' | 'child' | 'grandchild') => {
-    const pl = indent === 'base' ? 'pl-12' : indent === 'child' ? 'pl-12' : 'pl-14';
+    const pl = indent === 'base' ? 'pl-10 sm:pl-12' : indent === 'child' ? 'pl-10 sm:pl-12' : 'pl-12 sm:pl-14';
     return `
-      flex items-center gap-2 py-2.5 ${pl} pr-4 text-sm
+      flex items-center gap-2 min-h-[44px] py-2.5 ${pl} pr-3 sm:pr-4 text-sm
       transition-all duration-200
-      ${active ? 'bg-[#0f1f0f] text-white border-l-4 border-white/30 -ml-0.5' : 'text-gray-400 hover:bg-[#0f1f0f] hover:text-white'}
+      ${active ? 'bg-[#0f1f0f] text-white border-l-4 border-white/30 -ml-0.5' : 'text-gray-400 hover:bg-[#0f1f0f] hover:text-white active:bg-[#0f1f0f]'}
     `;
   };
 
@@ -251,14 +251,14 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
     const parentActive = hrefs.some((h) => pathname?.startsWith(h));
     const isExpanded = hasChildren && expandedKeys.has(item.href);
     const rowClass = `
-      flex items-center gap-3 px-7 py-4 w-full text-left
+      flex items-center gap-3 min-h-[44px] px-4 sm:px-5 md:px-7 py-3 sm:py-4 w-full text-left
       transition-all duration-200
       ${collapsed ? 'justify-center px-3' : ''}
       ${parentActive && !hasChildren
         ? 'bg-[#0f1f0f] text-white border-l-4 border-white/30'
         : parentActive && hasChildren
           ? 'text-white border-l-4 border-white/30'
-          : 'text-gray-300 hover:bg-[#0f1f0f] hover:text-white'}
+          : 'text-gray-300 hover:bg-[#0f1f0f] hover:text-white active:bg-[#0f1f0f]'}
     `;
 
     return (
@@ -344,22 +344,25 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
 
       <aside
         className={`
-          fixed top-0 left-0 h-full z-50
-          flex flex-col overflow-y-auto
+          fixed top-0 left-0 z-50
+          flex flex-col overflow-y-auto overflow-x-hidden
           transition-all duration-300 ease-in-out
+          h-full min-h-[100dvh]
+          w-[280px] max-w-[85vw]
+          lg:max-w-none
           lg:translate-x-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          ${collapsed ? 'w-20' : 'w-64'}
+          ${collapsed ? 'lg:w-20' : 'lg:w-64'}
           bg-[#1a2e1a]
           border-r border-[#0f1f0f]
           text-white
         `}
       >
-        <div className="p-5 border-b border-[#0f1f0f] flex-shrink-0 mb-4">
+        <div className="p-4 sm:p-5 border-b border-[#0f1f0f] flex-shrink-0 mb-2 sm:mb-4">
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <Link
               href="/dashboard"
-              className={`flex items-center gap-3 ${collapsed ? 'flex-1 justify-center' : 'flex-1'}`}
+              className={`flex items-center gap-3 min-h-[44px] ${collapsed ? 'flex-1 justify-center' : 'flex-1'}`}
               onClick={handleLinkClick}
             >
               <div
@@ -369,53 +372,57 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
               </div>
               {!collapsed && (
                 <div className="flex flex-col min-w-0">
-                  <span className="text-xl font-semibold text-white leading-tight truncate">Orora</span>
-                  <span className="text-xs text-white/80 leading-tight">Cattle Farming Platform</span>
+                  <span className="text-lg sm:text-xl font-semibold text-white leading-tight truncate">Orora</span>
+                  <span className="text-xs text-white/80 leading-tight hidden sm:block">Cattle Farming Platform</span>
                 </div>
               )}
             </Link>
-            {collapsed ? (
-              <button
-                type="button"
-                onClick={handleCollapseToggle}
-                className="p-1.5 hover:bg-[#0f1f0f] rounded-sm transition-colors text-gray-300 hover:text-white"
-                aria-label="Expand sidebar"
-                title="Expand sidebar"
-              >
-                <Icon icon={faChevronRight} size="sm" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleCollapseToggle}
-                className="p-1.5 hover:bg-[#0f1f0f] rounded-sm transition-colors text-gray-300 hover:text-white"
-                aria-label="Collapse sidebar"
-              >
-                <Icon icon={faBars} size="sm" />
-              </button>
-            )}
+            {/* Collapse toggle: only on lg+ when sidebar is visible (not overlay) */}
+            <span className="hidden lg:inline-flex">
+              {collapsed ? (
+                <button
+                  type="button"
+                  onClick={handleCollapseToggle}
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#0f1f0f] rounded-sm transition-colors text-gray-300 hover:text-white"
+                  aria-label="Expand sidebar"
+                  title="Expand sidebar"
+                >
+                  <Icon icon={faChevronRight} size="sm" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleCollapseToggle}
+                  className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#0f1f0f] rounded-sm transition-colors text-gray-300 hover:text-white"
+                  aria-label="Collapse sidebar"
+                >
+                  <Icon icon={faBars} size="sm" />
+                </button>
+              )}
+            </span>
           </div>
         </div>
 
-        <div className={`flex-shrink-0 flex flex-col items-center gap-4 mb-4 p-6 ${collapsed ? 'px-3' : ''}`}>
+        <div className={`flex-shrink-0 flex flex-col items-center gap-3 sm:gap-4 mb-2 sm:mb-4 p-4 sm:p-6 ${collapsed ? 'lg:px-3' : ''}`}>
           <div
             className={`
               rounded-full flex items-center justify-center text-white
               bg-black/20 border-2 border-white/30
               transition-all duration-300 ease-in-out
-              hover:bg-black/30 hover:border-white/50 hover:scale-105
-              ${collapsed ? 'w-12 h-12' : 'w-24 h-24'}
+              hover:bg-black/30 hover:border-white/50 active:scale-105
+              w-14 h-14 sm:w-20 sm:h-20
+              ${collapsed ? 'lg:w-12 lg:h-12' : 'lg:w-24 lg:h-24'}
             `}
           >
             <Icon icon={faUser} className="text-white" size={collapsed ? 'sm' : '2x'} />
           </div>
           {!collapsed && (
             <div className="text-center w-full min-w-0">
-              <div className="text-sm font-semibold text-white mb-1 truncate">{userName}</div>
+              <div className="text-sm font-semibold text-white mb-0.5 truncate">{userName}</div>
               {userEmail && (
-                <div className="text-xs text-gray-300 mb-1 truncate max-w-[200px] mx-auto">{userEmail}</div>
+                <div className="text-xs text-gray-300 truncate max-w-[200px] mx-auto">{userEmail}</div>
               )}
-              <div className="text-xs text-white/80 font-medium uppercase tracking-wide">{userRole}</div>
+              <div className="text-xs text-white/80 font-medium uppercase tracking-wide mt-0.5">{userRole}</div>
             </div>
           )}
         </div>
@@ -430,7 +437,9 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
                       {group.groupLabel}
                     </div>
                   )}
-                  {group.items.map((item, idx) => renderItem(item, idx))}
+                  <ul className="list-none p-0 m-0 flex flex-col gap-0">
+                    {group.items.map((item, idx) => renderItem(item, idx))}
+                  </ul>
                 </li>
               ))
             ) : (

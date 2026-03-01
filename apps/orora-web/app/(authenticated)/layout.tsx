@@ -76,21 +76,23 @@ export default function AuthenticatedLayout({
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen bg-gray-100 overflow-hidden">
+      <div className="flex h-screen min-h-[100dvh] bg-gray-100 overflow-hidden">
         <Sidebar
           isOpen={sidebarOpen}
           collapsed={sidebarCollapsed}
           onClose={handleSidebarClose}
           onCollapsedChange={handleSidebarCollapsedChange}
         />
-        <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
+        <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
           <Header
             sidebarOpen={sidebarOpen}
             sidebarCollapsed={sidebarCollapsed}
             onMenuToggle={handleSidebarToggle}
           />
-          <main className="flex-1 overflow-y-auto p-6">
-            <RouteGuard>{children}</RouteGuard>
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 md:p-6 lg:p-8">
+            <div className="container-content">
+              <RouteGuard>{children}</RouteGuard>
+            </div>
           </main>
           <Toast />
         </div>

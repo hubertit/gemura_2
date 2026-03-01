@@ -139,19 +139,19 @@ export default function Header({
   const selectedFarm = farmsForAccount.find((f) => f.id === selectedFarmId) || null;
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="flex items-center h-20 px-4 md:px-6 lg:px-8 gap-4">
-        {/* Sidebar Toggle */}
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 safe-area-inset">
+      <div className="flex items-center min-h-[56px] sm:min-h-[64px] md:min-h-[72px] lg:h-20 px-3 sm:px-4 md:px-6 lg:px-8 gap-2 sm:gap-4">
+        {/* Sidebar Toggle - touch target 44px */}
         <button
           onClick={onMenuToggle}
-          className="flex items-center justify-center p-2.5 bg-gray-50 border border-gray-200 text-gray-900 cursor-pointer rounded transition-all mr-3 flex-shrink-0 hover:bg-gray-100 hover:border-gray-300 hover:text-[var(--primary)] active:bg-gray-200 active:scale-95 lg:hidden"
+          className="flex items-center justify-center min-w-[44px] min-h-[44px] p-2.5 bg-gray-50 border border-gray-200 text-gray-900 cursor-pointer rounded-lg transition-all mr-1 sm:mr-3 flex-shrink-0 hover:bg-gray-100 hover:border-gray-300 hover:text-[var(--primary)] active:bg-gray-200 active:scale-95 lg:hidden"
           aria-label="Toggle sidebar"
         >
           <Icon icon={faBars} size="sm" />
         </button>
 
-        {/* Search Input */}
-        <div className="flex-1 relative hidden sm:block max-w-[240px] md:max-w-[280px] lg:max-w-[360px]" ref={searchRef}>
+        {/* Search Input - hidden on xs, shown sm+ */}
+        <div className="flex-1 relative hidden sm:block max-w-[200px] md:max-w-[260px] lg:max-w-[320px] xl:max-w-[360px]" ref={searchRef}>
           <div className="relative w-full">
             <div className={`absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center pointer-events-none text-gray-400 z-10 transition-colors ${searchLoading ? 'animate-spin text-[var(--primary)]' : ''}`}>
               <Icon icon={searchLoading ? faSpinner : faSearch} size="sm" />
@@ -176,9 +176,9 @@ export default function Header({
 
         {/* Account + Farm Switchers */}
         {accounts.length > 0 && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 min-w-0">
             {/* Account Switcher */}
-            <div className="relative flex-shrink-0" ref={accountSwitcherRef}>
+            <div className="relative flex-shrink-0 min-w-0" ref={accountSwitcherRef}>
             <button
               type="button"
               onClick={() => {
@@ -186,7 +186,7 @@ export default function Header({
                 setUserMenuOpen(false);
                 setNotificationsOpen(false);
               }}
-              className="flex items-center gap-2.5 min-w-0 max-w-[220px] sm:max-w-[260px] px-3.5 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all duration-200 group"
+              className="flex items-center gap-2 min-w-0 max-w-[160px] sm:max-w-[220px] md:max-w-[260px] px-2.5 sm:px-3.5 py-2 min-h-[44px] rounded-lg sm:rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all duration-200 group"
               aria-label="Switch account"
               aria-expanded={accountSwitcherOpen}
             >
@@ -211,7 +211,7 @@ export default function Header({
             </button>
 
             {accountSwitcherOpen && (
-              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-xl border border-gray-200 shadow-lg shadow-gray-200/50 py-2 z-[1000]">
+              <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-72 sm:max-w-none sm:w-80 bg-white rounded-xl border border-gray-200 shadow-lg shadow-gray-200/50 py-2 z-[1000]">
                 <div className="px-3 pb-2 mb-2 border-b border-gray-100">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Switch account</p>
                 </div>
@@ -272,7 +272,7 @@ export default function Header({
                     setUserMenuOpen(false);
                     setNotificationsOpen(false);
                   }}
-                  className="flex items-center gap-2.5 min-w-0 max-w-[220px] sm:max-w-[260px] px-3 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all duration-200 group"
+                  className="flex items-center gap-2 min-w-0 max-w-[140px] sm:max-w-[200px] md:max-w-[260px] px-2.5 sm:px-3 py-2 min-h-[44px] rounded-lg sm:rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all duration-200 group"
                   aria-label="Switch farm"
                   aria-expanded={farmSwitcherOpen}
                 >
@@ -295,7 +295,7 @@ export default function Header({
                 </button>
 
                 {farmSwitcherOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-xl border border-gray-200 shadow-lg shadow-gray-200/50 py-2 z-[1000]">
+                  <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-72 sm:max-w-none sm:w-80 bg-white rounded-xl border border-gray-200 shadow-lg shadow-gray-200/50 py-2 z-[1000]">
                     <div className="px-3 pb-2 mb-2 border-b border-gray-100">
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Farms</p>
                     </div>
@@ -383,7 +383,7 @@ export default function Header({
                 setNotificationsOpen(!notificationsOpen);
                 setUserMenuOpen(false);
               }}
-              className="relative flex items-center justify-center w-10 h-10 p-0 bg-transparent border-none text-gray-700 cursor-pointer rounded-sm transition-all hover:bg-gray-100 active:scale-95"
+              className="relative flex items-center justify-center min-w-[44px] min-h-[44px] p-2 bg-transparent border-none text-gray-700 cursor-pointer rounded-lg transition-all hover:bg-gray-100 active:scale-95"
               aria-label="Notifications"
             >
               <Icon icon={faBell} size="sm" />
@@ -399,7 +399,7 @@ export default function Header({
 
             {/* Notifications Dropdown */}
             {notificationsOpen && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded z-[1000] max-h-96 overflow-y-auto">
+              <div className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] max-w-80 sm:w-80 bg-white border border-gray-200 rounded-xl sm:rounded z-[1000] max-h-[70vh] sm:max-h-96 overflow-y-auto">
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-900 m-0">Notifications</h3>
                   <Link
@@ -457,7 +457,7 @@ export default function Header({
                 setUserMenuOpen(!userMenuOpen);
                 setNotificationsOpen(false);
               }}
-              className="flex items-center gap-2 p-1 bg-transparent border-none cursor-pointer rounded-sm transition-all hover:bg-gray-100"
+              className="flex items-center gap-2 min-w-[44px] min-h-[44px] p-2 bg-transparent border-none cursor-pointer rounded-lg transition-all hover:bg-gray-100 active:scale-95"
               aria-label="User menu"
             >
               <div className="w-9 h-9 bg-[var(--primary)]/10 rounded-full flex items-center justify-center text-[var(--primary)] flex-shrink-0">
@@ -472,7 +472,7 @@ export default function Header({
 
             {/* User Dropdown */}
             {userMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded z-[1000]">
+              <div className="absolute right-0 top-full mt-2 w-48 min-w-[200px] max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl sm:rounded z-[1000] shadow-lg">
                 <div className="py-1">
                   {user && (
                     <>
