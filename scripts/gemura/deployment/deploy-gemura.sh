@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Deploy Gemura (Backend + Web) to Kwezi server (209.74.80.195)
+# Deploy Gemura (Backend + Web) to Kwezi server – Kwezi-style: rsync + docker build (with cache).
 #
 # Usage (from project root):
 #   ./scripts/gemura/deployment/deploy-gemura.sh
@@ -9,19 +9,24 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+CREDS_FILE="$REPO_ROOT/scripts/shared/deployment/server-credentials.sh"
+[ -f "$CREDS_FILE" ] && source "$CREDS_FILE"
 
-# Server credentials
-SERVER_IP="209.74.80.195"
-SERVER_USER="root"
-SERVER_PASS="yZ961O53GtQdP2prAu"
+SERVER_IP="${SERVER_IP:-209.74.80.195}"
+SERVER_USER="${SERVER_USER:-root}"
+SERVER_PASS="${SERVER_PASS:-}"
 DEPLOY_PATH="/opt/gemura"
 GEMURA_UI_PORT="3006"
 GEMURA_API_PORT="3007"
 
-SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
-SCP_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
+if [ -z "$SERVER_PASS" ]; then
+  echo "❌ SERVER_PASS not set. Configure scripts/shared/deployment/server-credentials.sh or export SERVER_PASS."
+  exit 1
+fi
 
-echo "🚀 Gemura Deployment (Backend + Web)"
+SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
+
+echo "🚀 Gemura Deployment (Kwezi-style: rsync + build with cache)"
 echo "================================================"
 echo "   Server: $SERVER_IP"
 echo "   UI Port: $GEMURA_UI_PORT"
@@ -36,40 +41,53 @@ fi
 echo "   ✅ Server reachable"
 
 echo ""
-echo "📦 Step 1: Creating deployment archive..."
+echo "📤 Syncing files (rsync, incremental)..."
 cd "$REPO_ROOT"
-COPYFILE_DISABLE=1 tar -czf /tmp/gemura-deploy.tar.gz \
-  --exclude='backend/node_modules' \
-  --exclude='backend/dist' \
-  --exclude='apps/gemura-web/node_modules' \
-  --exclude='apps/gemura-web/.next' \
+sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH/backend $DEPLOY_PATH/apps/gemura-web $DEPLOY_PATH/docker"
+rsync -avz --delete \
+  --exclude='node_modules' --exclude='dist' --exclude='.git' \
+  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
   backend/ \
+  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/backend/
+rsync -avz --delete \
+  --exclude='node_modules' --exclude='.next' --exclude='.git' \
+  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
   apps/gemura-web/ \
-  docker/docker-compose.kwezi.yml
-echo "   ✅ Archive created ($(du -h /tmp/gemura-deploy.tar.gz | cut -f1))"
+  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/apps/gemura-web/
+rsync -avz \
+  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  docker/docker-compose.kwezi.yml \
+  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/docker/
+echo "   ✅ Sync complete"
 
 echo ""
-echo "📤 Step 2: Uploading to server..."
-sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH" 2>/dev/null || true
-sshpass -p "$SERVER_PASS" scp $SCP_OPTS /tmp/gemura-deploy.tar.gz $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/
-echo "   ✅ Upload complete"
+echo "🔨 Building and starting containers (Docker cache used)..."
+sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP 'bash -s' << 'ENDSSH'
+export LC_ALL=C.UTF-8
+cd /opt/gemura
+POSTGRES_PASSWORD=$(grep -E '^POSTGRES_PASSWORD=' /opt/kwezi/.env 2>/dev/null | cut -d= -f2- || echo "KweziPg2025!")
+if [ ! -f .env ] || ! grep -q "DATABASE_URL" .env 2>/dev/null; then
+  cat > .env << EOF
+DATABASE_URL=postgresql://kwezi:${POSTGRES_PASSWORD}@kwezi-postgres:5432/gemura_db?schema=public
+JWT_SECRET=gemura_jwt_secret_production_2026
+JWT_EXPIRES_IN=7d
+API_PORT=3007
+UI_PORT=3006
+NEXT_PUBLIC_API_URL=https://app.gemura.rw/api
+CORS_ORIGIN=http://localhost:3006,http://209.74.80.195:3006,http://209.74.80.195:3007,http://209.74.80.195:3011,https://app.gemura.rw,https://app.orora.rw
+EOF
+fi
+docker compose -f docker/docker-compose.kwezi.yml down --timeout 30 2>/dev/null || true
+sleep 2
+docker compose -f docker/docker-compose.kwezi.yml --env-file .env up -d --build
+ENDSSH
 
 echo ""
-echo "📂 Step 3: Extracting on server..."
-sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && tar -xzf gemura-deploy.tar.gz && rm gemura-deploy.tar.gz"
-echo "   ✅ Extracted"
-
-echo ""
-echo "🔨 Step 4: Building and starting containers..."
-sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH && docker compose -f docker/docker-compose.kwezi.yml down 2>/dev/null || true && docker compose -f docker/docker-compose.kwezi.yml build && docker compose -f docker/docker-compose.kwezi.yml up -d"
-
-echo ""
-echo "⏳ Step 5: Waiting for services to be ready..."
+echo "⏳ Waiting for services to be ready..."
 for i in 1 2 3 4 5 6 7 8; do
   sleep 5
   API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP:$GEMURA_API_PORT/api/health 2>/dev/null || echo "000")
   UI_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP:$GEMURA_UI_PORT/auth/login 2>/dev/null || echo "000")
-  
   if [ "$API_STATUS" = "200" ] && [ "$UI_STATUS" = "200" ]; then
     echo "   ✅ Backend is healthy"
     echo "   ✅ Frontend is healthy"
@@ -78,12 +96,9 @@ for i in 1 2 3 4 5 6 7 8; do
   [ "$i" -eq 8 ] && echo "   ⚠️  Services may still be starting (API: $API_STATUS, UI: $UI_STATUS)"
 done
 
-# Cleanup
-rm -f /tmp/gemura-deploy.tar.gz
-
 echo ""
 echo "✅ Deployment complete"
 echo "================================================"
-echo "   Gemura Web: http://$SERVER_IP:$GEMURA_UI_PORT"
+echo "   Gemura Web: https://app.gemura.rw  (or http://$SERVER_IP:$GEMURA_UI_PORT)"
 echo "   Gemura API: http://$SERVER_IP:$GEMURA_API_PORT/api"
 echo ""
