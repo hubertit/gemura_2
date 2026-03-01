@@ -196,10 +196,10 @@ module/
 
 ## 🔗 **RELATED DOCUMENTATION**
 
-- [Complete Endpoints](./ENDPOINTS_COMPLETE.md)
-- [UUID Consistency](./UUID_CONSISTENCY.md)
-- [Soft Delete Implementation](./SOFT_DELETE_IMPLEMENTATION.md)
-- [Default Status Changes](./DEFAULT_STATUS_CHANGES.md)
+- [Complete Endpoints](./endpoints-complete.md)
+- [UUID Consistency](./uuid-consistency.md)
+- [Soft Delete Implementation](./soft-delete-implementation.md)
+- [Default Status Changes](./default-status-changes.md)
 
 ---
 

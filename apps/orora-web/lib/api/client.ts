@@ -1,14 +1,25 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// Production backend. Set NEXT_PUBLIC_API_URL to use local (e.g. http://localhost:3004/api) or another host.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://159.198.65.38:3004/api';
+// When running on localhost/127.0.0.1, use local backend unless NEXT_PUBLIC_API_URL is set.
+// Production / deployed app uses NEXT_PUBLIC_API_URL or remote default.
+function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3007/api';
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://159.198.65.38:3007/api';
+}
+
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://159.198.65.38:3007/api';
 
 class ApiClient {
   private client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: DEFAULT_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -18,10 +29,11 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - add auth token
+    // Request interceptor - resolve base URL (localhost → local backend) and add auth token
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
         if (typeof window !== 'undefined') {
+          config.baseURL = getApiBaseUrl();
           const token = localStorage.getItem('orora-auth-token');
           if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -38,9 +50,10 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          // Unauthorized - clear auth and redirect to login
-          if (typeof window !== 'undefined') {
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+          const isLoginRequest = error.config?.url?.includes('/auth/login');
+          if (!isLoginRequest) {
+            // Unauthorized on a protected request - clear auth and redirect to login
             localStorage.removeItem('orora-auth-token');
             localStorage.removeItem('orora-auth-storage');
             window.location.href = '/auth/login';
@@ -68,6 +81,11 @@ class ApiClient {
 
   async put<T>(url: string, data?: any, config?: any): Promise<T> {
     const response = await this.client.put(url, data, config);
+    return response.data;
+  }
+
+  async patch<T>(url: string, data?: any, config?: any): Promise<T> {
+    const response = await this.client.patch(url, data, config);
     return response.data;
   }
 

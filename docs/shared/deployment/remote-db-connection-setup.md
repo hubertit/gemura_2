@@ -108,7 +108,7 @@ npm run start:dev
 
 **Solution**:
 - Create database on remote server
-- Or sync migrations (see [Remote DB Sync](../migration/SYNC_REMOTE_DB_INSTRUCTIONS.md))
+- Or sync migrations (see [Remote DB Sync](../migration/sync-remote-db-instructions.md))
 
 ---
 
@@ -123,9 +123,9 @@ npm run start:dev
 
 ## 🔗 **RELATED DOCUMENTATION**
 
-- [Remote DB Sync](../migration/SYNC_REMOTE_DB_INSTRUCTIONS.md) - Sync schema changes
-- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment
-- [Connect to Remote DB](./CONNECT_TO_REMOTE_DB.md) - Connection instructions
+- [Remote DB Sync](../migration/sync-remote-db-instructions.md) - Sync schema changes
+- [Deployment Guide](./deployment-guide.md) - Production deployment
+- [Connect to Remote DB](./connect-to-remote-db.md) - Connection instructions
 
 ---
 

@@ -210,7 +210,7 @@ npx prisma migrate status
 ## 🔗 **RELATED DOCUMENTATION**
 
 - [Migration Scripts](../scripts/migration/README.md)
-- [Deployment Guide](../deployment/DEPLOYMENT_GUIDE.md)
+- [Deployment Guide](../deployment/deployment-guide.md)
 - [Prisma Migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
 
 ---

@@ -1,0 +1,169 @@
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { FarmStatus, Prisma, User } from '@prisma/client';
+
+export interface FarmsListFilters {
+  status?: FarmStatus;
+  search?: string;
+}
+
+@Injectable()
+export class FarmsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private getAccountId(user: User, accountId?: string): string {
+    const id = accountId || user.default_account_id;
+    if (!id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+    return id;
+  }
+
+  async listFarms(user: User, filters?: FarmsListFilters, accountId?: string) {
+    const accId = this.getAccountId(user, accountId);
+    const where: Prisma.FarmWhereInput = { account_id: accId };
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { code: { contains: filters.search, mode: 'insensitive' } },
+        { location: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.farm.findMany({
+      where,
+      orderBy: [{ name: 'asc' }],
+      include: {
+        _count: { select: { animals: true } },
+        locationRef: { select: { id: true, code: true, name: true, location_type: true } },
+      },
+    });
+  }
+
+  async getFarm(user: User, id: string, accountId?: string) {
+    const accId = this.getAccountId(user, accountId);
+    const farm = await this.prisma.farm.findFirst({
+      where: { id, account_id: accId },
+      include: {
+        _count: { select: { animals: true } },
+        locationRef: { select: { id: true, code: true, name: true, location_type: true } },
+      },
+    });
+    if (!farm) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Farm not found',
+      });
+    }
+    return farm;
+  }
+
+  async createFarm(
+    user: User,
+    dto: { name: string; location_id?: string; description?: string; location?: string },
+    accountId?: string,
+  ) {
+    const accId = this.getAccountId(user, accountId);
+
+    const nextCode = await this.generateNextFarmCode(accId);
+
+    return this.prisma.farm.create({
+      data: {
+        account: { connect: { id: accId } },
+        name: dto.name,
+        code: nextCode,
+        description: dto.description ?? undefined,
+        location: dto.location ?? undefined,
+        ...(dto.location_id && { locationRef: { connect: { id: dto.location_id } } }),
+        status: FarmStatus.active,
+        created_by: user.id,
+      },
+    });
+  }
+
+  private async generateNextFarmCode(accountId: string): Promise<string> {
+    const last = await this.prisma.farm.findFirst({
+      where: { account_id: accountId },
+      orderBy: { created_at: 'desc' },
+      select: { code: true },
+    });
+    const nextNum = last?.code?.match(/^FARM-(\d+)$/)?.[1]
+      ? parseInt(last.code.replace(/^FARM-/, ''), 10) + 1
+      : 1;
+    const code = `FARM-${String(nextNum).padStart(4, '0')}`;
+    const exists = await this.prisma.farm.findUnique({ where: { code } });
+    if (exists) {
+      return `FARM-${String(nextNum + 1).padStart(4, '0')}`;
+    }
+    return code;
+  }
+
+  async updateFarm(
+    user: User,
+    id: string,
+    dto: { name?: string; location_id?: string; description?: string; location?: string; status?: FarmStatus },
+    accountId?: string,
+  ) {
+    const accId = this.getAccountId(user, accountId);
+    const existing = await this.prisma.farm.findFirst({
+      where: { id, account_id: accId },
+    });
+    if (!existing) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Farm not found',
+      });
+    }
+
+    return this.prisma.farm.update({
+      where: { id },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.location_id !== undefined && {
+          locationRef: dto.location_id ? { connect: { id: dto.location_id } } : { disconnect: true },
+        }),
+        ...(dto.description !== undefined && { description: dto.description }),
+        ...(dto.location !== undefined && { location: dto.location }),
+        ...(dto.status !== undefined && { status: dto.status }),
+      },
+    });
+  }
+
+  async deleteFarm(user: User, id: string, accountId?: string) {
+    const accId = this.getAccountId(user, accountId);
+    const farm = await this.prisma.farm.findFirst({
+      where: { id, account_id: accId },
+      include: { _count: { select: { animals: true } } },
+    });
+    if (!farm) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Farm not found',
+      });
+    }
+
+    if (farm._count.animals > 0) {
+      // For safety, we soft-delete by marking inactive instead of removing when animals exist.
+      await this.prisma.farm.update({
+        where: { id },
+        data: { status: FarmStatus.inactive },
+      });
+      return { message: 'Farm deactivated because it still has animals attached.' };
+    }
+
+    await this.prisma.farm.delete({ where: { id } });
+    return { message: 'Farm deleted successfully' };
+  }
+}
+

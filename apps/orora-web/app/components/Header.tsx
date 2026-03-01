@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
+import { useFarmStore } from '@/store/farms';
 import { accountsApi } from '@/lib/api/accounts';
 import { useToastStore } from '@/store/toast';
 import Icon, {
@@ -17,6 +18,7 @@ import Icon, {
   faSpinner,
   faBuilding,
   faCheck,
+  faPaw,
 } from './Icon';
 
 interface HeaderProps {
@@ -34,12 +36,14 @@ export default function Header({
 }: HeaderProps) {
   const router = useRouter();
   const { user, logout, accounts, currentAccount, setCurrentAccount, setAccounts } = useAuthStore();
+  const { farmsByAccount, selectedFarmByAccount, setSelectedFarm, loadFarms } = useFarmStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountSwitcherOpen, setAccountSwitcherOpen] = useState(false);
+  const [farmSwitcherOpen, setFarmSwitcherOpen] = useState(false);
   const [switchingAccountId, setSwitchingAccountId] = useState<string | null>(null);
   const [userName, setUserName] = useState('User');
 
@@ -47,6 +51,7 @@ export default function Header({
   const notificationsRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const accountSwitcherRef = useRef<HTMLDivElement>(null);
+  const farmSwitcherRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -69,16 +74,26 @@ export default function Header({
       if (accountSwitcherRef.current && !accountSwitcherRef.current.contains(event.target as Node)) {
         setAccountSwitcherOpen(false);
       }
+      if (farmSwitcherRef.current && !farmSwitcherRef.current.contains(event.target as Node)) {
+        setFarmSwitcherOpen(false);
+      }
     };
 
-    if (userMenuOpen || notificationsOpen || searchOpen || accountSwitcherOpen) {
+    if (userMenuOpen || notificationsOpen || searchOpen || accountSwitcherOpen || farmSwitcherOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [userMenuOpen, notificationsOpen, searchOpen, accountSwitcherOpen]);
+  }, [userMenuOpen, notificationsOpen, searchOpen, accountSwitcherOpen, farmSwitcherOpen]);
+
+  // Load farms when account changes so switcher has data
+  useEffect(() => {
+    if (currentAccount?.account_id) {
+      void loadFarms(currentAccount.account_id);
+    }
+  }, [currentAccount?.account_id, loadFarms]);
 
   const handleLogout = () => {
     logout();
@@ -118,6 +133,11 @@ export default function Header({
   const notifications: any[] = [];
   const unreadCount = 0;
 
+  const currentAccountId = currentAccount?.account_id || '';
+  const farmsForAccount = currentAccountId ? farmsByAccount[currentAccountId] || [] : [];
+  const selectedFarmId = currentAccountId ? selectedFarmByAccount[currentAccountId] ?? null : null;
+  const selectedFarm = farmsForAccount.find((f) => f.id === selectedFarmId) || null;
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="flex items-center h-20 px-4 md:px-6 lg:px-8 gap-4">
@@ -154,9 +174,11 @@ export default function Header({
         {/* Spacer */}
         <div className="flex-1"></div>
 
-        {/* Account Switcher */}
+        {/* Account + Farm Switchers */}
         {accounts.length > 0 && (
-          <div className="relative flex-shrink-0" ref={accountSwitcherRef}>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Account Switcher */}
+            <div className="relative flex-shrink-0" ref={accountSwitcherRef}>
             <button
               type="button"
               onClick={() => {
@@ -236,6 +258,117 @@ export default function Header({
                     );
                   })}
                 </ul>
+              </div>
+            )}
+            </div>
+
+            {/* Farm Switcher (per account) */}
+            {currentAccount && (
+              <div className="relative flex-shrink-0" ref={farmSwitcherRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFarmSwitcherOpen(!farmSwitcherOpen);
+                    setUserMenuOpen(false);
+                    setNotificationsOpen(false);
+                  }}
+                  className="flex items-center gap-2.5 min-w-0 max-w-[220px] sm:max-w-[260px] px-3 py-2 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all duration-200 group"
+                  aria-label="Switch farm"
+                  aria-expanded={farmSwitcherOpen}
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
+                    <Icon icon={faPaw} size="sm" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-xs font-semibold text-gray-900 truncate">
+                      {selectedFarm?.name || 'All farms'}
+                    </p>
+                    <p className="text-[11px] text-gray-500 truncate">
+                      {selectedFarm ? (selectedFarm.location || selectedFarm.code || 'Farm context') : 'Showing all farms'}
+                    </p>
+                  </div>
+                  <Icon
+                    icon={faChevronDown}
+                    className={`flex-shrink-0 text-gray-400 transition-transform duration-200 ${farmSwitcherOpen ? 'rotate-180' : ''}`}
+                    size="sm"
+                  />
+                </button>
+
+                {farmSwitcherOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-xl border border-gray-200 shadow-lg shadow-gray-200/50 py-2 z-[1000]">
+                    <div className="px-3 pb-2 mb-2 border-b border-gray-100">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Farms</p>
+                    </div>
+                    <ul className="max-h-[280px] overflow-y-auto">
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (currentAccountId) {
+                              setSelectedFarm(currentAccountId, null);
+                            }
+                            setFarmSwitcherOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors rounded-lg mx-2 ${
+                            !selectedFarm ? 'bg-purple-50 text-purple-700' : 'hover:bg-gray-50 text-gray-700'
+                          }`}
+                        >
+                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <Icon icon={faPaw} size="sm" className={!selectedFarm ? 'text-purple-600' : 'text-gray-500'} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">
+                              All farms
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              View animals and stats across all farms
+                            </p>
+                          </div>
+                          {!selectedFarm && <Icon icon={faCheck} size="sm" className="text-purple-600 flex-shrink-0" />}
+                        </button>
+                      </li>
+                      {farmsForAccount.map((farm) => {
+                        const isActive = selectedFarmId === farm.id;
+                        return (
+                          <li key={farm.id}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (currentAccountId) {
+                                  setSelectedFarm(currentAccountId, farm.id);
+                                }
+                                setFarmSwitcherOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors rounded-lg mx-2 ${
+                                isActive
+                                  ? 'bg-purple-50 text-purple-700'
+                                  : 'hover:bg-gray-50 text-gray-700'
+                              }`}
+                            >
+                              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                <Icon icon={faPaw} size="sm" className={isActive ? 'text-purple-600' : 'text-gray-500'} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate">
+                                  {farm.name}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {farm.location || farm.code || 'Farm'}
+                                </p>
+                              </div>
+                              {isActive && <Icon icon={faCheck} size="sm" className="text-purple-600 flex-shrink-0" />}
+                            </button>
+                          </li>
+                        );
+                      })}
+                      {farmsForAccount.length === 0 && (
+                        <li className="px-3 py-3 text-xs text-gray-500">
+                          No farms yet. Use the Farms module to create your first farm.
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </div>

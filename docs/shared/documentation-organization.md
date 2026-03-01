@@ -8,91 +8,53 @@ This document describes the organization structure and naming conventions for al
 ```
 docs/
 ├── README.md                          # Main documentation index
-├── DOCUMENTATION_ORGANIZATION.md      # This file
-│
-├── project/                           # Project documentation
-│   ├── README.md                      # Project docs index
-│   ├── PROJECT_STRUCTURE.md           # Project structure guide
-│   ├── PROJECT_ORGANIZATION.md       # Organization details
-│   ├── IMPLEMENTATION_STATUS.md       # Current status
-│   ├── MODULES_AND_FEATURES.md       # Features overview
-│   ├── NEXT_STEPS.md                 # Roadmap
-│   └── status/                        # Status reports
-│       ├── ORGANIZATION_COMPLETE.md
-│       └── PROJECT_DOCUMENTATION_COMPLETE.md
-│
-├── backend/                           # Backend documentation
-│   ├── README.md                      # Backend docs index
-│   ├── SWAGGER_DOCUMENTATION_STANDARDS.md
-│   ├── API_DOCUMENTATION_STATUS.md
-│   ├── DOCUMENTATION_ROADMAP.md
-│   ├── analysis/                      # Analysis documents
-│   │   ├── README_DEPLOYMENT.md
-│   │   └── TODO_ANALYSIS.md
-│   ├── modules/                       # Module-specific docs
-│   │   └── ACCOUNTING_TRANSACTIONS.md
-│   └── features/                      # Feature plans
-│       └── INVENTORY_SALES_FEATURE_PLAN.md
-│
-├── api/                              # API documentation
-│   ├── README.md
-│   ├── API_ARCHITECTURE.md
-│   ├── APP_FLOW_DOCUMENTATION.md
-│   └── ...
-│
-├── mobile/                           # Mobile app documentation
-│   ├── README.md
-│   ├── MOBILE_APP_INTEGRATION.md
-│   ├── ACCOUNT_SWITCHING_DATA_REFRESH.md
-│   └── ...
-│
-├── deployment/                       # Deployment guides
-│   ├── README.md
-│   ├── DEPLOYMENT_GUIDE.md
-│   └── ...
-│
-├── testing/                          # Test results
-│   ├── README.md
-│   └── ...
-│
-├── migration/                        # Migration guides
-│   ├── README.md
-│   └── ...
-│
-├── architecture/                     # Architecture docs
-│   └── README.md
-│
-└── archive/                          # Archived docs
-    ├── deployment/
-    └── testing/
+├── shared/
+│   ├── documentation-organization.md # This file
+│   ├── project/                      # Project documentation
+│   │   ├── README.md
+│   │   ├── project-structure.md
+│   │   ├── project-organization.md
+│   │   ├── implementation-status.md
+│   │   ├── modules-and-features.md
+│   │   ├── next-steps.md
+│   │   └── status/
+│   ├── backend/
+│   ├── api/
+│   ├── deployment/
+│   ├── testing/
+│   ├── migration/
+│   ├── architecture/
+│   └── archive/
+├── gemura/
+│   ├── mobile/
+│   └── web/
+└── orora/
 ```
 
 ## Naming Conventions
 
 ### File Naming Standards
 
-All documentation files follow these naming conventions:
+All documentation files use **kebab-case** (lowercase with hyphens):
 
-1. **UPPERCASE_WITH_UNDERSCORES.md** - Standard format
-   - Example: `PROJECT_STRUCTURE.md`, `API_DOCUMENTATION_STATUS.md`
+1. **kebab-case.md** - Standard format
+   - Example: `project-structure.md`, `api-documentation-status.md`, `deployment-guide.md`
 
 2. **README.md** - Directory index files
-   - Always lowercase
+   - Always `README.md` (capitalized)
    - Present in every major directory
 
-3. **Type Suffixes** (optional but recommended):
-   - `*_GUIDE.md` - How-to guides
-   - `*_STATUS.md` - Status reports
-   - `*_PLAN.md` - Implementation plans
-   - `*_RESULTS.md` - Test/execution results
-   - `*_STRUCTURE.md` - Structure documentation
-   - `*_COMPLETE.md` - Completion reports
+3. Use descriptive names; no required suffixes. Common patterns:
+   - `*-guide.md` - How-to guides
+   - `*-status.md` - Status reports
+   - `*-plan.md` - Implementation plans
+   - `*-results.md` - Test/execution results
 
 ### Examples
 
 ✅ **Good:**
-- `SWAGGER_DOCUMENTATION_STANDARDS.md`
-- `DEPLOYMENT_GUIDE.md`
+- `swagger-documentation-standards.md`
+- `deployment-guide.md`
 - `ACCOUNT_SWITCHING_DATA_REFRESH.md`
 - `INVENTORY_SALES_FEATURE_PLAN.md`
 

@@ -4,11 +4,11 @@ Complete testing documentation for Gemura 2.0.
 
 ## 📚 Documentation Files
 
-- **[ENDPOINT_TESTING_REPORT.md](./ENDPOINT_TESTING_REPORT.md)** - Comprehensive endpoint testing results
-- **[API_TEST_RESULTS.md](./API_TEST_RESULTS.md)** - API test results
-- **[TEST_RESULTS.md](./TEST_RESULTS.md)** - General test results
-- **[ACCOUNT_SWITCHING_TEST.md](./ACCOUNT_SWITCHING_TEST.md)** - Account switching tests
-- **[PAYROLL_TESTING_RESULTS.md](./PAYROLL_TESTING_RESULTS.md)** - Payroll module tests
+- **[endpoint-testing-report.md](./endpoint-testing-report.md)** - Comprehensive endpoint testing results
+- **[api-test-results.md](./api-test-results.md)** - API test results
+- **[test-results.md](./test-results.md)** - General test results
+- **[account-switching-test.md](./account-switching-test.md)** - Account switching tests
+- **[payroll-testing-results.md](./payroll-testing-results.md)** - Payroll module tests
 
 ## 🧪 Testing Overview
 
@@ -36,7 +36,7 @@ All API endpoints are tested for:
 - Suppliers: 4/4 endpoints ✅
 - Customers: 3/3 endpoints ✅
 
-See [ENDPOINT_TESTING_REPORT.md](./ENDPOINT_TESTING_REPORT.md) for detailed results.
+See [endpoint-testing-report.md](./endpoint-testing-report.md) for detailed results.
 
 ## 🔧 Running Tests
 

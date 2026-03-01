@@ -18,8 +18,9 @@
 
 - Shared docs in `/docs/shared` (API, architecture, deployment)
 - App-specific docs in `/docs/gemura` or `/docs/orora`
-- Each directory has a README.md
-- Use clear headings and structure
+- Doc filenames: **kebab-case** (e.g. `deployment-guide.md`). Directory indexes: `README.md`
+- Each directory has a README.md; use clear headings and structure
+- Canonical structure: see root `STRUCTURE.md`
 
 ## Script Organization
 

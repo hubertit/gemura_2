@@ -59,20 +59,20 @@ docs/
 ## 🚀 Quick Links
 
 ### Getting Started
-- **[Project Overview](./project/PROJECT_ORGANIZATION.md)** - Project structure and organization
-- **[Implementation Status](./project/IMPLEMENTATION_STATUS.md)** - Current development status
+- **[Project Overview](./project/project-organization.md)** - Project structure and organization
+- **[Implementation Status](./project/implementation-status.md)** - Current development status
 
 ### Deployment
-- **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Complete deployment instructions
-- **[Quick Deploy](./deployment/FINAL_DEPLOYMENT_INSTRUCTIONS.md)** - Fast deployment steps
-- **[Deployment Optimization](./deployment/DEPLOYMENT_OPTIMIZATION.md)** - Performance tips
+- **[Deployment Guide](./deployment/deployment-guide.md)** - Complete deployment instructions
+- **[Quick Deploy](./deployment/final-deployment-instructions.md)** - Fast deployment steps
+- **[Deployment Optimization](./deployment/deployment-optimization.md)** - Performance tips
 
 ### API
 - **[API Documentation](./api/README.md)** - API endpoints and status
-- **[App Flow](./api/APP_FLOW_DOCUMENTATION.md)** - Application flow documentation
+- **[App Flow](./api/app-flow-documentation.md)** - Application flow documentation
 
 ### Development
-- **[Mobile Integration](./mobile/MOBILE_APP_INTEGRATION.md)** - Mobile app integration guide
+- **[Mobile Integration](../gemura/mobile/mobile-app-integration.md)** - Mobile app integration guide
 - **[Testing Results](./testing/README.md)** - Test results and verification
 
 ### Migration
@@ -87,10 +87,10 @@ Project overview, status, and organization information.
 Complete guides for deploying the application to production.
 
 **Key Documents:**
-- `FINAL_DEPLOYMENT_INSTRUCTIONS.md` - Main deployment guide
-- `DEPLOYMENT_GUIDE.md` - Comprehensive deployment documentation
-- `DEPLOYMENT_OPTIMIZATION.md` - Performance optimization guide
-- `AUTOMATIC_DEPLOYMENT.md` - Automated deployment configuration
+- `final-deployment-instructions.md` - Main deployment guide
+- `deployment-guide.md` - Comprehensive deployment documentation
+- `deployment-optimization.md` - Performance optimization guide
+- `automatic-deployment.md` - Automated deployment configuration
 
 ### API Documentation (`/api`)
 API endpoints, testing results, and integration guides.
@@ -107,13 +107,13 @@ Data migration plans, execution guides, and progress tracking.
 ## 🔍 Finding Information
 
 ### Need to deploy?
-→ Start with [`deployment/FINAL_DEPLOYMENT_INSTRUCTIONS.md`](./deployment/FINAL_DEPLOYMENT_INSTRUCTIONS.md)
+→ Start with [`deployment/final-deployment-instructions.md`](./deployment/final-deployment-instructions.md)
 
 ### Looking for API endpoints?
 → Check [`api/README.md`](./api/README.md)
 
 ### Want to understand the project structure?
-→ Read [`project/PROJECT_ORGANIZATION.md`](./project/PROJECT_ORGANIZATION.md)
+→ Read [`project/project-organization.md`](./project/project-organization.md)
 
 ### Need migration help?
 → See [`migration/README.md`](./migration/README.md)

@@ -9,6 +9,8 @@ import { statsApi, OverviewResponse } from '@/lib/api/stats';
 import { accountingApi } from '@/lib/api/accounting';
 import { inventoryApi, type InventoryStats, type ValuationOverTimePoint, type TopItemByValue, type StockMovementPoint } from '@/lib/api/inventory';
 import { loansApi, type Loan } from '@/lib/api/loans';
+import { animalsApi } from '@/lib/api/animals';
+import { useFarmStore } from '@/store/farms';
 import { useToastStore } from '@/store/toast';
 import Icon, {
   faBuilding,
@@ -24,6 +26,7 @@ import Icon, {
   faSpinner,
   faHandHoldingDollar,
   faEye,
+  faPaw,
 } from '@/app/components/Icon';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
@@ -86,6 +89,7 @@ function getPeriodRange(period: PeriodKey, customFrom?: string, customTo?: strin
 export default function Dashboard() {
   const router = useRouter();
   const { currentAccount } = useAuthStore();
+  const { selectedFarmByAccount } = useFarmStore();
   const accountType = currentAccount?.account_type ?? '';
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<OverviewResponse['data'] | null>(null);
@@ -122,6 +126,7 @@ export default function Dashboard() {
   const [financeExpenseByCategory, setFinanceExpenseByCategory] = useState<{ category_name: string; amount: number }[]>([]);
   const [loansData, setLoansData] = useState<Loan[]>([]);
   const [loansLoading, setLoansLoading] = useState(false);
+  const [animalStats, setAnimalStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
 
   const dateRange = useMemo(
     () => getPeriodRange(period, customFrom || undefined, customTo || undefined),
@@ -168,6 +173,31 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [accountType, currentAccount?.account_id, router, dateRange.date_from, dateRange.date_to, refreshKey]);
+
+  // Load animal counts for farm overview (Overview tab)
+  useEffect(() => {
+    if (!currentAccount?.account_id) return;
+    let cancelled = false;
+    const accountId = currentAccount.account_id;
+    const selectedFarmId = selectedFarmByAccount[accountId] ?? null;
+    animalsApi
+      .getList(accountId, selectedFarmId ? { farm_id: selectedFarmId } : undefined)
+      .then((res) => {
+        if (cancelled || res.code !== 200 || !res.data) return;
+        const list = res.data;
+        const byStatus: Record<string, number> = {};
+        list.forEach((a) => {
+          byStatus[a.status] = (byStatus[a.status] || 0) + 1;
+        });
+        setAnimalStats({ total: list.length, byStatus });
+      })
+      .catch(() => {
+        if (!cancelled) setAnimalStats(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentAccount?.account_id, refreshKey, selectedFarmByAccount]);
 
   // Load inventory stats and chart data when Inventory tab is selected
   useEffect(() => {
@@ -415,8 +445,8 @@ export default function Dashboard() {
       {/* Overview tab */}
       {dashboardTab === 'overview' && (
         <>
-      {/* Summary cards - same data as mobile */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Summary cards - auto-adjusting grid, 1 row on large screens */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           label="Total Sales"
           value={formatCurrency(summary.sales.value)}
@@ -447,6 +477,19 @@ export default function Dashboard() {
           subtitle={`${summary.customers.active} active, ${summary.customers.inactive} inactive`}
           icon={faStore}
           href="/customers"
+          {...GREEN_ICON}
+        />
+        <StatCard
+          label="Animals"
+          value={animalStats?.total ?? 0}
+          subtitle={animalStats ? [
+            animalStats.byStatus.active && `${animalStats.byStatus.active} active`,
+            animalStats.byStatus.lactating && `${animalStats.byStatus.lactating} lactating`,
+            animalStats.byStatus.pregnant && `${animalStats.byStatus.pregnant} pregnant`,
+          ].filter(Boolean).join(', ') || 'No animals' : '…'}
+          icon={faPaw}
+          href="/animals"
+          {...PURPLE_ICON}
           {...PURPLE_ICON}
         />
       </div>

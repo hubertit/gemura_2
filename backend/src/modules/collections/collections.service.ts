@@ -57,6 +57,56 @@ export class CollectionsService {
     return reason;
   }
 
+  /**
+   * Get animals belonging to a supplier account. Only allowed when the supplier
+   * has an active relationship with the user's default account (customer).
+   */
+  async getSupplierAnimals(user: User, supplier_account_code: string) {
+    if (!user.default_account_id) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'No valid default account found. Please set a default account.',
+      });
+    }
+    const supplierAccount = await this.prisma.account.findUnique({
+      where: { code: supplier_account_code },
+    });
+    if (!supplierAccount) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'Supplier account not found.',
+      });
+    }
+    const relationship = await this.prisma.supplierCustomer.findFirst({
+      where: {
+        supplier_account_id: supplierAccount.id,
+        customer_account_id: user.default_account_id,
+        relationship_status: 'active',
+      },
+    });
+    if (!relationship) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'Supplier is not linked to your account.',
+      });
+    }
+    return this.prisma.animal.findMany({
+      where: { account_id: supplierAccount.id },
+      select: {
+        id: true,
+        tag_number: true,
+        name: true,
+        breed: true,
+        gender: true,
+        status: true,
+      },
+      orderBy: { tag_number: 'asc' },
+    });
+  }
+
   async createRejectionReason(createDto: { name: string; description?: string; sort_order?: number }) {
     // Check if name already exists
     const existing = await this.prisma.milkRejectionReason.findUnique({
@@ -155,7 +205,7 @@ export class CollectionsService {
   }
 
   async createCollection(user: User, createDto: CreateCollectionDto) {
-    const { supplier_account_code, quantity, status, collection_at, notes, payment_status } = createDto;
+    const { supplier_account_code, quantity, status, collection_at, notes, payment_status, animal_id } = createDto;
 
     // Check if user has a valid default account
     if (!user.default_account_id) {
@@ -194,6 +244,22 @@ export class CollectionsService {
 
     const unitPrice = relationship?.price_per_liter || 0;
 
+    // If animal_id provided, validate it belongs to the supplier's account
+    let validatedAnimalId: string | null = null;
+    if (animal_id) {
+      const animal = await this.prisma.animal.findFirst({
+        where: { id: animal_id, account_id: supplierAccountId },
+      });
+      if (!animal) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Animal not found or does not belong to the selected supplier.',
+        });
+      }
+      validatedAnimalId = animal_id;
+    }
+
     // Create milk sale (collection)
     try {
       const totalAmount = quantity * Number(unitPrice);
@@ -205,6 +271,7 @@ export class CollectionsService {
         data: {
           supplier_account_id: supplierAccountId,
           customer_account_id: customerAccountId,
+          animal_id: validatedAnimalId,
           quantity: quantity,
           unit_price: unitPrice,
           status: (status || 'accepted') as any,
@@ -862,6 +929,24 @@ export class CollectionsService {
 
       if (updateDto.notes !== undefined) {
         updateData.notes = updateDto.notes;
+      }
+
+      if (updateDto.animal_id !== undefined) {
+        if (updateDto.animal_id === null || updateDto.animal_id === '') {
+          updateData.animal_id = null;
+        } else {
+          const animal = await this.prisma.animal.findFirst({
+            where: { id: updateDto.animal_id, account_id: collection.supplier_account_id },
+          });
+          if (!animal) {
+            throw new BadRequestException({
+              code: 400,
+              status: 'error',
+              message: 'Animal not found or does not belong to the collection supplier.',
+            });
+          }
+          updateData.animal_id = updateDto.animal_id;
+        }
       }
 
       if (Object.keys(updateData).length === 1) {

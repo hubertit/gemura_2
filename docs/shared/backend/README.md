@@ -5,19 +5,19 @@ Backend-specific documentation for the NestJS API.
 ## 📚 Documentation
 
 ### API Documentation
-- **[SWAGGER_DOCUMENTATION_STANDARDS.md](./SWAGGER_DOCUMENTATION_STANDARDS.md)** - Complete Swagger/OpenAPI documentation standards
-- **[API_DOCUMENTATION_STATUS.md](./API_DOCUMENTATION_STATUS.md)** - Current documentation status for all controllers
-- **[DOCUMENTATION_ROADMAP.md](./DOCUMENTATION_ROADMAP.md)** - Phased plan for completing API documentation
+- **[swagger-documentation-standards.md](./swagger-documentation-standards.md)** - Complete Swagger/OpenAPI documentation standards
+- **[api-documentation-status.md](./api-documentation-status.md)** - Current documentation status for all controllers
+- **[documentation-roadmap.md](./documentation-roadmap.md)** - Phased plan for completing API documentation
 
 ### Analysis
-- **[analysis/README_DEPLOYMENT.md](./analysis/README_DEPLOYMENT.md)** - Deployment analysis
-- **[analysis/TODO_ANALYSIS.md](./analysis/TODO_ANALYSIS.md)** - TODO analysis
+- **[analysis/readme-deployment.md](./analysis/readme-deployment.md)** - Deployment analysis
+- **[analysis/todo-analysis.md](./analysis/todo-analysis.md)** - TODO analysis
 
 ### Modules
-- **[modules/ACCOUNTING_TRANSACTIONS.md](./modules/ACCOUNTING_TRANSACTIONS.md)** - Accounting transactions module documentation
+- **[modules/accounting-transactions.md](./modules/accounting-transactions.md)** - Accounting transactions module documentation
 
 ### Features
-- **[features/INVENTORY_SALES_FEATURE_PLAN.md](./features/INVENTORY_SALES_FEATURE_PLAN.md)** - Inventory sales feature implementation plan
+- **[features/inventory-sales-feature-plan.md](./features/inventory-sales-feature-plan.md)** - Inventory sales feature implementation plan
 
 ## 🏗️ Backend Structure
 
@@ -57,7 +57,7 @@ Each module in `src/modules/` contains:
 
 ## 📝 Documentation Standards
 
-All API endpoints should follow the standards in [SWAGGER_DOCUMENTATION_STANDARDS.md](./SWAGGER_DOCUMENTATION_STANDARDS.md).
+All API endpoints should follow the standards in [swagger-documentation-standards.md](./swagger-documentation-standards.md).
 
 Key requirements:
 - `@ApiTags` for grouping

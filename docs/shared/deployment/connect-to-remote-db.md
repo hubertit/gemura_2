@@ -104,7 +104,7 @@ npx prisma db execute --stdin <<< "SELECT current_database(), version();"
 **Error**: `database "gemura_db" does not exist`
 
 **Solution**:
-- Create database on remote server (see [Remote DB Sync](../migration/SYNC_REMOTE_DB_INSTRUCTIONS.md))
+- Create database on remote server (see [Remote DB Sync](../migration/sync-remote-db-instructions.md))
 - Or connect to existing database
 
 ---
@@ -120,9 +120,9 @@ npx prisma db execute --stdin <<< "SELECT current_database(), version();"
 
 ## 🔗 **RELATED DOCUMENTATION**
 
-- [Remote DB Sync](../migration/SYNC_REMOTE_DB_INSTRUCTIONS.md) - Sync schema changes
-- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment
-- [Database Configuration](./DEPLOYMENT_SETUP.md) - Database setup
+- [Remote DB Sync](../migration/sync-remote-db-instructions.md) - Sync schema changes
+- [Deployment Guide](./deployment-guide.md) - Production deployment
+- [Database Configuration](./deployment-setup.md) - Database setup
 
 ---
 

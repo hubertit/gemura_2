@@ -389,6 +389,31 @@ export class CollectionsController {
     };
   }
 
+  @Get('supplier-animals')
+  @ApiOperation({
+    summary: 'Get animals for a supplier',
+    description: 'Returns animals belonging to the given supplier account. Only available when the supplier is linked to your account. Use when linking a milk collection to an animal.',
+  })
+  @ApiQuery({
+    name: 'supplier_account_code',
+    required: true,
+    description: 'Supplier account code',
+    example: 'A_ABC123',
+    type: String,
+  })
+  @ApiResponse({ status: 200, description: 'List of animals' })
+  @ApiBadRequestResponse({ description: 'No default account or supplier not linked' })
+  @ApiNotFoundResponse({ description: 'Supplier account not found' })
+  async getSupplierAnimals(@CurrentUser() user: User, @Query('supplier_account_code') supplierAccountCode: string) {
+    const data = await this.collectionsService.getSupplierAnimals(user, supplierAccountCode);
+    return {
+      code: 200,
+      status: 'success',
+      message: 'Supplier animals retrieved successfully',
+      data,
+    };
+  }
+
   @Get()
   @ApiOperation({
     summary: 'Get all collections',

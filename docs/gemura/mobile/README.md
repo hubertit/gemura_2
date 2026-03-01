@@ -5,25 +5,25 @@ Documentation for the Flutter mobile application.
 ## 📚 Documentation Files
 
 ### Integration & Migration
-- **[MOBILE_APP_INTEGRATION.md](./MOBILE_APP_INTEGRATION.md)** - Complete mobile app integration guide
-- **[API_ENDPOINT_MIGRATION.md](./API_ENDPOINT_MIGRATION.md)** - API endpoint migration from PHP to NestJS
-- **[MIGRATION_PROGRESS.md](./MIGRATION_PROGRESS.md)** - Migration progress tracking
-- **[MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md)** - Migration summary
+- **[mobile-app-integration.md](./mobile-app-integration.md)** - Complete mobile app integration guide
+- **[api-endpoint-migration.md](./api-endpoint-migration.md)** - API endpoint migration from PHP to NestJS
+- **[migration-progress.md](./migration-progress.md)** - Migration progress tracking
+- **[migration-summary.md](./migration-summary.md)** - Migration summary
 
 ### Testing & Verification
-- **[TESTING_RESULTS.md](./TESTING_RESULTS.md)** - Mobile app test results
-- **[COMPREHENSIVE_TEST_REPORT.md](./COMPREHENSIVE_TEST_REPORT.md)** - Comprehensive test report
-- **[FINAL_TESTING_REPORT.md](./FINAL_TESTING_REPORT.md)** - Final testing report
-- **[INTEGRATION_COMPLETE.md](./INTEGRATION_COMPLETE.md)** - Integration completion status
+- **[testing-results.md](./testing-results.md)** - Mobile app test results
+- **[comprehensive-test-report.md](./comprehensive-test-report.md)** - Comprehensive test report
+- **[final-testing-report.md](./final-testing-report.md)** - Final testing report
+- **[integration-complete.md](./integration-complete.md)** - Integration completion status
 
 ### Features & Fixes
-- **[ACCOUNT_SWITCHING_FIX.md](./ACCOUNT_SWITCHING_FIX.md)** - Account switching feature fix
-- **[HOME_SCREEN_REDESIGN_COMPLETE.md](./HOME_SCREEN_REDESIGN_COMPLETE.md)** - Home screen redesign
-- **[UI_REDESIGN_PLAN.md](./UI_REDESIGN_PLAN.md)** - UI redesign planning
+- **[account-switching-fix.md](./account-switching-fix.md)** - Account switching feature fix
+- **[home-screen-redesign-complete.md](./home-screen-redesign-complete.md)** - Home screen redesign
+- **[ui-redesign-plan.md](./ui-redesign-plan.md)** - UI redesign planning
 
 ### Analysis
-- **[FLUTTER_ANALYZE_RESULTS.md](./FLUTTER_ANALYZE_RESULTS.md)** - Flutter code analysis results
-- **[LOGIN_TROUBLESHOOTING.md](./LOGIN_TROUBLESHOOTING.md)** - Login troubleshooting guide
+- **[flutter-analyze-results.md](./flutter-analyze-results.md)** - Flutter code analysis results
+- **[login-troubleshooting.md](./login-troubleshooting.md)** - Login troubleshooting guide
 
 ## 📱 Mobile App Structure
 
@@ -64,8 +64,8 @@ http://159.198.65.38:3004/api
 ## 🧪 Testing
 
 ### Test Results
-- [TESTING_RESULTS.md](./TESTING_RESULTS.md) - Test results
-- [COMPREHENSIVE_TEST_REPORT.md](./COMPREHENSIVE_TEST_REPORT.md) - Comprehensive testing
+- [testing-results.md](./testing-results.md) - Test results
+- [comprehensive-test-report.md](./comprehensive-test-report.md) - Comprehensive testing
 
 ### Running Tests
 ```bash
@@ -76,9 +76,9 @@ flutter analyze
 
 ## 🔗 Related Documentation
 
-- [API Documentation](../api/README.md) - Backend API
-- [Deployment Guide](../deployment/README.md) - Deployment procedures
-- [Testing Results](../testing/README.md) - Test results
+- [API Documentation](../../shared/api/README.md) - Backend API
+- [Deployment Guide](../../shared/deployment/README.md) - Deployment procedures
+- [Testing Results](../../shared/testing/README.md) - Test results
 
 ---
 

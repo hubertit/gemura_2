@@ -49,6 +49,16 @@ export interface CreateCollectionData {
   collection_at: string;
   notes?: string;
   payment_status?: 'paid' | 'unpaid';
+  animal_id?: string;
+}
+
+export interface SupplierAnimal {
+  id: string;
+  tag_number: string;
+  name: string | null;
+  breed: string;
+  gender: string;
+  status: string;
 }
 
 export interface UpdateCollectionData {
@@ -87,6 +97,10 @@ export const collectionsApi = {
     if (filters?.price_max) params.append('price_max', filters.price_max.toString());
     
     return apiClient.get(`/collections?${params.toString()}`);
+  },
+
+  getSupplierAnimals: async (supplierAccountCode: string): Promise<{ code: number; status: string; message: string; data: SupplierAnimal[] }> => {
+    return apiClient.get(`/collections/supplier-animals?supplier_account_code=${encodeURIComponent(supplierAccountCode)}`);
   },
 
   getCollectionById: async (collectionId: string, accountId?: string): Promise<CollectionResponse> => {

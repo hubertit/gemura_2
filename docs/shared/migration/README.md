@@ -5,27 +5,27 @@ Data migration guides and procedures for migrating from legacy PHP/MySQL system 
 ## 📚 Migration Guides
 
 ### Main Guides
-- **[DATA_MIGRATION_GUIDE.md](./DATA_MIGRATION_GUIDE.md)** - Complete migration guide
-- **[MIGRATION_PLAN.md](./MIGRATION_PLAN.md)** - Detailed migration plan
-- **[DATA_MIGRATION_EXECUTION.md](./DATA_MIGRATION_EXECUTION.md)** - Migration execution steps
+- **[data-migration-guide.md](./data-migration-guide.md)** - Complete migration guide
+- **[migration-plan.md](./migration-plan.md)** - Detailed migration plan
+- **[data-migration-execution.md](./data-migration-execution.md)** - Migration execution steps
 
 ### Status Reports
-- **[MIGRATION_PROGRESS.md](./MIGRATION_PROGRESS.md)** - Current migration progress
-- **[MIGRATION_READY.md](./MIGRATION_READY.md)** - Migration readiness status
-- **[DATA_MIGRATION_READY.md](./DATA_MIGRATION_READY.md)** - Data migration readiness
+- **[migration-progress.md](./migration-progress.md)** - Current migration progress
+- **[migration-ready.md](./migration-ready.md)** - Migration readiness status
+- **[data-migration-ready.md](./data-migration-ready.md)** - Data migration readiness
 
 ### Priority Documents
-- **[MILK_SALES_PRIORITY.md](./MILK_SALES_PRIORITY.md)** - Milk sales migration priority
+- **[milk-sales-priority.md](./milk-sales-priority.md)** - Milk sales migration priority
 
 ## 🚀 Migration Process
 
 ### Step 1: Preparation
-1. Review [MIGRATION_PLAN.md](./MIGRATION_PLAN.md)
-2. Check [MIGRATION_READY.md](./MIGRATION_READY.md)
+1. Review [migration-plan.md](./migration-plan.md)
+2. Check [migration-ready.md](./migration-ready.md)
 3. Verify database backups
 
 ### Step 2: Execution
-1. Follow [DATA_MIGRATION_GUIDE.md](./DATA_MIGRATION_GUIDE.md)
+1. Follow [data-migration-guide.md](./data-migration-guide.md)
 2. Run migration scripts
 3. Verify data integrity
 
@@ -53,7 +53,7 @@ Migration scripts are located in `scripts/migration/`:
 
 ## ✅ Migration Status
 
-See [MIGRATION_PROGRESS.md](./MIGRATION_PROGRESS.md) for current status.
+See [migration-progress.md](./migration-progress.md) for current status.
 
 ## 🔗 Related Documentation
 

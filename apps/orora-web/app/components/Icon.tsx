@@ -105,6 +105,9 @@ export {
   faTriangleExclamation,
   faArrowsRotate,
   faHandHoldingDollar,
+  faPaw,
+  faWeightScale,
+  faNotesMedical,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Export aliases for convenience  

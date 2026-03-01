@@ -60,5 +60,13 @@ export class CreateCollectionDto {
   @IsOptional()
   @IsString({ message: 'Payment status must be a string' })
   payment_status?: string;
+
+  @ApiProperty({
+    description: 'Optional animal ID (UUID) - link collection to a specific animal belonging to the supplier',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  animal_id?: string;
 }
 

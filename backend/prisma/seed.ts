@@ -34,6 +34,7 @@ async function main() {
     update: {
       password_hash: hashedPassword,
       token: authToken,
+      default_account_id: mainAccount.id,
     },
     create: {
       code: 'USER_MAIN_001',
@@ -195,9 +196,19 @@ async function main() {
       },
     });
 
-    // Create supplier-customer relationship
-    await prisma.supplierCustomer.create({
-      data: {
+    // Create supplier-customer relationship (upsert to avoid duplicate key on re-seed)
+    await prisma.supplierCustomer.upsert({
+      where: {
+        supplier_account_id_customer_account_id: {
+          supplier_account_id: supplierAccount.id,
+          customer_account_id: mainAccount.id,
+        },
+      },
+      update: {
+        price_per_liter: supplier.price_per_liter,
+        relationship_status: 'active',
+      },
+      create: {
         supplier_account_id: supplierAccount.id,
         customer_account_id: mainAccount.id,
         price_per_liter: supplier.price_per_liter,
@@ -352,6 +363,33 @@ async function main() {
     console.log(`✅ Created ${products.length} products`);
   }
 
+  // 9. Create sample animals (Orora – cattle) for main account
+  console.log('🐄 Creating sample animals...');
+  const animalData = [
+    { tag_number: 'TAG-001', name: 'Bella', breed: 'Holstein', gender: 'female' as const, date_of_birth: new Date('2022-03-15'), source: 'born_on_farm' as const, status: 'active' as const },
+    { tag_number: 'TAG-002', name: 'Max', breed: 'Angus', gender: 'male' as const, date_of_birth: new Date('2021-06-20'), source: 'purchased' as const, status: 'active' as const },
+  ];
+  for (const a of animalData) {
+    await prisma.animal.upsert({
+      where: {
+        account_id_tag_number: { account_id: mainAccount.id, tag_number: a.tag_number },
+      },
+      update: {},
+      create: {
+        account_id: mainAccount.id,
+        tag_number: a.tag_number,
+        name: a.name,
+        breed: a.breed,
+        gender: a.gender,
+        date_of_birth: a.date_of_birth,
+        source: a.source,
+        status: a.status,
+        created_by: mainUser.id,
+      },
+    });
+  }
+  console.log(`✅ Created ${animalData.length} sample animals`);
+
   console.log('\n🎉 Database seeding completed successfully!\n');
   console.log('📋 Summary:');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -364,6 +402,7 @@ async function main() {
   console.log(`🥛 Suppliers: 3`);
   console.log(`📦 Collections: ${collections.length}`);
   console.log(`📦 Products: 3`);
+  console.log(`🐄 Animals: ${animalData.length}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
   console.log('🧪 Test the API:');
   console.log('1. Login: POST http://159.198.65.38:3004/api/auth/login');

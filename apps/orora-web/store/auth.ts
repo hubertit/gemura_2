@@ -91,7 +91,16 @@ export const useAuthStore = create<AuthStore>()(
 
           return { error: 'Login failed' };
         } catch (error: any) {
-          return { error: error?.response?.data?.message || 'Login failed. Please try again.' };
+          const msg = error?.response?.data?.message;
+          const isNetwork = !error?.response && (error?.message === 'Network Error' || error?.code === 'ERR_NETWORK');
+          if (isNetwork) {
+            const backendHint =
+              typeof window !== 'undefined' && window.location.hostname === 'localhost'
+                ? 'http://localhost:3007'
+                : 'the API URL';
+            return { error: `Cannot reach server. Is the backend running at ${backendHint}?` };
+          }
+          return { error: msg || error?.message || 'Login failed. Please try again.' };
         }
       },
 
@@ -195,7 +204,11 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'orora-auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() =>
+        typeof window !== 'undefined'
+          ? localStorage
+          : ({ getItem: () => null, setItem: () => {}, removeItem: () => {} } as Storage)
+      ),
       partialize: (state) => ({
         user: state.user,
         token: state.token,

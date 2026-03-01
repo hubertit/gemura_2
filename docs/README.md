@@ -11,24 +11,19 @@ Orora is a comprehensive Cattle Farming Platform built for livestock farmers in 
 ```
 docs/
 ├── README.md              # This file
-│
 ├── orora/                 # Orora Platform Documentation
-│   ├── README.md          # Overview & Quick Start
-│   ├── architecture.md    # System Architecture
-│   ├── roadmap.md         # Development Roadmap
-│   ├── features.md        # Feature Specifications
-│   ├── api.md             # API Documentation
-│   ├── database.md        # Database Schema
-│   ├── deployment.md      # Deployment Guide
-│   ├── mobile.md          # Mobile App Guide
-│   └── feedback-strategy.md # Feedback & Communication Strategy
-│
-├── gemura/                # Gemura-specific docs (legacy)
-│   └── ...
-│
-└── shared/                # Shared documentation
-    └── ...
+├── gemura/                # Gemura-specific (mobile, web)
+└── shared/                # Shared (API, deployment, migration, testing, project)
 ```
+
+## Numbered index (where to start)
+
+1. **Overview** – [Orora README](./orora/README.md) or [Shared README](./shared/README.md)
+2. **Deployment** – [Shared deployment](./shared/deployment/README.md) → [final-deployment-instructions.md](./shared/deployment/final-deployment-instructions.md)
+3. **API** – [Shared API](./shared/api/README.md)
+4. **Project structure** – [STRUCTURE.md](../STRUCTURE.md) (repo root), [project-organization](./shared/project/project-organization.md)
+5. **Migration** – [Shared migration](./shared/migration/README.md)
+6. **Testing** – [Shared testing](./shared/testing/README.md)
 
 ## Quick Links
 

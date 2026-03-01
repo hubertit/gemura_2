@@ -12,7 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [isPhoneLogin, setIsPhoneLogin] = useState(false);
+  const [isPhoneLogin, setIsPhoneLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -114,40 +114,44 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email / Phone toggle */}
-            <div className="flex items-center gap-2 mb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPhoneLogin(false);
-                  setIdentifier('');
-                  setError('');
-                }}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-sm transition-colors ${
-                  !isPhoneLogin
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                disabled={loading}
-              >
-                Email
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPhoneLogin(true);
-                  setIdentifier('');
-                  setError('');
-                }}
-                className={`flex-1 py-2 px-4 text-sm font-medium rounded-sm transition-colors ${
-                  isPhoneLogin
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                disabled={loading}
-              >
-                Phone
-              </button>
+            {/* Phone / Email toggle — segmented control */}
+            <div className="p-1 rounded-xl bg-gray-100 border border-gray-200/80 mb-2">
+              <div className="flex gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPhoneLogin(true);
+                    setIdentifier('');
+                    setError('');
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ease-out ${
+                    isPhoneLogin
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200/50'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/80'
+                  }`}
+                  disabled={loading}
+                >
+                  <Icon icon={faPhone} size="sm" className="shrink-0" />
+                  Phone
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPhoneLogin(false);
+                    setIdentifier('');
+                    setError('');
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ease-out ${
+                    !isPhoneLogin
+                      ? 'bg-white text-primary shadow-sm ring-1 ring-gray-200/50'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/80'
+                  }`}
+                  disabled={loading}
+                >
+                  <Icon icon={faEnvelope} size="sm" className="shrink-0" />
+                  Email
+                </button>
+              </div>
             </div>
 
             <div>

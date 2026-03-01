@@ -102,7 +102,7 @@ devslab-postgres (shared)
 
 - [Deployment Guide](../deployment/README.md) - Deployment architecture
 - [API Documentation](../api/README.md) - API architecture
-- [Project Organization](../project/PROJECT_ORGANIZATION.md) - Project structure
+- [Project Organization](../project/project-organization.md) - Project structure
 
 ---
 

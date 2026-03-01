@@ -5,24 +5,24 @@ Complete API documentation for Gemura 2.0 backend.
 ## 📚 Documentation Files
 
 ### Main Documentation
-- **[ENDPOINTS_COMPLETE.md](./ENDPOINTS_COMPLETE.md)** - Complete list of implemented endpoints
-- **[REMAINING_ENDPOINTS.md](./REMAINING_ENDPOINTS.md)** - Endpoints still to be implemented
-- **[APP_FLOW_DOCUMENTATION.md](./APP_FLOW_DOCUMENTATION.md)** - Application flow and API usage
+- **[endpoints-complete.md](./endpoints-complete.md)** - Complete list of implemented endpoints
+- **[remaining-endpoints.md](./remaining-endpoints.md)** - Endpoints still to be implemented
+- **[app-flow-documentation.md](./app-flow-documentation.md)** - Application flow and API usage
 
 ### Implementation Details
-- **[UUID_CONSISTENCY.md](./UUID_CONSISTENCY.md)** - UUID implementation and usage
-- **[SOFT_DELETE_IMPLEMENTATION.md](./SOFT_DELETE_IMPLEMENTATION.md)** - Soft delete pattern
-- **[DEFAULT_STATUS_CHANGES.md](./DEFAULT_STATUS_CHANGES.md)** - Default status changes
-- **[API_ARCHITECTURE.md](./API_ARCHITECTURE.md)** - Architecture and design decisions
+- **[uuid-consistency.md](./uuid-consistency.md)** - UUID implementation and usage
+- **[soft-delete-implementation.md](./soft-delete-implementation.md)** - Soft delete pattern
+- **[default-status-changes.md](./default-status-changes.md)** - Default status changes
+- **[api-architecture.md](./api-architecture.md)** - Architecture and design decisions
 
 ### Deployment & Testing
-- **[DEPLOYMENT_AND_TESTING_COMPLETE.md](./DEPLOYMENT_AND_TESTING_COMPLETE.md)** - Deployment and testing status
-- **[API_TESTING_RESULTS.md](./API_TESTING_RESULTS.md)** - API testing results
-- **[ENDPOINT_TESTING_SUMMARY.md](./ENDPOINT_TESTING_SUMMARY.md)** - Endpoint testing summary
+- **[deployment-and-testing-complete.md](./deployment-and-testing-complete.md)** - Deployment and testing status
+- **[api-testing-results.md](./api-testing-results.md)** - API testing results
+- **[endpoint-testing-summary.md](./endpoint-testing-summary.md)** - Endpoint testing summary
 
 ### Feature Documentation
-- **[FEED_AND_API_KEYS_DEPLOYMENT.md](./FEED_AND_API_KEYS_DEPLOYMENT.md)** - Feed and API keys module
-- **[FEED_AND_API_KEYS_TEST_RESULTS.md](./FEED_AND_API_KEYS_TEST_RESULTS.md)** - Feed module test results
+- **[feed-and-api-keys-deployment.md](./feed-and-api-keys-deployment.md)** - Feed and API keys module
+- **[feed-and-api-keys-test-results.md](./feed-and-api-keys-test-results.md)** - Feed module test results
 
 ## 🌐 API Endpoints
 
@@ -98,7 +98,7 @@ GET http://localhost:3004/api/health
 - `DELETE /inventory/:id` - Delete inventory item
 - `POST /inventory/sell` - Sell inventory item
 
-See [ENDPOINTS_COMPLETE.md](./ENDPOINTS_COMPLETE.md) for complete list.
+See [endpoints-complete.md](./endpoints-complete.md) for complete list.
 
 ## 🔑 Key Features
 
@@ -106,22 +106,22 @@ See [ENDPOINTS_COMPLETE.md](./ENDPOINTS_COMPLETE.md) for complete list.
 - All endpoints prioritize UUIDs over account codes
 - UUID format validation
 - Account IDs included in all responses
-- See [UUID_CONSISTENCY.md](./UUID_CONSISTENCY.md)
+- See [uuid-consistency.md](./uuid-consistency.md)
 
 ### Soft Delete
 - All delete operations use soft delete
 - Records preserved for auditing
-- See [SOFT_DELETE_IMPLEMENTATION.md](./SOFT_DELETE_IMPLEMENTATION.md)
+- See [soft-delete-implementation.md](./soft-delete-implementation.md)
 
 ### Default Status
 - Sales and collections default to `accepted` status
-- See [DEFAULT_STATUS_CHANGES.md](./DEFAULT_STATUS_CHANGES.md)
+- See [default-status-changes.md](./default-status-changes.md)
 
 ## 🧪 Testing
 
 ### Test Results
-- [API_TESTING_RESULTS.md](./API_TESTING_RESULTS.md) - Complete test results
-- [ENDPOINT_TESTING_SUMMARY.md](./ENDPOINT_TESTING_SUMMARY.md) - Testing summary
+- [api-testing-results.md](./api-testing-results.md) - Complete test results
+- [endpoint-testing-summary.md](./endpoint-testing-summary.md) - Testing summary
 
 ### Running Tests
 ```bash
@@ -177,8 +177,8 @@ All endpoints are fully documented in Swagger UI:
 
 - [Deployment Guide](../deployment/README.md) - API deployment
 - [Testing Results](../testing/README.md) - API test results
-- [Mobile Integration](../mobile/MOBILE_APP_INTEGRATION.md) - Mobile API usage
-- [Architecture Decisions](./API_ARCHITECTURE.md) - Design decisions
+- [Mobile Integration](../../gemura/mobile/mobile-app-integration.md) - Mobile API usage
+- [Architecture Decisions](./api-architecture.md) - Design decisions
 
 ---
 

@@ -9,37 +9,37 @@ Complete guides for deploying Gemura 2.0 to production.
 ./scripts/deployment/deploy-to-server.sh
 ```
 
-See [FINAL_DEPLOYMENT_INSTRUCTIONS.md](./FINAL_DEPLOYMENT_INSTRUCTIONS.md) for detailed steps.
+See [final-deployment-instructions.md](./final-deployment-instructions.md) for detailed steps.
 
 ## 📚 Documentation Files
 
 ### Essential Guides
 
-1. **[FINAL_DEPLOYMENT_INSTRUCTIONS.md](./FINAL_DEPLOYMENT_INSTRUCTIONS.md)** ⭐ **START HERE**
+1. **[final-deployment-instructions.md](./final-deployment-instructions.md)** ⭐ **START HERE**
    - Complete step-by-step deployment guide
    - Automated deployment script usage
    - Manual deployment procedures
 
-2. **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
+2. **[deployment-guide.md](./deployment-guide.md)**
    - Comprehensive deployment documentation
    - Architecture overview
    - Server configuration
 
-3. **[DEPLOYMENT_OPTIMIZATION.md](./DEPLOYMENT_OPTIMIZATION.md)**
+3. **[deployment-optimization.md](./deployment-optimization.md)**
    - Performance optimization guide
    - Docker layer caching
    - Build time improvements
 
-4. **[AUTOMATIC_DEPLOYMENT.md](./AUTOMATIC_DEPLOYMENT.md)**
+4. **[automatic-deployment.md](./automatic-deployment.md)**
    - Automatic container recreation
    - Deployment automation
    - Health verification
 
 ### Reference Documents
 
-- **[DEPLOYMENT_COMPARISON.md](./DEPLOYMENT_COMPARISON.md)** - Comparison with ResolveIt deployment
-- **[DEPLOYMENT_SETUP.md](./DEPLOYMENT_SETUP.md)** - Initial server setup
-- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist
+- **[deployment-comparison.md](./deployment-comparison.md)** - Comparison with ResolveIt deployment
+- **[deployment-setup.md](./deployment-setup.md)** - Initial server setup
+- **[deployment-checklist.md](./deployment-checklist.md)** - Pre-deployment checklist
 
 ## 🚀 Deployment Process
 
@@ -62,7 +62,7 @@ This single command:
 
 ### Manual Deployment
 
-See [FINAL_DEPLOYMENT_INSTRUCTIONS.md](./FINAL_DEPLOYMENT_INSTRUCTIONS.md) for manual steps.
+See [final-deployment-instructions.md](./final-deployment-instructions.md) for manual steps.
 
 ## 🏗️ Architecture
 
@@ -126,7 +126,7 @@ ssh root@159.198.65.38 'cd /opt/gemura && docker compose -f docker-compose.gemur
 ## 🔗 Related Documentation
 
 - [API Documentation](../api/README.md) - API endpoints
-- [Project Organization](../project/PROJECT_ORGANIZATION.md) - Project structure
+- [Project Organization](../project/project-organization.md) - Project structure
 - [Testing Results](../testing/README.md) - Test verification
 
 ---

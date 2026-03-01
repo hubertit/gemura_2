@@ -186,9 +186,9 @@ After successful sync:
 
 ## 🔗 **RELATED DOCUMENTATION**
 
-- [Remote DB Sync Guide](./REMOTE_DB_SYNC.md) - Detailed sync procedures
+- [Remote DB Sync Guide](./remote-db-sync.md) - Detailed sync procedures
 - [Migration Scripts](../scripts/migration/README.md) - Migration scripts
-- [Deployment Guide](../deployment/DEPLOYMENT_GUIDE.md) - Deployment procedures
+- [Deployment Guide](../deployment/deployment-guide.md) - Deployment procedures
 
 ---
 

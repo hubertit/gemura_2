@@ -24,6 +24,7 @@ import {
   faClipboardList,
   faHandHoldingDollar,
   faTag,
+  faPaw,
 } from '@/app/components/Icon';
 
 /** Account type that sees only admin menu/features */
@@ -66,6 +67,8 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
  */
 export const OPERATIONS_NAV_ITEMS: NavItem[] = [
   { icon: faHome, label: 'Dashboard', href: '/dashboard', section: 'operations' },
+  { icon: faPaw, label: 'Animals', href: '/animals', section: 'operations' },
+  { icon: faPaw, label: 'Farms', href: '/farms', section: 'operations' },
   { icon: faReceipt, label: 'Sales', href: '/sales', section: 'operations', requiresPermission: 'view_sales' },
   { icon: faBox, label: 'Collections', href: '/collections', section: 'operations', requiresPermission: 'view_collections' },
   { icon: faBuilding, label: 'Suppliers', href: '/suppliers', section: 'operations', requiresPermission: 'view_suppliers' },

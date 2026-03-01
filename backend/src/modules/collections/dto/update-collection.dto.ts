@@ -48,5 +48,13 @@ export class UpdateCollectionDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiProperty({
+    description: 'Optional animal ID (UUID) - link collection to a specific animal belonging to the supplier',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  animal_id?: string;
 }
 
