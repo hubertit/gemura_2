@@ -2,7 +2,7 @@
 FROM node:20-alpine AS base
 
 # Build-time: API URL the browser will use (must be set for production)
-ARG NEXT_PUBLIC_API_URL=http://209.74.80.195:3007/api
+ARG NEXT_PUBLIC_API_URL=https://app.orora.rw/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 FROM base AS deps
