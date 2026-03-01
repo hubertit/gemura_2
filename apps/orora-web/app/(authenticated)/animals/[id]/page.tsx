@@ -8,10 +8,17 @@ import {
   Animal,
   AnimalWeight,
   AnimalHealth,
+  AnimalBreeding,
+  AnimalCalving,
   CreateWeightData,
   CreateHealthData,
+  CreateBreedingData,
+  CreateCalvingData,
   HealthEventType,
+  BreedingMethod,
+  CalvingOutcome,
 } from '@/lib/api/animals';
+import { milkProductionApi, MilkProductionRecord } from '@/lib/api/milk-production';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/app/components/Modal';
@@ -28,6 +35,9 @@ import Icon, {
   faTrash,
   faCalendar,
   faSpinner,
+  faBox,
+  faHeart,
+  faBaby,
 } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
@@ -65,6 +75,33 @@ export default function AnimalDetailPage() {
     notes: '',
   });
 
+  const [productionList, setProductionList] = useState<MilkProductionRecord[]>([]);
+  const [breedingList, setBreedingList] = useState<AnimalBreeding[]>([]);
+  const [calvingList, setCalvingList] = useState<AnimalCalving[]>([]);
+  const [productionModalOpen, setProductionModalOpen] = useState(false);
+  const [breedingModalOpen, setBreedingModalOpen] = useState(false);
+  const [calvingModalOpen, setCalvingModalOpen] = useState(false);
+  const [productionForm, setProductionForm] = useState({ production_date: new Date().toISOString().slice(0, 10), quantity_litres: 0, notes: '' });
+  const [breedingForm, setBreedingForm] = useState<CreateBreedingData>({
+    breeding_date: new Date().toISOString().slice(0, 10),
+    method: 'natural',
+    bull_animal_id: '',
+    bull_name: '',
+    expected_calving_date: '',
+    outcome: 'unknown',
+    notes: '',
+  });
+  const [calvingForm, setCalvingForm] = useState<CreateCalvingData>({
+    calving_date: new Date().toISOString().slice(0, 10),
+    outcome: 'live',
+    calf_id: '',
+    gender: undefined,
+    weight_kg: undefined,
+    notes: '',
+  });
+  const [maleAnimals, setMaleAnimals] = useState<Animal[]>([]);
+  const [allAnimals, setAllAnimals] = useState<Animal[]>([]);
+
   const loadAnimal = useCallback(async () => {
     try {
       setLoading(true);
@@ -83,6 +120,168 @@ export default function AnimalDetailPage() {
   useEffect(() => {
     loadAnimal();
   }, [loadAnimal]);
+
+  const loadProduction = useCallback(async () => {
+    if (!id || !accountId) return;
+    try {
+      const res = await milkProductionApi.list(accountId, { animal_id: id });
+      if (res.code === 200 && res.data) setProductionList(res.data);
+    } catch {
+      setProductionList([]);
+    }
+  }, [id, accountId]);
+
+  const loadBreeding = useCallback(async () => {
+    if (!id || !accountId) return;
+    try {
+      const res = await animalsApi.getBreeding(id, accountId);
+      if (res.code === 200 && res.data) setBreedingList(res.data);
+    } catch {
+      setBreedingList([]);
+    }
+  }, [id, accountId]);
+
+  const loadCalvings = useCallback(async () => {
+    if (!id || !accountId) return;
+    try {
+      const res = await animalsApi.getCalvings(id, accountId);
+      if (res.code === 200 && res.data) setCalvingList(res.data);
+    } catch {
+      setCalvingList([]);
+    }
+  }, [id, accountId]);
+
+  useEffect(() => {
+    if (!animal?.id) return;
+    loadProduction();
+    if (animal.gender === 'female') {
+      loadBreeding();
+      loadCalvings();
+    }
+  }, [animal?.id, animal?.gender, loadProduction, loadBreeding, loadCalvings]);
+
+  useEffect(() => {
+    if (!accountId) return;
+    animalsApi.getList(accountId).then((res) => {
+      if (res.code === 200 && res.data) {
+        setAllAnimals(res.data);
+        setMaleAnimals(res.data.filter((a) => a.gender === 'male' && a.id !== id));
+      }
+    }).catch(() => {});
+  }, [accountId, id]);
+
+  const handleAddProduction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productionForm.quantity_litres || productionForm.quantity_litres <= 0) return;
+    setSubmitting(true);
+    try {
+      await milkProductionApi.create(
+        { animal_id: id, production_date: productionForm.production_date, quantity_litres: productionForm.quantity_litres, notes: productionForm.notes || undefined },
+        accountId
+      );
+      useToastStore.getState().show('Milk production recorded', 'success');
+      setProductionModalOpen(false);
+      setProductionForm({ production_date: new Date().toISOString().slice(0, 10), quantity_litres: 0, notes: '' });
+      loadProduction();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      useToastStore.getState().show(e?.response?.data?.message || e?.message || 'Failed to record production', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteProduction = async (prodId: string) => {
+    if (!confirm('Delete this production record?')) return;
+    try {
+      await milkProductionApi.delete(prodId, accountId);
+      useToastStore.getState().show('Production record deleted', 'success');
+      loadProduction();
+    } catch {
+      useToastStore.getState().show('Failed to delete production record', 'error');
+    }
+  };
+
+  const handleAddBreeding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await animalsApi.addBreeding(
+        id,
+        {
+          breeding_date: breedingForm.breeding_date,
+          method: breedingForm.method,
+          bull_animal_id: breedingForm.bull_animal_id?.trim() || undefined,
+          bull_name: breedingForm.bull_name?.trim() || undefined,
+          expected_calving_date: breedingForm.expected_calving_date?.trim() || undefined,
+          outcome: breedingForm.outcome || 'unknown',
+          notes: breedingForm.notes?.trim() || undefined,
+        },
+        accountId
+      );
+      useToastStore.getState().show('Breeding record added', 'success');
+      setBreedingModalOpen(false);
+      setBreedingForm({ breeding_date: new Date().toISOString().slice(0, 10), method: 'natural', bull_animal_id: '', bull_name: '', expected_calving_date: '', outcome: 'unknown', notes: '' });
+      loadBreeding();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      useToastStore.getState().show(e?.response?.data?.message || e?.message || 'Failed to add breeding record', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteBreeding = async (breedingId: string) => {
+    if (!confirm('Delete this breeding record?')) return;
+    try {
+      await animalsApi.deleteBreeding(id, breedingId, accountId);
+      useToastStore.getState().show('Breeding record deleted', 'success');
+      loadBreeding();
+    } catch {
+      useToastStore.getState().show('Failed to delete breeding record', 'error');
+    }
+  };
+
+  const handleAddCalving = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await animalsApi.addCalving(
+        id,
+        {
+          calving_date: calvingForm.calving_date,
+          outcome: calvingForm.outcome,
+          calf_id: calvingForm.calf_id?.trim() || undefined,
+          gender: calvingForm.gender,
+          weight_kg: calvingForm.weight_kg,
+          notes: calvingForm.notes?.trim() || undefined,
+        },
+        accountId
+      );
+      useToastStore.getState().show('Calving record added', 'success');
+      setCalvingModalOpen(false);
+      setCalvingForm({ calving_date: new Date().toISOString().slice(0, 10), outcome: 'live', calf_id: '', gender: undefined, weight_kg: undefined, notes: '' });
+      loadCalvings();
+      loadAnimal();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      useToastStore.getState().show(e?.response?.data?.message || e?.message || 'Failed to add calving record', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCalving = async (calvingId: string) => {
+    if (!confirm('Delete this calving record?')) return;
+    try {
+      await animalsApi.deleteCalving(id, calvingId, accountId);
+      useToastStore.getState().show('Calving record deleted', 'success');
+      loadCalvings();
+      loadAnimal();
+    } catch {
+      useToastStore.getState().show('Failed to delete calving record', 'error');
+    }
+  };
 
   const handleAddWeight = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -375,6 +574,133 @@ export default function AnimalDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Milk production */}
+          <div className="bg-white border border-gray-200 rounded-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Icon icon={faBox} size="sm" className="mr-2 text-gray-500" />
+                Milk production
+              </h2>
+              <button type="button" onClick={() => setProductionModalOpen(true)} className="btn btn-secondary text-sm">
+                <Icon icon={faPlus} size="sm" className="mr-1" />
+                Record production
+              </button>
+            </div>
+            {productionList.length === 0 ? (
+              <p className="text-sm text-gray-500">No production records yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-left text-gray-500">
+                      <th className="py-2 pr-4">Date</th>
+                      <th className="py-2 pr-4">Quantity (L)</th>
+                      <th className="py-2 pr-4">Notes</th>
+                      <th className="py-2 w-10" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productionList.map((p) => (
+                      <tr key={p.id} className="border-b border-gray-100">
+                        <td className="py-2 pr-4 text-gray-900">{new Date(p.production_date).toLocaleDateString()}</td>
+                        <td className="py-2 pr-4 font-medium">{Number(p.quantity_litres)}</td>
+                        <td className="py-2 pr-4 text-gray-600">{p.notes || '—'}</td>
+                        <td className="py-2">
+                          <button type="button" onClick={() => handleDeleteProduction(p.id)} className="text-gray-400 hover:text-red-600 p-1" title="Delete">
+                            <Icon icon={faTrash} size="sm" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Breeding (female only) */}
+          {animal.gender === 'female' && (
+            <div className="bg-white border border-gray-200 rounded-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Icon icon={faHeart} size="sm" className="mr-2 text-gray-500" />
+                  Breeding records
+                </h2>
+                <button type="button" onClick={() => setBreedingModalOpen(true)} className="btn btn-secondary text-sm">
+                  <Icon icon={faPlus} size="sm" className="mr-1" />
+                  Add breeding
+                </button>
+              </div>
+              {breedingList.length === 0 ? (
+                <p className="text-sm text-gray-500">No breeding records yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {breedingList.map((b) => (
+                    <div key={b.id} className="border border-gray-100 rounded-sm p-3 flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">{new Date(b.breeding_date).toLocaleDateString()}</span>
+                        <span className="text-gray-500 text-sm ml-2">{b.method.replace('_', ' ')}</span>
+                        {(b.bull_animal || b.bull_name) && (
+                          <p className="text-sm text-gray-600 mt-0.5">Bull: {b.bull_animal ? `${b.bull_animal.tag_number} ${b.bull_animal.name || ''}` : b.bull_name || '—'}</p>
+                        )}
+                        {b.expected_calving_date && (
+                          <p className="text-xs text-gray-500">Expected calving: {new Date(b.expected_calving_date).toLocaleDateString()}</p>
+                        )}
+                        {b.outcome && b.outcome !== 'unknown' && (
+                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">{b.outcome.replace('_', ' ')}</span>
+                        )}
+                      </div>
+                      <button type="button" onClick={() => handleDeleteBreeding(b.id)} className="text-gray-400 hover:text-red-600 p-1 shrink-0" title="Delete">
+                        <Icon icon={faTrash} size="sm" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Calving (female only) */}
+          {animal.gender === 'female' && (
+            <div className="bg-white border border-gray-200 rounded-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Icon icon={faBaby} size="sm" className="mr-2 text-gray-500" />
+                  Calving records
+                </h2>
+                <button type="button" onClick={() => setCalvingModalOpen(true)} className="btn btn-secondary text-sm">
+                  <Icon icon={faPlus} size="sm" className="mr-1" />
+                  Add calving
+                </button>
+              </div>
+              {calvingList.length === 0 ? (
+                <p className="text-sm text-gray-500">No calving records yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {calvingList.map((c) => (
+                    <div key={c.id} className="border border-gray-100 rounded-sm p-3 flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">{new Date(c.calving_date).toLocaleDateString()}</span>
+                        <span className="text-gray-500 text-sm ml-2 capitalize">{c.outcome}</span>
+                        {c.calf && (
+                          <p className="text-sm text-gray-600 mt-0.5">
+                            Calf: <Link href={`/animals/${c.calf.id}`} className="text-[var(--primary)] hover:underline">{c.calf.tag_number} {c.calf.name || ''}</Link>
+                          </p>
+                        )}
+                        {(c.gender || c.weight_kg != null) && (
+                          <p className="text-xs text-gray-500">{[c.gender, c.weight_kg != null ? `${c.weight_kg} kg` : null].filter(Boolean).join(' · ')}</p>
+                        )}
+                      </div>
+                      <button type="button" onClick={() => handleDeleteCalving(c.id)} className="text-gray-400 hover:text-red-600 p-1 shrink-0" title="Delete">
+                        <Icon icon={faTrash} size="sm" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -504,6 +830,225 @@ export default function AnimalDetailPage() {
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={submitting || !healthForm.description.trim()}>
+              {submitting ? <Icon icon={faSpinner} size="sm" className="animate-spin" /> : 'Save'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={productionModalOpen} onClose={() => setProductionModalOpen(false)} title="Record milk production" maxWidth="max-w-md">
+        <form onSubmit={handleAddProduction} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+            <DatePicker
+              value={productionForm.production_date}
+              onChange={(v) => setProductionForm((p) => ({ ...p, production_date: v }))}
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select date"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity (litres) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={productionForm.quantity_litres || ''}
+              onChange={(e) => setProductionForm((p) => ({ ...p, quantity_litres: parseFloat(e.target.value) || 0 }))}
+              className="input w-full"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <input
+              type="text"
+              value={productionForm.notes}
+              onChange={(e) => setProductionForm((p) => ({ ...p, notes: e.target.value }))}
+              className="input w-full"
+              placeholder="e.g. morning milking"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setProductionModalOpen(false)} className="btn btn-secondary">Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting || !productionForm.quantity_litres}>
+              {submitting ? <Icon icon={faSpinner} size="sm" className="animate-spin" /> : 'Save'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={breedingModalOpen} onClose={() => setBreedingModalOpen(false)} title="Add breeding record" maxWidth="max-w-md">
+        <form onSubmit={handleAddBreeding} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Breeding date *</label>
+            <DatePicker
+              value={breedingForm.breeding_date}
+              onChange={(v) => setBreedingForm((p) => ({ ...p, breeding_date: v }))}
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select date"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Method *</label>
+            <Select
+              value={breedingForm.method}
+              onChange={(v) => setBreedingForm((p) => ({ ...p, method: v as BreedingMethod }))}
+              options={[
+                { value: 'natural', label: 'Natural' },
+                { value: 'artificial_insemination', label: 'Artificial insemination' },
+              ]}
+              placeholder="Select method"
+              className="w-full"
+            />
+          </div>
+          {breedingForm.method === 'natural' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Bull (optional)</label>
+                <Select
+                  value={breedingForm.bull_animal_id}
+                  onChange={(v) => setBreedingForm((p) => ({ ...p, bull_animal_id: v, bull_name: '' }))}
+                  options={maleAnimals.map((a) => ({ value: a.id, label: `${a.tag_number} ${a.name ? `(${a.name})` : ''}` }))}
+                  placeholder="— Select bull —"
+                  allowEmpty
+                  className="w-full"
+                />
+              </div>
+              {!breedingForm.bull_animal_id && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bull name (if not registered)</label>
+                  <input
+                    type="text"
+                    value={breedingForm.bull_name}
+                    onChange={(e) => setBreedingForm((p) => ({ ...p, bull_name: e.target.value }))}
+                    className="input w-full"
+                    placeholder="Optional"
+                  />
+                </div>
+              )}
+            </>
+          )}
+          {breedingForm.method === 'artificial_insemination' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Semen code</label>
+              <input
+                type="text"
+                value={breedingForm.semen_code ?? ''}
+                onChange={(e) => setBreedingForm((p) => ({ ...p, semen_code: e.target.value }))}
+                className="input w-full"
+                placeholder="Optional"
+              />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Expected calving date</label>
+            <DatePicker
+              value={breedingForm.expected_calving_date ?? ''}
+              onChange={(v) => setBreedingForm((p) => ({ ...p, expected_calving_date: v }))}
+              placeholder="Optional"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>
+            <Select
+              value={breedingForm.outcome ?? 'unknown'}
+              onChange={(v) => setBreedingForm((p) => ({ ...p, outcome: (v || 'unknown') as CreateBreedingData['outcome'] }))}
+              options={[
+                { value: 'unknown', label: 'Unknown' },
+                { value: 'pregnant', label: 'Pregnant' },
+                { value: 'not_pregnant', label: 'Not pregnant' },
+              ]}
+              placeholder="Select outcome"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <input type="text" value={breedingForm.notes ?? ''} onChange={(e) => setBreedingForm((p) => ({ ...p, notes: e.target.value }))} className="input w-full" />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setBreedingModalOpen(false)} className="btn btn-secondary">Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {submitting ? <Icon icon={faSpinner} size="sm" className="animate-spin" /> : 'Save'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={calvingModalOpen} onClose={() => setCalvingModalOpen(false)} title="Add calving record" maxWidth="max-w-md">
+        <form onSubmit={handleAddCalving} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Calving date *</label>
+            <DatePicker
+              value={calvingForm.calving_date}
+              onChange={(v) => setCalvingForm((p) => ({ ...p, calving_date: v }))}
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select date"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Outcome *</label>
+            <Select
+              value={calvingForm.outcome}
+              onChange={(v) => setCalvingForm((p) => ({ ...p, outcome: v as CalvingOutcome }))}
+              options={[
+                { value: 'live', label: 'Live' },
+                { value: 'stillborn', label: 'Stillborn' },
+                { value: 'aborted', label: 'Aborted' },
+              ]}
+              placeholder="Select outcome"
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Calf (if already registered)</label>
+            <Select
+              value={calvingForm.calf_id ?? ''}
+              onChange={(v) => setCalvingForm((p) => ({ ...p, calf_id: v }))}
+              options={allAnimals.filter((a) => a.id !== id).map((a) => ({ value: a.id, label: `${a.tag_number} ${a.name ? `(${a.name})` : ''}` }))}
+              placeholder="— None / register later —"
+              allowEmpty
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Calf gender</label>
+            <Select
+              value={calvingForm.gender ?? ''}
+              onChange={(v) => setCalvingForm((p) => ({ ...p, gender: (v || undefined) as 'male' | 'female' | undefined }))}
+              options={[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+              ]}
+              placeholder="— Optional —"
+              allowEmpty
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Birth weight (kg)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={calvingForm.weight_kg ?? ''}
+              onChange={(e) => setCalvingForm((p) => ({ ...p, weight_kg: e.target.value ? parseFloat(e.target.value) : undefined }))}
+              className="input w-full"
+              placeholder="Optional"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <input type="text" value={calvingForm.notes ?? ''} onChange={(e) => setCalvingForm((p) => ({ ...p, notes: e.target.value }))} className="input w-full" />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setCalvingModalOpen(false)} className="btn btn-secondary">Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
               {submitting ? <Icon icon={faSpinner} size="sm" className="animate-spin" /> : 'Save'}
             </button>
           </div>

@@ -1,0 +1,76 @@
+import { apiClient } from './client';
+
+export interface MilkProductionRecord {
+  id: string;
+  account_id: string;
+  farm_id: string | null;
+  animal_id: string | null;
+  production_date: string;
+  quantity_litres: number | string;
+  notes: string | null;
+  created_at: string;
+  created_by: string | null;
+  animal?: { id: string; tag_number: string; name: string | null } | null;
+  farm?: { id: string; name: string; code: string | null } | null;
+}
+
+export interface CreateMilkProductionData {
+  farm_id?: string;
+  animal_id?: string;
+  production_date: string;
+  quantity_litres: number;
+  notes?: string;
+}
+
+export interface MilkProductionFilters {
+  animal_id?: string;
+  farm_id?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface ProductionReport {
+  total_production_litres: number;
+  total_sold_litres: number;
+}
+
+export interface ApiResponse<T> {
+  code: number;
+  status: string;
+  message: string;
+  data: T;
+}
+
+const accountParam = (accountId?: string) => (accountId ? { account_id: accountId } : {});
+
+export const milkProductionApi = {
+  create: (data: CreateMilkProductionData, accountId?: string) =>
+    apiClient.post<ApiResponse<MilkProductionRecord>>('/milk-production', data, {
+      params: accountParam(accountId),
+    }),
+
+  list: (accountId?: string, filters?: MilkProductionFilters) =>
+    apiClient.get<ApiResponse<MilkProductionRecord[]>>('/milk-production', {
+      params: { ...accountParam(accountId), ...filters },
+    }),
+
+  getById: (id: string, accountId?: string) =>
+    apiClient.get<ApiResponse<MilkProductionRecord>>(`/milk-production/${id}`, {
+      params: accountParam(accountId),
+    }),
+
+  report: (accountId?: string, from?: string, to?: string) =>
+    apiClient.get<ApiResponse<ProductionReport>>('/milk-production/report', {
+      params: { ...accountParam(accountId), from, to },
+    }),
+
+  update: (id: string, data: Partial<CreateMilkProductionData>, accountId?: string) =>
+    apiClient.patch<ApiResponse<MilkProductionRecord>>(`/milk-production/${id}`, data, {
+      params: accountParam(accountId),
+    }),
+
+  delete: (id: string, accountId?: string) =>
+    apiClient.delete<ApiResponse<{ id: string; message: string }>>(`/milk-production/${id}`, {
+      params: accountParam(accountId),
+    }),
+};

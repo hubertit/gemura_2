@@ -131,6 +131,63 @@ export interface CreateHealthData {
   notes?: string;
 }
 
+// Breeding
+export type BreedingMethod = 'natural' | 'artificial_insemination';
+export type BreedingOutcome = 'pregnant' | 'not_pregnant' | 'unknown';
+
+export interface AnimalBreeding {
+  id: string;
+  animal_id: string;
+  breeding_date: string;
+  method: BreedingMethod;
+  bull_animal_id: string | null;
+  bull_name: string | null;
+  semen_code: string | null;
+  expected_calving_date: string | null;
+  outcome: BreedingOutcome | null;
+  notes: string | null;
+  created_at: string;
+  created_by: string | null;
+  bull_animal?: { id: string; tag_number: string; name: string | null } | null;
+}
+
+export interface CreateBreedingData {
+  breeding_date: string;
+  method: BreedingMethod;
+  bull_animal_id?: string;
+  bull_name?: string;
+  semen_code?: string;
+  expected_calving_date?: string;
+  outcome?: BreedingOutcome;
+  notes?: string;
+}
+
+// Calving
+export type CalvingOutcome = 'live' | 'stillborn' | 'aborted';
+
+export interface AnimalCalving {
+  id: string;
+  mother_id: string;
+  calving_date: string;
+  calf_id: string | null;
+  outcome: CalvingOutcome;
+  gender: 'male' | 'female' | null;
+  weight_kg: number | string | null;
+  notes: string | null;
+  created_at: string;
+  created_by: string | null;
+  calf?: { id: string; tag_number: string; name: string | null; gender: string; date_of_birth: string } | null;
+}
+
+export interface CreateCalvingData {
+  calving_date: string;
+  calf_id?: string;
+  outcome: CalvingOutcome;
+  gender?: 'male' | 'female';
+  weight_kg?: number;
+  notes?: string;
+}
+
 export interface ApiResponse<T> {
   code: number;
   status: string;
@@ -212,6 +269,38 @@ export const animalsApi = {
 
   deleteHealth: (animalId: string, healthId: string, accountId?: string) =>
     apiClient.delete<ApiResponse<{ message: string }>>(`/animals/${animalId}/health/${healthId}`, {
+      params: accountId ? { account_id: accountId } : {},
+    }),
+
+  // Breeding
+  getBreeding: (animalId: string, accountId?: string) =>
+    apiClient.get<ApiResponse<AnimalBreeding[]>>(`/animals/${animalId}/breeding`, {
+      params: accountId ? { account_id: accountId } : {},
+    }),
+
+  addBreeding: (animalId: string, data: CreateBreedingData, accountId?: string) =>
+    apiClient.post<ApiResponse<AnimalBreeding>>(`/animals/${animalId}/breeding`, data, {
+      params: accountId ? { account_id: accountId } : {},
+    }),
+
+  deleteBreeding: (animalId: string, breedingId: string, accountId?: string) =>
+    apiClient.delete<ApiResponse<{ message: string }>>(`/animals/${animalId}/breeding/${breedingId}`, {
+      params: accountId ? { account_id: accountId } : {},
+    }),
+
+  // Calving
+  getCalvings: (animalId: string, accountId?: string) =>
+    apiClient.get<ApiResponse<AnimalCalving[]>>(`/animals/${animalId}/calvings`, {
+      params: accountId ? { account_id: accountId } : {},
+    }),
+
+  addCalving: (animalId: string, data: CreateCalvingData, accountId?: string) =>
+    apiClient.post<ApiResponse<AnimalCalving>>(`/animals/${animalId}/calvings`, data, {
+      params: accountId ? { account_id: accountId } : {},
+    }),
+
+  deleteCalving: (animalId: string, calvingId: string, accountId?: string) =>
+    apiClient.delete<ApiResponse<{ message: string }>>(`/animals/${animalId}/calvings/${calvingId}`, {
       params: accountId ? { account_id: accountId } : {},
     }),
 };
