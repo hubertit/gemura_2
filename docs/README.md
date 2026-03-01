@@ -24,6 +24,7 @@ docs/
 4. **Project structure** – [STRUCTURE.md](../STRUCTURE.md) (repo root), [project-organization](./shared/project/project-organization.md)
 5. **Migration** – [Shared migration](./shared/migration/README.md)
 6. **Testing** – [Shared testing](./shared/testing/README.md)
+7. **Module integration & roadmap** – [Shared backend: module-integration-and-roadmap](./shared/backend/module-integration-and-roadmap.md) (best practices, accounting spine, assets/liabilities/production/inventory plan)
 
 ## Quick Links
 

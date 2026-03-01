@@ -98,12 +98,19 @@ devslab-postgres (shared)
 6. Backend → Return JSON response
 7. Mobile app → Update UI
 
+## 🔗 Module integration
+
+Modules that affect money or value (sales, inventory, loans, receivables-payables, assets) **post to the accounting ledger** via a single posting path. Each such transaction is linked to the source event (`source_type` + `source_id`). See [Module Integration & Roadmap](../backend/module-integration-and-roadmap.md) for principles, current gaps, and implementation order (accounting extensions → posting from MilkSale/Inventory/Loans → assets → reporting).
+
+---
+
 ## 🔗 Related Documentation
 
 - [Deployment Guide](../deployment/README.md) - Deployment architecture
 - [API Documentation](../api/README.md) - API architecture
 - [Project Organization](../project/project-organization.md) - Project structure
+- [Module Integration & Roadmap](../backend/module-integration-and-roadmap.md) - Cross-module linking and roadmap
 
 ---
 
-**Last Updated:** January 18, 2026
+**Last Updated:** March 2026

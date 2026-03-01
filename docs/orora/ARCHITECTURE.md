@@ -145,6 +145,13 @@ Account (MCC/Farm)
                      └── sold via → InventorySales
 ```
 
+### Module integration (cross-module linking)
+
+- **Accounting as spine:** All financial effects (milk sales, inventory sales, loans, receivables-payables, assets) post to the same ledger (ChartOfAccount + AccountingTransaction). Operational modules do not duplicate ledger logic; they call a shared posting service.
+- **Traceability:** Every accounting transaction created from a business event has `source_type` and `source_id` (e.g. `milk_sale`, `inventory_sale`, `loan`) so reports and audits can link back.
+- **One event, one posting:** Creating a milk sale or inventory sale creates one (or one set of) journal entry; no double-posting. Use DB transactions where both operational and accounting writes must succeed or fail together.
+- **Full plan and implementation order:** See [Module Integration & Roadmap](../shared/backend/module-integration-and-roadmap.md).
+
 ## Authentication & Authorization
 
 ### Authentication Flow

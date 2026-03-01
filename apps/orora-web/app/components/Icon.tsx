@@ -108,6 +108,12 @@ export {
   faPaw,
   faWeightScale,
   faNotesMedical,
+  faBook,
+  faChartPie,
+  faSackDollar,
+  faMapLocationDot,
+  faRocket,
+  faLeaf,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Export aliases for convenience  

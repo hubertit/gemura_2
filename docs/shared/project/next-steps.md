@@ -1,7 +1,17 @@
 # 🎯 What's Next - Gemura API
 
-**Last Updated:** January 4, 2026  
+**Last Updated:** March 2026  
 **Current Status:** Feed & API Keys modules 100% complete ✅
+
+---
+
+## 📋 Before implementation: module integration & new modules
+
+**Read and follow:** [Module Integration & Roadmap](../backend/module-integration-and-roadmap.md).
+
+- **Best practices:** Accounting as single source of truth; operational modules (MilkSale, InventorySale, Loans, etc.) post to the ledger with `source_type`/`source_id`; one event → one posting; same tenant/account scope.
+- **Planned work (in order):** (1) Accounting: add source tracking + shared posting helper, Chart list/CRUD. (2) Post from MilkSale, InventorySale/InventoryMovement, Loans, receivables-payables. (3) Asset register posting to ledger. (4) Optional ProductionRun for reporting. (5) Reporting and integrity checks.
+- **Do not start implementation** of new modules (assets, extended accounting, inventory/loan posting) until the doc is read and any repo-specific adjustments are made.
 
 ---
 

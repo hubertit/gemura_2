@@ -207,7 +207,7 @@ export const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage
-          : ({ getItem: () => null, setItem: () => {}, removeItem: () => {} } as Storage)
+          : ({ getItem: () => null, setItem: () => {}, removeItem: () => {}, length: 0, clear: () => {}, key: () => null } as unknown as Storage)
       ),
       partialize: (state) => ({
         user: state.user,
