@@ -133,7 +133,7 @@ export default function Select({
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className="input w-full flex items-center justify-between gap-2 text-left cursor-pointer min-h-[42px] transition-colors"
+        className="input w-full flex items-center justify-between gap-2 text-left cursor-pointer transition-colors"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={displayLabel || placeholder}

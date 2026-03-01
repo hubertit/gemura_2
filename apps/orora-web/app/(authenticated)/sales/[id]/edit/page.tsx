@@ -12,6 +12,7 @@ import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCi
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import Select from '@/app/components/Select';
+import DateTimePicker from '@/app/components/DateTimePicker';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -274,14 +275,13 @@ export default function EditSalePage() {
                 <Icon icon={faCalendar} size="sm" className="inline mr-2" />
                 Sale Date & Time
               </label>
-              <input
+              <DateTimePicker
                 id="sale_at"
                 name="sale_at"
-                type="datetime-local"
                 value={formData.sale_at}
+                onChange={(v) => setFormData((p) => ({ ...p, sale_at: v }))}
                 max={new Date().toISOString().slice(0, 16)}
-                onChange={handleChange}
-                className="input w-full"
+                className="w-full"
                 disabled={saving}
               />
             </div>

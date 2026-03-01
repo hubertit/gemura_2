@@ -113,10 +113,16 @@ p, .body {
 }
 
 /* Form input styles - Orora: gray-50 bg, green focus */
+/* Consistent height for all form controls (inputs, selects, date/datetime pickers) */
+:root {
+  --input-height: 2.5rem; /* 40px - single-line form control height */
+}
 /* Base styles: only .input gets default padding so Tailwind pl-* works on auth inputs with icons */
 .input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  min-height: var(--input-height);
+  padding: 0.5rem 1rem;
+  box-sizing: border-box;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 0.125rem;
@@ -125,6 +131,10 @@ p, .body {
   color: #111827;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   line-height: 1.5;
+}
+/* Allow textarea to grow; single-line inputs stay at --input-height */
+textarea.input {
+  min-height: 5rem;
 }
 input[type="text"],
 input[type="email"],
@@ -135,6 +145,9 @@ input[type="tel"],
 input[type="url"],
 input[type="search"] {
   width: 100%;
+  min-height: var(--input-height);
+  padding: 0.5rem 1rem;
+  box-sizing: border-box;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 0.125rem;
@@ -186,7 +199,9 @@ input.input-error:focus {
 .select,
 select {
   width: 100%;
-  padding: 0.75rem 1rem;
+  min-height: var(--input-height);
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  box-sizing: border-box;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 0.125rem;
@@ -201,7 +216,6 @@ select {
   background-position: right 0.5rem center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
 }
 
 .select:hover:not(:disabled),

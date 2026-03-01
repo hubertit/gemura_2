@@ -13,6 +13,7 @@ import { useToastStore } from '@/store/toast';
 import Icon, { faDollarSign, faUser, faBox, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import Select from '@/app/components/Select';
+import DateTimePicker from '@/app/components/DateTimePicker';
 
 const BUYER_TYPES = [
   { value: 'supplier', label: 'Supplier' },
@@ -438,14 +439,13 @@ export default function SellInventoryPage() {
                 <Icon icon={faCalendar} size="sm" className="inline mr-2" />
                 Sale Date
               </label>
-              <input
+              <DateTimePicker
                 id="sale_date"
                 name="sale_date"
-                type="datetime-local"
                 value={formData.sale_date}
+                onChange={(v) => setFormData((p) => ({ ...p, sale_date: v }))}
                 max={new Date().toISOString().slice(0, 16)}
-                onChange={handleChange}
-                className="input w-full"
+                className="w-full"
                 disabled={saving}
               />
             </div>

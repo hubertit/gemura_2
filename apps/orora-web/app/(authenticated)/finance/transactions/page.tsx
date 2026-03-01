@@ -8,6 +8,7 @@ import type { TableColumn } from '@/app/components/DataTable';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarApply, FilterBarExport } from '@/app/components/FilterBar';
 import Icon, { faArrowLeft, faArrowsRotate, faSpinner, faTriangleExclamation } from '@/app/components/Icon';
 import Select from '@/app/components/Select';
+import DatePicker from '@/app/components/DatePicker';
 
 function formatDate(str: string): string {
   try {
@@ -164,22 +165,10 @@ export default function FinanceTransactionsPage() {
           />
         </FilterBarGroup>
         <FilterBarGroup label="Date From">
-          <input
-            type="date"
-            value={dateFrom}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          />
+          <DatePicker value={dateFrom} onChange={setDateFrom} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-full" />
         </FilterBarGroup>
         <FilterBarGroup label="Date To">
-          <input
-            type="date"
-            value={dateTo}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          />
+          <DatePicker value={dateTo} onChange={setDateTo} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-full" />
         </FilterBarGroup>
         <FilterBarGroup label="Amount Min (RWF)">
           <input
@@ -188,7 +177,7 @@ export default function FinanceTransactionsPage() {
             value={amountMin}
             onChange={(e) => setAmountMin(e.target.value)}
             placeholder="Min"
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+            className="input w-full text-sm text-gray-900"
           />
         </FilterBarGroup>
         <FilterBarGroup label="Amount Max (RWF)">
@@ -198,7 +187,7 @@ export default function FinanceTransactionsPage() {
             value={amountMax}
             onChange={(e) => setAmountMax(e.target.value)}
             placeholder="Max"
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+            className="input w-full text-sm text-gray-900"
           />
         </FilterBarGroup>
         <FilterBarActions onClear={handleClearFilters} />

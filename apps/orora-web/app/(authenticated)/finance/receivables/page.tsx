@@ -14,6 +14,7 @@ import Icon, {
   faCheckCircle,
 } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import DatePicker from '@/app/components/DatePicker';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 function formatDate(str: string): string {
@@ -141,27 +142,13 @@ export default function FinanceReceivablesPage() {
             <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
               From
             </span>
-            <input
-              type="date"
-              value={fromDate}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-r border border-gray-300 px-1.5 py-1 text-xs w-[130px]"
-              aria-label="From date"
-            />
+            <DatePicker value={fromDate} onChange={setFromDate} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="rounded-r border border-gray-300 border-l-0 w-[130px]" id="receivables-from" />
           </div>
           <div className="flex">
             <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
               To
             </span>
-            <input
-              type="date"
-              value={toDate}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setToDate(e.target.value)}
-              className="rounded-r border border-gray-300 px-1.5 py-1 text-xs w-[130px]"
-              aria-label="To date"
-            />
+            <DatePicker value={toDate} onChange={setToDate} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="rounded-r border border-gray-300 border-l-0 w-[130px]" id="receivables-to" />
           </div>
           <button type="button" onClick={() => load()} className="btn btn-secondary text-sm py-1.5 px-2.5" disabled={loading}>
             <Icon icon={loading ? faSpinner : faArrowsRotate} size="sm" className={`mr-1.5 ${loading ? 'animate-spin' : ''}`} />
@@ -323,7 +310,7 @@ export default function FinanceReceivablesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Payment Date</label>
-              <input type="date" value={payDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setPayDate(e.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
+              <DatePicker value={payDate} onChange={setPayDate} max={new Date().toISOString().slice(0, 10)} className="mt-1 w-full" id="receivables-pay-date" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Notes (optional)</label>

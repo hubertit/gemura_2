@@ -6,6 +6,7 @@ import { milkProductionApi, MilkProductionRecord } from '@/lib/api/milk-producti
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import FilterBar, { FilterBarGroup, FilterBarActions } from '@/app/components/FilterBar';
 import Icon, { faBox, faChartLine } from '@/app/components/Icon';
+import DatePicker from '@/app/components/DatePicker';
 import Link from 'next/link';
 
 export default function MilkProductionPage() {
@@ -95,22 +96,10 @@ export default function MilkProductionPage() {
 
       <FilterBar>
         <FilterBarGroup label="From date">
-          <input
-            type="date"
-            value={dateFrom}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          />
+          <DatePicker value={dateFrom} onChange={setDateFrom} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-full" />
         </FilterBarGroup>
         <FilterBarGroup label="To date">
-          <input
-            type="date"
-            value={dateTo}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          />
+          <DatePicker value={dateTo} onChange={setDateTo} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-full" />
         </FilterBarGroup>
         <FilterBarActions onClear={clearFilters} />
       </FilterBar>

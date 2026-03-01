@@ -15,6 +15,7 @@ import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateCollectionForm from './CreateCollectionForm';
 import Icon, { faPlus, faEye, faCheckCircle, faFile } from '@/app/components/Icon';
 import Select from '@/app/components/Select';
+import DatePicker from '@/app/components/DatePicker';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -249,21 +250,21 @@ export default function CollectionsPage() {
           />
         </FilterBarGroup>
         <FilterBarGroup label="Date From">
-          <input
-            type="date"
+          <DatePicker
             value={filters.date_from || ''}
+            onChange={(v) => handleFilterChange('date_from', v)}
             max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => handleFilterChange('date_from', e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+            placeholder="From"
+            className="w-full"
           />
         </FilterBarGroup>
         <FilterBarGroup label="Date To">
-          <input
-            type="date"
+          <DatePicker
             value={filters.date_to || ''}
+            onChange={(v) => handleFilterChange('date_to', v)}
             max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => handleFilterChange('date_to', e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+            placeholder="To"
+            className="w-full"
           />
         </FilterBarGroup>
         <FilterBarGroup label="Supplier Code">
@@ -272,7 +273,7 @@ export default function CollectionsPage() {
             value={filters.supplier_account_code || ''}
             onChange={(e) => handleFilterChange('supplier_account_code', e.target.value)}
             placeholder="A_ABC123"
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
+            className="input w-full text-sm text-gray-900"
           />
         </FilterBarGroup>
         <FilterBarActions onClear={handleClearFilters} />

@@ -137,26 +137,26 @@ export default function FinancePage() {
             <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
               From
             </span>
-            <input
-              type="date"
+            <DatePicker
               value={fromDate}
+              onChange={setFromDate}
               max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
-              aria-label="From date"
+              placeholder="From"
+              className="rounded-r border border-gray-300 border-l-0 min-w-[140px]"
+              id="finance-from-date"
             />
           </div>
           <div className="flex">
             <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
               To
             </span>
-            <input
-              type="date"
+            <DatePicker
               value={toDate}
+              onChange={setToDate}
               max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setToDate(e.target.value)}
-              className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
-              aria-label="To date"
+              placeholder="To"
+              className="rounded-r border border-gray-300 border-l-0 min-w-[140px]"
+              id="finance-to-date"
             />
           </div>
           <button type="button" onClick={() => load()} className="btn btn-secondary" disabled={loading}>

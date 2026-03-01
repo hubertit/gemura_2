@@ -95,7 +95,6 @@ export const OPERATIONS_NAV_GROUPS: NavGroup[] = [
       { icon: faChartBar, label: 'Milk production', href: '/production', section: 'operations' },
       { icon: faReceipt, label: 'Sales', href: '/sales', section: 'operations', requiresPermission: 'view_sales' },
       { icon: faBox, label: 'Collections', href: '/collections', section: 'operations', requiresPermission: 'view_collections' },
-      { icon: faClipboardList, label: 'Production runs', href: '/coming-soon/production-runs', section: 'operations', comingSoon: true },
     ],
   },
   {

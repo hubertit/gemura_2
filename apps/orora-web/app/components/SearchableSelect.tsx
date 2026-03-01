@@ -138,7 +138,7 @@ export default function SearchableSelect({
         tabIndex={disabled ? -1 : 0}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleKeyDown}
-        className={`input w-full flex items-center justify-between cursor-pointer bg-white border border-gray-200 rounded-sm px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+        className={`input w-full flex items-center justify-between cursor-pointer bg-white border border-gray-200 rounded-sm text-sm text-gray-900 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] ${disabled ? 'bg-gray-50 cursor-not-allowed' : ''}`}
         style={{ caretColor: 'transparent' }}
         aria-disabled={disabled}
         aria-required={required}
@@ -168,7 +168,7 @@ export default function SearchableSelect({
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type to search..."
-                className="w-full rounded border border-gray-200 bg-white py-2 pr-3 pl-9 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+                className="input w-full rounded border border-gray-200 bg-white pr-3 pl-9 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
                 aria-label="Filter options"
               />
             </div>

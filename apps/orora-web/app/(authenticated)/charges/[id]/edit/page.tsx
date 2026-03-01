@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faArrowLeft, faSpinner, faTag } from '@/app/components/Icon';
 import Select from '@/app/components/Select';
+import DatePicker from '@/app/components/DatePicker';
 
 export default function EditChargePage() {
   const router = useRouter();
@@ -274,23 +275,11 @@ export default function EditChargePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Effective from (optional)</label>
-            <input
-              type="date"
-              value={form.effective_from || ''}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setForm((p) => ({ ...p, effective_from: e.target.value }))}
-              className="input w-full"
-            />
+            <DatePicker value={form.effective_from || ''} onChange={(v) => setForm((p) => ({ ...p, effective_from: v }))} max={new Date().toISOString().slice(0, 10)} className="w-full" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Effective to (optional)</label>
-            <input
-              type="date"
-              value={form.effective_to || ''}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => setForm((p) => ({ ...p, effective_to: e.target.value }))}
-              className="input w-full"
-            />
+            <DatePicker value={form.effective_to || ''} onChange={(v) => setForm((p) => ({ ...p, effective_to: v }))} max={new Date().toISOString().slice(0, 10)} className="w-full" />
           </div>
         </div>
         <div>

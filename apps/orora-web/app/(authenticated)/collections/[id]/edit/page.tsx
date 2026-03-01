@@ -10,6 +10,7 @@ import { useToastStore } from '@/store/toast';
 import Icon, { faBox, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import Select from '@/app/components/Select';
+import DateTimePicker from '@/app/components/DateTimePicker';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -195,14 +196,13 @@ export default function EditCollectionPage() {
                 <Icon icon={faCalendar} size="sm" className="inline mr-2" />
                 Collection Date & Time
               </label>
-              <input
+              <DateTimePicker
                 id="collection_at"
                 name="collection_at"
-                type="datetime-local"
                 value={formData.collection_at}
+                onChange={(v) => setFormData((p) => ({ ...p, collection_at: v }))}
                 max={new Date().toISOString().slice(0, 16)}
-                onChange={handleChange}
-                className="input w-full"
+                className="w-full"
                 disabled={saving}
               />
             </div>

@@ -23,6 +23,7 @@ import Icon, {
   faCalendar,
 } from '@/app/components/Icon';
 import Select from '@/app/components/Select';
+import DatePicker from '@/app/components/DatePicker';
 import Link from 'next/link';
 
 const BORROWER_TYPE_OPTIONS = [
@@ -340,20 +341,10 @@ export default function LoansPage() {
           />
         </FilterBarGroup>
         <FilterBarGroup label="From date">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          />
+          <DatePicker value={dateFrom} onChange={setDateFrom} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-full" />
         </FilterBarGroup>
         <FilterBarGroup label="To date">
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          />
+          <DatePicker value={dateTo} onChange={setDateTo} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-full" />
         </FilterBarGroup>
         <FilterBarActions onClear={clearFilters} />
         <FilterBarExport<Loan>

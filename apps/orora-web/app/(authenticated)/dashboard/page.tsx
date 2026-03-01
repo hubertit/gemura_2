@@ -28,9 +28,9 @@ import Icon, {
   faEye,
   faPaw,
 } from '@/app/components/Icon';
+import DatePicker from '@/app/components/DatePicker';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
-import DatePicker from '@/app/components/DatePicker';
 import Select from '@/app/components/Select';
 import { DashboardSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from '../sales/CreateSaleForm';
@@ -427,21 +427,9 @@ export default function Dashboard() {
           />
           {period === 'custom' && (
             <div className="absolute top-full right-0 z-10 mt-0.5 py-1.5 px-1.5 bg-white border border-gray-200 rounded shadow-lg flex items-center gap-1.5">
-              <input
-                type="date"
-                value={customFrom}
-                max={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28"
-              />
+              <DatePicker value={customFrom} onChange={setCustomFrom} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-28" />
               <span className="text-gray-400 text-[10px]">–</span>
-              <input
-                type="date"
-                value={customTo}
-                max={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setCustomTo(e.target.value)}
-                className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28"
-              />
+              <DatePicker value={customTo} onChange={setCustomTo} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-28" />
             </div>
           )}
         </div>
