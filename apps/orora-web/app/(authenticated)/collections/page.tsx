@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { collectionsApi, Collection, CollectionsFilters } from '@/lib/api/collections';
+import { suppliersApi, type Supplier } from '@/lib/api/suppliers';
 import { useToastStore } from '@/store/toast';
 import { useAuthStore } from '@/store/auth';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
@@ -15,6 +16,7 @@ import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateCollectionForm from './CreateCollectionForm';
 import Icon, { faPlus, faEye, faCheckCircle, faFile } from '@/app/components/Icon';
 import Select from '@/app/components/Select';
+import SearchableSelect from '@/app/components/SearchableSelect';
 import DatePicker from '@/app/components/DatePicker';
 
 const STATUS_OPTIONS = [
@@ -39,6 +41,29 @@ export default function CollectionsPage() {
     date_to: searchParams.get('date_to') || undefined,
     supplier_account_code: searchParams.get('supplier') || undefined,
   });
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  useEffect(() => {
+    if (!currentAccount?.account_id) {
+      setSuppliers([]);
+      return;
+    }
+    suppliersApi.getAllSuppliers(currentAccount.account_id).then((res) => {
+      if (res.code === 200 && res.data) setSuppliers(res.data);
+      else setSuppliers([]);
+    }).catch(() => setSuppliers([]));
+  }, [currentAccount?.account_id]);
+
+  const supplierOptions = useMemo(
+    () => [
+      { value: '', label: 'All suppliers' },
+      ...suppliers.map((s) => ({
+        value: s.account.code,
+        label: `${s.account.name || s.name || s.account.code} (${s.account.code})`,
+      })),
+    ],
+    [suppliers],
+  );
 
   const loadCollections = useCallback(async () => {
     try {
@@ -267,13 +292,13 @@ export default function CollectionsPage() {
             className="w-full"
           />
         </FilterBarGroup>
-        <FilterBarGroup label="Supplier Code">
-          <input
-            type="text"
+        <FilterBarGroup label="Supplier">
+          <SearchableSelect
             value={filters.supplier_account_code || ''}
-            onChange={(e) => handleFilterChange('supplier_account_code', e.target.value)}
-            placeholder="A_ABC123"
-            className="input w-full text-sm text-gray-900"
+            onChange={(v) => handleFilterChange('supplier_account_code', v)}
+            options={supplierOptions}
+            placeholder="Search supplier..."
+            className="w-full"
           />
         </FilterBarGroup>
         <FilterBarActions onClear={handleClearFilters} />

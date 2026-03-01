@@ -135,6 +135,7 @@ export default function PayrollPage() {
             <input
               type="date"
               value={periodStart}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => {
                 setPeriodStart(e.target.value);
                 setResult(null);
@@ -147,6 +148,7 @@ export default function PayrollPage() {
             <input
               type="date"
               value={periodEnd}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => {
                 setPeriodEnd(e.target.value);
                 setResult(null);

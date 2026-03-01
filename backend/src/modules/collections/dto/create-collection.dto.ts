@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 
 export class CreateCollectionDto {
   @ApiProperty({
@@ -33,12 +34,13 @@ export class CreateCollectionDto {
   status?: string;
 
   @ApiProperty({
-    description: 'Collection date and time in format: YYYY-MM-DD HH:mm:ss',
+    description: 'Collection date and time (must not be in the future)',
     example: '2025-01-04 10:00:00',
     required: true,
   })
   @IsNotEmpty({ message: 'Collection date/time is required' })
   @IsString({ message: 'Collection date/time must be a string' })
+  @IsNotFutureDate({ message: 'Collection date must not be in the future' })
   collection_at: string;
 
   @ApiProperty({
@@ -68,5 +70,13 @@ export class CreateCollectionDto {
   @IsOptional()
   @IsString()
   animal_id?: string;
+
+  @ApiProperty({
+    description: 'Optional milk production record ID (UUID) - link this sale to a recorded production',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  milk_production_id?: string;
 }
 

@@ -42,7 +42,7 @@ export default function FeedsPage() {
     if (searchParams.get('open') === 'calculator') setCalculatorOpen(true);
   }, [searchParams]);
 
-  const feedItems = inventory.filter(isFeedCategory);
+  const feedItems = inventory.filter((item) => isFeedCategory(item.categories));
 
   return (
     <div className="space-y-6">

@@ -238,6 +238,7 @@ export default function CreateLoanForm({ onSuccess, onCancel }: CreateLoanFormPr
             type="date"
             name="disbursement_date"
             value={formData.disbursement_date}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={handleChange}
             className="input w-full"
             required

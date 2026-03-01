@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { InventoryItemsService } from './inventory-items.service';
 import { TokenGuard } from '../../common/guards/token.guard';
@@ -35,6 +36,7 @@ export class InventoryItemsController {
       ],
     },
   })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getCategories() {
     return this.inventoryItemsService.getCategories();
   }
@@ -67,6 +69,7 @@ export class InventoryItemsController {
     status: 200,
     description: 'Inventory items retrieved successfully',
   })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getItems(
     @Query('category_id') categoryId?: string,
     @Query('group_by_category') groupByCategory?: string,
@@ -93,6 +96,7 @@ export class InventoryItemsController {
     status: 404,
     description: 'Inventory item not found',
   })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getItemById(@Param('id') id: string) {
     return this.inventoryItemsService.getItemById(id);
   }

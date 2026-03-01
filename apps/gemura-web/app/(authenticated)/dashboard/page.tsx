@@ -397,6 +397,7 @@ export default function Dashboard() {
               <input
                 type="date"
                 value={customFrom}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setCustomFrom(e.target.value)}
                 className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28"
               />
@@ -404,6 +405,7 @@ export default function Dashboard() {
               <input
                 type="date"
                 value={customTo}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setCustomTo(e.target.value)}
                 className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28"
               />
@@ -1494,6 +1496,7 @@ export default function Dashboard() {
               <input
                 type="date"
                 value={recordDate}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setRecordDate(e.target.value)}
                 className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
               />

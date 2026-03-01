@@ -144,6 +144,7 @@ export default function FinanceReceivablesPage() {
             <input
               type="date"
               value={fromDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setFromDate(e.target.value)}
               className="rounded-r border border-gray-300 px-1.5 py-1 text-xs w-[130px]"
               aria-label="From date"
@@ -156,6 +157,7 @@ export default function FinanceReceivablesPage() {
             <input
               type="date"
               value={toDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setToDate(e.target.value)}
               className="rounded-r border border-gray-300 px-1.5 py-1 text-xs w-[130px]"
               aria-label="To date"
@@ -321,7 +323,7 @@ export default function FinanceReceivablesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Payment Date</label>
-              <input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
+              <input type="date" value={payDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setPayDate(e.target.value)} className="mt-1 w-full rounded border border-gray-300 px-3 py-2" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Notes (optional)</label>

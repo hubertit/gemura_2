@@ -90,7 +90,7 @@ export default function EditSalePage() {
           status: saleData.status,
           sale_at: saleData.sale_at ? new Date(saleData.sale_at).toISOString().slice(0, 16) : '',
           notes: saleData.notes || '',
-          animal_id: saleData.animal_id ?? saleData.animal?.id ?? undefined,
+          animal_id: saleData.animal?.id ?? undefined,
         });
       } else {
         setError('Failed to load sale data');

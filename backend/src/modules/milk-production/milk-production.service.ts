@@ -57,6 +57,7 @@ export class MilkProductionService {
           status: 'error',
           message: 'Animal is assigned to a different farm.',
         });
+      }
     }
 
     if (farmId) {

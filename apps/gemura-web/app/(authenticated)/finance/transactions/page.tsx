@@ -164,6 +164,7 @@ export default function FinanceTransactionsPage() {
           <input
             type="date"
             value={dateFrom}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setDateFrom(e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
@@ -172,6 +173,7 @@ export default function FinanceTransactionsPage() {
           <input
             type="date"
             value={dateTo}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setDateTo(e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />

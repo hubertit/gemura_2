@@ -139,6 +139,7 @@ export default function FinancePage() {
             <input
               type="date"
               value={fromDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setFromDate(e.target.value)}
               className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
               aria-label="From date"
@@ -151,6 +152,7 @@ export default function FinancePage() {
             <input
               type="date"
               value={toDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setToDate(e.target.value)}
               className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
               aria-label="To date"
@@ -405,6 +407,7 @@ export default function FinancePage() {
             <input
               type="date"
               value={recordDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setRecordDate(e.target.value)}
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
             />

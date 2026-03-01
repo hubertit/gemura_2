@@ -168,8 +168,8 @@ export default function CreateLoanForm({ onSuccess, onCancel }: CreateLoanFormPr
       </div>
 
       {formData.borrower_type !== 'other' ? (
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Borrower</label>
+        <div className="input-group">
+          <label className="input-group-label">Borrower</label>
           <SearchableSelect
             options={borrowerOptions}
             value={formData.borrower_account_id || ''}
@@ -178,6 +178,7 @@ export default function CreateLoanForm({ onSuccess, onCancel }: CreateLoanFormPr
             }
             placeholder="Search supplier or customer..."
             required
+            className="w-full"
           />
         </div>
       ) : (

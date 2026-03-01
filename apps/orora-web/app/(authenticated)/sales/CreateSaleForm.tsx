@@ -130,8 +130,8 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">{error}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <label htmlFor="sale-customer" className="block text-sm font-medium text-gray-700 mb-1">Customer <span className="text-red-500">*</span></label>
+        <div className="sm:col-span-2 input-group">
+          <label htmlFor="sale-customer" className="input-group-label">Customer <span className="text-red-500">*</span></label>
           {loadingCustomers ? (
             <div className="input w-full flex items-center text-gray-500 text-sm"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading customers...</div>
           ) : (
@@ -144,6 +144,7 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
               placeholder="Search or select a customer..."
               disabled={loading}
               required
+              className="w-full"
             />
           )}
         </div>

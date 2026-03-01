@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, IsUUID, IsDateString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNotFutureDate } from '../../../../common/validators/not-future-date.validator';
 
 export enum TransactionType {
   REVENUE = 'revenue',
@@ -39,12 +40,13 @@ export class CreateTransactionDto {
   description: string;
 
   @ApiProperty({
-    description: 'Transaction date in YYYY-MM-DD format',
+    description: 'Transaction date in YYYY-MM-DD format (must not be in the future)',
     example: '2025-01-18',
     pattern: '^\\d{4}-\\d{2}-\\d{2}$',
   })
   @IsNotEmpty()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Transaction date must not be in the future' })
   transaction_date: string;
 
   @ApiProperty({

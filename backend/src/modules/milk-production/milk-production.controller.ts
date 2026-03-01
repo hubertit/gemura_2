@@ -15,6 +15,7 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiQuery,
+  ApiBody,
   ApiResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
@@ -36,6 +37,7 @@ export class MilkProductionController {
 
   @Post()
   @ApiOperation({ summary: 'Record milk production', description: 'Record milk produced (per animal or farm) for a given date.' })
+  @ApiBody({ type: CreateMilkProductionDto, description: 'Production record (animal_id or farm_id, production_date, quantity_litres; optional session, notes)' })
   @ApiResponse({ status: 201, description: 'Production record created' })
   @ApiBadRequestResponse({ description: 'Invalid input or animal/farm not found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -111,6 +113,7 @@ export class MilkProductionController {
   @ApiOperation({ summary: 'Update milk production record' })
   @ApiParam({ name: 'id', description: 'Production record UUID' })
   @ApiQuery({ name: 'account_id', required: false })
+  @ApiBody({ type: UpdateMilkProductionDto, description: 'Fields to update (production_date, quantity_litres, session, notes, etc.)' })
   @ApiResponse({ status: 200, description: 'Production record updated' })
   @ApiNotFoundResponse({ description: 'Record not found' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized' })

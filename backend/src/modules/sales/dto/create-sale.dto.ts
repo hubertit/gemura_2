@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsEnum, IsDateString, Min } from 'class-validator';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 import { MilkSaleStatus } from '@prisma/client';
 
 export class CreateSaleDto {
@@ -53,12 +54,13 @@ export class CreateSaleDto {
   status?: MilkSaleStatus;
 
   @ApiProperty({
-    description: 'Sale date and time',
+    description: 'Sale date and time (must not be in the future)',
     example: '2025-01-04T10:00:00Z',
     required: false,
   })
   @IsDateString()
   @IsOptional()
+  @IsNotFutureDate({ message: 'Sale date must not be in the future' })
   sale_at?: string;
 
   @ApiProperty({
@@ -80,5 +82,21 @@ export class CreateSaleDto {
   @IsOptional()
   @IsString({ message: 'Payment status must be a string' })
   payment_status?: string;
+
+  @ApiProperty({
+    description: 'Optional animal ID (UUID) - link sale to a specific animal',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  animal_id?: string;
+
+  @ApiProperty({
+    description: 'Optional milk production record ID (UUID) - link this sale to a recorded production',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  milk_production_id?: string;
 }
 

@@ -10,6 +10,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 
 export enum InventorySaleBuyerType {
   SUPPLIER = 'supplier',
@@ -84,11 +85,12 @@ export class CreateInventorySaleDto {
   amount_paid: number;
 
   @ApiPropertyOptional({
-    description: 'Sale date (ISO 8601 format). Defaults to current date if not provided.',
+    description: 'Sale date (ISO 8601 format). Must not be in the future. Defaults to current date if not provided.',
     example: '2025-01-20T10:00:00Z',
   })
   @IsOptional()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Sale date must not be in the future' })
   sale_date?: string;
 
   @ApiPropertyOptional({

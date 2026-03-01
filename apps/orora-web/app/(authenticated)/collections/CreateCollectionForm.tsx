@@ -108,8 +108,8 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">{error}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <label htmlFor="coll-supplier" className="block text-sm font-medium text-gray-700 mb-1">Supplier <span className="text-red-500">*</span></label>
+        <div className="sm:col-span-2 input-group">
+          <label htmlFor="coll-supplier" className="input-group-label">Supplier <span className="text-red-500">*</span></label>
           {loadingSuppliers ? (
             <div className="input w-full flex items-center text-gray-500 text-sm"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading suppliers...</div>
           ) : (
@@ -122,6 +122,7 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
               placeholder="Search or select a supplier..."
               disabled={loading}
               required
+              className="w-full"
             />
           )}
         </div>

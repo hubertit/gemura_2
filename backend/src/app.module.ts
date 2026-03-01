@@ -32,8 +32,10 @@ import { InventoryItemsModule } from './modules/inventory-items/inventory-items.
 import { LoansModule } from './modules/loans/loans.module';
 import { ChargesModule } from './modules/charges/charges.module';
 import { AnimalsModule } from './modules/animals/animals.module';
+import { BreedsModule } from './modules/breeds/breeds.module';
 import { FarmsModule } from './modules/farms/farms.module';
 import { LocationsModule } from './modules/locations/locations.module';
+import { MilkProductionModule } from './modules/milk-production/milk-production.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PublicAnalyticsModule } from './modules/public-analytics/public-analytics.module';
 import { AppController } from './app.controller';
@@ -81,8 +83,10 @@ import { AppController } from './app.controller';
     LoansModule,
     ChargesModule,
     AnimalsModule,
+    BreedsModule,
     FarmsModule,
     LocationsModule,
+    MilkProductionModule,
     AdminModule,
     PublicAnalyticsModule,
   ],

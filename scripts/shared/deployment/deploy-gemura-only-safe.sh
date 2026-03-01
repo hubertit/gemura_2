@@ -1,8 +1,9 @@
 #!/bin/bash
 #
-# Safe Gemura-only deployment to Kwezi server (209.74.80.195) – Kwezi-style: rsync + docker build (with cache).
+# Safe Gemura-only deployment to Kwezi server (209.74.80.195) – rsync (parallel) + docker build (cache).
 # - Deploys ONLY Gemura backend and frontend containers.
 # - Does NOT start, stop, or modify the database container (kwezi-postgres).
+# - Backend and gemura-web rsync run in parallel for faster sync.
 #
 # Usage (from project root):
 #   ./scripts/shared/deployment/deploy-gemura-only-safe.sh
@@ -26,7 +27,7 @@ fi
 
 SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
 
-echo "🚀 Safe Gemura deployment (Kwezi-style: rsync + build with cache)"
+echo "🚀 Safe Gemura deployment (parallel rsync + build with cache)"
 echo "================================================"
 echo "   Server: $SERVER_IP"
 echo "   Backend Port: 3007"
@@ -41,25 +42,40 @@ fi
 echo "   ✅ Server reachable"
 
 echo ""
-echo "📤 Syncing files (rsync, incremental)..."
+echo "📤 Syncing files (rsync, parallel)..."
 cd "$REPO_ROOT"
+RSYNC_SSH="sshpass -p $SERVER_PASS ssh $SSH_OPTS"
 sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH/backend $DEPLOY_PATH/apps/gemura-web $DEPLOY_PATH/docker"
+
+# Backend and frontend rsync in parallel (docker compose file is small, run after)
 rsync -avz --delete \
   --exclude='node_modules' \
   --exclude='dist' \
   --exclude='.git' \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  --exclude='.env' \
+  --exclude='.env.local' \
+  --exclude='*.log' \
+  --exclude='.DS_Store' \
+  --exclude='*.tsbuildinfo' \
+  --exclude='coverage' \
+  -e "$RSYNC_SSH" \
   backend/ \
-  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/backend/
+  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/backend/ &
+RSYNC_BACKEND_PID=$!
 rsync -avz --delete \
   --exclude='node_modules' \
   --exclude='.next' \
   --exclude='.git' \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  --exclude='.env.local' \
+  --exclude='*.log' \
+  --exclude='.DS_Store' \
+  -e "$RSYNC_SSH" \
   apps/gemura-web/ \
-  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/apps/gemura-web/
-rsync -avz \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/apps/gemura-web/ &
+RSYNC_UI_PID=$!
+wait $RSYNC_BACKEND_PID $RSYNC_UI_PID
+
+rsync -avz -e "$RSYNC_SSH" \
   docker/docker-compose.kwezi.yml \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/docker/
 echo "   ✅ Sync complete"
@@ -88,8 +104,8 @@ EOF
 fi
 
 echo "   Stopping Gemura containers..."
-docker compose -f docker/docker-compose.kwezi.yml down --timeout 30 2>/dev/null || true
-sleep 2
+docker compose -f docker/docker-compose.kwezi.yml down --timeout 20 2>/dev/null || true
+sleep 1
 
 echo "   Building and starting (with cache)..."
 docker compose -f docker/docker-compose.kwezi.yml --env-file .env up -d --build
@@ -97,11 +113,11 @@ docker compose -f docker/docker-compose.kwezi.yml --env-file .env up -d --build
 echo ""
 echo "   ⏳ Waiting for backend to be ready..."
 for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
-  if curl -s http://localhost:3007/api/health > /dev/null 2>&1; then
+  if curl -s -m 3 http://localhost:3007/api/health > /dev/null 2>&1; then
     echo "   ✅ Backend is healthy"
     break
   fi
-  [ "$i" -eq 12 ] && echo "   ⚠️  Backend may still be starting" || sleep 5
+  [ "$i" -eq 12 ] && echo "   ⚠️  Backend may still be starting" || sleep 2
 done
 
 echo ""

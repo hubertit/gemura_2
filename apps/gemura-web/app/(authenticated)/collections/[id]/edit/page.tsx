@@ -203,6 +203,7 @@ export default function EditCollectionPage() {
                 name="collection_at"
                 type="datetime-local"
                 value={formData.collection_at}
+                max={new Date().toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="input w-full"
                 disabled={saving}

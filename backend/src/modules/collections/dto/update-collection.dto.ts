@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNumber, IsOptional, IsEnum, IsDateString, Min } from 'class-validator';
 import { MilkSaleStatus } from '@prisma/client';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 
 export class UpdateCollectionDto {
   @ApiProperty({
@@ -32,12 +33,13 @@ export class UpdateCollectionDto {
   status?: MilkSaleStatus;
 
   @ApiProperty({
-    description: 'Collection date and time',
+    description: 'Collection date and time (must not be in the future)',
     example: '2025-01-04T10:00:00Z',
     required: false,
   })
   @IsDateString()
   @IsOptional()
+  @IsNotFutureDate({ message: 'Collection date must not be in the future' })
   collection_at?: string;
 
   @ApiProperty({

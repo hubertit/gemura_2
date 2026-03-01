@@ -50,6 +50,9 @@ rsync -avz --delete \
   --exclude='node_modules' \
   --exclude='.next' \
   --exclude='.git' \
+  --exclude='.env.local' \
+  --exclude='*.log' \
+  --exclude='.DS_Store' \
   -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
   apps/orora-web/ \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/apps/orora-web/
@@ -65,13 +68,12 @@ sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "cd $DEPLOY_PATH
 
 echo ""
 echo "⏳ Waiting for Orora Web to be ready..."
-for i in 1 2 3 4 5 6; do
-  sleep 3
-  if curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP:$ORORA_WEB_PORT/auth/login 2>/dev/null | grep -q "200"; then
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if curl -s -m 3 -o /dev/null -w "%{http_code}" "http://$SERVER_IP:$ORORA_WEB_PORT/auth/login" 2>/dev/null | grep -q "200"; then
     echo "   ✅ Orora Web is healthy"
     break
   fi
-  [ "$i" -eq 6 ] && echo "   ⚠️  Orora Web may still be starting"
+  [ "$i" -eq 10 ] && echo "   ⚠️  Orora Web may still be starting" || sleep 2
 done
 
 echo ""

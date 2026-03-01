@@ -108,6 +108,7 @@ export class SalesService {
       include: {
         supplier_account: true,
         customer_account: true,
+        animal: { select: { id: true, tag_number: true, name: true } },
       },
       orderBy: {
         sale_at: 'desc',
@@ -123,6 +124,10 @@ export class SalesService {
       sale_at: sale.sale_at,
       notes: sale.notes,
       created_at: sale.created_at,
+      animal_id: sale.animal_id ?? undefined,
+      animal: sale.animal
+        ? { id: sale.animal.id, tag_number: sale.animal.tag_number, name: sale.animal.name }
+        : undefined,
       supplier_account: {
         id: sale.supplier_account.id,
         code: sale.supplier_account.code,
@@ -215,6 +220,24 @@ export class SalesService {
       updateData.notes = updateDto.notes;
     }
 
+    if (updateDto.animal_id !== undefined) {
+      if (updateDto.animal_id === null || updateDto.animal_id === '') {
+        updateData.animal_id = null;
+      } else {
+        const animal = await this.prisma.animal.findFirst({
+          where: { id: updateDto.animal_id, account_id: user.default_account_id },
+        });
+        if (!animal) {
+          throw new BadRequestException({
+            code: 400,
+            status: 'error',
+            message: 'Animal not found or does not belong to your account.',
+          });
+        }
+        updateData.animal_id = updateDto.animal_id;
+      }
+    }
+
     if (Object.keys(updateData).length === 1) {
       // Only updated_by, no actual fields to update
       throw new BadRequestException({
@@ -290,7 +313,7 @@ export class SalesService {
   }
 
   async createSale(user: User, createDto: CreateSaleDto) {
-    const { customer_account_code, customer_account_id, quantity, unit_price, status, sale_at, notes, payment_status } = createDto;
+    const { customer_account_code, customer_account_id, quantity, unit_price, status, sale_at, notes, payment_status, animal_id, milk_production_id } = createDto;
 
     // Check if user has a valid default account
     if (!user.default_account_id) {
@@ -346,6 +369,46 @@ export class SalesService {
 
     const customerAccountId = customerAccount.id;
 
+    // If animal_id provided, validate it belongs to the supplier (user's default account)
+    let validatedAnimalId: string | null = null;
+    if (animal_id) {
+      const animal = await this.prisma.animal.findFirst({
+        where: { id: animal_id, account_id: supplierAccountId },
+      });
+      if (!animal) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Animal not found or does not belong to your account.',
+        });
+      }
+      validatedAnimalId = animal_id;
+    }
+
+    // If milk_production_id provided, validate it exists and belongs to supplier account
+    let validatedMilkProductionId: string | null = null;
+    if (milk_production_id) {
+      const production = await this.prisma.milkProduction.findFirst({
+        where: { id: milk_production_id, account_id: supplierAccountId },
+        select: { id: true, animal_id: true },
+      });
+      if (!production) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Milk production record not found or does not belong to your account.',
+        });
+      }
+      if (production.animal_id && validatedAnimalId && production.animal_id !== validatedAnimalId) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'animal_id does not match the animal on the selected milk production record.',
+        });
+      }
+      validatedMilkProductionId = milk_production_id;
+    }
+
     // Get unit price from supplier-customer relationship if not provided
     let finalUnitPrice = unit_price;
     if (!finalUnitPrice) {
@@ -370,6 +433,8 @@ export class SalesService {
         data: {
           supplier_account_id: supplierAccountId,
           customer_account_id: customerAccountId,
+          animal_id: validatedAnimalId,
+          milk_production_id: validatedMilkProductionId,
           quantity: quantity,
           unit_price: finalUnitPrice,
           status: (status || 'accepted') as any,

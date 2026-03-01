@@ -270,6 +270,7 @@ export default function EditChargePage() {
             <input
               type="date"
               value={form.effective_from || ''}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setForm((p) => ({ ...p, effective_from: e.target.value }))}
               className="input w-full"
             />
@@ -279,6 +280,7 @@ export default function EditChargePage() {
             <input
               type="date"
               value={form.effective_to || ''}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setForm((p) => ({ ...p, effective_to: e.target.value }))}
               className="input w-full"
             />

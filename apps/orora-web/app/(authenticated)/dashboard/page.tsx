@@ -48,7 +48,8 @@ const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 const BLUE_ICON = { iconBgColor: '#eff6ff', iconColor: 'var(--primary)' };
 const GREEN_ICON = { iconBgColor: '#dcfce7', iconColor: '#059669' };
-const PURPLE_ICON = { iconBgColor: '#f3e8ff', iconColor: '#7c3aed' };
+/** Teal/green-adjacent for livestock (Animals, Farms) - no purple/pink */
+const TEAL_ICON = { iconBgColor: '#ccfbf1', iconColor: '#0d9488' };
 
 type PeriodKey = 'day' | 'month' | 'quarter' | 'year' | 'custom';
 
@@ -514,7 +515,7 @@ export default function Dashboard() {
           ].filter(Boolean).join(', ') || 'No animals' : '…'}
           icon={faPaw}
           href="/animals"
-          {...PURPLE_ICON}
+          {...TEAL_ICON}
         />
         <StatCard
           label="Farms"
@@ -522,7 +523,7 @@ export default function Dashboard() {
           subtitle="locations"
           icon={faMapLocationDot}
           href="/farms"
-          {...PURPLE_ICON}
+          {...TEAL_ICON}
         />
         <StatCard
           label="Suppliers"
@@ -828,15 +829,6 @@ export default function Dashboard() {
                   <Icon icon={faChartLine} size="lg" />
                 </span>
                 <span className="text-sm font-semibold text-gray-900">Finance</span>
-              </Link>
-              <Link
-                href="/accounts"
-                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 no-underline"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
-                  <Icon icon={faDollarSign} size="lg" />
-                </span>
-                <span className="text-sm font-semibold text-gray-900">Accounts</span>
               </Link>
             </div>
           </div>
@@ -1407,7 +1399,7 @@ export default function Dashboard() {
                           options={{
                             chart: { type: 'bar', toolbar: { show: false } },
                             plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
-                            colors: ['#84BD22', '#7c3aed', '#6b7280'],
+                            colors: ['#84BD22', '#0d9488', '#6b7280'],
                             xaxis: {
                               categories: outstandingByType.map((x) => x.type),
                               labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },

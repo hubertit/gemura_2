@@ -124,7 +124,7 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="coll-collection_at" className="block text-sm font-medium text-gray-700 mb-1">Date & time <span className="text-red-500">*</span></label>
-          <input id="coll-collection_at" name="collection_at" type="datetime-local" required value={formData.collection_at} onChange={handleChange} className="input w-full" disabled={loading} />
+          <input id="coll-collection_at" name="collection_at" type="datetime-local" required value={formData.collection_at} max={new Date().toISOString().slice(0, 16)} onChange={handleChange} className="input w-full" disabled={loading} />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="coll-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>

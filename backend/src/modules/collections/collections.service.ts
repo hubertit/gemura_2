@@ -99,7 +99,7 @@ export class CollectionsService {
         id: true,
         tag_number: true,
         name: true,
-        breed: true,
+        breed: { select: { id: true, name: true, code: true } },
         gender: true,
         status: true,
       },
@@ -205,7 +205,7 @@ export class CollectionsService {
   }
 
   async createCollection(user: User, createDto: CreateCollectionDto) {
-    const { supplier_account_code, quantity, status, collection_at, notes, payment_status, animal_id } = createDto;
+    const { supplier_account_code, quantity, status, collection_at, notes, payment_status, animal_id, milk_production_id } = createDto;
 
     // Check if user has a valid default account
     if (!user.default_account_id) {
@@ -260,6 +260,30 @@ export class CollectionsService {
       validatedAnimalId = animal_id;
     }
 
+    // If milk_production_id provided, validate it exists and belongs to supplier account; ensure animal_id matches if production has one
+    let validatedMilkProductionId: string | null = null;
+    if (milk_production_id) {
+      const production = await this.prisma.milkProduction.findFirst({
+        where: { id: milk_production_id, account_id: supplierAccountId },
+        select: { id: true, animal_id: true },
+      });
+      if (!production) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'Milk production record not found or does not belong to the selected supplier.',
+        });
+      }
+      if (production.animal_id && validatedAnimalId && production.animal_id !== validatedAnimalId) {
+        throw new BadRequestException({
+          code: 400,
+          status: 'error',
+          message: 'animal_id does not match the animal on the selected milk production record.',
+        });
+      }
+      validatedMilkProductionId = milk_production_id;
+    }
+
     // Create milk sale (collection)
     try {
       const totalAmount = quantity * Number(unitPrice);
@@ -272,6 +296,7 @@ export class CollectionsService {
           supplier_account_id: supplierAccountId,
           customer_account_id: customerAccountId,
           animal_id: validatedAnimalId,
+          milk_production_id: validatedMilkProductionId,
           quantity: quantity,
           unit_price: unitPrice,
           status: (status || 'accepted') as any,
@@ -807,6 +832,7 @@ export class CollectionsService {
       include: {
         supplier_account: true,
         customer_account: true,
+        animal: { select: { id: true, tag_number: true, name: true } },
         recorded_by_user: {
           select: {
             id: true,
@@ -839,6 +865,10 @@ export class CollectionsService {
         notes: collection.notes,
         created_at: collection.created_at,
         updated_at: collection.updated_at,
+        animal_id: collection.animal_id ?? undefined,
+        animal: collection.animal
+          ? { id: collection.animal.id, tag_number: collection.animal.tag_number, name: collection.animal.name }
+          : undefined,
         supplier_account: {
           id: collection.supplier_account.id,
           code: collection.supplier_account.code,

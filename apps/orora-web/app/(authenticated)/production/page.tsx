@@ -249,7 +249,6 @@ export default function MilkProductionPage() {
             onChange={(v) => handleFilterChange('session', v)}
             options={SESSION_OPTIONS}
             placeholder="All sessions"
-            allowEmpty
             className="w-full"
           />
         </FilterBarGroup>

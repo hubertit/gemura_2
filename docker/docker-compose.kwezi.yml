@@ -49,6 +49,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3005
+      HOSTNAME: 0.0.0.0
     ports:
       - "3006:3005"
     depends_on:

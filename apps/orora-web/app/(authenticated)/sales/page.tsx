@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { salesApi, Sale, SalesFilters } from '@/lib/api/sales';
+import { customersApi, type Customer } from '@/lib/api/customers';
 import { useToastStore } from '@/store/toast';
 import { useAuthStore } from '@/store/auth';
 import DataTableWithPagination from '@/app/components/DataTableWithPagination';
@@ -15,6 +16,7 @@ import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from './CreateSaleForm';
 import Icon, { faPlus, faEye, faCheckCircle, faFile } from '@/app/components/Icon';
 import Select from '@/app/components/Select';
+import SearchableSelect from '@/app/components/SearchableSelect';
 import DatePicker from '@/app/components/DatePicker';
 
 const STATUS_OPTIONS = [
@@ -39,6 +41,29 @@ export default function SalesPage() {
     date_to: searchParams.get('date_to') || undefined,
     customer_account_code: searchParams.get('customer') || undefined,
   });
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  useEffect(() => {
+    if (!currentAccount?.account_id) {
+      setCustomers([]);
+      return;
+    }
+    customersApi.getAllCustomers(currentAccount.account_id).then((res) => {
+      if (res.code === 200 && res.data) setCustomers(res.data);
+      else setCustomers([]);
+    }).catch(() => setCustomers([]));
+  }, [currentAccount?.account_id]);
+
+  const customerOptions = useMemo(
+    () => [
+      { value: '', label: 'All customers' },
+      ...customers.map((c) => ({
+        value: c.account.code,
+        label: `${c.account.name || c.name || c.account.code} (${c.account.code})`,
+      })),
+    ],
+    [customers],
+  );
 
   const loadSales = useCallback(async () => {
     try {
@@ -259,13 +284,13 @@ export default function SalesPage() {
             className="w-full"
           />
         </FilterBarGroup>
-        <FilterBarGroup label="Customer Code">
-          <input
-            type="text"
+        <FilterBarGroup label="Customer">
+          <SearchableSelect
             value={filters.customer_account_code || ''}
-            onChange={(e) => handleFilterChange('customer_account_code', e.target.value)}
-            placeholder="A_XYZ789"
-            className="input w-full text-sm text-gray-900"
+            onChange={(v) => handleFilterChange('customer_account_code', v)}
+            options={customerOptions}
+            placeholder="Search customer..."
+            className="w-full"
           />
         </FilterBarGroup>
         <FilterBarActions onClear={handleClearFilters} />

@@ -282,6 +282,7 @@ export default function EditSalePage() {
                 name="sale_at"
                 type="datetime-local"
                 value={formData.sale_at}
+                max={new Date().toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="input w-full"
                 disabled={saving}

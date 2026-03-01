@@ -137,7 +137,7 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
         </div>
         <div>
           <label htmlFor="sale_at" className="block text-sm font-medium text-gray-700 mb-1">Date & time</label>
-          <input id="sale_at" name="sale_at" type="datetime-local" value={formData.sale_at} onChange={handleChange} className="input w-full" disabled={loading} />
+          <input id="sale_at" name="sale_at" type="datetime-local" value={formData.sale_at} max={new Date().toISOString().slice(0, 16)} onChange={handleChange} className="input w-full" disabled={loading} />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="sale-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>

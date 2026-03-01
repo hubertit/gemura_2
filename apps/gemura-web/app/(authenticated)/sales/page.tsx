@@ -246,6 +246,7 @@ export default function SalesPage() {
           <input
             type="date"
             value={filters.date_from || ''}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => handleFilterChange('date_from', e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
@@ -254,6 +255,7 @@ export default function SalesPage() {
           <input
             type="date"
             value={filters.date_to || ''}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => handleFilterChange('date_to', e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />

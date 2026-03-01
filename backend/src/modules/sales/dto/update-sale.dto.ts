@@ -36,5 +36,10 @@ export class UpdateSaleDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiProperty({ required: false, description: 'Optional animal ID (UUID) - link sale to a specific animal' })
+  @IsOptional()
+  @IsString()
+  animal_id?: string;
 }
 

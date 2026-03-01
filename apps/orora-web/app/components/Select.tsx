@@ -180,7 +180,7 @@ export default function Select({
                 const highlighted = i === highlightIndex;
                 return (
                   <li
-                    key={option.value || '__empty__'}
+                    key={option.value !== undefined && option.value !== '' ? String(option.value) : `__empty__-${i}`}
                     role="option"
                     aria-selected={selected}
                     onClick={() => handleSelect(option)}

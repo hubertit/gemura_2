@@ -1,14 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsDateString, IsUUID } from 'class-validator';
+import { IsNotFutureDate } from '../../../../common/validators/not-future-date.validator';
 
 export class MarkPayrollPaidDto {
   @ApiProperty({
-    description: 'Payment date (YYYY-MM-DD). If not provided, uses current date.',
+    description: 'Payment date (YYYY-MM-DD). Must not be in the future. If not provided, uses current date.',
     required: false,
     example: '2026-01-19',
   })
   @IsOptional()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Payment date must not be in the future' })
   payment_date?: string;
 
   @ApiProperty({

@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiParam, ApiBearerAuth, ApiResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { LocationsService } from './locations.service';
 
@@ -12,6 +12,8 @@ export class LocationsController {
 
   @Get('provinces')
   @ApiOperation({ summary: 'List provinces', description: 'Returns all provinces (top-level admin units).' })
+  @ApiResponse({ status: 200, description: 'Provinces retrieved' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getProvinces() {
     const data = await this.locationsService.getProvinces();
     return { code: 200, status: 'success', message: 'Provinces retrieved', data };
@@ -23,6 +25,8 @@ export class LocationsController {
     description: 'Returns direct children of the given parent_id (e.g. districts of a province, sectors of a district).',
   })
   @ApiQuery({ name: 'parent_id', required: true, description: 'Parent location UUID' })
+  @ApiResponse({ status: 200, description: 'Child locations retrieved' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getChildren(@Query('parent_id') parentId: string) {
     const data = await this.locationsService.getChildren(parentId);
     return { code: 200, status: 'success', message: 'Locations retrieved', data };
@@ -34,6 +38,8 @@ export class LocationsController {
     description: 'Returns the path from this location up to root (e.g. village → cell → sector → district → province).',
   })
   @ApiParam({ name: 'id', description: 'Location UUID' })
+  @ApiResponse({ status: 200, description: 'Location path retrieved' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getPath(@Param('id') id: string) {
     const data = await this.locationsService.getPath(id);
     return { code: 200, status: 'success', message: 'Path retrieved', data };
@@ -42,6 +48,9 @@ export class LocationsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get location by ID' })
   @ApiParam({ name: 'id', description: 'Location UUID' })
+  @ApiResponse({ status: 200, description: 'Location retrieved' })
+  @ApiResponse({ status: 404, description: 'Location not found' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
   async getById(@Param('id') id: string) {
     const data = await this.locationsService.getById(id);
     if (!data) {

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDateString, IsNumber, IsArray, Min, Max } from 'class-validator';
+import { IsNotFutureDate } from '../../../../common/validators/not-future-date.validator';
 
 export class GeneratePayrollDto {
   @ApiProperty({
@@ -23,19 +24,21 @@ export class GeneratePayrollDto {
   supplier_account_codes?: string[];
 
   @ApiProperty({ 
-    description: 'Period start date (for milk sales)', 
+    description: 'Period start date (for milk sales). Must not be in the future.', 
     example: '2025-01-01', 
     required: true 
   })
   @IsDateString()
+  @IsNotFutureDate({ message: 'Period start must not be in the future' })
   period_start: string;
 
   @ApiProperty({ 
-    description: 'Period end date (for milk sales)', 
+    description: 'Period end date (for milk sales). Must not be in the future.', 
     example: '2025-01-31', 
     required: true 
   })
   @IsDateString()
+  @IsNotFutureDate({ message: 'Period end must not be in the future' })
   period_end: string;
 
   @ApiProperty({ 

@@ -198,6 +198,7 @@ export default function LoanDetailPage() {
                 <input
                   type="date"
                   value={repayDate}
+                  max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setRepayDate(e.target.value)}
                   className="input w-40"
                 />

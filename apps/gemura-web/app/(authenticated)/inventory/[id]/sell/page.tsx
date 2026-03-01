@@ -446,6 +446,7 @@ export default function SellInventoryPage() {
                 name="sale_date"
                 type="datetime-local"
                 value={formData.sale_date}
+                max={new Date().toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="input w-full"
                 disabled={saving}
