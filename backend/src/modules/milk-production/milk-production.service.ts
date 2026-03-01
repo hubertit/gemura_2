@@ -103,13 +103,14 @@ export class MilkProductionService {
   async findAll(
     user: User,
     accountId?: string,
-    filters?: { animal_id?: string; farm_id?: string; from?: string; to?: string },
+    filters?: { animal_id?: string; farm_id?: string; session?: string; from?: string; to?: string },
   ) {
     const accId = this.getAccountId(user, accountId);
     const where: Prisma.MilkProductionWhereInput = { account_id: accId };
 
     if (filters?.animal_id) where.animal_id = filters.animal_id;
     if (filters?.farm_id) where.farm_id = filters.farm_id;
+    if (filters?.session) where.session = filters.session;
     if (filters?.from || filters?.to) {
       where.production_date = {};
       if (filters.from) (where.production_date as Prisma.DateTimeFilter).gte = new Date(filters.from);

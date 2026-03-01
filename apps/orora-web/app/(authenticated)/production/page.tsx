@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuthStore } from '@/store/auth';
-import { milkProductionApi, MilkProductionRecord, MILK_PRODUCTION_SESSIONS } from '@/lib/api/milk-production';
+import { milkProductionApi, MilkProductionRecord, MILK_PRODUCTION_SESSIONS, MilkProductionFilters } from '@/lib/api/milk-production';
 import { animalsApi, Animal } from '@/lib/api/animals';
 import { useToastStore } from '@/store/toast';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
@@ -11,7 +11,15 @@ import Icon, { faBox, faChartLine, faPlus, faSpinner } from '@/app/components/Ic
 import DatePicker from '@/app/components/DatePicker';
 import Modal from '@/app/components/Modal';
 import Select from '@/app/components/Select';
+import SearchableSelect from '@/app/components/SearchableSelect';
 import Link from 'next/link';
+import DataTableWithPagination from '@/app/components/DataTableWithPagination';
+import type { TableColumn } from '@/app/components/DataTable';
+
+const SESSION_OPTIONS = [
+  { value: '', label: 'All sessions' },
+  ...MILK_PRODUCTION_SESSIONS.map((s) => ({ value: s.value, label: s.label })),
+];
 
 export default function MilkProductionPage() {
   const { currentAccount } = useAuthStore();
@@ -20,8 +28,7 @@ export default function MilkProductionPage() {
   const [error, setError] = useState('');
   const [records, setRecords] = useState<MilkProductionRecord[]>([]);
   const [report, setReport] = useState<{ total_production_litres: number; total_sold_litres: number } | null>(null);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [filters, setFilters] = useState<MilkProductionFilters>({});
   const [recordModalOpen, setRecordModalOpen] = useState(false);
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -38,9 +45,11 @@ export default function MilkProductionPage() {
     try {
       setLoading(true);
       setError('');
+      const hasFilters = filters.animal_id || filters.session || filters.from || filters.to;
+      const listFilters = hasFilters ? filters : undefined;
       const [listRes, reportRes] = await Promise.all([
-        milkProductionApi.list(accountId, dateFrom || dateTo ? { from: dateFrom || undefined, to: dateTo || undefined } : undefined),
-        milkProductionApi.report(accountId, dateFrom || undefined, dateTo || undefined),
+        milkProductionApi.list(accountId, listFilters),
+        milkProductionApi.report(accountId, filters.from, filters.to),
       ]);
       if (listRes.code === 200 && listRes.data) setRecords(listRes.data);
       if (reportRes.code === 200 && reportRes.data) setReport(reportRes.data);
@@ -52,7 +61,7 @@ export default function MilkProductionPage() {
     } finally {
       setLoading(false);
     }
-  }, [accountId, dateFrom, dateTo]);
+  }, [accountId, filters]);
 
   useEffect(() => {
     load();
@@ -69,9 +78,23 @@ export default function MilkProductionPage() {
     }).catch(() => setAnimals([]));
   }, [accountId]);
 
+  const animalOptions = useMemo(
+    () => [
+      { value: '', label: 'All animals' },
+      ...animals.map((a) => ({ value: a.id, label: `${a.tag_number}${a.name ? ` (${a.name})` : ''}` })),
+    ],
+    [animals],
+  );
+
   const clearFilters = () => {
-    setDateFrom('');
-    setDateTo('');
+    setFilters({});
+  };
+
+  const handleFilterChange = (key: keyof MilkProductionFilters, value: string | undefined) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value || undefined,
+    }));
   };
 
   const openRecordModal = () => {
@@ -115,6 +138,52 @@ export default function MilkProductionPage() {
     }
   };
 
+  const columns: TableColumn<MilkProductionRecord>[] = [
+    {
+      key: 'production_date',
+      label: 'Date',
+      sortable: true,
+      render: (value) => new Date(value).toLocaleDateString(),
+    },
+    {
+      key: 'session',
+      label: 'Session',
+      sortable: true,
+      render: (value) => (value ? MILK_PRODUCTION_SESSIONS.find((s) => s.value === value)?.label ?? value : '—'),
+    },
+    {
+      key: 'quantity_litres',
+      label: 'Quantity (L)',
+      sortable: true,
+      render: (value) => Number(value),
+    },
+    {
+      key: 'animal',
+      label: 'Animal',
+      sortable: false,
+      render: (_, row) =>
+        row.animal ? (
+          <Link href={`/animals/${row.animal.id}`} className="text-[var(--primary)] hover:underline">
+            {row.animal.tag_number} {row.animal.name ? `(${row.animal.name})` : ''}
+          </Link>
+        ) : (
+          <span className="text-gray-400">—</span>
+        ),
+    },
+    {
+      key: 'farm',
+      label: 'Farm',
+      sortable: false,
+      render: (_, row) => row.farm?.name ?? '—',
+    },
+    {
+      key: 'notes',
+      label: 'Notes',
+      sortable: false,
+      render: (value) => value || '—',
+    },
+  ];
+
   if (!accountId) {
     return (
       <div className="p-4">
@@ -141,92 +210,68 @@ export default function MilkProductionPage() {
 
       {report != null && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-[var(--primary)]/10 flex items-center justify-center">
+          <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-sm bg-[var(--primary)]/10 flex items-center justify-center">
               <Icon icon={faBox} className="text-[var(--primary)]" size="lg" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Total produced (L)</p>
               <p className="text-2xl font-bold text-gray-900">{Number(report.total_production_litres).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</p>
-              {(dateFrom || dateTo) && <p className="text-xs text-gray-400">In selected period</p>}
+              {(filters.from || filters.to) && <p className="text-xs text-gray-400">In selected period</p>}
             </div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+          <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-sm bg-emerald-100 flex items-center justify-center">
               <Icon icon={faChartLine} className="text-emerald-600" size="lg" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Total sold (L)</p>
               <p className="text-2xl font-bold text-gray-900">{Number(report.total_sold_litres).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</p>
-              {(dateFrom || dateTo) && <p className="text-xs text-gray-400">In selected period</p>}
+              {(filters.from || filters.to) && <p className="text-xs text-gray-400">In selected period</p>}
             </div>
           </div>
         </div>
       )}
 
       <FilterBar>
+        <FilterBarGroup label="Animal">
+          <SearchableSelect
+            value={filters.animal_id || ''}
+            onChange={(v) => handleFilterChange('animal_id', v)}
+            options={animalOptions}
+            placeholder="Search or select animal..."
+            className="w-full"
+          />
+        </FilterBarGroup>
+        <FilterBarGroup label="Session">
+          <Select
+            value={filters.session || ''}
+            onChange={(v) => handleFilterChange('session', v)}
+            options={SESSION_OPTIONS}
+            placeholder="All sessions"
+            allowEmpty
+            className="w-full"
+          />
+        </FilterBarGroup>
         <FilterBarGroup label="From date">
-          <DatePicker value={dateFrom} onChange={setDateFrom} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-full" />
+          <DatePicker value={filters.from || ''} onChange={(v) => handleFilterChange('from', v)} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-full" />
         </FilterBarGroup>
         <FilterBarGroup label="To date">
-          <DatePicker value={dateTo} onChange={setDateTo} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-full" />
+          <DatePicker value={filters.to || ''} onChange={(v) => handleFilterChange('to', v)} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-full" />
         </FilterBarGroup>
         <FilterBarActions onClear={clearFilters} />
       </FilterBar>
 
       {loading ? (
-        <ListPageSkeleton />
+        <ListPageSkeleton title="Milk production" filterFields={4} tableRows={10} tableCols={6} />
       ) : (
-        <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Production records</h2>
-            <p className="text-sm text-gray-500">Record production on each animal&apos;s detail page.</p>
-          </div>
-          {records.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <Icon icon={faBox} size="2x" className="mx-auto mb-2 text-gray-300" />
-              <p>No production records in this period.</p>
-              <Link href="/animals" className="text-[var(--primary)] hover:underline text-sm mt-2 inline-block">
-                Go to Animals to record production per animal
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-600">
-                    <th className="py-3 px-4 font-medium">Date</th>
-                    <th className="py-3 px-4 font-medium">Session</th>
-                    <th className="py-3 px-4 font-medium">Quantity (L)</th>
-                    <th className="py-3 px-4 font-medium">Animal</th>
-                    <th className="py-3 px-4 font-medium">Farm</th>
-                    <th className="py-3 px-4 font-medium">Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r) => (
-                    <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                      <td className="py-3 px-4 text-gray-900">{new Date(r.production_date).toLocaleDateString()}</td>
-                      <td className="py-3 px-4 text-gray-600">{r.session ? MILK_PRODUCTION_SESSIONS.find((s) => s.value === r.session)?.label ?? r.session : '—'}</td>
-                      <td className="py-3 px-4 font-medium">{Number(r.quantity_litres)}</td>
-                      <td className="py-3 px-4">
-                        {r.animal ? (
-                          <Link href={`/animals/${r.animal.id}`} className="text-[var(--primary)] hover:underline">
-                            {r.animal.tag_number} {r.animal.name ? `(${r.animal.name})` : ''}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">{r.farm?.name ?? '—'}</td>
-                      <td className="py-3 px-4 text-gray-600">{r.notes || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <DataTableWithPagination<MilkProductionRecord>
+          data={records}
+          columns={columns}
+          loading={false}
+          emptyMessage="No production records. Use filters or record production above."
+          itemLabel="records"
+        />
       )}
 
       <Modal open={recordModalOpen} onClose={() => setRecordModalOpen(false)} title="Record milk production" maxWidth="max-w-md">

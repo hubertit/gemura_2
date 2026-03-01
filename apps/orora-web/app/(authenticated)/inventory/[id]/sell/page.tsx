@@ -291,9 +291,9 @@ export default function SellInventoryPage() {
             </div>
 
             {formData.buyer_type !== 'other' && (
-              <div>
-                <label htmlFor="buyer_account_code" className="block text-sm font-medium text-gray-700 mb-2">
-                  <Icon icon={faUser} size="sm" className="inline mr-2" />
+              <div className="input-group">
+                <label htmlFor="buyer_account_code" className="input-group-label">
+                  <Icon icon={faUser} size="sm" className="inline mr-1" />
                   {formData.buyer_type === 'customer' ? 'Customer' : 'Supplier'} <span className="text-red-500">*</span>
                 </label>
                 {loadingBuyers ? (
@@ -311,6 +311,7 @@ export default function SellInventoryPage() {
                     placeholder={`Search or select a ${formData.buyer_type}...`}
                     disabled={saving}
                     required
+                    className="w-full"
                   />
                 )}
               </div>

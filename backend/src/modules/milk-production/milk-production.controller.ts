@@ -66,10 +66,11 @@ export class MilkProductionController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List milk production records', description: 'List production with optional filters by animal, farm, date range.' })
+  @ApiOperation({ summary: 'List milk production records', description: 'List production with optional filters by animal, farm, session, date range.' })
   @ApiQuery({ name: 'account_id', required: false })
   @ApiQuery({ name: 'animal_id', required: false, description: 'Filter by animal UUID' })
   @ApiQuery({ name: 'farm_id', required: false, description: 'Filter by farm UUID' })
+  @ApiQuery({ name: 'session', required: false, description: 'Filter by session (e.g. morning, evening)' })
   @ApiQuery({ name: 'from', required: false, description: 'From date (YYYY-MM-DD)' })
   @ApiQuery({ name: 'to', required: false, description: 'To date (YYYY-MM-DD)' })
   @ApiResponse({ status: 200, description: 'List of production records' })
@@ -79,11 +80,12 @@ export class MilkProductionController {
     @Query('account_id') accountId?: string,
     @Query('animal_id') animalId?: string,
     @Query('farm_id') farmId?: string,
+    @Query('session') session?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    const filters = animalId || farmId || from || to
-      ? { animal_id: animalId, farm_id: farmId, from, to }
+    const filters = animalId || farmId || session || from || to
+      ? { animal_id: animalId, farm_id: farmId, session, from, to }
       : undefined;
     const data = await this.milkProductionService.findAll(user, accountId, filters);
     return { code: 200, status: 'success', message: 'Milk production records retrieved', data };

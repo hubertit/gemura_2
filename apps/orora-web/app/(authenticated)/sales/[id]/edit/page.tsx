@@ -207,9 +207,9 @@ export default function EditSalePage() {
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="customer_account_code" className="block text-sm font-medium text-gray-700 mb-2">
-                <Icon icon={faUser} size="sm" className="inline mr-2" />
+            <div className="input-group">
+              <label htmlFor="customer_account_code" className="input-group-label">
+                <Icon icon={faUser} size="sm" className="inline mr-1" />
                 Customer <span className="text-red-500">*</span>
               </label>
               {loadingCustomers ? (
@@ -227,6 +227,7 @@ export default function EditSalePage() {
                   placeholder="Search or select a customer..."
                   disabled={saving}
                   required
+                  className="w-full"
                 />
               )}
             </div>

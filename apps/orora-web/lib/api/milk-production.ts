@@ -34,6 +34,7 @@ export const MILK_PRODUCTION_SESSIONS = [
 export interface MilkProductionFilters {
   animal_id?: string;
   farm_id?: string;
+  session?: string;
   from?: string;
   to?: string;
 }
