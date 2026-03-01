@@ -594,7 +594,7 @@ export default function Dashboard() {
                     chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
                     stroke: { curve: 'smooth', width: 2 },
                     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
-                    colors: ['#059669', '#004AAD'],
+                    colors: ['#059669', '#84BD22'],
                     xaxis: { categories: breakdownSlice.map((d) => d.date) },
                     yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
                     tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
@@ -615,7 +615,7 @@ export default function Dashboard() {
                   options={{
                     chart: { type: 'bar', toolbar: { show: false } },
                     plotOptions: { bar: { borderRadius: 6, columnWidth: '70%', distributed: false } },
-                    colors: ['#059669', '#004AAD'],
+                    colors: ['#059669', '#84BD22'],
                     xaxis: { categories: breakdownSlice.map((d) => d.date), labels: { rotate: -45, rotateAlways: true } },
                     yaxis: { title: { text: 'Liters' }, labels: { formatter: (v: number) => String(Math.round(v)) } },
                     dataLabels: { enabled: false },
@@ -645,7 +645,7 @@ export default function Dashboard() {
               options={{
                 chart: { type: 'donut', fontFamily: 'inherit' },
                 labels: ['Sales', 'Collections'],
-                colors: ['#059669', '#004AAD'],
+                colors: ['#059669', '#84BD22'],
                 legend: { position: 'bottom', fontSize: '12px' },
                 dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
                 plotOptions: {
@@ -933,7 +933,7 @@ export default function Dashboard() {
                   chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
                   stroke: { curve: 'smooth', width: 2 },
                   fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
-                  colors: ['#004AAD'],
+                  colors: ['#84BD22'],
                   xaxis: { categories: breakdownSlice.map((d) => d.date) },
                   yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
                   tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
@@ -1035,7 +1035,7 @@ export default function Dashboard() {
                         chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
                         stroke: { curve: 'smooth', width: 2 },
                         fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
-                        colors: ['#004AAD'],
+                        colors: ['#84BD22'],
                         xaxis: { categories: inventoryValuationSeries.map((d) => d.date) },
                         yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
                         tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
@@ -1085,7 +1085,7 @@ export default function Dashboard() {
                       options={{
                         chart: { type: 'bar', toolbar: { show: false } },
                         plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
-                        colors: ['#004AAD'],
+                        colors: ['#84BD22'],
                         xaxis: {
                           categories: inventoryTopByValue.map((i) => (i.name.length > 25 ? i.name.slice(0, 25) + '…' : i.name)),
                           labels: { formatter: (v: number) => formatCurrency(v) },
@@ -1159,7 +1159,7 @@ export default function Dashboard() {
                       options={{
                         chart: { type: 'bar', toolbar: { show: false } },
                         plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
-                        colors: ['#004AAD'],
+                        colors: ['#84BD22'],
                         xaxis: {
                           categories: ['Current', '31–60 days', '61–90 days', '90+ days'],
                           labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },
@@ -1407,7 +1407,7 @@ export default function Dashboard() {
                           options={{
                             chart: { type: 'bar', toolbar: { show: false } },
                             plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', horizontal: true } },
-                            colors: ['#004AAD', '#7c3aed', '#6b7280'],
+                            colors: ['#84BD22', '#7c3aed', '#6b7280'],
                             xaxis: {
                               categories: outstandingByType.map((x) => x.type),
                               labels: { formatter: (v: string | number) => (typeof v === 'number' && !Number.isNaN(v) ? formatCurrency(v) : String(v)) },
