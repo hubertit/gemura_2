@@ -27,6 +27,7 @@ import {
   faChartPie,
   faSackDollar,
   faMapLocationDot,
+  faLeaf,
 } from '@/app/components/Icon';
 
 /** Account type that sees only admin menu/features */
@@ -87,6 +88,7 @@ export const OPERATIONS_NAV_GROUPS: NavGroup[] = [
     items: [
       { icon: faPaw, label: 'Animals', href: '/animals', section: 'operations' },
       { icon: faMapLocationDot, label: 'Farms', href: '/farms', section: 'operations' },
+      { icon: faLeaf, label: 'Feeds', href: '/feeds', section: 'operations' },
     ],
   },
   {

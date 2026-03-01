@@ -1511,7 +1511,7 @@ export default function Dashboard() {
                 min={1}
                 value={recordAmount}
                 onChange={(e) => setRecordAmount(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
                 placeholder="0"
               />
             </div>
@@ -1521,7 +1521,7 @@ export default function Dashboard() {
                 type="text"
                 value={recordDescription}
                 onChange={(e) => setRecordDescription(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
                 placeholder="e.g. Milk sales"
               />
             </div>

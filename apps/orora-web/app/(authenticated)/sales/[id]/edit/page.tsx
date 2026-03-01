@@ -8,11 +8,12 @@ import { salesApi, UpdateSaleData, Sale } from '@/lib/api/sales';
 import { customersApi, Customer } from '@/lib/api/customers';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
-import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner, faPaw } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import Select from '@/app/components/Select';
 import DateTimePicker from '@/app/components/DateTimePicker';
+import { animalsApi, Animal } from '@/lib/api/animals';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -30,9 +31,11 @@ export default function EditSalePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const [loadingAnimals, setLoadingAnimals] = useState(false);
   const [error, setError] = useState('');
   const [sale, setSale] = useState<Sale | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>([]);
   const [formData, setFormData] = useState<UpdateSaleData & { customer_account_code: string }>({
     sale_id: saleId,
     customer_account_id: '',
@@ -42,6 +45,7 @@ export default function EditSalePage() {
     status: 'accepted',
     sale_at: '',
     notes: '',
+    animal_id: undefined,
   });
 
   useEffect(() => {
@@ -49,10 +53,25 @@ export default function EditSalePage() {
       router.push('/sales');
       return;
     }
-    Promise.all([loadSale(), loadCustomers()]);
+    loadSale();
+    loadCustomers();
     // Only re-run when sale or account context changes; hasPermission/isAdmin are stable in behavior
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saleId, currentAccount?.account_id]);
+
+  useEffect(() => {
+    if (!currentAccount?.account_id) {
+      setAnimals([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAnimals(true);
+    animalsApi.getList(currentAccount.account_id).then((res) => {
+      if (!cancelled && res.data) setAnimals(res.data);
+      else if (!cancelled) setAnimals([]);
+    }).catch(() => { if (!cancelled) setAnimals([]); }).finally(() => { if (!cancelled) setLoadingAnimals(false); });
+    return () => { cancelled = true; };
+  }, [currentAccount?.account_id]);
 
   const loadSale = async () => {
     try {
@@ -71,6 +90,7 @@ export default function EditSalePage() {
           status: saleData.status,
           sale_at: saleData.sale_at ? new Date(saleData.sale_at).toISOString().slice(0, 16) : '',
           notes: saleData.notes || '',
+          animal_id: saleData.animal_id ?? saleData.animal?.id ?? undefined,
         });
       } else {
         setError('Failed to load sale data');
@@ -139,6 +159,7 @@ export default function EditSalePage() {
       const finalData: UpdateSaleData = {
         ...saleData,
         customer_account_code: customer_account_code || undefined,
+        animal_id: formData.animal_id || undefined,
       };
 
       const response = await salesApi.updateSale(finalData);
@@ -206,6 +227,33 @@ export default function EditSalePage() {
                   placeholder="Search or select a customer..."
                   disabled={saving}
                   required
+                />
+              )}
+            </div>
+            <div>
+              <label htmlFor="sale-animal" className="block text-sm font-medium text-gray-700 mb-2">
+                <Icon icon={faPaw} size="sm" className="inline mr-2 text-gray-500" />
+                Animal (optional)
+              </label>
+              {loadingAnimals ? (
+                <div className="input w-full flex items-center text-gray-500 text-sm">
+                  <Icon icon={faSpinner} size="sm" spin className="mr-2" />
+                  Loading animals...
+                </div>
+              ) : (
+                <Select
+                  id="sale-animal"
+                  name="animal_id"
+                  value={formData.animal_id ?? ''}
+                  onChange={(v) => setFormData((prev) => ({ ...prev, animal_id: v || undefined }))}
+                  options={animals.map((a) => ({
+                    value: a.id,
+                    label: `${a.tag_number} ${a.name ? `(${a.name})` : ''} · ${a.breed?.name ?? '—'}`,
+                  }))}
+                  placeholder="— None —"
+                  allowEmpty
+                  disabled={saving}
+                  className="w-full"
                 />
               )}
             </div>

@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { salesApi, CreateSaleData } from '@/lib/api/sales';
 import { customersApi, Customer } from '@/lib/api/customers';
+import { animalsApi, Animal } from '@/lib/api/animals';
+import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
-import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import Icon, { faCheckCircle, faSpinner, faPaw } from '@/app/components/Icon';
 import SearchableSelect from '@/app/components/SearchableSelect';
 import DateTimePicker from '@/app/components/DateTimePicker';
 import Select from '@/app/components/Select';
@@ -21,10 +23,13 @@ interface CreateSaleFormProps {
 }
 
 export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormProps) {
+  const { currentAccount } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const [loadingAnimals, setLoadingAnimals] = useState(false);
   const [error, setError] = useState('');
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [animals, setAnimals] = useState<Animal[]>([]);
   const [formData, setFormData] = useState<CreateSaleData & { customer_account_code: string }>({
     customer_account_id: '',
     customer_account_code: '',
@@ -34,6 +39,7 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
     sale_at: new Date().toISOString().slice(0, 16),
     notes: '',
     payment_status: 'unpaid',
+    animal_id: undefined,
   });
 
   useEffect(() => {
@@ -43,6 +49,20 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
     }).finally(() => { if (!cancelled) setLoadingCustomers(false); });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!currentAccount?.account_id) {
+      setAnimals([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAnimals(true);
+    animalsApi.getList(currentAccount.account_id).then((res) => {
+      if (!cancelled && res.data) setAnimals(res.data);
+      else if (!cancelled) setAnimals([]);
+    }).catch(() => { if (!cancelled) setAnimals([]); }).finally(() => { if (!cancelled) setLoadingAnimals(false); });
+    return () => { cancelled = true; };
+  }, [currentAccount?.account_id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -85,7 +105,11 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
     setLoading(true);
     try {
       const { customer_account_code, ...rest } = formData;
-      const finalData: CreateSaleData = { ...rest, customer_account_code: customer_account_code || undefined };
+      const finalData: CreateSaleData = {
+        ...rest,
+        customer_account_code: customer_account_code || undefined,
+        animal_id: formData.animal_id || undefined,
+      };
       const response = await salesApi.createSale(finalData);
       if (response.code === 200 || response.code === 201) {
         useToastStore.getState().success('Sale created successfully!');
@@ -120,6 +144,30 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
               placeholder="Search or select a customer..."
               disabled={loading}
               required
+            />
+          )}
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="sale-animal" className="block text-sm font-medium text-gray-700 mb-1">
+            <Icon icon={faPaw} size="sm" className="inline mr-1 text-gray-500" />
+            Animal (optional)
+          </label>
+          {loadingAnimals ? (
+            <div className="input w-full flex items-center text-gray-500 text-sm"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading animals...</div>
+          ) : (
+            <Select
+              id="sale-animal"
+              name="animal_id"
+              value={formData.animal_id ?? ''}
+              onChange={(v) => setFormData((prev) => ({ ...prev, animal_id: v || undefined }))}
+              options={animals.map((a) => ({
+                value: a.id,
+                label: `${a.tag_number} ${a.name ? `(${a.name})` : ''} · ${a.breed?.name ?? '—'}`,
+              }))}
+              placeholder="— None —"
+              allowEmpty
+              disabled={loading}
+              className="w-full"
             />
           )}
         </div>

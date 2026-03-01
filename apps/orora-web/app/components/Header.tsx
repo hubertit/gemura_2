@@ -166,7 +166,7 @@ export default function Header({
                   setSearchOpen(true);
                 }
               }}
-              className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+              className="input w-full !pl-12 pr-4 text-sm placeholder:text-gray-500 rounded-sm"
             />
           </div>
         </div>

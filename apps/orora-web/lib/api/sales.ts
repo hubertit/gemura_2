@@ -23,6 +23,7 @@ export interface Sale {
     type: string;
     status: string;
   };
+  animal?: { id: string; tag_number: string; name: string | null } | null;
 }
 
 export interface SalesFilters {
@@ -45,6 +46,7 @@ export interface CreateSaleData {
   sale_at?: string;
   notes?: string;
   payment_status?: 'paid' | 'unpaid';
+  animal_id?: string;
 }
 
 export interface UpdateSaleData {
@@ -56,6 +58,7 @@ export interface UpdateSaleData {
   status?: string;
   sale_at?: string;
   notes?: string;
+  animal_id?: string;
 }
 
 export interface SalesResponse {

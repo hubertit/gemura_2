@@ -133,29 +133,25 @@ export default function FinancePage() {
               {formatDate(fromDate)} – {formatDate(toDate)}
             </span>
           </div>
-          <div className="flex">
-            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
-              From
-            </span>
+          <div className="input-group-inline">
+            <span className="input-group-addon">From</span>
             <DatePicker
               value={fromDate}
               onChange={setFromDate}
               max={new Date().toISOString().slice(0, 10)}
               placeholder="From"
-              className="rounded-r border border-gray-300 border-l-0 min-w-[140px]"
+              className="min-w-[140px]"
               id="finance-from-date"
             />
           </div>
-          <div className="flex">
-            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700">
-              To
-            </span>
+          <div className="input-group-inline">
+            <span className="input-group-addon">To</span>
             <DatePicker
               value={toDate}
               onChange={setToDate}
               max={new Date().toISOString().slice(0, 10)}
               placeholder="To"
-              className="rounded-r border border-gray-300 border-l-0 min-w-[140px]"
+              className="min-w-[140px]"
               id="finance-to-date"
             />
           </div>
@@ -389,7 +385,7 @@ export default function FinancePage() {
               min="1"
               value={recordAmount}
               onChange={(e) => setRecordAmount(e.target.value)}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="input mt-1 w-full"
               placeholder="0"
             />
           </div>
@@ -399,7 +395,7 @@ export default function FinancePage() {
               type="text"
               value={recordDescription}
               onChange={(e) => setRecordDescription(e.target.value)}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="input mt-1 w-full"
               placeholder="e.g. Milk sales"
             />
           </div>

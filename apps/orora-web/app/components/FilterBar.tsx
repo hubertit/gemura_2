@@ -10,7 +10,7 @@ export interface ExportColumn<T = unknown> {
   getValue?: (row: T) => string;
 }
 
-/** Single filter group: label + control, aligned with others (ResolveIT-style). */
+/** Single filter group: label + control, aligned with others. */
 export function FilterBarGroup({
   label,
   children,
@@ -21,8 +21,8 @@ export function FilterBarGroup({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col gap-1.5 min-w-0 flex-1 basis-full sm:basis-[calc(50%-0.375rem)] md:basis-auto md:min-w-[140px] lg:min-w-[180px] ${className}`}>
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+    <div className={`input-group min-w-0 flex-1 basis-full sm:basis-[calc(50%-0.375rem)] md:basis-auto md:min-w-[140px] lg:min-w-[180px] ${className}`}>
+      <label className="input-group-label">{label}</label>
       {children}
     </div>
   );
@@ -41,8 +41,8 @@ export function FilterBarSearch({
   onKeyDown?: (e: React.KeyboardEvent) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 min-w-0 flex-1 basis-full sm:basis-[calc(50%-0.375rem)] md:basis-auto md:min-w-[200px] lg:min-w-[240px]">
-      <label className="text-sm font-medium text-gray-700">Search</label>
+    <div className="input-group min-w-0 flex-1 basis-full sm:basis-[calc(50%-0.375rem)] md:basis-auto md:min-w-[200px] lg:min-w-[240px]">
+      <label className="input-group-label">Search</label>
       <div className="relative">
         <div className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center pointer-events-none text-gray-400">
           <Icon icon={faSearch} size="sm" />
@@ -63,8 +63,8 @@ export function FilterBarSearch({
 /** Actions group: Clear button, aligned with filter rows. */
 export function FilterBarActions({ onClear }: { onClear: () => void }) {
   return (
-    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-0 basis-full sm:basis-auto">
-      <label className="text-sm font-medium text-gray-700 invisible select-none">Actions</label>
+    <div className="input-group flex-shrink-0 min-w-0 basis-full sm:basis-auto">
+      <label className="input-group-label invisible select-none">Actions</label>
       <button
         type="button"
         onClick={onClear}
@@ -80,8 +80,8 @@ export function FilterBarActions({ onClear }: { onClear: () => void }) {
 /** Apply filters button for the filter bar. */
 export function FilterBarApply({ onApply }: { onApply: () => void }) {
   return (
-    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-0 basis-full sm:basis-auto">
-      <label className="text-sm font-medium text-gray-700 invisible select-none">Apply</label>
+    <div className="input-group flex-shrink-0 min-w-0 basis-full sm:basis-auto">
+      <label className="input-group-label invisible select-none">Apply</label>
       <button
         type="button"
         onClick={onApply}
@@ -110,8 +110,8 @@ export function FilterBarExport<T extends object>({
     exportToCsv(data, exportColumns, exportFilename);
   };
   return (
-    <div className="flex flex-col gap-1.5 flex-shrink-0 min-w-0 basis-full sm:basis-auto">
-      <label className="text-sm font-medium text-gray-700 invisible select-none">Export</label>
+    <div className="input-group flex-shrink-0 min-w-0 basis-full sm:basis-auto">
+      <label className="input-group-label invisible select-none">Export</label>
       <button
         type="button"
         onClick={handleExport}

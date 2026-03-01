@@ -196,6 +196,48 @@ input.input-error:focus {
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
+/* Input groups: label + control stack (consistent spacing across app) */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.input-group-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Inline input group: addon (e.g. "From" / "To") + control, same height */
+.input-group-inline {
+  display: flex;
+  align-items: stretch;
+}
+.input-group-addon {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-right: none;
+  border-radius: 0.125rem 0 0 0.125rem;
+  min-height: var(--input-height);
+  box-sizing: border-box;
+}
+.input-group-inline .input-group-addon + * {
+  flex: 1;
+  min-width: 0;
+}
+.input-group-inline .input-group-addon + * .input,
+.input-group-inline .input-group-addon + * button.input {
+  border-left: none;
+  border-radius: 0 0.125rem 0.125rem 0;
+}
+
 .select,
 select {
   width: 100%;

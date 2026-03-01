@@ -314,7 +314,7 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-12 text-center">
-            <p className="text-xs text-gray-500 mb-2">© 2025 Gemura</p>
+            <p className="text-xs text-gray-500 mb-2">© 2020–{new Date().getFullYear()} Gemura</p>
             <p className="text-xs text-gray-500">
               Financial Services Platform
             </p>

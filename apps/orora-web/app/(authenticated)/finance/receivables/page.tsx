@@ -138,17 +138,13 @@ export default function FinanceReceivablesPage() {
           <h1 className="text-xl font-bold text-gray-900">Receivables</h1>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="flex">
-            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-              From
-            </span>
-            <DatePicker value={fromDate} onChange={setFromDate} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="rounded-r border border-gray-300 border-l-0 w-[130px]" id="receivables-from" />
+          <div className="input-group-inline">
+            <span className="input-group-addon text-xs px-2">From</span>
+            <DatePicker value={fromDate} onChange={setFromDate} max={new Date().toISOString().slice(0, 10)} placeholder="From" className="w-[130px]" id="receivables-from" />
           </div>
-          <div className="flex">
-            <span className="inline-flex items-center rounded-l border border-gray-300 border-r-0 bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-              To
-            </span>
-            <DatePicker value={toDate} onChange={setToDate} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="rounded-r border border-gray-300 border-l-0 w-[130px]" id="receivables-to" />
+          <div className="input-group-inline">
+            <span className="input-group-addon text-xs px-2">To</span>
+            <DatePicker value={toDate} onChange={setToDate} max={new Date().toISOString().slice(0, 10)} placeholder="To" className="w-[130px]" id="receivables-to" />
           </div>
           <button type="button" onClick={() => load()} className="btn btn-secondary text-sm py-1.5 px-2.5" disabled={loading}>
             <Icon icon={loading ? faSpinner : faArrowsRotate} size="sm" className={`mr-1.5 ${loading ? 'animate-spin' : ''}`} />
@@ -298,7 +294,7 @@ export default function FinanceReceivablesPage() {
                 max={paymentModal.rec.outstanding}
                 value={payAmount}
                 onChange={(e) => setPayAmount(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
               />
               <button
                 type="button"
@@ -318,7 +314,7 @@ export default function FinanceReceivablesPage() {
                 type="text"
                 value={payNotes}
                 onChange={(e) => setPayNotes(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
                 placeholder="e.g. Payment via mobile money"
               />
             </div>

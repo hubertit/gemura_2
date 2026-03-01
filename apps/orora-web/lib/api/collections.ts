@@ -10,6 +10,8 @@ export interface Collection {
   notes?: string;
   created_at: string;
   updated_at?: string;
+  animal_id?: string;
+  animal?: { id: string; tag_number: string; name: string | null } | null;
   supplier_account: {
     id: string;
     code: string;
@@ -67,6 +69,7 @@ export interface UpdateCollectionData {
   status?: string;
   collection_at?: string;
   notes?: string;
+  animal_id?: string;
 }
 
 export interface CollectionsResponse {

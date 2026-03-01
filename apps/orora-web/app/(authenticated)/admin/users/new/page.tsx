@@ -229,7 +229,7 @@ export default function CreateUserPage() {
                   required
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+                  className="input w-full !pl-12 pr-4 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder="First name"
                   disabled={loading}
                 />
@@ -248,7 +248,7 @@ export default function CreateUserPage() {
                 required
                 value={formData.lastName}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+                className="input w-full text-sm placeholder:text-gray-500 rounded-sm"
                 placeholder="Last name"
                 disabled={loading}
               />
@@ -269,7 +269,7 @@ export default function CreateUserPage() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+                  className="input w-full !pl-12 pr-4 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder="Enter email address"
                   disabled={loading}
                 />
@@ -291,7 +291,7 @@ export default function CreateUserPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+                  className="input w-full !pl-12 pr-4 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder="250788123456"
                   disabled={loading}
                 />
@@ -320,7 +320,7 @@ export default function CreateUserPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+                  className="input w-full !pl-12 !pr-12 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder="Enter password (min 6 characters)"
                   disabled={loading}
                   minLength={6}
@@ -352,7 +352,7 @@ export default function CreateUserPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] text-sm"
+                  className="input w-full !pl-12 pr-4 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder="Confirm password"
                   disabled={loading}
                 />

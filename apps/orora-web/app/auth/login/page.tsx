@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Icon, { faEye, faEyeSlash, faEnvelope, faLock, faPhone } from '@/app/components/Icon';
-import DigitalClock from '@/app/components/DigitalClock';
 import { useAuthStore } from '@/store/auth';
 
 export default function LoginPage() {
@@ -167,7 +166,7 @@ export default function LoginPage() {
                   type={isPhoneLogin ? 'tel' : 'email'}
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
+                  className="input w-full !pl-12 pr-4 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder={isPhoneLogin ? 'Enter your phone number' : 'Enter your email'}
                   required
                   disabled={loading}
@@ -188,7 +187,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary text-sm"
+                  className="input w-full !pl-12 !pr-12 text-sm placeholder:text-gray-500 rounded-sm"
                   placeholder="Enter your password"
                   required
                   disabled={loading}
@@ -231,7 +230,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-12 text-center">
-            <p className="text-xs text-gray-500 mb-2">© 2025 Orora</p>
+            <p className="text-xs text-gray-500 mb-2">© 2020–{new Date().getFullYear()} Orora</p>
             <p className="text-xs text-gray-500">
               Cattle Farming Platform
             </p>
@@ -239,16 +238,13 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Image Cover (ResolveIt-style) */}
-      <div className="hidden lg:flex lg:w-[60%] relative bg-gradient-to-br from-primary-600 to-primary-800">
+      {/* Right Side - Image Cover */}
+      <div className="hidden lg:flex lg:w-[60%] relative bg-black">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url("/cover.jpg")' }}
         >
-          <div className="absolute inset-0 bg-primary/40"></div>
-        </div>
-        <div className="relative z-10 flex items-center justify-center w-full">
-          <DigitalClock />
+          <div className="absolute inset-0 bg-black/50" />
         </div>
       </div>
     </div>

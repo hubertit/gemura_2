@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePermission } from '@/hooks/usePermission';
-import { collectionsApi, UpdateCollectionData, Collection } from '@/lib/api/collections';
+import { collectionsApi, UpdateCollectionData, Collection, SupplierAnimal } from '@/lib/api/collections';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
-import Icon, { faBox, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import Icon, { faBox, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner, faPaw } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import Select from '@/app/components/Select';
 import DateTimePicker from '@/app/components/DateTimePicker';
@@ -27,8 +27,10 @@ export default function EditCollectionPage() {
   const { hasPermission, isAdmin } = usePermission();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingAnimals, setLoadingAnimals] = useState(false);
   const [error, setError] = useState('');
   const [collection, setCollection] = useState<Collection | null>(null);
+  const [supplierAnimals, setSupplierAnimals] = useState<SupplierAnimal[]>([]);
   const [formData, setFormData] = useState<UpdateCollectionData & { unit_price: number }>({
     collection_id: collectionId,
     quantity: 0,
@@ -36,6 +38,7 @@ export default function EditCollectionPage() {
     status: 'accepted',
     collection_at: '',
     notes: '',
+    animal_id: undefined,
   });
 
   useEffect(() => {
@@ -63,7 +66,18 @@ export default function EditCollectionPage() {
           status: collectionData.status,
           collection_at: collectionData.collection_at ? new Date(collectionData.collection_at).toISOString().slice(0, 16) : '',
           notes: collectionData.notes || '',
+          animal_id: collectionData.animal_id ?? collectionData.animal?.id ?? undefined,
         });
+        const supplierCode = collectionData.supplier_account?.code;
+        if (supplierCode) {
+          setLoadingAnimals(true);
+          collectionsApi.getSupplierAnimals(supplierCode).then((res) => {
+            if (res.code === 200 && res.data) setSupplierAnimals(res.data);
+            else setSupplierAnimals([]);
+          }).catch(() => setSupplierAnimals([])).finally(() => setLoadingAnimals(false));
+        } else {
+          setSupplierAnimals([]);
+        }
       } else {
         setError('Failed to load collection data');
       }
@@ -109,6 +123,7 @@ export default function EditCollectionPage() {
         status: formData.status,
         collection_at: formData.collection_at ? new Date(formData.collection_at).toISOString() : undefined,
         notes: formData.notes,
+        animal_id: formData.animal_id || undefined,
       };
 
       const response = await collectionsApi.updateCollection(finalData);
@@ -189,6 +204,34 @@ export default function EditCollectionPage() {
                 disabled={saving}
                 className="w-full"
               />
+            </div>
+
+            <div>
+              <label htmlFor="collection-animal" className="block text-sm font-medium text-gray-700 mb-2">
+                <Icon icon={faPaw} size="sm" className="inline mr-2 text-gray-500" />
+                Animal (optional)
+              </label>
+              {loadingAnimals ? (
+                <div className="input w-full flex items-center text-gray-500 text-sm">
+                  <Icon icon={faSpinner} size="sm" spin className="mr-2" />
+                  Loading animals...
+                </div>
+              ) : (
+                <Select
+                  id="collection-animal"
+                  name="animal_id"
+                  value={formData.animal_id ?? ''}
+                  onChange={(v) => setFormData((prev) => ({ ...prev, animal_id: v || undefined }))}
+                  options={supplierAnimals.map((a) => ({
+                    value: a.id,
+                    label: `${a.tag_number} ${a.name ? `(${a.name})` : ''} · ${a.breed}`,
+                  }))}
+                  placeholder="— None —"
+                  allowEmpty
+                  disabled={saving}
+                  className="w-full"
+                />
+              )}
             </div>
 
             <div>
