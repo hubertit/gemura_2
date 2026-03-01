@@ -468,6 +468,7 @@ model MilkProduction {
   animal_id        String?  @map("animal_id") @db.Uuid
   production_date  DateTime @map("production_date") @db.Date
   quantity_litres  Decimal  @map("quantity_litres") @db.Decimal(10, 2)
+  session          String?  @db.VarChar(32)
   notes            String?  @db.Text
   created_at       DateTime @default(now()) @map("created_at")
   updated_at       DateTime @updatedAt @map("updated_at")

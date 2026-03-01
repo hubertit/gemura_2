@@ -7,6 +7,7 @@ export interface MilkProductionRecord {
   animal_id: string | null;
   production_date: string;
   quantity_litres: number | string;
+  session: string | null;
   notes: string | null;
   created_at: string;
   created_by: string | null;
@@ -19,8 +20,16 @@ export interface CreateMilkProductionData {
   animal_id?: string;
   production_date: string;
   quantity_litres: number;
+  session?: string;
   notes?: string;
 }
+
+export const MILK_PRODUCTION_SESSIONS = [
+  { value: 'morning', label: 'Morning' },
+  { value: 'afternoon', label: 'Afternoon' },
+  { value: 'evening', label: 'Evening' },
+  { value: 'other', label: 'Other' },
+] as const;
 
 export interface MilkProductionFilters {
   animal_id?: string;

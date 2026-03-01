@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '@/store/auth';
-import { milkProductionApi, MilkProductionRecord } from '@/lib/api/milk-production';
+import { milkProductionApi, MilkProductionRecord, MILK_PRODUCTION_SESSIONS } from '@/lib/api/milk-production';
 import { animalsApi, Animal } from '@/lib/api/animals';
 import { useToastStore } from '@/store/toast';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
@@ -28,6 +28,7 @@ export default function MilkProductionPage() {
   const [recordForm, setRecordForm] = useState({
     animal_id: '',
     production_date: new Date().toISOString().slice(0, 10),
+    session: '',
     quantity_litres: '' as number | '',
     notes: '',
   });
@@ -77,6 +78,7 @@ export default function MilkProductionPage() {
     setRecordForm({
       animal_id: '',
       production_date: new Date().toISOString().slice(0, 10),
+      session: '',
       quantity_litres: '',
       notes: '',
     });
@@ -96,6 +98,7 @@ export default function MilkProductionPage() {
         {
           animal_id: recordForm.animal_id,
           production_date: recordForm.production_date,
+          session: recordForm.session.trim() || undefined,
           quantity_litres: qty,
           notes: recordForm.notes.trim() || undefined,
         },
@@ -193,6 +196,7 @@ export default function MilkProductionPage() {
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-600">
                     <th className="py-3 px-4 font-medium">Date</th>
+                    <th className="py-3 px-4 font-medium">Session</th>
                     <th className="py-3 px-4 font-medium">Quantity (L)</th>
                     <th className="py-3 px-4 font-medium">Animal</th>
                     <th className="py-3 px-4 font-medium">Farm</th>
@@ -203,6 +207,7 @@ export default function MilkProductionPage() {
                   {records.map((r) => (
                     <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                       <td className="py-3 px-4 text-gray-900">{new Date(r.production_date).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-gray-600">{r.session ? MILK_PRODUCTION_SESSIONS.find((s) => s.value === r.session)?.label ?? r.session : '—'}</td>
                       <td className="py-3 px-4 font-medium">{Number(r.quantity_litres)}</td>
                       <td className="py-3 px-4">
                         {r.animal ? (
@@ -250,6 +255,18 @@ export default function MilkProductionPage() {
             />
           </div>
           <div className="input-group">
+            <label htmlFor="prod-session" className="input-group-label">Session</label>
+            <Select
+              id="prod-session"
+              value={recordForm.session}
+              onChange={(v) => setRecordForm((p) => ({ ...p, session: v }))}
+              options={MILK_PRODUCTION_SESSIONS.map((s) => ({ value: s.value, label: s.label }))}
+              placeholder="Select session"
+              allowEmpty
+              className="w-full"
+            />
+          </div>
+          <div className="input-group">
             <label htmlFor="prod-qty" className="input-group-label">Quantity (litres) *</label>
             <input
               id="prod-qty"
@@ -270,7 +287,7 @@ export default function MilkProductionPage() {
               value={recordForm.notes}
               onChange={(e) => setRecordForm((p) => ({ ...p, notes: e.target.value }))}
               className="input w-full"
-              placeholder="e.g. morning milking"
+              placeholder="e.g. quality notes"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">

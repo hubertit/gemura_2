@@ -18,7 +18,7 @@ import {
   BreedingMethod,
   CalvingOutcome,
 } from '@/lib/api/animals';
-import { milkProductionApi, MilkProductionRecord } from '@/lib/api/milk-production';
+import { milkProductionApi, MilkProductionRecord, MILK_PRODUCTION_SESSIONS } from '@/lib/api/milk-production';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/app/components/Modal';
@@ -81,7 +81,7 @@ export default function AnimalDetailPage() {
   const [productionModalOpen, setProductionModalOpen] = useState(false);
   const [breedingModalOpen, setBreedingModalOpen] = useState(false);
   const [calvingModalOpen, setCalvingModalOpen] = useState(false);
-  const [productionForm, setProductionForm] = useState({ production_date: new Date().toISOString().slice(0, 10), quantity_litres: 0, notes: '' });
+  const [productionForm, setProductionForm] = useState({ production_date: new Date().toISOString().slice(0, 10), session: '', quantity_litres: 0, notes: '' });
   const [breedingForm, setBreedingForm] = useState<CreateBreedingData>({
     breeding_date: new Date().toISOString().slice(0, 10),
     method: 'natural',
@@ -176,12 +176,12 @@ export default function AnimalDetailPage() {
     setSubmitting(true);
     try {
       await milkProductionApi.create(
-        { animal_id: id, production_date: productionForm.production_date, quantity_litres: productionForm.quantity_litres, notes: productionForm.notes || undefined },
+        { animal_id: id, production_date: productionForm.production_date, session: productionForm.session || undefined, quantity_litres: productionForm.quantity_litres, notes: productionForm.notes || undefined },
         accountId
       );
       useToastStore.getState().show('Milk production recorded', 'success');
       setProductionModalOpen(false);
-      setProductionForm({ production_date: new Date().toISOString().slice(0, 10), quantity_litres: 0, notes: '' });
+      setProductionForm({ production_date: new Date().toISOString().slice(0, 10), session: '', quantity_litres: 0, notes: '' });
       loadProduction();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
@@ -595,6 +595,7 @@ export default function AnimalDetailPage() {
                   <thead>
                     <tr className="border-b border-gray-200 text-left text-gray-500">
                       <th className="py-2 pr-4">Date</th>
+                      <th className="py-2 pr-4">Session</th>
                       <th className="py-2 pr-4">Quantity (L)</th>
                       <th className="py-2 pr-4">Notes</th>
                       <th className="py-2 w-10" />
@@ -604,6 +605,7 @@ export default function AnimalDetailPage() {
                     {productionList.map((p) => (
                       <tr key={p.id} className="border-b border-gray-100">
                         <td className="py-2 pr-4 text-gray-900">{new Date(p.production_date).toLocaleDateString()}</td>
+                        <td className="py-2 pr-4 text-gray-600">{p.session ? MILK_PRODUCTION_SESSIONS.find((s) => s.value === p.session)?.label ?? p.session : '—'}</td>
                         <td className="py-2 pr-4 font-medium">{Number(p.quantity_litres)}</td>
                         <td className="py-2 pr-4 text-gray-600">{p.notes || '—'}</td>
                         <td className="py-2">
@@ -849,6 +851,17 @@ export default function AnimalDetailPage() {
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
+            <Select
+              value={productionForm.session}
+              onChange={(v) => setProductionForm((p) => ({ ...p, session: v }))}
+              options={MILK_PRODUCTION_SESSIONS.map((s) => ({ value: s.value, label: s.label }))}
+              placeholder="Select session"
+              allowEmpty
+              className="w-full"
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Quantity (litres) *</label>
             <input
               type="number"
@@ -867,7 +880,7 @@ export default function AnimalDetailPage() {
               value={productionForm.notes}
               onChange={(e) => setProductionForm((p) => ({ ...p, notes: e.target.value }))}
               className="input w-full"
-              placeholder="e.g. morning milking"
+              placeholder="e.g. quality notes"
             />
           </div>
           <div className="flex justify-end gap-2">

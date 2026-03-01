@@ -10,6 +10,8 @@ import { accountingApi } from '@/lib/api/accounting';
 import { inventoryApi, type InventoryStats, type ValuationOverTimePoint, type TopItemByValue, type StockMovementPoint } from '@/lib/api/inventory';
 import { loansApi, type Loan } from '@/lib/api/loans';
 import { animalsApi } from '@/lib/api/animals';
+import { milkProductionApi, type ProductionReport } from '@/lib/api/milk-production';
+import { farmsApi } from '@/lib/api/farms';
 import { useFarmStore } from '@/store/farms';
 import { useToastStore } from '@/store/toast';
 import Icon, {
@@ -27,6 +29,8 @@ import Icon, {
   faHandHoldingDollar,
   faEye,
   faPaw,
+  faMapLocationDot,
+  faChartBar,
 } from '@/app/components/Icon';
 import DatePicker from '@/app/components/DatePicker';
 import StatCard from '@/app/components/StatCard';
@@ -129,6 +133,10 @@ export default function Dashboard() {
   const [loansData, setLoansData] = useState<Loan[]>([]);
   const [loansLoading, setLoansLoading] = useState(false);
   const [animalStats, setAnimalStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
+  const [milkProductionReport, setMilkProductionReport] = useState<ProductionReport | null>(null);
+  const [farmsCount, setFarmsCount] = useState<number>(0);
+  const [overviewInventoryStats, setOverviewInventoryStats] = useState<InventoryStats | null>(null);
+  const [overviewExtrasLoading, setOverviewExtrasLoading] = useState(false);
 
   const dateRange = useMemo(
     () => getPeriodRange(period, customFrom || undefined, customTo || undefined),
@@ -263,6 +271,38 @@ export default function Dashboard() {
         if (!cancelled) setFinanceExpenseByCategory([]);
       })
       .finally(() => { if (!cancelled) setFinanceLoading(false); });
+    return () => { cancelled = true; };
+  }, [dashboardTab, currentAccount?.account_id, dateRange.date_from, dateRange.date_to]);
+
+  // Load milk production report and farms count for Overview tab
+  useEffect(() => {
+    if (dashboardTab !== 'overview' || !currentAccount?.account_id) return;
+    const accountId = currentAccount.account_id;
+    const { date_from, date_to } = dateRange;
+    let cancelled = false;
+    setOverviewExtrasLoading(true);
+    Promise.all([
+      milkProductionApi.report(accountId, date_from, date_to),
+      farmsApi.list(accountId),
+      inventoryApi.getInventoryStats(accountId),
+    ])
+      .then(([reportRes, farmsRes, invRes]) => {
+        if (cancelled) return;
+        if (reportRes.code === 200 && reportRes.data) setMilkProductionReport(reportRes.data);
+        else setMilkProductionReport(null);
+        if (farmsRes.code === 200 && Array.isArray(farmsRes.data)) setFarmsCount(farmsRes.data.length);
+        else setFarmsCount(0);
+        if (invRes.code === 200 && invRes.data) setOverviewInventoryStats(invRes.data);
+        else setOverviewInventoryStats(null);
+      })
+      .catch(() => {
+        if (!cancelled) setMilkProductionReport(null);
+        if (!cancelled) setFarmsCount(0);
+        if (!cancelled) setOverviewInventoryStats(null);
+      })
+      .finally(() => {
+        if (!cancelled) setOverviewExtrasLoading(false);
+      });
     return () => { cancelled = true; };
   }, [dashboardTab, currentAccount?.account_id, dateRange.date_from, dateRange.date_to]);
 
@@ -438,8 +478,8 @@ export default function Dashboard() {
       {/* Overview tab */}
       {dashboardTab === 'overview' && (
         <>
-      {/* Summary cards - auto-adjusting grid, 1 row on large screens */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Summary cards - metrics across sales, collections, production, livestock, people */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <StatCard
           label="Total Sales"
           value={formatCurrency(summary.sales.value)}
@@ -455,6 +495,34 @@ export default function Dashboard() {
           icon={faBox}
           href="/collections"
           {...BLUE_ICON}
+        />
+        <StatCard
+          label="Milk production"
+          value={overviewExtrasLoading ? '…' : `${Number(milkProductionReport?.total_production_litres ?? 0).toFixed(1)} L`}
+          subtitle={overviewExtrasLoading ? '…' : `${Number(milkProductionReport?.total_sold_litres ?? 0).toFixed(1)} L sold in period`}
+          icon={faChartBar}
+          href="/production"
+          {...BLUE_ICON}
+        />
+        <StatCard
+          label="Animals"
+          value={animalStats?.total ?? 0}
+          subtitle={animalStats ? [
+            animalStats.byStatus.active && `${animalStats.byStatus.active} active`,
+            animalStats.byStatus.lactating && `${animalStats.byStatus.lactating} lactating`,
+            animalStats.byStatus.pregnant && `${animalStats.byStatus.pregnant} pregnant`,
+          ].filter(Boolean).join(', ') || 'No animals' : '…'}
+          icon={faPaw}
+          href="/animals"
+          {...PURPLE_ICON}
+        />
+        <StatCard
+          label="Farms"
+          value={overviewExtrasLoading ? '…' : farmsCount}
+          subtitle="locations"
+          icon={faMapLocationDot}
+          href="/farms"
+          {...PURPLE_ICON}
         />
         <StatCard
           label="Suppliers"
@@ -473,17 +541,12 @@ export default function Dashboard() {
           {...GREEN_ICON}
         />
         <StatCard
-          label="Animals"
-          value={animalStats?.total ?? 0}
-          subtitle={animalStats ? [
-            animalStats.byStatus.active && `${animalStats.byStatus.active} active`,
-            animalStats.byStatus.lactating && `${animalStats.byStatus.lactating} lactating`,
-            animalStats.byStatus.pregnant && `${animalStats.byStatus.pregnant} pregnant`,
-          ].filter(Boolean).join(', ') || 'No animals' : '…'}
-          icon={faPaw}
-          href="/animals"
-          {...PURPLE_ICON}
-          {...PURPLE_ICON}
+          label="Inventory"
+          value={overviewExtrasLoading ? '…' : (overviewInventoryStats?.total_items ?? 0)}
+          subtitle={overviewExtrasLoading ? '…' : `${overviewInventoryStats?.low_stock_items ?? 0} low stock`}
+          icon={faWarehouse}
+          href="/inventory/items"
+          {...BLUE_ICON}
         />
       </div>
 
@@ -699,6 +762,15 @@ export default function Dashboard() {
                 </span>
                 <span className="text-sm font-semibold text-gray-900">New Collection</span>
               </button>
+              <Link
+                href="/production"
+                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 no-underline"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                  <Icon icon={faChartBar} size="lg" />
+                </span>
+                <span className="text-sm font-semibold text-gray-900">Record production</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setQuickActionModal('supplier')}
