@@ -14,6 +14,7 @@ import BulkImportModal from '@/app/components/BulkImportModal';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from './CreateSaleForm';
 import Icon, { faPlus, faEye, faCheckCircle, faFile } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -230,22 +231,20 @@ export default function SalesPage() {
       {/* Filters (admin/users style) */}
       <FilterBar>
         <FilterBarGroup label="Status">
-          <select
+          <Select
             value={filters.status || ''}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {STATUS_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => handleFilterChange('status', v)}
+            options={STATUS_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All Statuses"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="Date From">
           <input
             type="date"
             value={filters.date_from || ''}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => handleFilterChange('date_from', e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
@@ -254,6 +253,7 @@ export default function SalesPage() {
           <input
             type="date"
             value={filters.date_to || ''}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => handleFilterChange('date_to', e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />

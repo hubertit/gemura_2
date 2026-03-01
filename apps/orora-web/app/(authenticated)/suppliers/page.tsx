@@ -13,6 +13,7 @@ import Modal from '@/app/components/Modal';
 import BulkImportModal from '@/app/components/BulkImportModal';
 import CreateSupplierForm from './CreateSupplierForm';
 import Icon, { faPlus, faEye, faCheckCircle, faBuilding, faPhone, faEnvelope, faDollarSign, faFile } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -251,17 +252,14 @@ export default function SuppliersPage() {
           placeholder="Search by name, code, phone, email..."
         />
         <FilterBarGroup label="Status">
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={setStatusFilter}
+            options={STATUS_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All Statuses"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarActions onClear={clearFilters} />
         <FilterBarExport<Supplier>

@@ -8,7 +8,9 @@ import { customersApi, Customer } from '@/lib/api/customers';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import DatePicker from '@/app/components/DatePicker';
 import SearchableSelect, { SearchableSelectOption } from '@/app/components/SearchableSelect';
+import Select from '@/app/components/Select';
 
 interface CreateLoanFormProps {
   onSuccess: () => void;
@@ -151,16 +153,18 @@ export default function CreateLoanForm({ onSuccess, onCancel }: CreateLoanFormPr
 
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">Borrower type</label>
-        <select
+        <Select
           name="borrower_type"
           value={formData.borrower_type}
-          onChange={handleChange}
-          className="input w-full"
-        >
-          <option value="supplier">Supplier</option>
-          <option value="customer">Customer</option>
-          <option value="other">Other</option>
-        </select>
+          onChange={(v) => setFormData((prev) => ({ ...prev, borrower_type: v as 'supplier' | 'customer' | 'other' }))}
+          options={[
+            { value: 'supplier', label: 'Supplier' },
+            { value: 'customer', label: 'Customer' },
+            { value: 'other', label: 'Other' },
+          ]}
+          placeholder="Select type"
+          className="w-full"
+        />
       </div>
 
       {formData.borrower_type !== 'other' ? (
@@ -234,23 +238,24 @@ export default function CreateLoanForm({ onSuccess, onCancel }: CreateLoanFormPr
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Disbursement date</label>
-          <input
-            type="date"
+          <DatePicker
             name="disbursement_date"
             value={formData.disbursement_date}
-            onChange={handleChange}
-            className="input w-full"
+            onChange={(v) => setFormData((prev) => ({ ...prev, disbursement_date: v }))}
+            max={new Date().toISOString().slice(0, 10)}
+            placeholder="Select date"
             required
+            className="w-full"
           />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Due date (optional)</label>
-          <input
-            type="date"
+          <DatePicker
             name="due_date"
-            value={formData.due_date}
-            onChange={handleChange}
-            className="input w-full"
+            value={formData.due_date ?? ''}
+            onChange={(v) => setFormData((prev) => ({ ...prev, due_date: v }))}
+            placeholder="Select date"
+            className="w-full"
           />
         </div>
       </div>

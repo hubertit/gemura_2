@@ -7,6 +7,8 @@ import { loansApi, Loan } from '@/lib/api/loans';
 import { useToastStore } from '@/store/toast';
 import Icon, { faArrowLeft, faCalendar, faSpinner, faEdit, faCheckCircle } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import DatePicker from '@/app/components/DatePicker';
+import Select from '@/app/components/Select';
 
 export default function LoanDetailPage() {
   const params = useParams();
@@ -195,11 +197,12 @@ export default function LoanDetailPage() {
             <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Repayment date</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={repayDate}
-                  onChange={(e) => setRepayDate(e.target.value)}
-                  className="input w-40"
+                  onChange={setRepayDate}
+                  max={new Date().toISOString().slice(0, 10)}
+                  placeholder="Date"
+                  className="w-40"
                 />
               </div>
               <div>
@@ -286,22 +289,24 @@ export default function LoanDetailPage() {
           </p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
+            <Select
               value={editStatus}
-              onChange={(e) => setEditStatus(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-            >
-              <option value="active">Active</option>
-              <option value="closed">Closed</option>
-            </select>
+              onChange={setEditStatus}
+              options={[
+                { value: 'active', label: 'Active' },
+                { value: 'closed', label: 'Closed' },
+              ]}
+              placeholder="Select status"
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Due date</label>
-            <input
-              type="date"
+            <DatePicker
               value={editDueDate}
-              onChange={(e) => setEditDueDate(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+              onChange={setEditDueDate}
+              placeholder="Select date"
+              className="w-full"
             />
           </div>
           <div>

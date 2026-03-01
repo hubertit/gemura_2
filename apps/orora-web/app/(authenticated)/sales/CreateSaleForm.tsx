@@ -6,6 +6,8 @@ import { customersApi, Customer } from '@/lib/api/customers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
 import SearchableSelect from '@/app/components/SearchableSelect';
+import DateTimePicker from '@/app/components/DateTimePicker';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -131,13 +133,29 @@ export default function CreateSaleForm({ onSuccess, onCancel }: CreateSaleFormPr
         </div>
         <div>
           <label htmlFor="sale-status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select id="sale-status" name="status" value={formData.status} onChange={handleChange} className="input w-full" disabled={loading}>
-            {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
+          <Select
+            id="sale-status"
+            name="status"
+            value={formData.status}
+            onChange={(v) => setFormData((prev) => ({ ...prev, status: v as 'pending' | 'accepted' | 'rejected' | 'cancelled' }))}
+            options={STATUS_OPTIONS}
+            placeholder="Select status"
+            disabled={loading}
+            className="w-full"
+          />
         </div>
         <div>
           <label htmlFor="sale_at" className="block text-sm font-medium text-gray-700 mb-1">Date & time</label>
-          <input id="sale_at" name="sale_at" type="datetime-local" value={formData.sale_at} onChange={handleChange} className="input w-full" disabled={loading} />
+          <DateTimePicker
+            id="sale_at"
+            name="sale_at"
+            value={formData.sale_at ?? ''}
+            onChange={(v) => setFormData((prev) => ({ ...prev, sale_at: v }))}
+            max={new Date().toISOString().slice(0, 16)}
+            placeholder="Select date and time"
+            disabled={loading}
+            className="w-full"
+          />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="sale-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>

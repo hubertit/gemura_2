@@ -9,6 +9,7 @@ import { ENTITY_TYPE_OPTIONS } from '@/lib/constants/entity-types';
 import { customersApi, UpdateCustomerData, CustomerDetails } from '@/lib/api/customers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faUser, faPhone, faEnvelope, faIdCard, faMapPin, faDollarSign, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 
 const STATUS_OPTIONS = [
@@ -304,40 +305,33 @@ export default function EditCustomerPage() {
               <label htmlFor="relationship_status" className="block text-sm font-medium text-gray-700 mb-2">
                 Relationship Status
               </label>
-              <select
+              <Select
                 id="relationship_status"
                 name="relationship_status"
                 value={formData.relationship_status}
-                onChange={handleChange}
-                className="input w-full"
+                onChange={(v) => setFormData((prev) => ({ ...prev, relationship_status: v as 'active' | 'inactive' }))}
+                options={STATUS_OPTIONS}
+                placeholder="Select status"
                 disabled={saving}
-              >
-                {STATUS_OPTIONS.map(status => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
 
             <div>
               <label htmlFor="customer-type" className="block text-sm font-medium text-gray-700 mb-2">
                 Type
               </label>
-              <select
+              <Select
                 id="customer-type"
                 name="type"
                 value={formData.type}
-                onChange={handleChange}
-                className="input w-full"
+                onChange={(v) => setFormData((prev) => ({ ...prev, type: v }))}
+                options={ENTITY_TYPE_OPTIONS.filter((o) => o.value !== '')}
+                placeholder="— Select type —"
+                allowEmpty
                 disabled={saving}
-              >
-                {ENTITY_TYPE_OPTIONS.map(opt => (
-                  <option key={opt.value || 'none'} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
           </div>
         </div>

@@ -209,6 +209,23 @@ enum FarmStatus {
   archived
 }
 
+enum BreedingMethod {
+  natural
+  artificial_insemination
+}
+
+enum BreedingOutcome {
+  pregnant
+  not_pregnant
+  unknown
+}
+
+enum CalvingOutcome {
+  live
+  stillborn
+  aborted
+}
+
 // Administrative location hierarchy (province → district → sector → cell → village)
 enum LocationType {
   COUNTRY
@@ -262,6 +279,7 @@ model Account {
   api_keys              ApiKey[]
   animals               Animal[]            @relation("AnimalAccount")
   farms                 Farm[]              @relation("FarmAccount")
+  milk_productions      MilkProduction[]    @relation("MilkProductionAccount")
 
   @@index([code])
   @@index([type])
@@ -403,12 +421,13 @@ model SupplierCustomer {
 }
 
 model MilkSale {
-  id                  String         @id @default(uuid()) @db.Uuid
-  legacy_id           Int?           @unique @map("legacy_id") // For migration reference
-  supplier_account_id String         @map("supplier_account_id") @db.Uuid
-  customer_account_id String         @map("customer_account_id") @db.Uuid
-  animal_id           String?        @map("animal_id") @db.Uuid
-  quantity            Decimal        @db.Decimal(10, 2)
+  id                   String         @id @default(uuid()) @db.Uuid
+  legacy_id            Int?           @unique @map("legacy_id") // For migration reference
+  supplier_account_id  String         @map("supplier_account_id") @db.Uuid
+  customer_account_id  String         @map("customer_account_id") @db.Uuid
+  animal_id            String?        @map("animal_id") @db.Uuid
+  milk_production_id   String?        @map("milk_production_id") @db.Uuid
+  quantity             Decimal        @db.Decimal(10, 2)
   unit_price          Decimal        @map("unit_price") @db.Decimal(10, 2)
   status              MilkSaleStatus @default(pending)
   sale_at             DateTime       @map("sale_at")
@@ -427,16 +446,43 @@ model MilkSale {
   customer_account    Account             @relation("MilkSaleCustomer", fields: [customer_account_id], references: [id], onDelete: Restrict)
   recorded_by_user    User                @relation("MilkSaleRecordedBy", fields: [recorded_by], references: [id], onDelete: Restrict)
   animal              Animal?              @relation(fields: [animal_id], references: [id], onDelete: SetNull)
+  milk_production     MilkProduction?      @relation(fields: [milk_production_id], references: [id], onDelete: SetNull)
 
   @@index([supplier_account_id])
   @@index([customer_account_id])
   @@index([animal_id])
+  @@index([milk_production_id])
   @@index([status])
   @@index([sale_at])
   @@index([recorded_by])
   @@index([created_at])
   @@index([payment_status])
   @@map("milk_sales")
+}
+
+// Milk production (per animal or farm per day) – can be linked to sales later via milk_production_id on MilkSale
+model MilkProduction {
+  id               String   @id @default(uuid()) @db.Uuid
+  account_id       String   @map("account_id") @db.Uuid
+  farm_id          String?  @map("farm_id") @db.Uuid
+  animal_id        String?  @map("animal_id") @db.Uuid
+  production_date  DateTime @map("production_date") @db.Date
+  quantity_litres  Decimal  @map("quantity_litres") @db.Decimal(10, 2)
+  notes            String?  @db.Text
+  created_at       DateTime @default(now()) @map("created_at")
+  updated_at       DateTime @updatedAt @map("updated_at")
+  created_by       String?  @map("created_by") @db.Uuid
+
+  account Account  @relation("MilkProductionAccount", fields: [account_id], references: [id], onDelete: Cascade)
+  farm    Farm?    @relation(fields: [farm_id], references: [id], onDelete: SetNull)
+  animal  Animal?  @relation(fields: [animal_id], references: [id], onDelete: SetNull)
+  milk_sales MilkSale[]
+
+  @@index([account_id])
+  @@index([farm_id])
+  @@index([animal_id])
+  @@index([production_date])
+  @@map("milk_productions")
 }
 
 model Product {
@@ -1369,6 +1415,7 @@ model Farm {
   account  Account   @relation("FarmAccount", fields: [account_id], references: [id], onDelete: Cascade)
   locationRef Location? @relation(fields: [location_id], references: [id], onDelete: SetNull)
   animals  Animal[]
+  milk_productions MilkProduction[]
 
   @@index([account_id])
   @@index([location_id])
@@ -1380,13 +1427,27 @@ model Farm {
 // Orora: Animal module (cattle / farm management)
 // ============================================
 
+// Predefined breeds (select on registration/edit)
+model Breed {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  code        String   @unique
+  description String?  @db.Text
+  created_at  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  animals Animal[]
+
+  @@index([code])
+  @@map("breeds")
+}
+
 model Animal {
   id             String        @id @default(uuid()) @db.Uuid
   account_id     String        @map("account_id") @db.Uuid
   farm_id        String?       @map("farm_id") @db.Uuid
+  breed_id      String        @map("breed_id") @db.Uuid
   tag_number     String        @map("tag_number")
   name           String?
-  breed          String
   gender         AnimalGender
   date_of_birth  DateTime      @map("date_of_birth")
   source         AnimalSource
@@ -1402,20 +1463,26 @@ model Animal {
   created_by     String?       @map("created_by") @db.Uuid
 
   account        Account         @relation("AnimalAccount", fields: [account_id], references: [id], onDelete: Cascade)
+  breed          Breed           @relation(fields: [breed_id], references: [id], onDelete: Restrict)
   farm           Farm?           @relation(fields: [farm_id], references: [id], onDelete: SetNull)
   mother         Animal?         @relation("AnimalMother", fields: [mother_id], references: [id], onDelete: SetNull)
   father          Animal?         @relation("AnimalFather", fields: [father_id], references: [id], onDelete: SetNull)
   offspring_mother Animal[]      @relation("AnimalMother")
   offspring_father Animal[]      @relation("AnimalFather")
-  weights        AnimalWeight[]
-  health_records AnimalHealth[]
-  milk_sales     MilkSale[]
+  weights         AnimalWeight[]
+  health_records  AnimalHealth[]
+  milk_sales      MilkSale[]
+  milk_productions MilkProduction[]
+  breeding_records AnimalBreeding[]  @relation("AnimalBreedingDam")
+  breeding_as_bull AnimalBreeding[]  @relation("AnimalBreedingBull")
+  calvings         AnimalCalving[]   @relation("AnimalCalvingMother")
+  calving_as_calf  AnimalCalving?    @relation("AnimalCalvingCalf")
 
   @@unique([account_id, tag_number])
   @@index([account_id])
+  @@index([breed_id])
   @@index([farm_id])
   @@index([status])
-  @@index([breed])
   @@index([gender])
   @@map("animals")
 }
@@ -1460,4 +1527,48 @@ model AnimalHealth {
   @@index([event_date])
   @@index([next_due_date])
   @@map("animal_health")
+}
+
+model AnimalBreeding {
+  id                    String          @id @default(uuid()) @db.Uuid
+  animal_id             String          @map("animal_id") @db.Uuid
+  breeding_date         DateTime        @map("breeding_date") @db.Date
+  method                BreedingMethod
+  bull_animal_id        String?         @map("bull_animal_id") @db.Uuid
+  bull_name             String?         @map("bull_name")
+  semen_code            String?         @map("semen_code")
+  expected_calving_date DateTime?       @map("expected_calving_date") @db.Date
+  outcome               BreedingOutcome? @default(unknown)
+  notes                 String?         @db.Text
+  created_at            DateTime        @default(now()) @map("created_at")
+  created_by            String?         @map("created_by") @db.Uuid
+
+  animal    Animal  @relation("AnimalBreedingDam", fields: [animal_id], references: [id], onDelete: Cascade)
+  bull_animal Animal? @relation("AnimalBreedingBull", fields: [bull_animal_id], references: [id], onDelete: SetNull)
+
+  @@index([animal_id])
+  @@index([breeding_date])
+  @@index([expected_calving_date])
+  @@map("animal_breeding")
+}
+
+model AnimalCalving {
+  id           String         @id @default(uuid()) @db.Uuid
+  mother_id    String         @map("mother_id") @db.Uuid
+  calving_date DateTime       @map("calving_date") @db.Date
+  calf_id      String?        @unique @map("calf_id") @db.Uuid
+  outcome      CalvingOutcome
+  gender       AnimalGender?  @map("gender")
+  weight_kg    Decimal?       @map("weight_kg") @db.Decimal(6, 2)
+  notes        String?        @db.Text
+  created_at   DateTime       @default(now()) @map("created_at")
+  created_by   String?        @map("created_by") @db.Uuid
+
+  mother Animal  @relation("AnimalCalvingMother", fields: [mother_id], references: [id], onDelete: Cascade)
+  calf   Animal? @relation("AnimalCalvingCalf", fields: [calf_id], references: [id], onDelete: SetNull)
+
+  @@index([mother_id])
+  @@index([calving_date])
+  @@index([calf_id])
+  @@map("animal_calving")
 }

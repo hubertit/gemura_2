@@ -12,6 +12,7 @@ import { profileApi, UpdateProfilePayload } from '@/lib/api/profile';
 import { employeesApi, type EmployeeItem, type RoleOption } from '@/lib/api/employees';
 import Modal from '@/app/components/Modal';
 import ConfirmDialog from '@/app/components/ConfirmDialog';
+import Select from '@/app/components/Select';
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
@@ -476,21 +477,19 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <select
+            <Select
               value={inviteForm.role}
-              onChange={(e) => setInviteForm((f) => ({ ...f, role: e.target.value }))}
-              className="input w-full"
-            >
-              {roles.length > 0
-                ? roles.map((r) => (
-                    <option key={r.code} value={r.code}>
-                      {r.name}
-                    </option>
-                  ))
-                : Object.entries(ROLE_LABELS).filter(([k]) => !['supplier', 'customer'].includes(k)).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-            </select>
+              onChange={(v) => setInviteForm((f) => ({ ...f, role: v }))}
+              options={
+                roles.length > 0
+                  ? roles.map((r) => ({ value: r.code, label: r.name }))
+                  : Object.entries(ROLE_LABELS)
+                      .filter(([k]) => !['supplier', 'customer'].includes(k))
+                      .map(([value, label]) => ({ value, label }))
+              }
+              placeholder="Select role"
+              className="w-full"
+            />
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <button type="button" onClick={() => setInviteOpen(false)} className="btn btn-secondary" disabled={saving}>
@@ -510,19 +509,19 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-600">{editEmployee.user?.name}</p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <select
+              <Select
                 value={editRole}
-                onChange={(e) => setEditRole(e.target.value)}
-                className="input w-full"
-              >
-                {roles.length > 0
-                  ? roles.map((r) => (
-                      <option key={r.code} value={r.code}>{r.name}</option>
-                    ))
-                  : Object.entries(ROLE_LABELS).filter(([k]) => !['supplier', 'customer'].includes(k)).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-              </select>
+                onChange={setEditRole}
+                options={
+                  roles.length > 0
+                    ? roles.map((r) => ({ value: r.code, label: r.name }))
+                    : Object.entries(ROLE_LABELS)
+                        .filter(([k]) => !['supplier', 'customer'].includes(k))
+                        .map(([value, label]) => ({ value, label }))
+                }
+                placeholder="Select role"
+                className="w-full"
+              />
             </div>
             <div className="flex gap-2 justify-end pt-2">
               <button type="button" onClick={() => setEditEmployee(null)} className="btn btn-secondary" disabled={saving}>Cancel</button>

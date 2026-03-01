@@ -22,6 +22,7 @@ import Icon, {
   faTriangleExclamation,
 } from '@/app/components/Icon';
 import Modal from '@/app/components/Modal';
+import DatePicker from '@/app/components/DatePicker';
 import { FinancePageSkeleton } from '@/app/components/SkeletonLoader';
 
 function toYYYYMMDD(d: Date): string {
@@ -139,6 +140,7 @@ export default function FinancePage() {
             <input
               type="date"
               value={fromDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setFromDate(e.target.value)}
               className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
               aria-label="From date"
@@ -151,6 +153,7 @@ export default function FinancePage() {
             <input
               type="date"
               value={toDate}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setToDate(e.target.value)}
               className="rounded-r border border-gray-300 px-2 py-1.5 text-sm"
               aria-label="To date"
@@ -402,11 +405,12 @@ export default function FinancePage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Date</label>
-            <input
-              type="date"
+            <DatePicker
               value={recordDate}
-              onChange={(e) => setRecordDate(e.target.value)}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              onChange={setRecordDate}
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select date"
+              className="mt-1 w-full"
             />
           </div>
         </div>

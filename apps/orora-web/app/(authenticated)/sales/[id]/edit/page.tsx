@@ -11,6 +11,7 @@ import { useToastStore } from '@/store/toast';
 import Icon, { faReceipt, faUser, faDollarSign, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
 import SearchableSelect from '@/app/components/SearchableSelect';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -256,20 +257,16 @@ export default function EditSalePage() {
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
-              <select
+              <Select
                 id="status"
                 name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="input w-full"
+                value={formData.status ?? ''}
+                onChange={(v) => setFormData((prev) => ({ ...prev, status: v }))}
+                options={STATUS_OPTIONS}
+                placeholder="Select status"
                 disabled={saving}
-              >
-                {STATUS_OPTIONS.map(status => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
 
             <div>
@@ -282,6 +279,7 @@ export default function EditSalePage() {
                 name="sale_at"
                 type="datetime-local"
                 value={formData.sale_at}
+                max={new Date().toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="input w-full"
                 disabled={saving}

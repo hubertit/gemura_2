@@ -8,6 +8,7 @@ import { suppliersApi, Supplier } from '@/lib/api/suppliers';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faArrowLeft, faSpinner, faTag } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 export default function NewChargePage() {
   const router = useRouter();
@@ -126,40 +127,46 @@ export default function NewChargePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Kind *</label>
-            <select
+            <Select
               value={form.kind}
-              onChange={(e) => setForm((p) => ({ ...p, kind: e.target.value as 'one_time' | 'recurring' }))}
-              className="input w-full"
-            >
-              <option value="one_time">One-time</option>
-              <option value="recurring">Recurring</option>
-            </select>
+              onChange={(v) => setForm((p) => ({ ...p, kind: v as 'one_time' | 'recurring' }))}
+              options={[
+                { value: 'one_time', label: 'One-time' },
+                { value: 'recurring', label: 'Recurring' },
+              ]}
+              placeholder="Select kind"
+              className="w-full"
+            />
           </div>
           {form.kind === 'recurring' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Recurrence *</label>
-              <select
+              <Select
                 value={form.recurrence || ''}
-                onChange={(e) => setForm((p) => ({ ...p, recurrence: e.target.value as 'monthly' | 'per_payroll' }))}
-                className="input w-full"
-              >
-                <option value="per_payroll">Per payroll run</option>
-                <option value="monthly">Monthly</option>
-              </select>
+                onChange={(v) => setForm((p) => ({ ...p, recurrence: v as 'monthly' | 'per_payroll' }))}
+                options={[
+                  { value: 'per_payroll', label: 'Per payroll run' },
+                  { value: 'monthly', label: 'Monthly' },
+                ]}
+                placeholder="Select recurrence"
+                className="w-full"
+              />
             </div>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Amount type *</label>
-            <select
+            <Select
               value={form.amount_type}
-              onChange={(e) => setForm((p) => ({ ...p, amount_type: e.target.value as 'fixed' | 'percentage' }))}
-              className="input w-full"
-            >
-              <option value="fixed">Fixed (RWF)</option>
-              <option value="percentage">Percentage of gross</option>
-            </select>
+              onChange={(v) => setForm((p) => ({ ...p, amount_type: v as 'fixed' | 'percentage' }))}
+              options={[
+                { value: 'fixed', label: 'Fixed (RWF)' },
+                { value: 'percentage', label: 'Percentage of gross' },
+              ]}
+              placeholder="Select type"
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -221,6 +228,7 @@ export default function NewChargePage() {
             <input
               type="date"
               value={form.effective_from || ''}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setForm((p) => ({ ...p, effective_from: e.target.value }))}
               className="input w-full"
             />
@@ -230,6 +238,7 @@ export default function NewChargePage() {
             <input
               type="date"
               value={form.effective_to || ''}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setForm((p) => ({ ...p, effective_to: e.target.value }))}
               className="input w-full"
             />

@@ -9,6 +9,7 @@ import { adminApi, CreateUserData } from '@/lib/api/admin';
 import { useToastStore } from '@/store/toast';
 import { useAuthStore } from '@/store/auth';
 import Icon, { faUser, faEnvelope, faPhone, faLock, faBuilding, faUserShield, faCheckCircle, faTimes } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 // Available roles and account types
 const ROLES = [
@@ -370,20 +371,16 @@ export default function CreateUserPage() {
                 <Icon icon={faBuilding} size="sm" className="inline mr-2" />
                 Account Type
               </label>
-              <select
+              <Select
                 id="account_type"
                 name="account_type"
                 value={formData.account_type}
-                onChange={handleChange}
-                className="input w-full"
+                onChange={(v) => setFormData((prev) => ({ ...prev, account_type: v }))}
+                options={ACCOUNT_TYPES}
+                placeholder="Select account type"
                 disabled={loading}
-              >
-                {ACCOUNT_TYPES.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
 
             {/* Role */}
@@ -392,20 +389,16 @@ export default function CreateUserPage() {
                 <Icon icon={faUserShield} size="sm" className="inline mr-2" />
                 Role
               </label>
-              <select
+              <Select
                 id="role"
                 name="role"
                 value={formData.role}
-                onChange={handleChange}
-                className="input w-full"
+                onChange={(v) => setFormData((prev) => ({ ...prev, role: v }))}
+                options={ROLES}
+                placeholder="Select role"
                 disabled={loading}
-              >
-                {ROLES.map(role => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
 
             {/* Status */}
@@ -413,20 +406,16 @@ export default function CreateUserPage() {
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
-              <select
+              <Select
                 id="status"
                 name="status"
                 value={formData.status}
-                onChange={handleChange}
-                className="input w-full"
+                onChange={(v) => setFormData((prev) => ({ ...prev, status: v }))}
+                options={STATUS_OPTIONS}
+                placeholder="Select status"
                 disabled={loading}
-              >
-                {STATUS_OPTIONS.map(status => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
           </div>
         </div>

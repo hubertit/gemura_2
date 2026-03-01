@@ -6,6 +6,7 @@ import { inventoryItemsApi, type PredefinedCategoryGroup } from '@/lib/api/inven
 import { categoriesApi, Category } from '@/lib/api/categories';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 interface CreateInventoryFormProps {
   onSuccess: () => void;
@@ -125,10 +126,9 @@ export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInven
           {loadingPredefined ? (
             <div className="input w-full flex items-center text-gray-500"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading...</div>
           ) : (
-            <select
+            <Select
               value={formData.inventory_item_id || ''}
-              onChange={(e) => {
-                const val = e.target.value;
+              onChange={(val) => {
                 if (!val) {
                   handlePredefinedSelect('', '');
                   return;
@@ -141,20 +141,17 @@ export default function CreateInventoryForm({ onSuccess, onCancel }: CreateInven
                   }
                 }
               }}
-              className="input w-full"
+              options={predefinedGrouped.flatMap(cat =>
+                cat.items.map(item => ({
+                  value: item.id,
+                  label: `${cat.name} › ${item.name}${item.unit ? ` (${item.unit})` : ''}`,
+                }))
+              )}
+              placeholder="— Custom / enter name below —"
+              allowEmpty
               disabled={loading}
-            >
-              <option value="">— Custom / enter name below —</option>
-              {predefinedGrouped.map(cat => (
-                <optgroup key={cat.id} label={cat.name}>
-                  {cat.items.map(item => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}{item.unit ? ` (${item.unit})` : ''}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              className="w-full"
+            />
           )}
         </div>
       )}

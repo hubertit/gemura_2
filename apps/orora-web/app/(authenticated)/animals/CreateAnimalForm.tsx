@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { animalsApi, CreateAnimalData, Animal, AnimalStatus, AnimalSource, AnimalGender } from '@/lib/api/animals';
+import { breedsApi, Breed } from '@/lib/api/breeds';
 import { useAuthStore } from '@/store/auth';
 import { useFarmStore } from '@/store/farms';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import DatePicker from '@/app/components/DatePicker';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS: { value: AnimalStatus; label: string }[] = [
   { value: 'active', label: 'Active' },
@@ -46,10 +49,11 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [parents, setParents] = useState<Animal[]>([]);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
   const [formData, setFormData] = useState<CreateAnimalData>({
     tag_number: initialData?.tag_number ?? '',
     name: initialData?.name ?? '',
-    breed: initialData?.breed ?? '',
+    breed_id: initialData && 'breed_id' in initialData ? (initialData as any).breed_id : '',
     gender: initialData?.gender ?? 'female',
     date_of_birth: initialData?.date_of_birth ?? '',
     source: initialData?.source ?? 'born_on_farm',
@@ -68,6 +72,10 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
     animalsApi.getList(accountId).then((res) => res.data && setParents(res.data)).catch(() => {});
   }, [accountId]);
 
+  useEffect(() => {
+    breedsApi.getList().then((res) => res.data && setBreeds(res.data)).catch(() => {});
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -82,13 +90,28 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
       setError('Tag number is required');
       return false;
     }
-    if (!formData.breed.trim()) {
+    if (!formData.breed_id?.trim()) {
       setError('Breed is required');
       return false;
     }
     if (!formData.date_of_birth) {
       setError('Date of birth is required');
       return false;
+    }
+    if (new Date(formData.date_of_birth) > new Date()) {
+      setError('Date of birth must not be in the future');
+      return false;
+    }
+    if (formData.purchase_date && new Date(formData.purchase_date) > new Date()) {
+      setError('Purchase date must not be in the future');
+      return false;
+    }
+    if (!isEdit) {
+      const farmId = formData.farm_id || selectedFarmId;
+      if (!farmId) {
+        setError(farmsForAccount.length === 0 ? 'Create a farm first, then register the animal.' : 'Please select a farm.');
+        return false;
+      }
     }
     return true;
   };
@@ -99,9 +122,10 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
     if (!validate()) return;
     setLoading(true);
     try {
+      const farmId = formData.farm_id || selectedFarmId;
       const payload: CreateAnimalData = {
         tag_number: formData.tag_number.trim(),
-        breed: formData.breed.trim(),
+        breed_id: formData.breed_id.trim(),
         gender: formData.gender,
         date_of_birth: formData.date_of_birth,
         source: formData.source,
@@ -112,7 +136,7 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
         father_id: formData.father_id?.trim() || undefined,
         status: formData.status,
         notes: formData.notes?.trim() || undefined,
-        farm_id: formData.farm_id || selectedFarmId || undefined,
+        farm_id: isEdit ? (farmId || undefined) : (farmId ?? undefined),
       };
       if (isEdit && initialData?.id) {
         await animalsApi.update(initialData.id, payload, accountId);
@@ -129,6 +153,8 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
       setLoading(false);
     }
   };
+
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,57 +193,53 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Breed *</label>
-          <input
-            type="text"
-            name="breed"
-            value={formData.breed}
-            onChange={handleChange}
-            className="input w-full"
-            placeholder="e.g. Holstein"
+          <Select
+            name="breed_id"
+            value={formData.breed_id ?? ''}
+            onChange={(v) => setFormData((prev) => ({ ...prev, breed_id: v }))}
+            options={breeds.map((b) => ({ value: b.id, label: `${b.name}${b.code ? ` (${b.code})` : ''}` }))}
+            placeholder="— Select breed —"
+            allowEmpty
+            required
+            className="w-full"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
-          <select
+          <Select
             name="gender"
             value={formData.gender}
-            onChange={handleChange}
-            className="input w-full"
-          >
-            {GENDER_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, gender: v as AnimalGender }))}
+            options={GENDER_OPTIONS}
+            placeholder="Select gender"
+            className="w-full"
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date of birth *</label>
-          <input
-            type="date"
+          <DatePicker
             name="date_of_birth"
             value={formData.date_of_birth}
-            onChange={handleChange}
-            className="input w-full"
+            onChange={(v) => setFormData((prev) => ({ ...prev, date_of_birth: v }))}
+            max={today}
+            placeholder="Select date"
+            required
+            className="w-full"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Source *</label>
-          <select
+          <Select
             name="source"
             value={formData.source}
-            onChange={handleChange}
-            className="input w-full"
-          >
-            {SOURCE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, source: v as AnimalSource }))}
+            options={SOURCE_OPTIONS}
+            placeholder="Select source"
+            className="w-full"
+          />
         </div>
       </div>
 
@@ -225,12 +247,13 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Purchase date</label>
-            <input
-              type="date"
+            <DatePicker
               name="purchase_date"
               value={formData.purchase_date ?? ''}
-              onChange={handleChange}
-              className="input w-full"
+              onChange={(v) => setFormData((prev) => ({ ...prev, purchase_date: v }))}
+              max={today}
+              placeholder="Select date"
+              className="w-full"
             />
           </div>
           <div>
@@ -251,76 +274,67 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Mother</label>
-          <select
+          <Select
             name="mother_id"
             value={formData.mother_id ?? ''}
-            onChange={handleChange}
-            className="input w-full"
-          >
-            <option value="">— None —</option>
-            {parents
+            onChange={(v) => setFormData((prev) => ({ ...prev, mother_id: v }))}
+            options={parents
               .filter((a) => a.gender === 'female' && a.id !== initialData?.id)
-              .map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.tag_number} {a.name ? `(${a.name})` : ''}
-                </option>
-              ))}
-          </select>
+              .map((a) => ({ value: a.id, label: `${a.tag_number} ${a.name ? `(${a.name})` : ''}` }))}
+            placeholder="— None —"
+            allowEmpty
+            className="w-full"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Father</label>
-          <select
+          <Select
             name="father_id"
             value={formData.father_id ?? ''}
-            onChange={handleChange}
-            className="input w-full"
-          >
-            <option value="">— None —</option>
-            {parents
+            onChange={(v) => setFormData((prev) => ({ ...prev, father_id: v }))}
+            options={parents
               .filter((a) => a.gender === 'male' && a.id !== initialData?.id)
-              .map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.tag_number} {a.name ? `(${a.name})` : ''}
-                </option>
-              ))}
-          </select>
+              .map((a) => ({ value: a.id, label: `${a.tag_number} ${a.name ? `(${a.name})` : ''}` }))}
+            placeholder="— None —"
+            allowEmpty
+            className="w-full"
+          />
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-        <select
+        <Select
           name="status"
           value={formData.status}
-          onChange={handleChange}
-          className="input w-full"
-        >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setFormData((prev) => ({ ...prev, status: v as AnimalStatus }))}
+          options={STATUS_OPTIONS}
+          placeholder="Select status"
+          className="w-full"
+        />
       </div>
 
-      {farmsForAccount.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Farm</label>
-          <select
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Farm {!isEdit && '*'}
+        </label>
+        {farmsForAccount.length === 0 ? (
+          <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-sm p-3">
+            No farms yet. Create a farm first, then you can register animals to it.
+          </p>
+        ) : (
+          <Select
             name="farm_id"
             value={formData.farm_id ?? selectedFarmId ?? ''}
-            onChange={handleChange}
-            className="input w-full"
-          >
-            <option value="">All farms</option>
-            {farmsForAccount.map((farm) => (
-              <option key={farm.id} value={farm.id}>
-                {farm.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+            onChange={(v) => setFormData((prev) => ({ ...prev, farm_id: v || undefined }))}
+            options={farmsForAccount.map((f) => ({ value: f.id, label: f.name }))}
+            placeholder={isEdit ? '— Unchanged —' : '— Select farm —'}
+            allowEmpty
+            required={!isEdit}
+            className="w-full"
+          />
+        )}
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
@@ -338,7 +352,11 @@ export default function CreateAnimalForm({ onSuccess, onCancel, initialData }: C
         <button type="button" onClick={onCancel} className="btn btn-secondary">
           Cancel
         </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={loading || (!isEdit && farmsForAccount.length === 0)}
+        >
           {loading ? (
             <Icon icon={faSpinner} size="sm" className="mr-2 animate-spin" />
           ) : (

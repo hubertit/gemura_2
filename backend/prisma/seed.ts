@@ -365,30 +365,38 @@ async function main() {
 
   // 9. Create sample animals (Orora – cattle) for main account
   console.log('🐄 Creating sample animals...');
+  const holstein = await prisma.breed.findFirst({ where: { code: 'HOLSTEIN' } });
+  const angus = await prisma.breed.findFirst({ where: { code: 'ANGUS' } });
   const animalData = [
-    { tag_number: 'TAG-001', name: 'Bella', breed: 'Holstein', gender: 'female' as const, date_of_birth: new Date('2022-03-15'), source: 'born_on_farm' as const, status: 'active' as const },
-    { tag_number: 'TAG-002', name: 'Max', breed: 'Angus', gender: 'male' as const, date_of_birth: new Date('2021-06-20'), source: 'purchased' as const, status: 'active' as const },
+    { tag_number: 'TAG-001', name: 'Bella', breed_id: holstein?.id, gender: 'female' as const, date_of_birth: new Date('2022-03-15'), source: 'born_on_farm' as const, status: 'active' as const },
+    { tag_number: 'TAG-002', name: 'Max', breed_id: angus?.id, gender: 'male' as const, date_of_birth: new Date('2021-06-20'), source: 'purchased' as const, status: 'active' as const },
   ];
-  for (const a of animalData) {
-    await prisma.animal.upsert({
-      where: {
-        account_id_tag_number: { account_id: mainAccount.id, tag_number: a.tag_number },
-      },
-      update: {},
-      create: {
-        account_id: mainAccount.id,
-        tag_number: a.tag_number,
-        name: a.name,
-        breed: a.breed,
-        gender: a.gender,
-        date_of_birth: a.date_of_birth,
-        source: a.source,
-        status: a.status,
-        created_by: mainUser.id,
-      },
-    });
+  let animalsCreated = 0;
+  if (holstein && angus) {
+    for (const a of animalData) {
+      await prisma.animal.upsert({
+        where: {
+          account_id_tag_number: { account_id: mainAccount.id, tag_number: a.tag_number },
+        },
+        update: {},
+        create: {
+          account_id: mainAccount.id,
+          breed_id: a.breed_id!,
+          tag_number: a.tag_number,
+          name: a.name,
+          gender: a.gender,
+          date_of_birth: a.date_of_birth,
+          source: a.source,
+          status: a.status,
+          created_by: mainUser.id,
+        },
+      });
+      animalsCreated++;
+    }
+    console.log(`✅ Created ${animalsCreated} sample animals`);
+  } else {
+    console.warn('⚠️ Breeds HOLSTEIN or ANGUS not found; skipping sample animals.');
   }
-  console.log(`✅ Created ${animalData.length} sample animals`);
 
   console.log('\n🎉 Database seeding completed successfully!\n');
   console.log('📋 Summary:');
@@ -402,7 +410,7 @@ async function main() {
   console.log(`🥛 Suppliers: 3`);
   console.log(`📦 Collections: ${collections.length}`);
   console.log(`📦 Products: 3`);
-  console.log(`🐄 Animals: ${animalData.length}`);
+  console.log(`🐄 Animals: ${animalsCreated}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
   console.log('🧪 Test the API:');
   console.log('1. Login: POST http://159.198.65.38:3004/api/auth/login');

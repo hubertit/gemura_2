@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsNumber, IsDateString, Min } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNumber, IsDateString, IsUUID, Min } from 'class-validator';
 import { AnimalGenderEnum, AnimalSourceEnum, AnimalStatusEnum } from './create-animal.dto';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 
 export class UpdateAnimalDto {
   @ApiPropertyOptional({ description: 'Tag number' })
@@ -13,19 +14,20 @@ export class UpdateAnimalDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ description: 'Breed' })
+  @ApiPropertyOptional({ description: 'Breed ID (UUID) – from GET /api/breeds' })
   @IsOptional()
-  @IsString()
-  breed?: string;
+  @IsUUID()
+  breed_id?: string;
 
   @ApiPropertyOptional({ enum: AnimalGenderEnum })
   @IsOptional()
   @IsEnum(AnimalGenderEnum)
   gender?: AnimalGenderEnum;
 
-  @ApiPropertyOptional({ description: 'Date of birth (ISO date)' })
+  @ApiPropertyOptional({ description: 'Date of birth (ISO date), must not be in the future' })
   @IsOptional()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Date of birth must not be in the future' })
   date_of_birth?: string;
 
   @ApiPropertyOptional({ enum: AnimalSourceEnum })
@@ -33,9 +35,10 @@ export class UpdateAnimalDto {
   @IsEnum(AnimalSourceEnum)
   source?: AnimalSourceEnum;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Purchase date (must not be in the future)' })
   @IsOptional()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Purchase date must not be in the future' })
   purchase_date?: string;
 
   @ApiPropertyOptional()

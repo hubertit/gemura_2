@@ -15,6 +15,9 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Modal from '@/app/components/Modal';
+import DatePicker from '@/app/components/DatePicker';
+import DateTimePicker from '@/app/components/DateTimePicker';
+import Select from '@/app/components/Select';
 import Icon, {
   faArrowLeft,
   faEdit,
@@ -178,7 +181,7 @@ export default function AnimalDetailPage() {
             {animal.name && <span className="font-normal text-gray-600"> · {animal.name}</span>}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {animal.breed} · {animal.gender} · {new Date(animal.date_of_birth).toLocaleDateString()}
+            {animal.breed?.name ?? '—'} · {animal.gender} · {new Date(animal.date_of_birth).toLocaleDateString()}
           </p>
         </div>
         <Link href={`/animals/${id}/edit`} className="btn btn-primary">
@@ -207,7 +210,7 @@ export default function AnimalDetailPage() {
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Breed</dt>
-                <dd className="text-gray-900">{animal.breed}</dd>
+                <dd className="text-gray-900">{animal.breed?.name ?? '—'}</dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Gender</dt>
@@ -407,11 +410,12 @@ export default function AnimalDetailPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date & time</label>
-            <input
-              type="datetime-local"
+            <DateTimePicker
               value={weightForm.recorded_at}
-              onChange={(e) => setWeightForm((p) => ({ ...p, recorded_at: e.target.value }))}
-              className="input w-full"
+              onChange={(v) => setWeightForm((p) => ({ ...p, recorded_at: v }))}
+              max={new Date().toISOString().slice(0, 16)}
+              placeholder="Select date and time"
+              className="w-full"
             />
           </div>
           <div>
@@ -438,25 +442,25 @@ export default function AnimalDetailPage() {
         <form onSubmit={handleAddHealth} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Event type *</label>
-            <select
+            <Select
               value={healthForm.event_type}
-              onChange={(e) => setHealthForm((p) => ({ ...p, event_type: e.target.value as HealthEventType }))}
-              className="input w-full"
-            >
-              {(Object.keys(HEALTH_EVENT_LABELS) as HealthEventType[]).map((k) => (
-                <option key={k} value={k}>
-                  {HEALTH_EVENT_LABELS[k]}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setHealthForm((p) => ({ ...p, event_type: v as HealthEventType }))}
+              options={(Object.keys(HEALTH_EVENT_LABELS) as HealthEventType[]).map((k) => ({
+                value: k,
+                label: HEALTH_EVENT_LABELS[k],
+              }))}
+              placeholder="Select event type"
+              className="w-full"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-            <input
-              type="date"
+            <DatePicker
               value={healthForm.event_date}
-              onChange={(e) => setHealthForm((p) => ({ ...p, event_date: e.target.value }))}
-              className="input w-full"
+              onChange={(v) => setHealthForm((p) => ({ ...p, event_date: v }))}
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select date"
+              className="w-full"
             />
           </div>
           <div>

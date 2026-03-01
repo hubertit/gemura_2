@@ -12,6 +12,7 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faDollarSign, faUser, faBox, faCalendar, faFileAlt, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 import SearchableSelect from '@/app/components/SearchableSelect';
+import Select from '@/app/components/Select';
 
 const BUYER_TYPES = [
   { value: 'supplier', label: 'Supplier' },
@@ -275,21 +276,17 @@ export default function SellInventoryPage() {
               <label htmlFor="buyer_type" className="block text-sm font-medium text-gray-700 mb-2">
                 Buyer Type <span className="text-red-500">*</span>
               </label>
-              <select
+              <Select
                 id="buyer_type"
                 name="buyer_type"
                 required
                 value={formData.buyer_type}
-                onChange={(e) => handleBuyerTypeChange(e.target.value)}
-                className="input w-full"
+                onChange={handleBuyerTypeChange}
+                options={BUYER_TYPES}
+                placeholder="Select buyer type"
                 disabled={saving}
-              >
-                {BUYER_TYPES.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             </div>
 
             {formData.buyer_type !== 'other' && (
@@ -446,6 +443,7 @@ export default function SellInventoryPage() {
                 name="sale_date"
                 type="datetime-local"
                 value={formData.sale_date}
+                max={new Date().toISOString().slice(0, 16)}
                 onChange={handleChange}
                 className="input w-full"
                 disabled={saving}

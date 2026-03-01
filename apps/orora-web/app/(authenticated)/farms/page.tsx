@@ -8,6 +8,7 @@ import { locationsApi, type Location } from '@/lib/api/locations';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
 import Icon, { faPlus, faPaw, faSpinner, faMapPin, faEdit, faTrash } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 interface FarmFormProps {
   initial?: Partial<Farm>;
@@ -196,60 +197,50 @@ function FarmForm({ initial, onSubmit, onCancel }: FarmFormProps) {
           <p className="text-sm text-gray-500">Loading location…</p>
         ) : (
           <div className="grid grid-cols-1 gap-2">
-            <select
+            <Select
               value={provinceId}
-              onChange={(e) => setProvinceId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Select province</option>
-              {provinces.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            <select
+              onChange={setProvinceId}
+              options={provinces.map((p) => ({ value: p.id, label: p.name }))}
+              placeholder="Select province"
+              allowEmpty
+              className="w-full"
+            />
+            <Select
               value={districtId}
-              onChange={(e) => setDistrictId(e.target.value)}
-              className="input w-full"
+              onChange={setDistrictId}
+              options={districts.map((d) => ({ value: d.id, label: d.name }))}
+              placeholder="Select district"
+              allowEmpty
               disabled={!provinceId}
-            >
-              <option value="">Select district</option>
-              {districts.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-            <select
+              className="w-full"
+            />
+            <Select
               value={sectorId}
-              onChange={(e) => setSectorId(e.target.value)}
-              className="input w-full"
+              onChange={setSectorId}
+              options={sectors.map((s) => ({ value: s.id, label: s.name }))}
+              placeholder="Select sector"
+              allowEmpty
               disabled={!districtId}
-            >
-              <option value="">Select sector</option>
-              {sectors.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-            <select
+              className="w-full"
+            />
+            <Select
               value={cellId}
-              onChange={(e) => setCellId(e.target.value)}
-              className="input w-full"
+              onChange={setCellId}
+              options={cells.map((c) => ({ value: c.id, label: c.name }))}
+              placeholder="Select cell"
+              allowEmpty
               disabled={!sectorId}
-            >
-              <option value="">Select cell</option>
-              {cells.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <select
+              className="w-full"
+            />
+            <Select
               value={villageId}
-              onChange={(e) => setVillageId(e.target.value)}
-              className="input w-full"
+              onChange={setVillageId}
+              options={villages.map((v) => ({ value: v.id, label: v.name }))}
+              placeholder="Select village"
+              allowEmpty
               disabled={!cellId}
-            >
-              <option value="">Select village</option>
-              {villages.map((v) => (
-                <option key={v.id} value={v.id}>{v.name}</option>
-              ))}
-            </select>
+              className="w-full"
+            />
           </div>
         )}
       </div>

@@ -11,6 +11,7 @@ import DataTable, { TableColumn } from '@/app/components/DataTable';
 import Pagination from '@/app/components/Pagination';
 import FilterBar, { FilterBarGroup, FilterBarSearch, FilterBarActions } from '@/app/components/FilterBar';
 import Icon, { faPlus, faEye } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 
 const ROLE_OPTIONS = [
@@ -221,59 +222,49 @@ export default function UsersPage() {
           onKeyDown={onSearchKeyDown}
         />
         <FilterBarGroup label="Role">
-          <select
+          <Select
             value={roleFilter}
-            onChange={(e) => {
-              setRoleFilter(e.target.value);
+            onChange={(v) => {
+              setRoleFilter(v);
               setPagination((prev) => ({ ...prev, page: 1 }));
-              filtersRef.current.roleFilter = e.target.value;
+              filtersRef.current.roleFilter = v;
               loadUsers(1);
             }}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {ROLE_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            options={ROLE_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All Roles"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="Status">
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+            onChange={(v) => {
+              setStatusFilter(v);
               setPagination((prev) => ({ ...prev, page: 1 }));
-              filtersRef.current.statusFilter = e.target.value;
+              filtersRef.current.statusFilter = v;
               loadUsers(1);
             }}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            options={STATUS_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All Status"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="Page Size">
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              const val = Number(e.target.value);
+          <Select
+            value={String(pageSize)}
+            onChange={(v) => {
+              const val = Number(v);
               setPageSize(val);
               filtersRef.current.pageSize = val;
               setPagination((prev) => ({ ...prev, page: 1 }));
               loadUsers(1, { limit: val });
             }}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {PAGE_SIZES.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+            options={PAGE_SIZES.map((n) => ({ value: String(n), label: String(n) }))}
+            placeholder="Page size"
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarActions onClear={clearFilters} />
       </FilterBar>

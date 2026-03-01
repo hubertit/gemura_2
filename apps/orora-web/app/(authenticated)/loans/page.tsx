@@ -22,6 +22,7 @@ import Icon, {
   faFile,
   faCalendar,
 } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 import Link from 'next/link';
 
 const BORROWER_TYPE_OPTIONS = [
@@ -319,30 +320,24 @@ export default function LoansPage() {
           placeholder="Search by borrower, notes..."
         />
         <FilterBarGroup label="Borrower type">
-          <select
+          <Select
             value={borrowerTypeFilter}
-            onChange={(e) => setBorrowerTypeFilter(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {BORROWER_TYPE_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={setBorrowerTypeFilter}
+            options={BORROWER_TYPE_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All types"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="Status">
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={setStatusFilter}
+            options={STATUS_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All statuses"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="From date">
           <input

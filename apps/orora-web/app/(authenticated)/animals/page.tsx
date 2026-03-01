@@ -17,6 +17,7 @@ import { ListPageSkeleton } from '@/app/components/SkeletonLoader';
 import Modal from '@/app/components/Modal';
 import CreateAnimalForm from './CreateAnimalForm';
 import Icon, { faPlus, faEye, faPaw } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
@@ -101,6 +102,7 @@ export default function AnimalsPage() {
       key: 'breed',
       label: 'Breed',
       sortable: true,
+      render: (_, row) => <span className="text-gray-900">{row.breed?.name ?? '—'}</span>,
     },
     {
       key: 'gender',
@@ -204,30 +206,24 @@ export default function AnimalsPage() {
           placeholder="Search by tag, name, breed..."
         />
         <FilterBarGroup label="Status">
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={setStatusFilter}
+            options={STATUS_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All statuses"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="Gender">
-          <select
+          <Select
             value={genderFilter}
-            onChange={(e) => setGenderFilter(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            {GENDER_OPTIONS.map((o) => (
-              <option key={o.value || 'all'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            onChange={setGenderFilter}
+            options={GENDER_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="All genders"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarActions onClear={clearFilters} />
         <FilterBarExport<Animal>
@@ -236,7 +232,7 @@ export default function AnimalsPage() {
           exportColumns={[
             { key: 'tag_number', label: 'Tag' },
             { key: 'name', label: 'Name', getValue: (r) => r.name ?? '' },
-            { key: 'breed', label: 'Breed' },
+            { key: 'breed', label: 'Breed', getValue: (r) => r.breed?.name ?? '' },
             { key: 'gender', label: 'Gender' },
             { key: 'date_of_birth', label: 'DOB', getValue: (r) => (r.date_of_birth ? new Date(r.date_of_birth).toLocaleDateString() : '') },
             { key: 'status', label: 'Status' },

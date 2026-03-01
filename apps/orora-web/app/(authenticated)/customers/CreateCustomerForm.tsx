@@ -6,6 +6,7 @@ import { ENTITY_TYPE_OPTIONS } from '@/lib/constants/entity-types';
 import { customersApi, CreateCustomerData } from '@/lib/api/customers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 interface CreateCustomerFormProps {
   onSuccess: () => void;
@@ -113,11 +114,17 @@ export default function CreateCustomerForm({ onSuccess, onCancel }: CreateCustom
         </div>
         <div>
           <label htmlFor="customer-type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <select id="customer-type" name="type" value={formData.type} onChange={handleChange} className="input w-full" disabled={loading}>
-            {ENTITY_TYPE_OPTIONS.map(opt => (
-              <option key={opt.value || 'none'} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          <Select
+            id="customer-type"
+            name="type"
+            value={formData.type}
+            onChange={(v) => setFormData((prev) => ({ ...prev, type: v }))}
+            options={ENTITY_TYPE_OPTIONS.filter((o) => o.value !== '')}
+            placeholder="— Select type —"
+            allowEmpty
+            disabled={loading}
+            className="w-full"
+          />
         </div>
         <div>
           <label htmlFor="customer-price" className="block text-sm font-medium text-gray-700 mb-1">Price per liter (RWF)</label>

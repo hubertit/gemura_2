@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faWarehouse, faBox, faDollarSign, faTag, faCheckCircle, faTimes, faSpinner } from '@/app/components/Icon';
 import { DetailPageSkeleton } from '@/app/components/SkeletonLoader';
+import Select from '@/app/components/Select';
 
 export default function EditInventoryPage() {
   const router = useRouter();
@@ -287,18 +288,20 @@ export default function EditInventoryPage() {
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
-              <select
+              <Select
                 id="status"
                 name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="input w-full"
+                value={formData.status ?? ''}
+                onChange={(v) => setFormData((prev) => ({ ...prev, status: v }))}
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'out_of_stock', label: 'Out of Stock' },
+                ]}
+                placeholder="Select status"
                 disabled={saving}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="out_of_stock">Out of Stock</option>
-              </select>
+                className="w-full"
+              />
             </div>
           </div>
         </div>

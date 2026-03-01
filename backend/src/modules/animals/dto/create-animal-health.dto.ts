@@ -8,6 +8,7 @@ import {
   IsEnum,
   Min,
 } from 'class-validator';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 
 export enum HealthEventTypeEnum {
   vaccination = 'vaccination',
@@ -26,9 +27,10 @@ export class CreateAnimalHealthDto {
   @IsEnum(HealthEventTypeEnum)
   event_type: HealthEventTypeEnum;
 
-  @ApiProperty({ description: 'Event date (ISO date)', example: '2025-02-20' })
+  @ApiProperty({ description: 'Event date (ISO date), must not be in the future', example: '2025-02-20' })
   @IsNotEmpty()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Event date must not be in the future' })
   event_date: string;
 
   @ApiProperty({ description: 'Description of the event' })

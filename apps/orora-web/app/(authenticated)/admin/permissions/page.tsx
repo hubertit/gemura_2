@@ -8,6 +8,7 @@ import { adminApi, type PermissionItem } from '@/lib/api/admin';
 import { useAuthStore } from '@/store/auth';
 import Icon, { faLock } from '@/app/components/Icon';
 import FilterBar, { FilterBarGroup } from '@/app/components/FilterBar';
+import Select from '@/app/components/Select';
 import { TableSkeleton } from '@/app/components/SkeletonLoader';
 
 export default function AdminPermissionsPage() {
@@ -82,18 +83,14 @@ export default function AdminPermissionsPage() {
       {/* Filters */}
       <FilterBar>
         <FilterBarGroup label="Category">
-          <select
+          <Select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            <option value="">All categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+            onChange={setCategoryFilter}
+            options={categories.map((cat) => ({ value: cat, label: cat }))}
+            placeholder="All categories"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
       </FilterBar>
 

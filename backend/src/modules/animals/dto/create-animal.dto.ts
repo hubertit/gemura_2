@@ -6,8 +6,10 @@ import {
   IsOptional,
   IsEnum,
   IsDateString,
+  IsUUID,
   Min,
 } from 'class-validator';
+import { IsNotFutureDate } from '../../../common/validators/not-future-date.validator';
 
 export enum AnimalGenderEnum {
   male = 'male',
@@ -43,19 +45,20 @@ export class CreateAnimalDto {
   @IsString()
   name?: string;
 
-  @ApiProperty({ description: 'Breed', example: 'Holstein' })
+  @ApiProperty({ description: 'Breed ID (UUID) – from GET /api/breeds', example: '123e4567-e89b-12d3-a456-426614174000' })
   @IsNotEmpty()
-  @IsString()
-  breed: string;
+  @IsUUID()
+  breed_id: string;
 
   @ApiProperty({ description: 'Gender', enum: AnimalGenderEnum })
   @IsNotEmpty()
   @IsEnum(AnimalGenderEnum)
   gender: AnimalGenderEnum;
 
-  @ApiProperty({ description: 'Date of birth (ISO date)', example: '2022-03-15' })
+  @ApiProperty({ description: 'Date of birth (ISO date), must not be in the future', example: '2022-03-15' })
   @IsNotEmpty()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Date of birth must not be in the future' })
   date_of_birth: string;
 
   @ApiProperty({ description: 'Source', enum: AnimalSourceEnum })
@@ -63,9 +66,10 @@ export class CreateAnimalDto {
   @IsEnum(AnimalSourceEnum)
   source: AnimalSourceEnum;
 
-  @ApiPropertyOptional({ description: 'Purchase date if source is purchased' })
+  @ApiPropertyOptional({ description: 'Purchase date if source is purchased (must not be in the future)' })
   @IsOptional()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Purchase date must not be in the future' })
   purchase_date?: string;
 
   @ApiPropertyOptional({ description: 'Purchase price if purchased' })
@@ -99,8 +103,8 @@ export class CreateAnimalDto {
   @IsString()
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Farm ID where the animal is kept (UUID). If omitted, backend can default to a primary farm later.' })
-  @IsOptional()
-  @IsString()
-  farm_id?: string;
+  @ApiProperty({ description: 'Farm ID where the animal is kept (UUID). Animal registration is limited to one farm.' })
+  @IsNotEmpty()
+  @IsUUID()
+  farm_id: string;
 }

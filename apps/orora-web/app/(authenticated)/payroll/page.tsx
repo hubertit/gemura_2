@@ -7,6 +7,7 @@ import { suppliersApi, Supplier } from '@/lib/api/suppliers';
 import { useAuthStore } from '@/store/auth';
 import { useToastStore } from '@/store/toast';
 import Icon, { faClipboardList, faCalendar, faCheckCircle, faClock, faSpinner } from '@/app/components/Icon';
+import DatePicker from '@/app/components/DatePicker';
 import { SkeletonBar } from '@/app/components/SkeletonLoader';
 
 export default function PayrollPage() {
@@ -132,26 +133,28 @@ export default function PayrollPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
-            <input
-              type="date"
+            <DatePicker
               value={periodStart}
-              onChange={(e) => {
-                setPeriodStart(e.target.value);
+              onChange={(v) => {
+                setPeriodStart(v);
                 setResult(null);
               }}
-              className="input w-full"
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select start date"
+              className="w-full"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-            <input
-              type="date"
+            <DatePicker
               value={periodEnd}
-              onChange={(e) => {
-                setPeriodEnd(e.target.value);
+              onChange={(v) => {
+                setPeriodEnd(v);
                 setResult(null);
               }}
-              className="input w-full"
+              max={new Date().toISOString().slice(0, 10)}
+              placeholder="Select end date"
+              className="w-full"
             />
           </div>
           <div>

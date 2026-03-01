@@ -7,6 +7,7 @@ import DataTableWithPagination from '@/app/components/DataTableWithPagination';
 import type { TableColumn } from '@/app/components/DataTable';
 import FilterBar, { FilterBarGroup, FilterBarActions, FilterBarApply, FilterBarExport } from '@/app/components/FilterBar';
 import Icon, { faArrowLeft, faArrowsRotate, faSpinner, faTriangleExclamation } from '@/app/components/Icon';
+import Select from '@/app/components/Select';
 
 function formatDate(str: string): string {
   try {
@@ -150,20 +151,23 @@ export default function FinanceTransactionsPage() {
 
       <FilterBar>
         <FilterBarGroup label="Type">
-          <select
+          <Select
             value={typeFilter}
-            onChange={(e) => setTypeFilter((e.target.value || '') as 'revenue' | 'expense' | '')}
-            className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
-          >
-            <option value="">All</option>
-            <option value="revenue">Revenue</option>
-            <option value="expense">Expense</option>
-          </select>
+            onChange={(v) => setTypeFilter((v || '') as 'revenue' | 'expense' | '')}
+            options={[
+              { value: 'revenue', label: 'Revenue' },
+              { value: 'expense', label: 'Expense' },
+            ]}
+            placeholder="All"
+            allowEmpty
+            className="w-full"
+          />
         </FilterBarGroup>
         <FilterBarGroup label="Date From">
           <input
             type="date"
             value={dateFrom}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setDateFrom(e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />
@@ -172,6 +176,7 @@ export default function FinanceTransactionsPage() {
           <input
             type="date"
             value={dateTo}
+            max={new Date().toISOString().slice(0, 10)}
             onChange={(e) => setDateTo(e.target.value)}
             className="input h-9 min-h-[2.25rem] !py-1.5 !px-3 text-sm w-full text-gray-900"
           />

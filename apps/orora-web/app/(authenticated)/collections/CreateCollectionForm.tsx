@@ -6,6 +6,8 @@ import { suppliersApi, Supplier } from '@/lib/api/suppliers';
 import { useToastStore } from '@/store/toast';
 import Icon, { faCheckCircle, faSpinner, faPaw } from '@/app/components/Icon';
 import SearchableSelect from '@/app/components/SearchableSelect';
+import DateTimePicker from '@/app/components/DateTimePicker';
+import Select from '@/app/components/Select';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -132,21 +134,20 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
             {loadingAnimals ? (
               <div className="input w-full flex items-center text-gray-500 text-sm"><Icon icon={faSpinner} size="sm" spin className="mr-2" />Loading animals...</div>
             ) : (
-              <select
+              <Select
                 id="coll-animal"
                 name="animal_id"
                 value={formData.animal_id ?? ''}
-                onChange={handleChange}
-                className="input w-full"
+                onChange={(v) => setFormData((prev) => ({ ...prev, animal_id: v || undefined }))}
+                options={supplierAnimals.map((a) => ({
+                  value: a.id,
+                  label: `${a.tag_number} ${a.name ? `(${a.name})` : ''} · ${a.breed}`,
+                }))}
+                placeholder="— None —"
+                allowEmpty
                 disabled={loading}
-              >
-                <option value="">— None —</option>
-                {supplierAnimals.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.tag_number} {a.name ? `(${a.name})` : ''} · {a.breed}
-                  </option>
-                ))}
-              </select>
+                className="w-full"
+              />
             )}
           </div>
         )}
@@ -156,13 +157,30 @@ export default function CreateCollectionForm({ onSuccess, onCancel }: CreateColl
         </div>
         <div>
           <label htmlFor="coll-status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-          <select id="coll-status" name="status" value={formData.status} onChange={handleChange} className="input w-full" disabled={loading}>
-            {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
+          <Select
+            id="coll-status"
+            name="status"
+            value={formData.status}
+            onChange={(v) => setFormData((prev) => ({ ...prev, status: v as 'pending' | 'accepted' | 'rejected' | 'cancelled' }))}
+            options={STATUS_OPTIONS}
+            placeholder="Select status"
+            disabled={loading}
+            className="w-full"
+          />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="coll-collection_at" className="block text-sm font-medium text-gray-700 mb-1">Date & time <span className="text-red-500">*</span></label>
-          <input id="coll-collection_at" name="collection_at" type="datetime-local" required value={formData.collection_at} onChange={handleChange} className="input w-full" disabled={loading} />
+          <DateTimePicker
+            id="coll-collection_at"
+            name="collection_at"
+            value={formData.collection_at}
+            onChange={(v) => setFormData((prev) => ({ ...prev, collection_at: v }))}
+            max={new Date().toISOString().slice(0, 16)}
+            placeholder="Select date and time"
+            required
+            disabled={loading}
+            className="w-full"
+          />
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="coll-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>

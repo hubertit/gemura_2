@@ -30,6 +30,8 @@ import Icon, {
 } from '@/app/components/Icon';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
+import DatePicker from '@/app/components/DatePicker';
+import Select from '@/app/components/Select';
 import { DashboardSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from '../sales/CreateSaleForm';
 import CreateCollectionForm from '../collections/CreateCollectionForm';
@@ -401,32 +403,34 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
-        <div className="relative flex-shrink-0">
-          <select
+        <div className="relative flex-shrink-0 min-w-0 w-[120px]">
+          <Select
             value={period}
-            onChange={(e) => {
-              const v = e.target.value as PeriodKey;
-              setPeriod(v);
-              if (v === 'custom' && !customFrom && !customTo) {
+            onChange={(v) => {
+              const val = v as PeriodKey;
+              setPeriod(val);
+              if (val === 'custom' && !customFrom && !customTo) {
                 const n = new Date();
                 setCustomFrom(toYYYYMMDD(new Date(n.getFullYear(), n.getMonth(), 1)));
                 setCustomTo(toYYYYMMDD(n));
               }
             }}
-            title={periodLabel}
-            className="min-w-0 w-[120px] border border-gray-300 rounded py-0.5 pl-1.5 pr-6 text-xs text-gray-900 bg-white focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
-          >
-            <option value="day">Day</option>
-            <option value="month">Month</option>
-            <option value="quarter">Quarter</option>
-            <option value="year">Year</option>
-            <option value="custom">Custom</option>
-          </select>
+            options={[
+              { value: 'day', label: 'Day' },
+              { value: 'month', label: 'Month' },
+              { value: 'quarter', label: 'Quarter' },
+              { value: 'year', label: 'Year' },
+              { value: 'custom', label: 'Custom' },
+            ]}
+            placeholder="Period"
+            className="w-full"
+          />
           {period === 'custom' && (
             <div className="absolute top-full right-0 z-10 mt-0.5 py-1.5 px-1.5 bg-white border border-gray-200 rounded shadow-lg flex items-center gap-1.5">
               <input
                 type="date"
                 value={customFrom}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setCustomFrom(e.target.value)}
                 className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28"
               />
@@ -434,6 +438,7 @@ export default function Dashboard() {
               <input
                 type="date"
                 value={customTo}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setCustomTo(e.target.value)}
                 className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28"
               />
@@ -1534,11 +1539,12 @@ export default function Dashboard() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Date</label>
-              <input
-                type="date"
+              <DatePicker
                 value={recordDate}
-                onChange={(e) => setRecordDate(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                onChange={setRecordDate}
+                max={new Date().toISOString().slice(0, 10)}
+                placeholder="Select date"
+                className="mt-1 w-full"
               />
             </div>
           </div>
