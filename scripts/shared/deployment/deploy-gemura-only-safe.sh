@@ -75,16 +75,16 @@ JWT_SECRET=gemura_jwt_secret_production_2026
 JWT_EXPIRES_IN=7d
 API_PORT=3007
 UI_PORT=3006
-NEXT_PUBLIC_API_URL=http://209.74.80.195:3007/api
-CORS_ORIGIN=http://localhost:3006,http://209.74.80.195:3006,http://209.74.80.195:3007
+NEXT_PUBLIC_API_URL=https://app.gemura.rw/api
+CORS_ORIGIN=http://localhost:3006,http://209.74.80.195:3006,http://209.74.80.195:3007,http://209.74.80.195:3011,https://app.gemura.rw,https://app.orora.rw
 EOF
 
 echo "   Stopping Gemura containers..."
 docker compose -f docker/docker-compose.kwezi.yml down --timeout 30 2>/dev/null || true
 sleep 3
 
-echo "   Building Gemura images..."
-docker compose -f docker/docker-compose.kwezi.yml --env-file .env build
+echo "   Building Gemura images (--no-cache for latest code)..."
+docker compose -f docker/docker-compose.kwezi.yml --env-file .env build --no-cache
 
 echo "   Starting Gemura containers..."
 docker compose -f docker/docker-compose.kwezi.yml --env-file .env up -d

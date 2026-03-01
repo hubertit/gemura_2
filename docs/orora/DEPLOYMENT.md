@@ -24,6 +24,10 @@ This guide covers deploying the Orora platform to production on the Kwezi server
 | 3011 | Orora Web | Active |
 | 5432 | PostgreSQL (kwezi-postgres) | Active |
 
+### Custom domains (optional)
+
+With Nginx and DNS you can serve the apps at **app.gemura.rw** and **app.orora.rw** (and HTTPS via Let's Encrypt). See [Custom domains and HTTPS](#custom-domains-appgemurarw-appororarw-and-https) below.
+
 ---
 
 ## Prerequisites
@@ -45,7 +49,24 @@ This guide covers deploying the Orora platform to production on the Kwezi server
 
 ## Quick Deploy
 
-### Deploy Everything
+### One-command deploy (Orora + Backend to Kwezi)
+
+Same style as the Kwezi app deploy (archive → upload → `docker compose up` on server).
+
+**Prerequisites:** `scripts/shared/deployment/server-credentials.sh` with `SERVER_PASS` set (and optional `SERVER_IP` / `SERVER_USER`). Copy from `server-credentials.sh.example` if needed.
+
+```bash
+# From project root (gemura2)
+./scripts/orora/deployment/deploy-orora-and-backend-to-kwezi.sh
+```
+
+This deploys in order:
+1. **Backend + Gemura Web** → `/opt/gemura` (API 3007, Gemura UI 3006)
+2. **Orora Web** → `/opt/orora` (3011)
+
+Server must already have the Kwezi stack at `/opt/kwezi` (PostgreSQL + kwezi-ui) so the `kwezi_default` network exists.
+
+### Deploy Everything (two commands)
 
 ```bash
 # From project root
@@ -442,12 +463,57 @@ ufw allow 3007/tcp  # Backend API
 ufw allow 3011/tcp  # Orora Web
 ```
 
-### SSL/HTTPS (Future)
+### Custom domains (app.gemura.rw, app.orora.rw) and HTTPS
 
-For production with custom domain:
-1. Set up Nginx as reverse proxy
-2. Install Let's Encrypt SSL certificates
-3. Configure HTTPS redirects
+Nginx is used to serve the web apps on domains and to add HTTPS via Let's Encrypt.
+
+**1. DNS (required first)**  
+Create A records for both hostnames pointing to the server IP:
+
+| Hostname        | Type | Value        |
+|-----------------|------|--------------|
+| app.gemura.rw   | A    | 209.74.80.195 |
+| app.orora.rw    | A    | 209.74.80.195 |
+
+**2. Run the Nginx + domain setup script**
+
+From the repo root:
+
+```bash
+./scripts/shared/deployment/setup-nginx-domains.sh
+```
+
+This script will:
+
+- Install Nginx on the server (if not already installed)
+- Deploy the config that proxies **app.gemura.rw** → Gemura Web (port 3006) and **app.orora.rw** → Orora Web (port 3011)
+- Allow firewall ports 80 and 443 if `ufw` is active
+- If `CERTBOT_EMAIL` is set (see below), run Let's Encrypt and enable HTTPS with HTTP→HTTPS redirect
+
+**3. Optional: enable HTTPS with Let's Encrypt**
+
+In `scripts/shared/deployment/server-credentials.sh` add (use a real email):
+
+```bash
+CERTBOT_EMAIL="admin@gemura.rw"
+export CERTBOT_EMAIL
+```
+
+Then run the same script again (or run certbot on the server as printed by the script). Certbot will obtain a certificate for both domains and Nginx will serve HTTPS and redirect HTTP to HTTPS.
+
+**4. Backend CORS**
+
+If the frontends are served over HTTPS, ensure the backend allows those origins. In `/opt/gemura/.env` on the server, `CORS_ORIGIN` should include:
+
+- `https://app.gemura.rw`
+- `https://app.orora.rw`
+
+Then restart the API container: `docker restart gemura-api`.
+
+**Config and script locations**
+
+- Nginx config (in repo): `docker/nginx/gemura-orora.conf`
+- Setup script: `scripts/shared/deployment/setup-nginx-domains.sh`
 
 ---
 

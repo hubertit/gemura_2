@@ -55,9 +55,21 @@ async function bootstrap() {
       exposedHeaders: ['Content-Type', 'Authorization'],
     });
   } else {
+    const defaultOrigins = [
+      'http://localhost:3100',
+      'http://localhost:3101',
+      'http://localhost:3005',  // Gemura Web local
+      'http://localhost:3006',  // Orora Web local
+      'http://127.0.0.1:3005',
+      'http://127.0.0.1:3006',
+      'http://209.74.80.195:3006',  // Gemura UI on Kwezi
+      'http://209.74.80.195:3011',  // Orora Web on Kwezi
+      'https://app.gemura.rw',  // Gemura UI (Cloudflare)
+      'https://app.orora.rw',   // Orora Web (Cloudflare)
+    ];
     const allowedOrigins = process.env.CORS_ORIGIN
       ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-      : ['http://localhost:3101', 'http://localhost:3100'];
+      : defaultOrigins;
 
     console.log('🌐 CORS Allowed Origins:', allowedOrigins);
 

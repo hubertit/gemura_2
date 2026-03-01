@@ -29,6 +29,11 @@ backend/coverage/
 
 # Deployment credentials (copy from server-credentials.sh.example)
 scripts/deployment/server-credentials.sh
+scripts/shared/deployment/server-credentials.sh
+# SSL certs/keys (do not commit)
+scripts/shared/deployment/ssl/*.key
+scripts/shared/deployment/ssl/*.crt
+scripts/shared/deployment/ssl/*.pem
 
 # IDE
 .vscode/

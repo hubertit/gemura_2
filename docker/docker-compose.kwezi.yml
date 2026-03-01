@@ -6,7 +6,8 @@
 services:
   gemura-api:
     build:
-      context: ./backend
+      # Resolved from compose file dir (docker/); archive extracts backend at repo root
+      context: ../backend
       dockerfile: Dockerfile
     container_name: gemura-api
     restart: unless-stopped
@@ -16,7 +17,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET:-gemura_jwt_secret_production_2026}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3006}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3006,http://209.74.80.195:3006,http://209.74.80.195:3011,https://app.gemura.rw,https://app.orora.rw}
     ports:
       - "3007:3004"
     networks:
@@ -38,10 +39,11 @@ services:
 
   gemura-ui:
     build:
-      context: ./web
+      # Resolved from compose file dir (docker/); archive extracts to apps/gemura-web
+      context: ../apps/gemura-web
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3007/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://app.gemura.rw/api}
     container_name: gemura-ui
     restart: unless-stopped
     environment:
