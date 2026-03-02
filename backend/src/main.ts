@@ -4,9 +4,17 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as https from 'https';
 import { AppModule } from './app.module';
+import { SerializePrismaInterceptor } from './common/interceptors/serialize-prisma.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Return valid JSON on any unhandled exception (prevents 502 from nginx when backend crashes mid-request)
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Serialize Prisma Decimal/BigInt so JSON responses don't throw (prevents 502 on e.g. /animals, /farms, /stats)
+  app.useGlobalInterceptors(new SerializePrismaInterceptor());
 
   // Trust proxy to get correct client IP
   const expressApp = app.getHttpAdapter().getInstance();
