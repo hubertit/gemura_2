@@ -21,7 +21,7 @@ docs/
 1. **Overview** – [Orora README](./orora/README.md) or [Shared README](./shared/README.md)
 2. **Deployment** – [Shared deployment](./shared/deployment/README.md) → [final-deployment-instructions.md](./shared/deployment/final-deployment-instructions.md)
 3. **API** – [Shared API](./shared/api/README.md)
-4. **Project structure** – [STRUCTURE.md](../STRUCTURE.md) (repo root), [project-organization](./shared/project/project-organization.md)
+4. **Project structure** – [structure.md](./shared/structure.md), [project-organization](./shared/project/project-organization.md)
 5. **Migration** – [Shared migration](./shared/migration/README.md)
 6. **Testing** – [Shared testing](./shared/testing/README.md)
 7. **Module integration & roadmap** – [Shared backend: module-integration-and-roadmap](./shared/backend/module-integration-and-roadmap.md) (best practices, accounting spine, assets/liabilities/production/inventory plan)

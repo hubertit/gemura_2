@@ -9,4 +9,4 @@ Add guides for:
 - Auth and account switching
 - Deployment
 
-Until then, see the main [docs README](../../README.md) and [project structure](../../../STRUCTURE.md).
+Until then, see the main [docs README](../../README.md) and [repository structure](../../shared/structure.md).

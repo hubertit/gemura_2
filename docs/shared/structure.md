@@ -43,7 +43,7 @@ This document defines the canonical layout and naming for the Orora/Gemura monor
 ## Numbering
 
 - **Migrations:** Prisma migrations use timestamps; no extra numbering.
-- **Docs:** Ordered by directory and optional numbered index in READMEs (e.g. “1. Getting started”, “2. Deployment”) rather than `01-`-prefixed filenames unless a clear sequence is required.
+- **Docs:** Ordered by directory and optional numbered index in READMEs (e.g. "1. Getting started", "2. Deployment") rather than `01-`-prefixed filenames unless a clear sequence is required.
 - **Backend modules:** No numeric prefixes; alphabetical or feature-grouped is sufficient.
 
 ## References
