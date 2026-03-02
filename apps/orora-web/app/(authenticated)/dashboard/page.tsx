@@ -36,7 +36,7 @@ import DatePicker from '@/app/components/DatePicker';
 import StatCard from '@/app/components/StatCard';
 import Modal from '@/app/components/Modal';
 import Select from '@/app/components/Select';
-import { DashboardSkeleton } from '@/app/components/SkeletonLoader';
+import { DashboardSkeleton, InventoryTabSkeleton, FinanceTabSkeleton, LoansTabSkeleton } from '@/app/components/SkeletonLoader';
 import CreateSaleForm from '../sales/CreateSaleForm';
 import CreateCollectionForm from '../collections/CreateCollectionForm';
 import CreateCustomerForm from '../customers/CreateCustomerForm';
@@ -977,7 +977,7 @@ export default function Dashboard() {
       {dashboardTab === 'inventory' && (
         <div className="space-y-4">
           {inventoryLoading ? (
-            <div className="flex items-center justify-center py-12"><div className="text-center"><div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" /><p className="text-sm text-gray-600">Loading inventory...</p></div></div>
+            <InventoryTabSkeleton />
           ) : inventoryStats ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1108,7 +1108,7 @@ export default function Dashboard() {
       {dashboardTab === 'finance' && (
         <div className="space-y-4">
           {financeLoading ? (
-            <div className="flex items-center justify-center py-12"><div className="text-center"><div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" /><p className="text-sm text-gray-600">Loading finance...</p></div></div>
+            <FinanceTabSkeleton />
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -1256,12 +1256,7 @@ export default function Dashboard() {
       {dashboardTab === 'loans' && (
         <div className="space-y-4">
           {loansLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-sm text-gray-600">Loading loans...</p>
-              </div>
-            </div>
+            <LoansTabSkeleton />
           ) : (
             (() => {
               const totalOutstanding = loansData.reduce((s, l) => s + (l.outstanding ?? 0), 0);

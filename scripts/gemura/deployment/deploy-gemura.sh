@@ -26,6 +26,13 @@ fi
 
 SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
 
+# Use a single SSH control socket so rsync reuses one connection (avoids multiple auth attempts;
+# some servers or networks drop or throttle repeated password logins).
+SSH_CONTROL_PATH="/tmp/gemura-deploy-$$"
+SSH_MASTER_OPTS="$SSH_OPTS -o ControlMaster=auto -o ControlPath=$SSH_CONTROL_PATH -o ControlPersist=300"
+cleanup_ssh() { ssh -O exit -o ControlPath="$SSH_CONTROL_PATH" $SERVER_USER@$SERVER_IP 2>/dev/null || true; }
+trap cleanup_ssh EXIT
+
 echo "🚀 Gemura Deployment (Kwezi-style: rsync + build with cache)"
 echo "================================================"
 echo "   Server: $SERVER_IP"
@@ -34,7 +41,7 @@ echo "   API Port: $GEMURA_API_PORT"
 echo ""
 
 echo "🔌 Checking connectivity to $SERVER_IP..."
-if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "echo OK" 2>/dev/null; then
+if ! sshpass -p "$SERVER_PASS" ssh $SSH_MASTER_OPTS -o ControlPersist=0 $SERVER_USER@$SERVER_IP "echo OK" 2>/dev/null; then
   echo "❌ Cannot reach the server."
   exit 1
 fi
@@ -43,19 +50,21 @@ echo "   ✅ Server reachable"
 echo ""
 echo "📤 Syncing files (rsync, incremental)..."
 cd "$REPO_ROOT"
-sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH/backend $DEPLOY_PATH/apps/gemura-web $DEPLOY_PATH/docker"
+# Open one master SSH connection; rsync and mkdir reuse it (avoids repeated password auth)
+sshpass -p "$SERVER_PASS" ssh $SSH_MASTER_OPTS -N -f $SERVER_USER@$SERVER_IP || { echo "❌ Failed to open SSH master connection."; exit 1; }
+ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH/backend $DEPLOY_PATH/apps/gemura-web $DEPLOY_PATH/docker"
 rsync -avz --delete \
   --exclude='node_modules' --exclude='dist' --exclude='.git' \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  -e "ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH" \
   backend/ \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/backend/
 rsync -avz --delete \
   --exclude='node_modules' --exclude='.next' --exclude='.git' \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  -e "ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH" \
   apps/gemura-web/ \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/apps/gemura-web/
 rsync -avz \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  -e "ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH" \
   docker/docker-compose.kwezi.yml \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/docker/
 echo "   ✅ Sync complete"

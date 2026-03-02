@@ -203,7 +203,7 @@ export default function Sidebar({ isOpen, collapsed, onClose, onCollapsedChange 
               {!collapsed && (
                 <div className="flex flex-col min-w-0">
                   <span className="text-lg sm:text-xl font-semibold text-white leading-tight truncate">Gemura</span>
-                  <span className="text-xs text-white/80 leading-tight hidden sm:block">Financial Services</span>
+                  <span className="text-xs text-white/80 leading-tight hidden sm:block">Milk collection services platform</span>
                 </div>
               )}
             </Link>

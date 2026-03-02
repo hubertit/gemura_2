@@ -297,3 +297,130 @@ export function CardSkeleton() {
     </div>
   );
 }
+
+/** Dashboard Inventory tab skeleton – stat cards, value card, 2x2 charts, footer. */
+export function InventoryTabSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <StatCardSkeleton key={i} />
+        ))}
+      </div>
+      <div className="bg-white border border-gray-200 rounded-sm p-6">
+        <SkeletonBar className="h-4 w-24 mb-4" />
+        <SkeletonBar className="h-8 w-32 mb-2" />
+        <SkeletonBar className="h-3 w-40" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-36 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-40 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-44 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-36 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+      </div>
+      <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center justify-between">
+        <SkeletonBar className="h-4 w-32" />
+        <SkeletonBar className="h-4 w-28" />
+      </div>
+    </div>
+  );
+}
+
+/** Dashboard Finance tab skeleton – 5 stat cards, donut, 2x2 charts, footer. */
+export function FinanceTabSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <StatCardSkeleton key={i} />
+        ))}
+      </div>
+      <div className="bg-white border border-gray-200 rounded-sm p-6">
+        <SkeletonBar className="h-4 w-36 mb-4" />
+        <div className="h-[240px] rounded-full skeleton-shimmer bg-gray-100 mx-auto max-w-[200px]" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-36 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-32 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-48 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-40 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+      </div>
+      <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center justify-between">
+        <SkeletonBar className="h-4 w-40" />
+        <SkeletonBar className="h-4 w-28" />
+      </div>
+    </div>
+  );
+}
+
+/** Dashboard Loans tab skeleton – 4 stat cards, 2 charts, 2 charts, table, footer. */
+export function LoansTabSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <StatCardSkeleton key={i} />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-44 mb-4" />
+          <div className="h-[280px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-36 mb-4" />
+          <div className="h-[280px] rounded-full skeleton-shimmer bg-gray-100 mx-auto max-w-[180px]" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-48 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+        <div className="bg-white border border-gray-200 rounded-sm p-6">
+          <SkeletonBar className="h-4 w-40 mb-4" />
+          <div className="h-[260px] skeleton-shimmer rounded-sm bg-gray-100" />
+        </div>
+      </div>
+      <div className="bg-white border border-gray-200 rounded-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <SkeletonBar className="h-4 w-28" />
+          <SkeletonBar className="h-4 w-20" />
+        </div>
+        <TableSkeleton rows={5} cols={4} />
+      </div>
+      <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center justify-between">
+        <SkeletonBar className="h-4 w-24" />
+        <SkeletonBar className="h-4 w-28" />
+      </div>
+    </div>
+  );
+}

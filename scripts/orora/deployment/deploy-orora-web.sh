@@ -26,7 +26,10 @@ if [ -z "$SERVER_PASS" ]; then
 fi
 
 SSH_OPTS="-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=15"
-RSYNC_RSH="sshpass -p $SERVER_PASS ssh $SSH_OPTS"
+SSH_CONTROL_PATH="/tmp/orora-deploy-$$"
+SSH_MASTER_OPTS="$SSH_OPTS -o ControlMaster=auto -o ControlPath=$SSH_CONTROL_PATH -o ControlPersist=300"
+cleanup_ssh() { ssh -O exit -o ControlPath="$SSH_CONTROL_PATH" $SERVER_USER@$SERVER_IP 2>/dev/null || true; }
+trap cleanup_ssh EXIT
 
 echo "🚀 Orora Web Deployment (Kwezi-style: rsync + build with cache)"
 echo "================================================"
@@ -36,7 +39,7 @@ echo "   API: $API_URL"
 echo ""
 
 echo "🔌 Checking connectivity to $SERVER_IP..."
-if ! sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "echo OK" 2>/dev/null; then
+if ! sshpass -p "$SERVER_PASS" ssh $SSH_MASTER_OPTS -o ControlPersist=0 $SERVER_USER@$SERVER_IP "echo OK" 2>/dev/null; then
   echo "❌ Cannot reach the server."
   exit 1
 fi
@@ -45,7 +48,8 @@ echo "   ✅ Server reachable"
 echo ""
 echo "📤 Syncing files (rsync, incremental)..."
 cd "$REPO_ROOT"
-sshpass -p "$SERVER_PASS" ssh $SSH_OPTS $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH/apps $DEPLOY_PATH/docker"
+sshpass -p "$SERVER_PASS" ssh $SSH_MASTER_OPTS -N -f $SERVER_USER@$SERVER_IP || { echo "❌ Failed to open SSH master."; exit 1; }
+ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH $SERVER_USER@$SERVER_IP "mkdir -p $DEPLOY_PATH/apps $DEPLOY_PATH/docker"
 rsync -avz --delete \
   --exclude='node_modules' \
   --exclude='.next' \
@@ -53,11 +57,11 @@ rsync -avz --delete \
   --exclude='.env.local' \
   --exclude='*.log' \
   --exclude='.DS_Store' \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  -e "ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH" \
   apps/orora-web/ \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/apps/orora-web/
 rsync -avz \
-  -e "sshpass -p $SERVER_PASS ssh $SSH_OPTS" \
+  -e "ssh $SSH_OPTS -o ControlPath=$SSH_CONTROL_PATH" \
   docker/docker-compose.orora-web.yml \
   $SERVER_USER@$SERVER_IP:$DEPLOY_PATH/docker/
 echo "   ✅ Sync complete"

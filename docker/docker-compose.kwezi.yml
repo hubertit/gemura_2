@@ -31,11 +31,11 @@ services:
         node dist/src/main.js
       "
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3004/api"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3004/api/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 45s
 
   gemura-ui:
     build:
@@ -57,11 +57,11 @@ services:
     networks:
       - default
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3005"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3005/"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 60s
 
 networks:
   kwezi_default:

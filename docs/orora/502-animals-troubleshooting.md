@@ -50,7 +50,7 @@ docker logs <backend-container-name> --tail 200
 
 # Look for:
 # - Uncaught exceptions
-# - "Response serialization failed" (SerializePrismaInterceptor)
+# - Serialization/JSON errors in the response pipeline (e.g. SerializePrismaInterceptor)
 # - Prisma/DB errors
 # - Out of memory / crash
 ```
@@ -87,7 +87,7 @@ If you changed backend code (e.g. interceptor or animals module):
 
 ## Code fixes applied (deploy to clear 502s)
 
-1. **SerializePrismaInterceptor** (`backend/src/common/interceptors/serialize-prisma.interceptor.ts`): Decimal detection no longer relies only on `constructor.name === 'Decimal'` (minified in production). Uses `Object.prototype.toString.call(value) === '[object Decimal]'` and duck-typing (`toString` + `toFixed`). Includes try/catch and catchError so serialization never crashes the request.
+1. **SerializePrismaInterceptor** (`backend/src/common/interceptors/serialize-prisma.interceptor.ts`): Decimal detection no longer relies only on `constructor.name === 'Decimal'` (minified in production). It also checks `Object.prototype.toString.call(value) === '[object Decimal]'` and uses duck-typing (`toString` + `toFixed`). The interceptor wraps conversion in `try/catch` so serialization itself does not crash the request; any unhandled errors are surfaced via Nest's global exception filter.
 2. **HttpExceptionFilter** (`backend/src/common/filters/http-exception.filter.ts`): Global exception filter so any unhandled exception returns a valid JSON response (e.g. 500 with body) instead of crashing and causing nginx to return 502. Applies to all routes (animals, farms, stats, collections, etc.).
 
 ## Quick reference

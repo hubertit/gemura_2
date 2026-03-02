@@ -2,6 +2,16 @@
 
 This guide follows the same deployment pattern as ResolveIt v2, which is proven to work well.
 
+## 🌐 Current Production (Kwezi server – 209.74.80.195)
+
+For day-to-day production deploys on the Kwezi server, use these scripts from the repo root (they use rsync + Docker and are the canonical way to deploy):
+
+- `./scripts/gemura/deployment/deploy-gemura-backend-only.sh` – **Backend API only** (shared Gemura/Orora NestJS backend on port 3007)
+- `./scripts/gemura/deployment/deploy-gemura-web-only.sh` – **Gemura web UI only** (`https://app.gemura.rw`, internal port 3006)
+- `./scripts/orora/deployment/deploy-orora-web.sh` – **Orora web UI only** (`https://app.orora.rw`, internal port 3011)
+
+The rest of this document describes the earlier DevLabs-style deployment (server `159.198.65.38`) and is kept for historical reference and for local/staging setups.
+
 ## 📋 Prerequisites
 
 - Server access: `159.198.65.38`
