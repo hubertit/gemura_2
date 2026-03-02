@@ -70,6 +70,9 @@ export interface AnimalHealth {
   medicine_name: string | null;
   dosage: string | null;
   administered_by: string | null;
+  vet_first_name?: string | null;
+  vet_last_name?: string | null;
+  vet_phone?: string | null;
   next_due_date: string | null;
   cost: string | null;
   notes: string | null;
@@ -126,6 +129,9 @@ export interface CreateHealthData {
   medicine_name?: string;
   dosage?: string;
   administered_by?: string;
+  vet_first_name?: string;
+  vet_last_name?: string;
+  vet_phone?: string;
   next_due_date?: string;
   cost?: number;
   notes?: string;
@@ -139,6 +145,7 @@ export interface AnimalBreeding {
   id: string;
   animal_id: string;
   breeding_date: string;
+  heat_date?: string | null;
   method: BreedingMethod;
   bull_animal_id: string | null;
   bull_name: string | null;
@@ -153,6 +160,7 @@ export interface AnimalBreeding {
 
 export interface CreateBreedingData {
   breeding_date: string;
+  heat_date?: string;
   method: BreedingMethod;
   bull_animal_id?: string;
   bull_name?: string;

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { useFarmStore } from '@/store/farms';
 import { accountsApi } from '@/lib/api/accounts';
+import { showCollections, showSuppliers } from '@/lib/config/features';
 import { useToastStore } from '@/store/toast';
 import Icon, {
   faBars,
@@ -158,7 +159,7 @@ export default function Header({
             </div>
             <input
               type="text"
-              placeholder="Search sales, collections, suppliers..."
+              placeholder={`Search sales${showCollections ? ', collections' : ''}${showSuppliers ? ', suppliers' : ''}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => {

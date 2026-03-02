@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/auth';
 import { isAdminAccount } from '@/lib/config/nav.config';
+import { showCollections, showSuppliers } from '@/lib/config/features';
 import { statsApi, OverviewResponse } from '@/lib/api/stats';
 import { accountingApi } from '@/lib/api/accounting';
 import { inventoryApi, type InventoryStats, type ValuationOverTimePoint, type TopItemByValue, type StockMovementPoint } from '@/lib/api/inventory';
@@ -116,6 +117,9 @@ export default function Dashboard() {
 
   type DashboardTab = 'overview' | 'sales' | 'collections' | 'inventory' | 'finance' | 'loans';
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>('overview');
+  useEffect(() => {
+    if (!showCollections && dashboardTab === 'collections') setDashboardTab('overview');
+  }, [showCollections, dashboardTab]);
   const [inventoryStats, setInventoryStats] = useState<InventoryStats | null>(null);
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [inventoryValuationSeries, setInventoryValuationSeries] = useState<ValuationOverTimePoint[]>([]);
@@ -138,6 +142,9 @@ export default function Dashboard() {
   const [farmsCount, setFarmsCount] = useState<number>(0);
   const [overviewInventoryStats, setOverviewInventoryStats] = useState<InventoryStats | null>(null);
   const [overviewExtrasLoading, setOverviewExtrasLoading] = useState(false);
+  const [overviewIncome, setOverviewIncome] = useState<{ revenue: number; expenses: number; net_income: number } | null>(null);
+  const [overviewRevenueExpensesSeries, setOverviewRevenueExpensesSeries] = useState<{ date: string; revenue: number; expenses: number }[]>([]);
+  const [overviewRevExpLoading, setOverviewRevExpLoading] = useState(false);
 
   const dateRange = useMemo(
     () => getPeriodRange(period, customFrom || undefined, customTo || undefined),
@@ -307,6 +314,29 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, [dashboardTab, currentAccount?.account_id, dateRange.date_from, dateRange.date_to]);
 
+  // Load revenue vs expenses for Overview tab charts (Orora: Revenue vs Expenses)
+  useEffect(() => {
+    if (dashboardTab !== 'overview') return;
+    const { date_from, date_to } = dateRange;
+    let cancelled = false;
+    setOverviewRevExpLoading(true);
+    Promise.all([
+      accountingApi.getIncomeStatement(date_from, date_to),
+      accountingApi.getRevenueExpensesOverTime(date_from, date_to),
+    ])
+      .then(([income, revExp]) => {
+        if (cancelled) return;
+        setOverviewIncome({ revenue: income.revenue, expenses: income.expenses, net_income: income.net_income });
+        setOverviewRevenueExpensesSeries(revExp?.series ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setOverviewIncome(null);
+        if (!cancelled) setOverviewRevenueExpensesSeries([]);
+      })
+      .finally(() => { if (!cancelled) setOverviewRevExpLoading(false); });
+    return () => { cancelled = true; };
+  }, [dashboardTab, dateRange.date_from, dateRange.date_to, refreshKey]);
+
   // Load loans when Loans tab is selected
   useEffect(() => {
     if (dashboardTab !== 'loans' || !currentAccount?.account_id) return;
@@ -412,7 +442,7 @@ export default function Dashboard() {
   const tabs: { id: DashboardTab; label: string }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'sales', label: 'Sales' },
-    { id: 'collections', label: 'Collections' },
+    ...(showCollections ? [{ id: 'collections' as const, label: 'Collections' }] : []),
     { id: 'inventory', label: 'Inventory' },
     { id: 'finance', label: 'Finance' },
     { id: 'loans', label: 'Loans' },
@@ -479,8 +509,8 @@ export default function Dashboard() {
       {/* Overview tab */}
       {dashboardTab === 'overview' && (
         <>
-      {/* Summary cards - metrics across sales, collections, production, livestock, people */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Summary cards - metrics across sales, production, livestock, people */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
           label="Total Sales"
           value={formatCurrency(summary.sales.value)}
@@ -489,14 +519,16 @@ export default function Dashboard() {
           href="/sales"
           {...GREEN_ICON}
         />
-        <StatCard
-          label="Total Collections"
-          value={formatCurrency(summary.collection.value)}
-          subtitle={`${summary.collection.transactions} transactions · ${summary.collection.liters.toFixed(1)} L`}
-          icon={faBox}
-          href="/collections"
-          {...BLUE_ICON}
-        />
+        {showCollections && (
+          <StatCard
+            label="Total Collections"
+            value={formatCurrency(summary.collection.value)}
+            subtitle={`${summary.collection.transactions} transactions · ${summary.collection.liters.toFixed(1)} L`}
+            icon={faBox}
+            href="/collections"
+            {...BLUE_ICON}
+          />
+        )}
         <StatCard
           label="Milk production"
           value={overviewExtrasLoading ? '…' : `${Number(milkProductionReport?.total_production_litres ?? 0).toFixed(1)} L`}
@@ -525,14 +557,16 @@ export default function Dashboard() {
           href="/farms"
           {...TEAL_ICON}
         />
-        <StatCard
-          label="Suppliers"
-          value={summary.suppliers.active + summary.suppliers.inactive}
-          subtitle={`${summary.suppliers.active} active, ${summary.suppliers.inactive} inactive`}
-          icon={faBuilding}
-          href="/suppliers"
-          {...BLUE_ICON}
-        />
+        {showSuppliers && (
+          <StatCard
+            label="Suppliers"
+            value={summary.suppliers.active + summary.suppliers.inactive}
+            subtitle={`${summary.suppliers.active} active, ${summary.suppliers.inactive} inactive`}
+            icon={faBuilding}
+            href="/suppliers"
+            {...BLUE_ICON}
+          />
+        )}
         <StatCard
           label="Customers"
           value={summary.customers.active + summary.customers.inactive}
@@ -551,91 +585,48 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Charts row: tabbed Value/Volume + donut */}
+      {/* Charts row: Revenue vs Expenses (Orora) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white border border-gray-200 rounded-sm p-6">
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <h3 className="text-base font-semibold text-gray-900">Sales vs Collections</h3>
-            <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50">
-              <button
-                type="button"
-                onClick={() => setChartTab('value')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  chartTab === 'value'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Value
-              </button>
-              <button
-                type="button"
-                onClick={() => setChartTab('volume')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  chartTab === 'volume'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Volume (L)
-              </button>
-            </div>
-          </div>
-          {!hasBreakdown ? (
+          <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue vs Expenses</h3>
+          {overviewRevExpLoading ? (
             <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">
-              No time series data yet.
+              Loading…
+            </div>
+          ) : !overviewRevenueExpensesSeries.length ? (
+            <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">
+              No revenue or expense data for this period.
             </div>
           ) : (
-            <>
-              <div className={chartTab === 'value' ? 'block' : 'hidden'}>
-                <Chart
-                  type="area"
-                  height={280}
-                  options={{
-                    chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
-                    stroke: { curve: 'smooth', width: 2 },
-                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
-                    colors: ['#059669', '#84BD22'],
-                    xaxis: { categories: breakdownSlice.map((d) => d.date) },
-                    yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
-                    tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
-                    dataLabels: { enabled: false },
-                    grid: { strokeDashArray: 3 },
-                    legend: { position: 'top' },
-                  }}
-                  series={[
-                    { name: 'Sales', data: breakdownSlice.map((d) => d.sales.value) },
-                    { name: 'Collections', data: breakdownSlice.map((d) => d.collection.value) },
-                  ]}
-                />
-              </div>
-              <div className={chartTab === 'volume' ? 'block' : 'hidden'}>
-                <Chart
-                  type="bar"
-                  height={280}
-                  options={{
-                    chart: { type: 'bar', toolbar: { show: false } },
-                    plotOptions: { bar: { borderRadius: 6, columnWidth: '70%', distributed: false } },
-                    colors: ['#059669', '#84BD22'],
-                    xaxis: { categories: breakdownSlice.map((d) => d.date), labels: { rotate: -45, rotateAlways: true } },
-                    yaxis: { title: { text: 'Liters' }, labels: { formatter: (v: number) => String(Math.round(v)) } },
-                    dataLabels: { enabled: false },
-                    grid: { strokeDashArray: 3 },
-                    tooltip: { y: { formatter: (v: number) => `${v} L` } },
-                    legend: { position: 'top' },
-                  }}
-                  series={[
-                    { name: 'Sales (L)', data: breakdownSlice.map((d) => d.sales.liters) },
-                    { name: 'Collections (L)', data: breakdownSlice.map((d) => d.collection.liters) },
-                  ]}
-                />
-              </div>
-            </>
+            <Chart
+              type="area"
+              height={280}
+              options={{
+                chart: { type: 'area', toolbar: { show: false }, zoom: { enabled: false } },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.5, opacityTo: 0.2, stops: [0, 90, 100] } },
+                colors: ['#059669', '#b91c1c'],
+                xaxis: { categories: overviewRevenueExpensesSeries.map((d) => d.date), labels: { rotate: -45, rotateAlways: true } },
+                yaxis: { labels: { formatter: (v: number) => formatCurrency(v) } },
+                tooltip: { y: { formatter: (v: number) => formatCurrency(v) } },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 3 },
+                legend: { position: 'top' },
+              }}
+              series={[
+                { name: 'Revenue', data: overviewRevenueExpensesSeries.map((d) => d.revenue) },
+                { name: 'Expenses', data: overviewRevenueExpensesSeries.map((d) => d.expenses) },
+              ]}
+            />
           )}
         </div>
         <div className="bg-white border border-gray-200 rounded-sm p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Split by value</h3>
-          {summary.sales.value === 0 && summary.collection.value === 0 ? (
+          <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue vs Expenses</h3>
+          {overviewRevExpLoading ? (
+            <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">
+              Loading…
+            </div>
+          ) : !overviewIncome || (overviewIncome.revenue === 0 && overviewIncome.expenses === 0) ? (
             <div className="h-[280px] flex items-center justify-center text-gray-500 text-sm">
               No data yet.
             </div>
@@ -645,8 +636,8 @@ export default function Dashboard() {
               height={280}
               options={{
                 chart: { type: 'donut', fontFamily: 'inherit' },
-                labels: ['Sales', 'Collections'],
-                colors: ['#059669', '#84BD22'],
+                labels: ['Revenue', 'Expenses'],
+                colors: ['#059669', '#b91c1c'],
                 legend: { position: 'bottom', fontSize: '12px' },
                 dataLabels: { formatter: (val: number) => `${Math.round(val)}%` },
                 plotOptions: {
@@ -657,15 +648,15 @@ export default function Dashboard() {
                         show: true,
                         total: {
                           show: true,
-                          label: 'Total',
-                          formatter: () => formatCurrency(summary.sales.value + summary.collection.value),
+                          label: 'Net',
+                          formatter: () => formatCurrency(overviewIncome.net_income),
                         },
                       },
                     },
                   },
                 },
               }}
-              series={[summary.sales.value, summary.collection.value]}
+              series={[overviewIncome.revenue, overviewIncome.expenses]}
             />
           )}
         </div>
@@ -700,7 +691,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recent_transactions.map((tx) => (
+                    {(showCollections ? recent_transactions : recent_transactions.filter((t) => t.type === 'sale')).map((tx) => (
                       <tr key={tx.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-2 px-3 text-gray-600">
                           {new Date(tx.transaction_at).toLocaleDateString()}
@@ -753,16 +744,30 @@ export default function Dashboard() {
                 </span>
                 <span className="text-sm font-semibold text-gray-900 group-hover:text-white transition-colors">New Sale</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setQuickActionModal('collection')}
-                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
-                  <Icon icon={faBox} size="lg" />
-                </span>
-                <span className="text-sm font-semibold text-gray-900">New Collection</span>
-              </button>
+              {showCollections && (
+                <button
+                  type="button"
+                  onClick={() => setQuickActionModal('collection')}
+                  className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                    <Icon icon={faBox} size="lg" />
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900">New Collection</span>
+                </button>
+              )}
+              {showSuppliers && (
+                <button
+                  type="button"
+                  onClick={() => setQuickActionModal('supplier')}
+                  className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                    <Icon icon={faBuilding} size="lg" />
+                  </span>
+                  <span className="text-sm font-semibold text-gray-900">Add Supplier</span>
+                </button>
+              )}
               <Link
                 href="/production"
                 className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 no-underline"
@@ -772,16 +777,6 @@ export default function Dashboard() {
                 </span>
                 <span className="text-sm font-semibold text-gray-900">Record production</span>
               </Link>
-              <button
-                type="button"
-                onClick={() => setQuickActionModal('supplier')}
-                className="group flex flex-col items-center justify-center gap-2.5 rounded-sm border border-gray-200 bg-white p-5 text-center transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary)]/5"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-gray-100 text-gray-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
-                  <Icon icon={faBuilding} size="lg" />
-                </span>
-                <span className="text-sm font-semibold text-gray-900">Add Supplier</span>
-              </button>
               <button
                 type="button"
                 onClick={() => setQuickActionModal('customer')}
@@ -905,8 +900,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Collections tab */}
-      {dashboardTab === 'collections' && (
+      {/* Collections tab (hidden when showCollections is false) */}
+      {showCollections && dashboardTab === 'collections' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard label="Collections value" value={formatCurrency(summary.collection.value)} subtitle={periodLabel} icon={faBox} href="/collections" {...BLUE_ICON} />
@@ -1479,14 +1474,16 @@ export default function Dashboard() {
       >
         <CreateSaleForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
       </Modal>
-      <Modal
-        open={quickActionModal === 'collection'}
-        onClose={() => setQuickActionModal(null)}
-        title="New Collection"
-        maxWidth="max-w-xl"
-      >
-        <CreateCollectionForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
-      </Modal>
+      {showCollections && (
+        <Modal
+          open={quickActionModal === 'collection'}
+          onClose={() => setQuickActionModal(null)}
+          title="New Collection"
+          maxWidth="max-w-xl"
+        >
+          <CreateCollectionForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+        </Modal>
+      )}
       <Modal
         open={quickActionModal === 'customer'}
         onClose={() => setQuickActionModal(null)}
@@ -1495,14 +1492,16 @@ export default function Dashboard() {
       >
         <CreateCustomerForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
       </Modal>
-      <Modal
-        open={quickActionModal === 'supplier'}
-        onClose={() => setQuickActionModal(null)}
-        title="Add Supplier"
-        maxWidth="max-w-lg"
-      >
-        <CreateSupplierForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
-      </Modal>
+      {showSuppliers && (
+        <Modal
+          open={quickActionModal === 'supplier'}
+          onClose={() => setQuickActionModal(null)}
+          title="Add Supplier"
+          maxWidth="max-w-lg"
+        >
+          <CreateSupplierForm onSuccess={closeQuickActionAndRefresh} onCancel={() => setQuickActionModal(null)} />
+        </Modal>
+      )}
       <Modal
         open={quickActionModal === 'inventory'}
         onClose={() => setQuickActionModal(null)}

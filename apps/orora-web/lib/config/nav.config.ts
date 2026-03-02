@@ -5,6 +5,7 @@
  */
 
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { showCollections, showSuppliers } from './features';
 import {
   faHome,
   faUsers,
@@ -96,13 +97,17 @@ export const OPERATIONS_NAV_GROUPS: NavGroup[] = [
     items: [
       { icon: faChartBar, label: 'Milk production', href: '/production', section: 'operations' },
       { icon: faReceipt, label: 'Sales', href: '/sales', section: 'operations', requiresPermission: 'view_sales' },
-      { icon: faBox, label: 'Collections', href: '/collections', section: 'operations', requiresPermission: 'view_collections' },
+      ...(showCollections
+        ? [{ icon: faBox, label: 'Collections', href: '/collections', section: 'operations' as const, requiresPermission: 'view_collections' }]
+        : []),
     ],
   },
   {
     groupLabel: 'People',
     items: [
-      { icon: faBuilding, label: 'Suppliers', href: '/suppliers', section: 'operations', requiresPermission: 'view_suppliers' },
+      ...(showSuppliers
+        ? [{ icon: faBuilding, label: 'Suppliers', href: '/suppliers', section: 'operations' as const, requiresPermission: 'view_suppliers' }]
+        : []),
       { icon: faStore, label: 'Customers', href: '/customers', section: 'operations', requiresPermission: 'view_customers' },
     ],
   },

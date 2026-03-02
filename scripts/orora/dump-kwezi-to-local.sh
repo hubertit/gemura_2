@@ -55,11 +55,24 @@ fi
 
 mkdir -p "$BACKUP_DIR"
 
+# Step 0: Ensure production has latest migrations (vet/heat columns) so dump is complete
+echo "🔧 Step 0: Ensuring production DB has latest migrations (vet/heat)..."
+if sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" \
+  "docker exec gemura-api npx prisma migrate deploy" 2>/dev/null; then
+  echo "   ✅ Production migrations up to date"
+else
+  echo "   ⚠️  Could not run migrate deploy on server (gemura-api may be stopped). Dump may lack vet/heat columns; restore will apply migrations locally."
+fi
+
 # Step 1: Dump from Kwezi (pg_dump inside container; user kwezi, db gemura_db)
+echo ""
 echo "📤 Step 1: Dumping from Kwezi (kwezi-postgres → gemura_db)..."
 sshpass -p "$SERVER_PASS" ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" \
   "docker exec kwezi-postgres pg_dump -U kwezi --no-owner --no-acl gemura_db" \
   > "$DUMP_FILE"
+# Strip \restrict/\unrestrict (pg_dump 16.12+) so older psql can restore
+sed -i.bak -e '/^\\restrict /d' -e '/^\\unrestrict /d' "$DUMP_FILE" 2>/dev/null || true
+[ -f "${DUMP_FILE}.bak" ] && rm -f "${DUMP_FILE}.bak"
 echo "   ✅ Dump saved ($(du -h "$DUMP_FILE" | cut -f1))"
 
 # Step 2: Check local Postgres is reachable
@@ -79,27 +92,38 @@ echo "   ✅ Local Postgres is running"
 # Step 3: Drop and recreate local DB, restore dump
 echo ""
 echo "📥 Step 3: Restoring to local $LOCAL_DB..."
-psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d postgres -v ON_ERROR_STOP=1 << EOF
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$LOCAL_DB' AND pid <> pg_backend_pid();
-DROP DATABASE IF EXISTS $LOCAL_DB;
-CREATE DATABASE $LOCAL_DB;
-EOF
+psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$LOCAL_DB' AND pid <> pg_backend_pid();" 2>/dev/null || true
+psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d postgres -c "DROP DATABASE IF EXISTS $LOCAL_DB;"
+psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d postgres -c "CREATE DATABASE $LOCAL_DB;"
 psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d "$LOCAL_DB" -f "$DUMP_FILE" -v ON_ERROR_STOP=1 2>&1 | grep -v "^NOTICE:" | grep -v "^$" || true
 [ -n "$LOCAL_PG_PASS" ] && unset PGPASSWORD
 echo "   ✅ Restore completed"
 
-# Step 4: Prisma schema sync (in case dump is from before farms table)
+# Step 4: Apply any missing migrations locally (e.g. vet/heat if dump was from before)
 echo ""
-echo "🔧 Step 4: Syncing schema with Prisma (db push)..."
+echo "🔧 Step 4: Applying any missing migrations (vet/heat if needed)..."
 cd "$REPO_ROOT/backend"
 if [ -n "$LOCAL_PG_PASS" ]; then
   export DATABASE_URL="postgresql://${LOCAL_PG_USER}:${LOCAL_PG_PASS}@${LOCAL_PG_HOST}:${LOCAL_PG_PORT}/${LOCAL_DB}?schema=public"
 else
   export DATABASE_URL="postgresql://${LOCAL_PG_USER}@${LOCAL_PG_HOST}:${LOCAL_PG_PORT}/${LOCAL_DB}?schema=public"
 fi
-npx prisma db push --accept-data-loss 2>/dev/null || true
+npx prisma migrate deploy
 npx prisma generate
-echo "   ✅ Schema synced"
+echo "   ✅ Migrations applied"
+
+# Step 5: Verify vet/heat columns exist
+echo ""
+echo "🔍 Step 5: Verifying vet/heat columns..."
+if [ -n "$LOCAL_PG_PASS" ]; then export PGPASSWORD="$LOCAL_PG_PASS"; fi
+HEAT_COL=$(psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d "$LOCAL_DB" -t -A -c "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='animal_breeding' AND column_name='heat_date';" 2>/dev/null || true)
+VET_COL=$(psql -h "$LOCAL_PG_HOST" -p "$LOCAL_PG_PORT" -U "$LOCAL_PG_USER" -d "$LOCAL_DB" -t -A -c "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='animal_health' AND column_name='vet_user_id';" 2>/dev/null || true)
+[ -n "$LOCAL_PG_PASS" ] && unset PGPASSWORD
+if [ -n "$HEAT_COL" ] && [ -n "$VET_COL" ]; then
+  echo "   ✅ animal_breeding.heat_date and animal_health.vet_user_id present"
+else
+  echo "   ⚠️  Some columns missing (heat_date: ${HEAT_COL:-none}, vet_user_id: ${VET_COL:-none}). Run: cd backend && npx prisma migrate deploy"
+fi
 
 echo ""
 echo "=========================================="

@@ -72,6 +72,9 @@ export default function AnimalDetailPage() {
     event_type: 'vaccination',
     event_date: new Date().toISOString().slice(0, 10),
     description: '',
+    vet_first_name: '',
+    vet_last_name: '',
+    vet_phone: '',
     notes: '',
   });
 
@@ -84,6 +87,7 @@ export default function AnimalDetailPage() {
   const [productionForm, setProductionForm] = useState({ production_date: new Date().toISOString().slice(0, 10), session: '', quantity_litres: 0, notes: '' });
   const [breedingForm, setBreedingForm] = useState<CreateBreedingData>({
     breeding_date: new Date().toISOString().slice(0, 10),
+    heat_date: '',
     method: 'natural',
     bull_animal_id: '',
     bull_name: '',
@@ -324,6 +328,9 @@ export default function AnimalDetailPage() {
         event_type: 'vaccination',
         event_date: new Date().toISOString().slice(0, 10),
         description: '',
+        vet_first_name: '',
+        vet_last_name: '',
+        vet_phone: '',
         notes: '',
       });
       loadAnimal();
@@ -560,6 +567,13 @@ export default function AnimalDetailPage() {
                       {h.medicine_name && (
                         <p className="text-sm text-gray-600">Medicine: {h.medicine_name}</p>
                       )}
+                      {(h.vet_first_name || h.vet_last_name || h.vet_phone) && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Vet:{' '}
+                          {[h.vet_first_name, h.vet_last_name].filter(Boolean).join(' ')}
+                          {h.vet_phone ? ` · ${h.vet_phone}` : ''}
+                        </p>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -645,6 +659,9 @@ export default function AnimalDetailPage() {
                         <span className="text-gray-500 text-sm ml-2">{b.method.replace('_', ' ')}</span>
                         {(b.bull_animal || b.bull_name) && (
                           <p className="text-sm text-gray-600 mt-0.5">Bull: {b.bull_animal ? `${b.bull_animal.tag_number} ${b.bull_animal.name || ''}` : b.bull_name || '—'}</p>
+                        )}
+                        {b.heat_date && (
+                          <p className="text-xs text-gray-500">Heat: {new Date(b.heat_date).toLocaleDateString()}</p>
                         )}
                         {b.expected_calving_date && (
                           <p className="text-xs text-gray-500">Expected calving: {new Date(b.expected_calving_date).toLocaleDateString()}</p>
@@ -818,6 +835,38 @@ export default function AnimalDetailPage() {
               className="input w-full"
             />
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vet first name</label>
+              <input
+                type="text"
+                value={healthForm.vet_first_name ?? ''}
+                onChange={(e) => setHealthForm((p) => ({ ...p, vet_first_name: e.target.value }))}
+                className="input w-full"
+                placeholder="Optional"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vet last name</label>
+              <input
+                type="text"
+                value={healthForm.vet_last_name ?? ''}
+                onChange={(e) => setHealthForm((p) => ({ ...p, vet_last_name: e.target.value }))}
+                className="input w-full"
+                placeholder="Optional"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vet phone (with country code)</label>
+              <input
+                type="tel"
+                value={healthForm.vet_phone ?? ''}
+                onChange={(e) => setHealthForm((p) => ({ ...p, vet_phone: e.target.value }))}
+                className="input w-full"
+                placeholder="+250 7..."
+              />
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <input
@@ -956,14 +1005,25 @@ export default function AnimalDetailPage() {
               />
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expected calving date</label>
-            <DatePicker
-              value={breedingForm.expected_calving_date ?? ''}
-              onChange={(v) => setBreedingForm((p) => ({ ...p, expected_calving_date: v }))}
-              placeholder="Optional"
-              className="w-full"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Heat date</label>
+              <DatePicker
+                value={breedingForm.heat_date ?? ''}
+                onChange={(v) => setBreedingForm((p) => ({ ...p, heat_date: v }))}
+                placeholder="Optional"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expected calving date</label>
+              <DatePicker
+                value={breedingForm.expected_calving_date ?? ''}
+                onChange={(v) => setBreedingForm((p) => ({ ...p, expected_calving_date: v }))}
+                placeholder="Optional"
+                className="w-full"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Outcome</label>

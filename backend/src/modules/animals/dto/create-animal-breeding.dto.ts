@@ -20,6 +20,11 @@ export class CreateAnimalBreedingDto {
   @IsNotFutureDate({ message: 'Breeding date must not be in the future' })
   breeding_date: string;
 
+  @ApiPropertyOptional({ description: 'Heat date (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsDateString()
+  heat_date?: string;
+
   @ApiProperty({ description: 'Method', enum: BreedingMethodEnum })
   @IsNotEmpty()
   @IsEnum(BreedingMethodEnum)

@@ -63,9 +63,25 @@ export class CreateAnimalHealthDto {
   @IsString()
   administered_by?: string;
 
+  @ApiPropertyOptional({ description: 'Vet first name' })
+  @IsOptional()
+  @IsString()
+  vet_first_name?: string;
+
+  @ApiPropertyOptional({ description: 'Vet last name' })
+  @IsOptional()
+  @IsString()
+  vet_last_name?: string;
+
+  @ApiPropertyOptional({ description: 'Vet phone (with country code, digits will be normalized)' })
+  @IsOptional()
+  @IsString()
+  vet_phone?: string;
+
   @ApiPropertyOptional({ description: 'Next due date (e.g. for vaccinations)' })
   @IsOptional()
   @IsDateString()
+  @IsNotFutureDate({ message: 'Next due date must not be in the future' })
   next_due_date?: string;
 
   @ApiPropertyOptional({ description: 'Cost' })

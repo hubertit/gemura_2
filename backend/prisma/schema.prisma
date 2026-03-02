@@ -351,6 +351,7 @@ model User {
   user_bookmarks               UserBookmark[]
   user_relationships_follower  UserRelationship[] @relation("UserRelationshipFollower")
   user_relationships_following UserRelationship[] @relation("UserRelationshipFollowing")
+  vet_animal_health            AnimalHealth[]     @relation("VetUserAnimalHealth")
   user_points                  UserPoint[]
   user_referrals_referrer      UserReferral[]     @relation("UserReferrer")
   user_referrals_referred      UserReferral[]     @relation("UserReferred")
@@ -1515,18 +1516,24 @@ model AnimalHealth {
   medicine_name    String?         @map("medicine_name")
   dosage           String?
   administered_by  String?         @map("administered_by")
+  vet_user_id      String?         @map("vet_user_id") @db.Uuid
+  vet_first_name   String?         @map("vet_first_name")
+  vet_last_name    String?         @map("vet_last_name")
+  vet_phone        String?         @map("vet_phone")
   next_due_date    DateTime?       @map("next_due_date")
   cost             Decimal?        @db.Decimal(10, 2)
   notes            String?         @db.Text
   created_at       DateTime        @default(now()) @map("created_at")
   created_by       String?         @map("created_by") @db.Uuid
 
-  animal Animal @relation(fields: [animal_id], references: [id], onDelete: Cascade)
+  animal  Animal @relation(fields: [animal_id], references: [id], onDelete: Cascade)
+  vetUser User?  @relation("VetUserAnimalHealth", fields: [vet_user_id], references: [id], onDelete: SetNull)
 
   @@index([animal_id])
   @@index([event_type])
   @@index([event_date])
   @@index([next_due_date])
+  @@index([vet_user_id])
   @@map("animal_health")
 }
 
@@ -1534,6 +1541,7 @@ model AnimalBreeding {
   id                    String          @id @default(uuid()) @db.Uuid
   animal_id             String          @map("animal_id") @db.Uuid
   breeding_date         DateTime        @map("breeding_date") @db.Date
+  heat_date             DateTime?       @map("heat_date") @db.Date
   method                BreedingMethod
   bull_animal_id        String?         @map("bull_animal_id") @db.Uuid
   bull_name             String?         @map("bull_name")

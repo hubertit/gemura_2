@@ -1,10 +1,8 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
+import { randomBytes } from 'crypto';
+import * as bcrypt from 'bcrypt';
 import { CreateAnimalDto } from './dto/create-animal.dto';
 import { UpdateAnimalDto } from './dto/update-animal.dto';
 import { CreateAnimalWeightDto } from './dto/create-animal-weight.dto';
@@ -348,6 +346,50 @@ export class AnimalsService {
     accountId?: string,
   ) {
     await this.getAnimal(user, animalId, accountId);
+
+    let vetUserId: string | undefined;
+    let vetPhoneNormalized: string | undefined;
+
+    if (dto.vet_phone) {
+      let digits = dto.vet_phone.replace(/\D/g, '');
+      if (digits.startsWith('07') && digits.length === 10) {
+        // Normalize local Rwandan format 07xx... -> 2507xx...
+        digits = `250${digits.slice(1)}`;
+      }
+      if (digits.startsWith('250') && digits.length === 12) {
+        vetPhoneNormalized = digits;
+      } else if (digits.length >= 9) {
+        // Fallback: store raw digits if it looks like a phone
+        vetPhoneNormalized = digits;
+      }
+    }
+
+    if (vetPhoneNormalized) {
+      let vetUser = await this.prisma.user.findFirst({
+        where: { phone: vetPhoneNormalized },
+      });
+
+      if (!vetUser) {
+        const userCode = `U_${randomBytes(3).toString('hex').toUpperCase()}`;
+        const passwordHash = await bcrypt.hash('Pass123!', 10);
+        const name = [dto.vet_first_name, dto.vet_last_name].filter(Boolean).join(' ').trim() || 'Veterinary';
+
+        vetUser = await this.prisma.user.create({
+          data: {
+            code: userCode,
+            name,
+            phone: vetPhoneNormalized,
+            password_hash: passwordHash,
+            status: 'active',
+            account_type: 'mcc',
+            created_by: user.id,
+          },
+        });
+      }
+
+      vetUserId = vetUser.id;
+    }
+
     return this.prisma.animalHealth.create({
       data: {
         animal_id: animalId,
@@ -359,6 +401,10 @@ export class AnimalsService {
         medicine_name: dto.medicine_name ?? undefined,
         dosage: dto.dosage ?? undefined,
         administered_by: dto.administered_by ?? undefined,
+        vet_user_id: vetUserId,
+        vet_first_name: dto.vet_first_name ?? undefined,
+        vet_last_name: dto.vet_last_name ?? undefined,
+        vet_phone: vetPhoneNormalized ?? dto.vet_phone ?? undefined,
         next_due_date: dto.next_due_date ? new Date(dto.next_due_date) : undefined,
         cost: dto.cost != null ? dto.cost : undefined,
         notes: dto.notes ?? undefined,
@@ -415,6 +461,7 @@ export class AnimalsService {
       data: {
         animal_id: animalId,
         breeding_date: new Date(dto.breeding_date),
+        heat_date: dto.heat_date ? new Date(dto.heat_date) : undefined,
         method: dto.method as any,
         bull_animal_id: dto.bull_animal_id ?? undefined,
         bull_name: dto.bull_name ?? undefined,
