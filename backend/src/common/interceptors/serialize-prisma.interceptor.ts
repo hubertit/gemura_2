@@ -5,8 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
 /**
  * Recursively convert Prisma Decimal and BigInt to JSON-serializable values.
  * Without this, JSON.stringify() throws when responses contain Decimal/BigInt (e.g. animals list),
@@ -64,16 +63,6 @@ function toSerializable(value: unknown): unknown {
 @Injectable()
 export class SerializePrismaInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    return next.handle().pipe(
-      map((data: unknown) => toSerializable(data)),
-      catchError((err) => {
-        console.error('[SerializePrismaInterceptor] serialization failed', err?.message || err);
-        return of({
-          code: 500,
-          status: 'error',
-          message: 'Response serialization failed',
-        });
-      }),
-    );
+    return next.handle().pipe(map((data: unknown) => toSerializable(data)));
   }
 }
