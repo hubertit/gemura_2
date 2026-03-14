@@ -20,8 +20,9 @@ export function IsNotFutureDate(validationOptions?: ValidationOptions) {
           if (value == null || value === '') return true;
           const d = new Date(value as string);
           if (Number.isNaN(d.getTime())) return false;
-          // Allow the value if it is now or in the past (compare the actual moment, not end-of-day)
-          return d.getTime() <= Date.now();
+          // Allow up to 5 minutes in the future to account for clock skew and network delays
+          const fiveMinutesFromNow = Date.now() + (5 * 60 * 1000);
+          return d.getTime() <= fiveMinutesFromNow;
         },
         defaultMessage(args: ValidationArguments): string {
           return `${args.property} must not be a future date`;

@@ -177,16 +177,20 @@ class CollectionsService {
     String? paymentStatus,
   }) async {
     try {
+      final requestData = {
+        'supplier_account_code': supplierAccountCode,
+        'quantity': quantity,
+        'status': status,
+        'collection_at': collectionAt.toIso8601String().replaceAll('T', ' ').substring(0, 19),
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+        if (paymentStatus != null) 'payment_status': paymentStatus,
+      };
+      
+      print('📤 CollectionsService: Creating collection with data: $requestData');
+      
       final response = await _dio.post(
         '/collections/create',
-        data: {
-          'supplier_account_code': supplierAccountCode,
-          'quantity': quantity,
-          'status': status,
-          'collection_at': collectionAt.toIso8601String().replaceAll('T', ' ').substring(0, 19),
-          if (notes != null && notes.isNotEmpty) 'notes': notes,
-          if (paymentStatus != null) 'payment_status': paymentStatus,
-        },
+        data: requestData,
       );
 
       // Accept both 200 (OK) and 201 (Created) as success status codes
@@ -201,14 +205,18 @@ class CollectionsService {
         throw Exception('Failed to create collection: ${response.statusCode}');
       }
     } on DioException catch (e) {
+      print('❌ CollectionsService: DioException - Status: ${e.response?.statusCode}');
+      print('❌ CollectionsService: Response data: ${e.response?.data}');
+      print('❌ CollectionsService: Error type: ${e.type}');
+      
       String errorMessage = 'Failed to create collection. ';
       
       if (e.response?.statusCode == 401) {
         errorMessage = 'Authentication failed. Please login again.';
       } else if (e.response?.statusCode == 400) {
-        errorMessage = 'Invalid collection data. Please check your input.';
+        final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
+        errorMessage = backendError ?? 'Invalid collection data. Please check your input.';
       } else if (e.response?.statusCode == 500) {
-        // Try to get the actual error message from backend
         final backendError = e.response?.data?['error'] ?? e.response?.data?['message'];
         errorMessage = backendError ?? 'Server error. Please try again later.';
       } else if (e.type == DioExceptionType.connectionTimeout ||

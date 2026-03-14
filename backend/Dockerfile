@@ -32,6 +32,10 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV TZ=Africa/Kigali
+
+# Install timezone data
+RUN apk add --no-cache tzdata
 
 # Don't run as root
 RUN addgroup --system --gid 1001 nodejs
