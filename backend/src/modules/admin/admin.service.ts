@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ImmisService } from '../immis/immis.service';
 import * as bcrypt from 'bcrypt';
 import {
   ROLES,
@@ -15,7 +16,10 @@ import {
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private immisService: ImmisService,
+  ) {}
 
   /**
    * Check if user has admin permission
@@ -406,6 +410,99 @@ export class AdminService {
       status: 'success',
       message: 'User updated successfully.',
       data: updatedUser,
+    };
+  }
+
+  /**
+   * Link or unlink a Gemura user (must belong to account) to an IMMIS member.
+   */
+  async linkUserImmisMember(
+    adminUser: User,
+    accountId: string,
+    targetUserId: string,
+    immis_member_id: number | null,
+  ) {
+    await this.checkAdminPermission(adminUser, accountId);
+
+    const ua = await this.prisma.userAccount.findFirst({
+      where: {
+        user_id: targetUserId,
+        account_id: accountId,
+        status: 'active',
+      },
+    });
+    if (!ua) {
+      throw new ForbiddenException({
+        code: 403,
+        status: 'error',
+        message: 'User is not an active member of this account.',
+      });
+    }
+
+    const target = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!target) {
+      throw new NotFoundException({
+        code: 404,
+        status: 'error',
+        message: 'User not found.',
+      });
+    }
+
+    if (immis_member_id === null) {
+      await this.prisma.user.update({
+        where: { id: targetUserId },
+        data: {
+          immis_member_id: null,
+          immis_linked_at: null,
+          updated_by: adminUser.id,
+        },
+      });
+      return {
+        code: 200,
+        status: 'success',
+        message: 'IMMIS link removed.',
+        data: { user_id: targetUserId, immis_member_id: null },
+      };
+    }
+
+    const exists = await this.immisService.immisMemberExists(immis_member_id);
+    if (!exists) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'IMMIS member not found or could not be verified.',
+      });
+    }
+
+    const taken = await this.prisma.user.findFirst({
+      where: {
+        immis_member_id,
+        NOT: { id: targetUserId },
+        status: 'active',
+      },
+    });
+    if (taken) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: `IMMIS member ${immis_member_id} is already linked to "${taken.name}".`,
+      });
+    }
+
+    await this.prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        immis_member_id,
+        immis_linked_at: new Date(),
+        updated_by: adminUser.id,
+      },
+    });
+
+    return {
+      code: 200,
+      status: 'success',
+      message: 'User linked to IMMIS member.',
+      data: { user_id: targetUserId, immis_member_id },
     };
   }
 

@@ -141,5 +141,37 @@ export class ImmisService {
       req.end();
     });
   }
+
+  /** Gemura users linked to these IMMIS member IDs (active users only). */
+  async getMemberLinkMap(
+    memberIds: number[],
+  ): Promise<Record<number, { user_id: string; name: string; phone: string | null }>> {
+    const unique = [...new Set(memberIds.filter((n) => Number.isFinite(n)))];
+    if (unique.length === 0) return {};
+    const users = await this.prisma.user.findMany({
+      where: {
+        immis_member_id: { in: unique },
+        status: 'active',
+      },
+      select: { id: true, name: true, phone: true, immis_member_id: true },
+    });
+    const map: Record<number, { user_id: string; name: string; phone: string | null }> = {};
+    for (const u of users) {
+      if (u.immis_member_id != null) {
+        map[u.immis_member_id] = { user_id: u.id, name: u.name, phone: u.phone };
+      }
+    }
+    return map;
+  }
+
+  async immisMemberExists(memberId: number): Promise<boolean> {
+    try {
+      const res = await this.getMember(String(memberId));
+      const d = res.data as Record<string, unknown> | null | undefined;
+      return res.status === 200 && d != null && typeof d === 'object' && typeof d.id === 'number';
+    } catch {
+      return false;
+    }
+  }
 }
 

@@ -327,6 +327,8 @@ model User {
   total_points         Int              @default(0) @map("total_points")
   available_points     Int              @default(0) @map("available_points")
   registration_type    RegistrationType @default(self) @map("registration_type")
+  immis_member_id      Int?             @unique @map("immis_member_id")
+  immis_linked_at      DateTime?        @map("immis_linked_at")
   created_at           DateTime         @default(now()) @map("created_at")
   updated_at           DateTime         @updatedAt @map("updated_at")
   created_by           String?          @map("created_by") @db.Uuid

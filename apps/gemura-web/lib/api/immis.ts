@@ -84,5 +84,18 @@ export const immisApi = {
   getMember(memberId: string): Promise<ImmisMemberResponse> {
     return apiClient.get<ImmisMemberResponse>(`/immis/members/${encodeURIComponent(memberId)}`);
   },
+
+  getMemberLinks(memberIds: number[]): Promise<{
+    status: number;
+    message: string;
+    data: Record<string, { user_id: string; name: string; phone: string | null }> | null;
+  }> {
+    if (!memberIds.length) {
+      return Promise.resolve({ status: 200, message: 'OK', data: {} });
+    }
+    return apiClient.get('/immis/member-links', {
+      params: { ids: memberIds.join(',') },
+    });
+  },
 };
 

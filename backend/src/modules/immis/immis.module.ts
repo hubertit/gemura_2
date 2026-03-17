@@ -7,6 +7,7 @@ import { ImmisController } from './immis.controller';
   imports: [PrismaModule],
   providers: [ImmisService],
   controllers: [ImmisController],
+  exports: [ImmisService],
 })
 export class ImmisModule {}
 

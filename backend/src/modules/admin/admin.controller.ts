@@ -31,6 +31,7 @@ import { CurrentAccount } from '../../common/decorators/account.decorator';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { LinkUserImmisDto } from './dto/link-user-immis.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -284,6 +285,24 @@ export class AdminController {
     @Param('id') userId: string,
   ) {
     return this.adminService.getUserById(user, accountId, userId);
+  }
+
+  @Put('users/:userId/immis-link')
+  @RequirePermission('manage_users')
+  @ApiOperation({
+    summary: 'Link Gemura user to IMMIS member (or unlink)',
+    description:
+      'Target user must belong to the current account. Body: { "immis_member_id": 10 } to link, { "immis_member_id": null } to unlink.',
+  })
+  @ApiParam({ name: 'userId', description: 'Gemura user UUID' })
+  @ApiBody({ type: LinkUserImmisDto })
+  async linkUserImmis(
+    @CurrentUser() user: User,
+    @CurrentAccount() accountId: string,
+    @Param('userId') userId: string,
+    @Body() dto: LinkUserImmisDto,
+  ) {
+    return this.adminService.linkUserImmisMember(user, accountId, userId, dto.immis_member_id);
   }
 
   @Post('users')

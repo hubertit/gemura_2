@@ -8,6 +8,8 @@ export interface ProfileUser {
   account_type?: string;
   status?: string;
   token?: string;
+  immis_member_id?: number | null;
+  immis_linked_at?: string | null;
 }
 
 export interface ProfileAccount {
@@ -60,4 +62,10 @@ export const profileApi = {
 
   updateProfile: (data: UpdateProfilePayload): Promise<GetProfileResponse> =>
     apiClient.put<GetProfileResponse>('/profile/update', data),
+
+  linkImmis: (immis_member_id: number): Promise<GetProfileResponse> =>
+    apiClient.post<GetProfileResponse>('/profile/immis-link', { immis_member_id }),
+
+  unlinkImmis: (): Promise<GetProfileResponse> =>
+    apiClient.delete<GetProfileResponse>('/profile/immis-link'),
 };

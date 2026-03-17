@@ -22,16 +22,26 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+export type LinkedUser = { user_id: string; name: string; phone: string | null };
+
 export default function ImmisMemberDetailModal({
   open,
   onClose,
   member,
   loading,
+  linkedUser,
+  canLink,
+  onLinkUser,
+  onUnlink,
 }: {
   open: boolean;
   onClose: () => void;
   member: ImmisMember | null;
   loading?: boolean;
+  linkedUser?: LinkedUser | null;
+  canLink?: boolean;
+  onLinkUser?: () => void;
+  onUnlink?: () => void;
 }) {
   if (!member && !open) return null;
 
@@ -119,7 +129,6 @@ export default function ImmisMemberDetailModal({
               <dl>
                 <DetailRow label="Name" value={m.location.name} />
                 <DetailRow label="Type" value={m.location.type} />
-                <DetailRow label="Code" value={m.location.code} />
                 {m.location.parent && (
                   <DetailRow
                     label="Parent"
@@ -140,6 +149,33 @@ export default function ImmisMemberDetailModal({
               </dl>
             </section>
           )}
+
+          <section>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+              Gemura user
+            </h3>
+            <dl>
+              <DetailRow label="Linked account" value={linkedUser ? linkedUser.name : 'Not linked'} />
+              {linkedUser?.phone && <DetailRow label="Phone" value={linkedUser.phone} />}
+            </dl>
+            {canLink && (onLinkUser || onUnlink) && (
+              <div className="mt-2">
+                {linkedUser ? (
+                  <button
+                    type="button"
+                    onClick={onUnlink}
+                    className="inline-flex items-center justify-center gap-1.5 h-9 px-4 text-sm font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100 transition-colors"
+                  >
+                    Unlink user
+                  </button>
+                ) : (
+                  <button type="button" onClick={onLinkUser} className="btn btn-primary text-sm">
+                    Link to Gemura user
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
 
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">

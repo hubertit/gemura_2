@@ -170,4 +170,14 @@ export const adminApi = {
     const params = accountId ? { account_id: accountId } : {};
     return apiClient.delete(`/admin/users/${userId}`, { params });
   },
+
+  /** Link Gemura user to IMMIS member, or pass null to unlink. Requires manage_users. */
+  linkUserImmis: async (
+    userId: string,
+    immis_member_id: number | null,
+    accountId?: string,
+  ): Promise<{ code: number; status: string; message: string; data?: unknown }> => {
+    const params = accountId ? { account_id: accountId } : {};
+    return apiClient.put(`/admin/users/${userId}/immis-link`, { immis_member_id }, { params });
+  },
 };

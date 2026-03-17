@@ -40,5 +40,29 @@ export class ImmisController {
   async getMember(@Param('id') id: string): Promise<ImmisApiResponse> {
     return this.immisService.getMember(id);
   }
+
+  @Get('member-links')
+  @ApiOperation({
+    summary: 'IMMIS member → Gemura user links',
+    description:
+      'For each IMMIS member ID, returns the linked Gemura user (if any). Query: ids=1,2,3 (max 200).',
+  })
+  @ApiQuery({ name: 'ids', required: true, description: 'Comma-separated IMMIS member IDs' })
+  @ApiResponse({ status: 200, description: 'Map of member_id to linked user.' })
+  async memberLinks(@Query('ids') ids: string) {
+    const list = (ids || '')
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n));
+    if (list.length > 200) {
+      return {
+        status: 400,
+        message: 'Maximum 200 member IDs per request.',
+        data: null,
+      };
+    }
+    const map = await this.immisService.getMemberLinkMap(list);
+    return { status: 200, message: 'OK', data: map };
+  }
 }
 

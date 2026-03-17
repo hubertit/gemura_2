@@ -1,13 +1,23 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ImmisService } from '../immis/immis.service';
 
 @Injectable()
 export class ProfileService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private immisService: ImmisService,
+  ) {}
 
   async getProfile(user: User) {
+    const dbUser = await this.prisma.user.findUnique({ where: { id: user.id } });
+    if (!dbUser) {
+      throw new NotFoundException({ code: 404, status: 'error', message: 'User not found.' });
+    }
+    user = dbUser;
+
     // Get user accounts (same as login)
     const userAccounts = await this.prisma.userAccount.findMany({
       where: {
@@ -92,6 +102,8 @@ export class ProfileService {
           account_type: user.account_type,
           status: user.status,
           token: user.token,
+          immis_member_id: user.immis_member_id ?? null,
+          immis_linked_at: user.immis_linked_at ?? null,
         },
         account: defaultAccountData,
         accounts,
@@ -154,6 +166,52 @@ export class ProfileService {
 
     // Return updated profile (same structure as get)
     return this.getProfile(updatedUser);
+  }
+
+  async linkImmisMember(user: User, immisMemberId: number) {
+    const exists = await this.immisService.immisMemberExists(immisMemberId);
+    if (!exists) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: 'IMMIS member not found or could not be verified.',
+      });
+    }
+    const taken = await this.prisma.user.findFirst({
+      where: {
+        immis_member_id: immisMemberId,
+        NOT: { id: user.id },
+        status: 'active',
+      },
+    });
+    if (taken) {
+      throw new BadRequestException({
+        code: 400,
+        status: 'error',
+        message: `This IMMIS member is already linked to Gemura user "${taken.name}".`,
+      });
+    }
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        immis_member_id: immisMemberId,
+        immis_linked_at: new Date(),
+        updated_by: user.id,
+      },
+    });
+    return this.getProfile(updated);
+  }
+
+  async unlinkImmisMember(user: User) {
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        immis_member_id: null,
+        immis_linked_at: null,
+        updated_by: user.id,
+      },
+    });
+    return this.getProfile(updated);
   }
 }
 

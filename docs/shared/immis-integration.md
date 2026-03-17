@@ -31,6 +31,15 @@ Gemura Web/Mobile Apps
 - Backend acts as authenticated proxy, enforcing access control
 - API key lookup uses same pattern as other integrations (Mista SMS)
 
+## Linking Gemura users to IMMIS members
+
+- **Database**: `users.immis_member_id` (unique, nullable), `users.immis_linked_at`
+- **Self-service**: `POST /profile/immis-link` `{ "immis_member_id": 10 }`, `DELETE /profile/immis-link` — verifies member exists in IMMIS; one Gemura user per IMMIS member.
+- **Admin** (`manage_users`): `PUT /admin/users/:userId/immis-link` with `{ "immis_member_id": 10 }` or `{ "immis_member_id": null }` to unlink. Target user must belong to the current account (`account_id` in query/body).
+- **IMMIS table**: `GET /immis/member-links?ids=1,2,3` returns which IMMIS IDs are linked to which Gemura users.
+
+Run migration: `npx prisma migrate deploy` (or `migrate dev`) after pulling.
+
 ## Backend Implementation
 
 ### Module Structure

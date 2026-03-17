@@ -1,10 +1,11 @@
-import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Post, Delete, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiBadRequestResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { ProfileService } from './profile.service';
 import { TokenGuard } from '../../common/guards/token.guard';
 import { CurrentUser } from '../../common/decorators/user.decorator';
 import { User } from '@prisma/client';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { LinkImmisDto } from './dto/link-immis.dto';
 
 @ApiTags('Profile')
 @Controller('profile')
@@ -133,5 +134,18 @@ export class ProfileController {
   })
   async updateProfile(@CurrentUser() user: User, @Body() updateDto: UpdateProfileDto) {
     return this.profileService.updateProfile(user, updateDto);
+  }
+
+  @Post('immis-link')
+  @ApiOperation({ summary: 'Link your account to an IMMIS member record' })
+  @ApiBody({ type: LinkImmisDto })
+  async linkImmis(@CurrentUser() user: User, @Body() dto: LinkImmisDto) {
+    return this.profileService.linkImmisMember(user, dto.immis_member_id);
+  }
+
+  @Delete('immis-link')
+  @ApiOperation({ summary: 'Remove IMMIS member link from your account' })
+  async unlinkImmis(@CurrentUser() user: User) {
+    return this.profileService.unlinkImmisMember(user);
   }
 }
