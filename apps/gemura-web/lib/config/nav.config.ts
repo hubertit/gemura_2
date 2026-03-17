@@ -58,6 +58,8 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { icon: faUserShield, label: 'Roles', href: '/admin/roles', section: 'admin' },
   { icon: faLock, label: 'Permissions', href: '/admin/permissions', section: 'admin' },
   { icon: faCog, label: 'Settings', href: '/settings', section: 'admin' },
+  // IMMIS integration entry – initially visible to everyone; later can be restricted to admin users
+  { icon: faUsers, label: 'IMMIS', href: '/immis', section: 'admin' },
 ];
 
 /**
@@ -77,6 +79,8 @@ export const OPERATIONS_NAV_ITEMS: NavItem[] = [
   { icon: faChartLine, label: 'Finance', href: '/finance', section: 'operations' },
   { icon: faDollarSign, label: 'Accounts', href: '/accounts', section: 'operations' },
   { icon: faCog, label: 'Settings', href: '/settings', section: 'operations' },
+  // IMMIS integration entry – initially visible to all operations users; later can be permission-gated
+  { icon: faUsers, label: 'IMMIS', href: '/immis', section: 'operations' },
 ];
 
 /**

@@ -36,6 +36,7 @@ import { BreedsModule } from './modules/breeds/breeds.module';
 import { FarmsModule } from './modules/farms/farms.module';
 import { LocationsModule } from './modules/locations/locations.module';
 import { MilkProductionModule } from './modules/milk-production/milk-production.module';
+import { ImmisModule } from './modules/immis/immis.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PublicAnalyticsModule } from './modules/public-analytics/public-analytics.module';
 import { AppController } from './app.controller';
@@ -87,6 +88,7 @@ import { AppController } from './app.controller';
     FarmsModule,
     LocationsModule,
     MilkProductionModule,
+    ImmisModule,
     AdminModule,
     PublicAnalyticsModule,
   ],
